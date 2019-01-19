@@ -63,7 +63,7 @@ export const IconButton = ({ iconProps, onPress, style }) => (
 );
 
 export const AppMenuButton = ({ containerStyle, iconProps, onPress }) => (
-    <TouchableOpacity activeOpacity={0.4} style={containerStyle}>
+    <TouchableOpacity activeOpacity={0.4} style={containerStyle} onPress={onPress}>
         <View style={{ backgroundColor: '#221D1F', width: 120, height: 120, borderRadius: 120, justifyContent: 'center' }}>
             <View style={{ backgroundColor: '#EB861E', width: 80, height: 80, borderRadius: 80, justifyContent: 'center', alignSelf: 'center' }}>
                 <NBIcon name={iconProps.name} type={iconProps.type} style={{ fontSize: 40, backgroundColor: '#fff', borderRadius: 40, alignSelf: 'center', padding: 10 }} />

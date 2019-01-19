@@ -46,6 +46,8 @@ export const ACCESS_TOKEN = 'accessToken';
 
 export const RECORD_RIDE_STATUS = { RUNNING: 'running', COMPLETED: 'completed', PAUSED: 'paused' };
 
+export const RIDE_TYPE = { RECORD_RIDE: 'recordRide', BUILD_RIDE: 'buildRide' };
+
 export const ICON_NAMES = {
     SOURCE_DEFAULT: 'sourceDefault', SOURCE_SELECTED: 'sourceSelected',
     DESTINATION_DEFAULT: 'destinationDefault', DESTINATION_SELECTED: 'destinationSelected',

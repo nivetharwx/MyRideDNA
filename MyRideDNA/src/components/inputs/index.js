@@ -4,10 +4,12 @@ import {
     Text,
     TextInput,
     Switch,
-    StyleSheet
+    StyleSheet,
+    TouchableOpacity
 } from 'react-native';
 import { Icon as NBIcon, Picker, DatePicker } from 'native-base';
 import { WindowDimensions, ShortMonthNames } from '../../constants';
+import { getFormattedDate } from '../../util';
 
 export const LabeledInput = ({ label, placeholder, inputType, onChange }) => (
     <View style={{ backgroundColor: '#848484', opacity: 0.7, marginBottom: 10, borderRadius: 5, paddingLeft: 10 }}>
@@ -16,20 +18,24 @@ export const LabeledInput = ({ label, placeholder, inputType, onChange }) => (
             onChange={(event) => onChange && onChange(event.nativeEvent.text)} />
     </View>
 );
-export const IconicInput = ({ iconProps, placeholder, value, inputType, onChange, iconEnd }) => (
-    <View>
-        <View style={{ flexDirection: 'row', marginVertical: 10 }}>
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, iconProps.style]} />
-            </View>
-            <TextInput secureTextEntry={inputType === 'password'} style={{ flex: 10, borderBottomColor: '#D4D4D4', borderBottomWidth: 1 }}
-                placeholder={placeholder} textContentType='password' value={value} onChange={(event) => onChange && onChange(event.nativeEvent.text)} />
-            {
-                iconEnd
-                    ? iconEnd
-                    : null
-            }
-        </View>
+export const IconicInput = ({ inputColor, containerStyle, iconProps, placeholder, value, inputType, onChange, iconEnd }) => (
+    <View style={[{ flexDirection: 'row', marginVertical: 10 }, containerStyle]}>
+        {
+            iconProps.onPress
+                ? <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} onPress={iconProps.onPress}>
+                    <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, iconProps.style]} />
+                </TouchableOpacity>
+                : <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, iconProps.style]} />
+                </View>
+        }
+        <TextInput secureTextEntry={inputType === 'password'} style={{ flex: 10, borderBottomColor: '#D4D4D4', borderBottomWidth: 1, color: inputColor }}
+            placeholder={placeholder} textContentType='password' value={value} onChangeText={(val) => onChange && onChange(val)} />
+        {
+            iconEnd
+                ? iconEnd
+                : null
+        }
     </View>
 );
 
@@ -91,7 +97,7 @@ export const IconicDatePicker = ({ iconProps, selectedDate, selectedDateString, 
                     modalTransparent={false}
                     animationType={"fade"}
                     androidMode={"default"}
-                    placeHolderText={placeholder || selectedDate || (selectedDateString && getFormattedDate(new Date(selectedDateString).toString().substr(4, 12))) || 'Select date'}
+                    placeHolderText={placeholder || selectedDate || (selectedDateString && getFormattedDate(new Date(selectedDateString).toString().substr(4, 12), '/')) || 'Select date'}
                     textStyle={styles.datePickerDefaultStyles}
                     placeHolderTextStyle={[styles.datePickerDefaultStyles, { color: selectedDate || (selectedDateString && new Date(selectedDateString)) ? "black" : "#a9a9a9" }]}
                     onDateChange={onChange && onChange}
@@ -116,11 +122,6 @@ export const SearchBox = ({ value, hideIcon, onTextChange, onPressClear, style, 
         </View>
     </View>
 );
-
-export const getFormattedDate = (dateString) => {
-    let dateInfo = dateString.split(' ');
-    return [dateInfo[1], ShortMonthNames[dateInfo[0]], dateInfo[2]].join('/');
-}
 
 const styles = StyleSheet.create({
     formFieldIcon: {

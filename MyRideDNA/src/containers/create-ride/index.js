@@ -43,12 +43,7 @@ export class CreateRide extends Component {
         };
     }
 
-    componentWillMount() {
-        console.log("componentWillMount: ", JSON.stringify(this.props));
-    }
-
     componentDidMount() {
-        console.log("componentDidMount: ", JSON.stringify(this.props));
         if (this.props.currentLocation === null) {
             Geolocation.getCurrentPosition(
                 ({ coords }) => {
@@ -71,12 +66,22 @@ export class CreateRide extends Component {
                 },
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
             );
+        } else {
+            const { currentLocation } = this.props;
+            this.setState({
+                currentLocation: {
+                    name: currentLocation.name,
+                    lat: currentLocation.location[1],
+                    lng: currentLocation.location[0]
+                },
+                startRideFrom: {
+                    name: currentLocation.name,
+                    lat: currentLocation.location[1],
+                    lng: currentLocation.location[0]
+                }
+            });
         }
         // TODO: Call geocoding API to get address of the location
-    }
-
-    componentDidUpdate() {
-        console.log("componentDidUpdate: ", JSON.stringify(this.props));
     }
 
     onPressBackButton = () => {

@@ -13,8 +13,11 @@ import MapboxGL from '@mapbox/react-native-mapbox-gl';
 import Permissions from 'react-native-permissions';
 import * as turfHelpers from '@turf/helpers';
 import { default as turfBBox } from '@turf/bbox';
+import { default as turfBBoxPolygon } from '@turf/bbox-polygon';
 import { default as turfCircle } from '@turf/circle';
 import { default as turfDistance } from '@turf/distance';
+import { default as turfTransformRotate } from '@turf/transform-rotate';
+import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon } from 'native-base';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES } from '../../constants';
 import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction } from '../../actions';
@@ -72,6 +75,7 @@ export class Map extends Component {
     gpsPointTimestamps = [];
     rootScreen = PageKeys.MAP;
     mapCircleTimeout = null;
+    bottomLeftDefaultPoint = null;
     constructor(props) {
         super(props);
         this.state = {
@@ -116,10 +120,7 @@ export class Map extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        // console.log(this.props.ride === nextProps.ride); // DOC: false when something changes in rie
-
-        const markerFeatures = this.state.markerCollection.features;
-        const { gpsPointCollection } = this.state;
+        // console.log(this.props.ride === nextProps.ride); // DOC: false when something changes in ride
         const { ride, isLocationOn, currentScreen } = nextProps;
         let updatedState = {};
 
@@ -127,8 +128,7 @@ export class Map extends Component {
             this.isLocationOn = isLocationOn;
             if (isLocationOn === false) this.getCurrentLocation();
         }
-        if (this.props.ride != ride) {
-            // DOC: Reset directions and markerCollection when redux clear the ride
+        if (this.props.ride != ride) {            // DOC: Reset directions and markerCollection when redux clear the ride
             if (this.props.ride.rideId != ride.rideId) {
                 updatedState.directions = null;
                 updatedState.markerCollection = {
@@ -158,6 +158,10 @@ export class Map extends Component {
 
                 // TODO: Loading different ride
                 if (ride.rideId) {
+                    if (this.state.showCreateRide === true) {
+                        updatedState.showCreateRide = false;
+                    }
+
                     if (ride.isRecorded) {
                         updatedState.gpsPointCollection.features[0].geometry.coordinates = ride.trackpoints.reduce((arr, trackpoint) => {
                             arr.push([trackpoint.lng, trackpoint.lat]);
@@ -167,37 +171,26 @@ export class Map extends Component {
 
                     if (ride.source) {
                         const sourceMarker = this.createMarkerFeature([ride.source.lng, ride.source.lat], ICON_NAMES.SOURCE_DEFAULT);
-                        updatedState.markerCollection = {
-                            ...this.state.markerCollection,
-                            features: [sourceMarker]
-                        };
+                        updatedState.markerCollection.features = [sourceMarker];
+                    }
+
+                    if (ride.waypoints.length > 0) {
+                        updatedState.markerCollection.features = ride.waypoints.reduce((arr, loc) => {
+                            arr.push(this.createMarkerFeature([loc.lng, loc.lat], ICON_NAMES.WAYPOINT_DEFAULT));
+                            return arr;
+                        }, [...updatedState.markerCollection.features]);
                     }
 
                     if (ride.destination) {
                         const destinationMarker = this.createMarkerFeature([ride.destination.lng, ride.destination.lat], ICON_NAMES.DESTINATION_DEFAULT);
-                        const collection = ride.source ? updatedState.markerCollection : this.state.markerCollection;
-                        updatedState.markerCollection = {
-                            ...collection,
-                            features: [...collection.features, destinationMarker]
-                        };
+                        updatedState.markerCollection.features = [...updatedState.markerCollection.features, destinationMarker];
                     }
                 }
-            }
-
-            if (ride.isRecorded && (this.props.ride.status != ride.status)) {
-                if (ride.status != RECORD_RIDE_STATUS.RUNNING || this.props.ride.status != null) {
-                    this.onChangeRecordRideStatus(ride.status);
-                }
-            }
-
-            if (!ride.isRecorded && ride.source) {
-                if (markerFeatures.length === 0 || (ride.source.lng + '' + ride.source.lat != markerFeatures[0].id)) {
-                    const sourceMarker = this.createMarkerFeature([ride.source.lng, ride.source.lat], ICON_NAMES.SOURCE_DEFAULT);
-                    updatedState.markerCollection = {
-                        ...this.state.markerCollection,
-                        features: [sourceMarker, ...markerFeatures]
-                    };
-                    this._mapView.flyTo([ride.source.lng, ride.source.lat], 500);
+            } else {
+                if (ride.isRecorded && (this.props.ride.status != ride.status)) {
+                    if (ride.status != null && (ride.status != RECORD_RIDE_STATUS.RUNNING || this.props.ride.status != null)) {
+                        this.onChangeRecordRideStatus(ride.status);
+                    }
                 }
             }
         }
@@ -207,7 +200,12 @@ export class Map extends Component {
                 : Actions.popTo(currentScreen, {})
         }
         if (Object.keys(updatedState).length > 0) {
-            this.setState(updatedState, () => console.log("State updated: ", this.state.markerCollection));
+            this.setState(updatedState, () => {
+                // DOC: Fetch route for build ride if waypoints are more than one
+                if (!ride.isRecorded && updatedState.markerCollection && updatedState.markerCollection.features.length > 1) {
+                    this.fetchDirections();
+                }
+            });
         }
     }
 
@@ -317,6 +315,7 @@ export class Map extends Component {
                 callback(response.body, []);
                 return;
             }
+            // TODO: Return distance and duration from matching object (here matchings[0])
             const trackpoints = matchings[0].geometry.coordinates.reduce((arr, coord, index) => {
                 arr.push(coord[1], coord[0], gpsPointTimestamps[index]);
                 return arr;
@@ -366,7 +365,7 @@ export class Map extends Component {
         }
     }
 
-    onFinishMapLoading = () => {
+    onFinishMapLoading = async () => {
         console.log("Map loaded");
     }
 
@@ -407,7 +406,7 @@ export class Map extends Component {
         if (this.state.showCreateRide === false) {
             const mapZoomLevel = await this._mapView.getZoom();
             if (this.state.mapZoomLevel != mapZoomLevel) {
-                const { circle, radius } = this.getVisibleMapInfo(properties, geometry);
+                const { circle, radius, coords } = this.getVisibleMapInfo(properties, geometry);
                 this.setState({ mapZoomLevel, mapRadiusCircle: circle, radius: radius.toFixed(2) }, () => {
                     clearTimeout(this.mapCircleTimeout);
                     this.mapCircleTimeout = setTimeout(() => this.setState({ mapRadiusCircle: null }), 2500);
@@ -419,25 +418,16 @@ export class Map extends Component {
     }
 
     getVisibleMapInfo(regionProp, regionGeo) {
-        const { latitudeDelta, longitudeDelta } = this.getRegionForCoordinates([
-            { latitude: regionProp.visibleBounds[0][1], longitude: regionProp.visibleBounds[0][0] },
-            { latitude: regionProp.visibleBounds[1][1], longitude: regionProp.visibleBounds[1][0] }
-        ]);
+        const bottomRight = [regionProp.visibleBounds[0][0], regionProp.visibleBounds[1][1]];
+        const bottomLeft = regionProp.visibleBounds[1];
         const center = regionGeo.coordinates;
-        const topLeft = [center[0] - (longitudeDelta / 2), center[1] + (latitudeDelta / 2)];
-        const topRight = regionProp.visibleBounds[0];
-        // const bottomRight = [center[0] + (longitudeDelta / 2), center[1] - (latitudeDelta / 2)];
-        // const bottomLeft = properties.visibleBounds[1];
-
-
-        const fromPoint = turfHelpers.point(topLeft);
-        const toPoint = turfHelpers.point(topRight);
+        const fromPoint = turfHelpers.point(bottomLeft);
+        const toPoint = turfHelpers.point(bottomRight);
         const options = { units: 'kilometers' };
         const distanceBtwn = turfDistance(fromPoint, toPoint, options);
         const radius = distanceBtwn / 2;
         const mapRadiusCircle = turfCircle(center, radius, options);
-
-        return { radius: radius, circle: mapRadiusCircle };
+        return { radius, circle: mapRadiusCircle };
     }
 
     toggleReplaceOption = () => this.setState({ isUpdatingWaypoint: !this.state.isUpdatingWaypoint });
@@ -605,7 +595,7 @@ export class Map extends Component {
     }
 
     onBullseyePress = async () => {
-        if (showCreateRide === true) return;
+        if (this.state.showCreateRide === true) return;
         const mapCenter = await this._mapView.getCenter();
         const { ride } = this.props;
         let nextWaypointIndex = this.state.markerCollection.features.length;
@@ -726,39 +716,44 @@ export class Map extends Component {
     }
 
     onPressRecenterMap = (location, showBullseye) => {
-        this.setState({
-            gpsPointCollection: {
-                ...this.state.gpsPointCollection,
-                ...{ "type": "FeatureCollection", "features": [{ "type": "Feature", "geometry": { "type": "LineString", "coordinates": 
-                [[77.651344, 12.911957], [77.649152, 12.910999], [77.649218, 12.907848], [77.648865, 12.905623]] } }] }
-            },
-            mapMatchinRoute: {
-                "type": "FeatureCollection", "features": [{
-                    "type": "Feature", "geometry": {
-                        "type": "LineString", "coordinates": [[77.651344, 12.911957],
-                        [77.649043, 12.911912],
-                        [77.649143, 12.911331],
-                        [77.649152, 12.910999],
-                        [77.649348, 12.908728],
-                        [77.649218, 12.907848],
-                        [77.649059, 12.907002],
-                        [77.649042, 12.906533],
-                        [77.648979, 12.906174],
-                        [77.649002, 12.905715],
-                        [77.648873, 12.905726],
-                        [77.648865, 12.905623]]
-                    }
-                }]
-            },
-            // directions: matchings[0]
-        });
-        // if (Array.isArray(location)) {
-        //     this._mapView.flyTo(location, 500);
-        // } else if (this.state.currentLocation) {
-        //     this._mapView.flyTo(this.state.currentLocation.location, 500);
-        // }
+        // this.setState({
+        //     gpsPointCollection: {
+        //         ...this.state.gpsPointCollection,
+        //         ...{
+        //             "type": "FeatureCollection", "features": [{
+        //                 "type": "Feature", "geometry": {
+        //                     "type": "LineString", "coordinates":
+        //                         [[77.651344, 12.911957], [77.649152, 12.910999], [77.649218, 12.907848], [77.648865, 12.905623]]
+        //                 }
+        //             }]
+        //         }
+        //     },
+        //     mapMatchinRoute: {
+        //         "type": "FeatureCollection", "features": [{
+        //             "type": "Feature", "geometry": {
+        //                 "type": "LineString", "coordinates": [[77.651344, 12.911957],
+        //                 [77.649043, 12.911912],
+        //                 [77.649143, 12.911331],
+        //                 [77.649152, 12.910999],
+        //                 [77.649348, 12.908728],
+        //                 [77.649218, 12.907848],
+        //                 [77.649059, 12.907002],
+        //                 [77.649042, 12.906533],
+        //                 [77.648979, 12.906174],
+        //                 [77.649002, 12.905715],
+        //                 [77.648873, 12.905726],
+        //                 [77.648865, 12.905623]]
+        //             }
+        //         }]
+        //     },
+        //     // directions: matchings[0]
+        // });
+        if (Array.isArray(location)) {
+            this._mapView.flyTo(location, 500);
+        } else if (this.state.currentLocation) {
+            this._mapView.flyTo(this.state.currentLocation.location, 500);
+        }
         // this.props.getRideByRideId(this.props.ride.rideId); // 5b8fd4f233db8371791bea06, 5b9bcc1e33db83297d119a7d, 5b9cfcab33db83297d119aaa
-
     }
 
     onPressZoomIn = () => {
@@ -960,7 +955,8 @@ export class Map extends Component {
             userId: this.props.user.userId,
             name: new Date().toLocaleString(),
             date: dateTime,
-            isRecorded: true
+            isRecorded: true,
+            startTime: new Date().toISOString()
         };
         if (currentLocation) {
             rideDetails.source = {
@@ -1004,18 +1000,18 @@ export class Map extends Component {
         if (this.gpsPointTimestamps.length > 1) {
             this.getCoordsOnRoad(gpsPointCollection.features[0].geometry.coordinates.slice(-this.gpsPointTimestamps.length),
                 this.gpsPointTimestamps, (responseBody, trackpoints) => {
-                    this.props.pauseRecordRide(trackpoints, ride, this.props.user.userId)
+                    this.props.pauseRecordRide(new Date().toISOString(), trackpoints, ride, this.props.user.userId)
                 });
             this.gpsPointTimestamps = [];
         } else {
-            this.props.pauseRecordRide([], ride, this.props.user.userId);
+            this.props.pauseRecordRide(new Date().toISOString(), [], ride, this.props.user.userId);
         }
     }
 
     onPressContinueRide = () => {
         console.log("ContinueRide called");
         const { ride } = this.props;
-        this.props.continueRecordRide(ride, this.props.user.userId);
+        this.props.continueRecordRide(new Date().toISOString(), ride, this.props.user.userId);
     }
 
     onPressStopRide = () => {
@@ -1026,10 +1022,10 @@ export class Map extends Component {
         if (this.gpsPointTimestamps.length > 1) {
             this.getCoordsOnRoad(gpsPointCollection.features[0].geometry.coordinates.slice(-this.gpsPointTimestamps.length),
                 this.gpsPointTimestamps, (responseBody, trackpoints) => {
-                    this.props.completeRecordRide(trackpoints, ride, this.props.user.userId)
+                    this.props.completeRecordRide(new Date().toISOString(), trackpoints, ride, this.props.user.userId)
                 });
         } else {
-            this.props.completeRecordRide([], ride, this.props.user.userId);
+            this.props.completeRecordRide(new Date().toISOString(), [], ride, this.props.user.userId);
         }
     }
 
@@ -1041,6 +1037,7 @@ export class Map extends Component {
             case RECORD_RIDE_STATUS.PAUSED:
                 break;
             case RECORD_RIDE_STATUS.COMPLETED:
+                console.log("RECORD_RIDE_STATUS: ", this.props.ride);
                 this.gpsPointTimestamps = [];
                 // TODO: Call our API and show the result on map
                 this.props.getRideByRideId(this.props.ride.rideId);
@@ -1264,11 +1261,16 @@ export class Map extends Component {
     render() {
         const { mapViewHeight, directions, markerCollection, activeMarkerIndex, gpsPointCollection, controlsBarLeftAnim, showCreateRide, currentLocation,
             searchResults, searchQuery, isEditable, snapshot, hideRoute, optionsBarRightAnim, isUpdatingWaypoint, mapRadiusCircle } = this.state;
-        const { ride, showMenu } = this.props;
+        const { ride, showMenu, showLoader } = this.props;
         const MAP_VIEW_TOP_OFFSET = showCreateRide ? (CREATE_RIDE_CONTAINER_HEIGHT - WINDOW_HALF_HEIGHT) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2) : (isEditable ? 130 : 60) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2);
         return (
             <SafeAreaView style={{ flex: 1 }}>
                 <MenuModal isVisible={showMenu} onClose={this.onCloseAppNavMenu} onPressNavMenu={this.onPressAppNavMenu} />
+                <Spinner
+                    visible={showLoader}
+                    textContent={'Loading...'}
+                    textStyle={{ color: '#fff' }}
+                />
                 <View style={styles.fillParent}>
                     {
                         !showCreateRide
@@ -1324,7 +1326,7 @@ export class Map extends Component {
                         ref={el => this._mapView = el}
                         onDidFinishLoadingMap={this.onFinishMapLoading}
                         onRegionDidChange={this.onRegionDidChange}
-                        compassEnabled={false}
+                        compassEnabled={true}
                         onLayout={({ nativeEvent }) => {
                             const { height } = nativeEvent.layout;
                             height != this.state.mapViewHeight && this.setState({ mapViewHeight: height })
@@ -1527,7 +1529,8 @@ const mapStateToProps = (state) => {
     const { ride } = state.RideInfo;
     const { user } = state.UserAuth;
     const { isLocationOn } = state.GPSState;
-    return { ride, isLocationOn, user, showMenu, currentScreen };
+    const { showLoader } = state.PageState;
+    return { ride, isLocationOn, user, showMenu, currentScreen, showLoader };
 }
 
 const mapDispatchToProps = (dispatch) => {
@@ -1552,9 +1555,9 @@ const mapDispatchToProps = (dispatch) => {
         makeDestinationAsWaypoint: (ride) => dispatch(makeDestinationAsWaypoint(ride)),
         createRecordRide: (rideInfo) => dispatch(createRecordRide(rideInfo)),
         addTrackpoints: (trackpoints, ride, userId) => dispatch(addTrackpoints(trackpoints, ride, userId)),
-        pauseRecordRide: (trackpoints, ride, userId) => dispatch(pauseRecordRide(trackpoints, ride, userId)),
-        continueRecordRide: (ride, userId) => dispatch(continueRecordRide(ride, userId)),
-        completeRecordRide: (trackpoints, ride, userId) => dispatch(completeRecordRide(trackpoints, ride, userId)),
+        pauseRecordRide: (pauseTime, trackpoints, ride, userId) => dispatch(pauseRecordRide(pauseTime, trackpoints, ride, userId)),
+        continueRecordRide: (resumeTime, ride, userId) => dispatch(continueRecordRide(resumeTime, ride, userId)),
+        completeRecordRide: (endTime, trackpoints, ride, userId) => dispatch(completeRecordRide(endTime, trackpoints, ride, userId)),
         getRideByRideId: (rideId) => dispatch(getRideByRideId(rideId)),
         submitNewRide: (rideInfo) => dispatch(createNewRide(rideInfo))
     }

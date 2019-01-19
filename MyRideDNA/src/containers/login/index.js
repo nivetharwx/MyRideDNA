@@ -14,6 +14,7 @@ import { PageKeys, ACCESS_TOKEN, USER_BASE_URL } from '../../constants';
 import { storeUserAction } from '../../actions';
 
 class Login extends Component {
+    // TODO: Create splash screen and do authToken login there
     constructor(props) {
         super(props);
         this.state = {
@@ -22,21 +23,7 @@ class Login extends Component {
             spinner: false,
             isVisiblePassword: false
         };
-
-        AsyncStorage.getItem('allCoords').then(allCoords => console.log(JSON.parse(allCoords)));
-        AsyncStorage.getItem('timeStamps').then(timeStamps => console.log(JSON.parse(timeStamps)));
-        AsyncStorage.getItem('roadCoords').then(roadCoords => console.log(JSON.parse(roadCoords)));
     }
-
-    // componentWillReceiveProps(nextProps) {
-    //     if (nextProps.loginResponse.status === 200) {
-    //         const responseBody = JSON.parse(nextProps.loginResponse._bodyText);
-    //         AsyncStorage.setItem(ACCESS_TOKEN, responseBody.accessToken);
-    //         Actions.reset(PageKeys.TABS, { user: responseBody.user });
-    //     } else {
-    //         console.log("ErrorInfo: ", JSON.parse(nextProps.loginResponse._bodyText).userMessage);
-    //     }
-    // }
 
     onEmailChange = (username) => {
         this.setState({ username });
@@ -56,15 +43,8 @@ class Login extends Component {
         const userData = {};
         userData.deviceId = DeviceInfo.getUniqueID();
         userData.date = new Date().toISOString();
-        userData.email = username;
-        userData.password = Md5.hex_md5(password);
-
-        // FIXME: Change the following static details
-        // userData.userId = 'TEST_ID';
-        // userData.name = 'TEST USER';
-        // userData.nickname = '2018';
-        // this.props.storeUser(userData);
-        // Actions.reset(PageKeys.TABS);
+        userData.email = 'madhavan.v@reactiveworks.in'; // FIXME: Remove static value
+        userData.password = Md5.hex_md5(890 + ''); // FIXME: Remove static value
 
         this.setState({ spinner: !this.state.spinner });
         axios.post(USER_BASE_URL + 'loginUser', userData)
@@ -80,17 +60,6 @@ class Login extends Component {
                 console.log(er);
                 this.setState({ spinner: !this.state.spinner });
             });
-
-        // try {
-        //     const res = await axios.post(USER_BASE_URL + 'loginUser', userData);
-        //     if (res.status === 200) {
-        //         AsyncStorage.setItem(ACCESS_TOKEN, res.data.accessToken);
-        //         this.props.storeUser(res.data.user);
-        //         Actions.reset(PageKeys.TABS);
-        //     }
-        // } catch (er) {
-        //     console.log(er);
-        // }
     }
 
     onSignupPress = () => {
@@ -122,8 +91,6 @@ class Login extends Component {
 }
 
 const mapStateToProps = (state) => {
-    // const { loginResponse } = state.UserAuth;
-    // return { loginResponse };
     const { user } = state.UserAuth;
     return { user };
 }

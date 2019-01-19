@@ -1,4 +1,4 @@
-import { UPDTAE_RIDE, CLEAR_RIDE, UPDATE_WAYPOINT } from "../actions/actionConstants";
+import { UPDTAE_RIDE, CLEAR_RIDE, UPDATE_WAYPOINT, LOAD_RIDE } from "../actions/actionConstants";
 
 const initialState = {
     ride: {
