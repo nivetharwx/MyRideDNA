@@ -75,6 +75,7 @@
 		CB310A9FEF9A45E9B6813A9C /* libRNSettings.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D94E6BA1CE64E3A915EF7B3 /* libRNSettings.a */; };
 		0068BD2B5BB14CDC9A0DB5AF /* libimageCropPicker.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 264BCBC2926F4F1786447140 /* libimageCropPicker.a */; };
 		20DAA847CCCD4ABFBA91D8B4 /* libRNFetchBlob.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 08CF47422D7149DFA7DD9EA9 /* libRNFetchBlob.a */; };
+		2C6089F828EB43BCBD447A28 /* libRNSnackbar.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D7B34C5CAC044538DF17492 /* libRNSnackbar.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -446,6 +447,8 @@
 		264BCBC2926F4F1786447140 /* libimageCropPicker.a */ = {isa = PBXFileReference; name = "libimageCropPicker.a"; path = "libimageCropPicker.a"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = archive.ar; explicitFileType = undefined; includeInIndex = 0; };
 		990C196F49CC463DBF8564B0 /* RNFetchBlob.xcodeproj */ = {isa = PBXFileReference; name = "RNFetchBlob.xcodeproj"; path = "../node_modules/rn-fetch-blob/ios/RNFetchBlob.xcodeproj"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = wrapper.pb-project; explicitFileType = undefined; includeInIndex = 0; };
 		08CF47422D7149DFA7DD9EA9 /* libRNFetchBlob.a */ = {isa = PBXFileReference; name = "libRNFetchBlob.a"; path = "libRNFetchBlob.a"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = archive.ar; explicitFileType = undefined; includeInIndex = 0; };
+		D494F7098C9E4528863EAD24 /* RNSnackbar.xcodeproj */ = {isa = PBXFileReference; name = "RNSnackbar.xcodeproj"; path = "../node_modules/react-native-snackbar/ios/RNSnackbar.xcodeproj"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = wrapper.pb-project; explicitFileType = undefined; includeInIndex = 0; };
+		1D7B34C5CAC044538DF17492 /* libRNSnackbar.a */ = {isa = PBXFileReference; name = "libRNSnackbar.a"; path = "libRNSnackbar.a"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = archive.ar; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -480,6 +483,7 @@
 				CB310A9FEF9A45E9B6813A9C /* libRNSettings.a in Frameworks */,
 				0068BD2B5BB14CDC9A0DB5AF /* libimageCropPicker.a in Frameworks */,
 				20DAA847CCCD4ABFBA91D8B4 /* libRNFetchBlob.a in Frameworks */,
+				2C6089F828EB43BCBD447A28 /* libRNSnackbar.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -703,6 +707,7 @@
 				84194AF3364F4A349FA31A3E /* RNSettings.xcodeproj */,
 				E1E6817CC43141AEB7EDCA0E /* imageCropPicker.xcodeproj */,
 				990C196F49CC463DBF8564B0 /* RNFetchBlob.xcodeproj */,
+				D494F7098C9E4528863EAD24 /* RNSnackbar.xcodeproj */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -1425,13 +1430,13 @@
 					"$(SRCROOT)\..\node_modules\react-native-settings\ios",
 					"$(SRCROOT)\..\node_modules\react-native-image-crop-picker\ios/**",
 					"$(SRCROOT)\..\node_modules\rn-fetch-blob\ios/**",
+					"$(SRCROOT)\..\node_modules\react-native-snackbar\ios",
 				);
 				INFOPLIST_FILE = MyRideDNATests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -1459,13 +1464,13 @@
 					"$(SRCROOT)\..\node_modules\react-native-settings\ios",
 					"$(SRCROOT)\..\node_modules\react-native-image-crop-picker\ios/**",
 					"$(SRCROOT)\..\node_modules\rn-fetch-blob\ios/**",
+					"$(SRCROOT)\..\node_modules\react-native-snackbar\ios",
 				);
 				INFOPLIST_FILE = MyRideDNATests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -1495,6 +1500,7 @@
 					"$(SRCROOT)\..\node_modules\react-native-settings\ios",
 					"$(SRCROOT)\..\node_modules\react-native-image-crop-picker\ios/**",
 					"$(SRCROOT)\..\node_modules\rn-fetch-blob\ios/**",
+					"$(SRCROOT)\..\node_modules\react-native-snackbar\ios",
 				);
 				INFOPLIST_FILE = MyRideDNA/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -1526,6 +1532,7 @@
 					"$(SRCROOT)\..\node_modules\react-native-settings\ios",
 					"$(SRCROOT)\..\node_modules\react-native-image-crop-picker\ios/**",
 					"$(SRCROOT)\..\node_modules\rn-fetch-blob\ios/**",
+					"$(SRCROOT)\..\node_modules\react-native-snackbar\ios",
 				);
 				INFOPLIST_FILE = MyRideDNA/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -1563,12 +1570,12 @@
 					"$(SRCROOT)\..\node_modules\react-native-settings\ios",
 					"$(SRCROOT)\..\node_modules\react-native-image-crop-picker\ios/**",
 					"$(SRCROOT)\..\node_modules\rn-fetch-blob\ios/**",
+					"$(SRCROOT)\..\node_modules\react-native-snackbar\ios",
 				);
 				INFOPLIST_FILE = "MyRideDNA-tvOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -1605,12 +1612,12 @@
 					"$(SRCROOT)\..\node_modules\react-native-settings\ios",
 					"$(SRCROOT)\..\node_modules\react-native-image-crop-picker\ios/**",
 					"$(SRCROOT)\..\node_modules\rn-fetch-blob\ios/**",
+					"$(SRCROOT)\..\node_modules\react-native-snackbar\ios",
 				);
 				INFOPLIST_FILE = "MyRideDNA-tvOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -1646,12 +1653,12 @@
 					"$(SRCROOT)\..\node_modules\react-native-settings\ios",
 					"$(SRCROOT)\..\node_modules\react-native-image-crop-picker\ios/**",
 					"$(SRCROOT)\..\node_modules\rn-fetch-blob\ios/**",
+					"$(SRCROOT)\..\node_modules\react-native-snackbar\ios",
 				);
 				INFOPLIST_FILE = "MyRideDNA-tvOSTests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -1687,12 +1694,12 @@
 					"$(SRCROOT)\..\node_modules\react-native-settings\ios",
 					"$(SRCROOT)\..\node_modules\react-native-image-crop-picker\ios/**",
 					"$(SRCROOT)\..\node_modules\rn-fetch-blob\ios/**",
+					"$(SRCROOT)\..\node_modules\react-native-snackbar\ios",
 				);
 				INFOPLIST_FILE = "MyRideDNA-tvOSTests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				OTHER_LDFLAGS = (
 					"-ObjC",

@@ -3,14 +3,14 @@ import {
     View,
     PureComponent,
     Text,
-    Input,
+    ScrollView,
     Image,
     ImageBackground,
-    TouchableOpacity
+    TouchableOpacity,
 } from 'react-native';
 
-import { LabeledInput, IconicInput } from '../../components/inputs';
-import { LoginButton, SocialButtons, IconButton, LinkButton } from '../../components/buttons';
+import { IconicInput } from '../../components/inputs';
+import { IconButton, LinkButton } from '../../components/buttons';
 
 import * as Animatable from 'react-native-animatable';
 
@@ -18,7 +18,7 @@ import { WindowDimensions } from '../../constants/index';
 import { LoginStyles } from './styles';
 
 export const LoginScreen = (props) => (
-    <View style={{ flex: 1 }}>
+    <ScrollView style={{ flex: 1 }}>
         <Animatable.View animation='zoomIn' iterationCount={1} style={{ height: 200, width: WindowDimensions.width }}>
             <Image source={require('../../assets/img/logo.png')}></Image>
         </Animatable.View>
@@ -37,7 +37,7 @@ export const LoginScreen = (props) => (
             <View style={{ position: 'absolute', zIndex: 8, width: WindowDimensions.width, backgroundColor: 'rgba(182,86,26,0.7)', height: 100, paddingTop: 15 }}>
                 <View style={{ paddingStart: 5, paddingEnd: 30, marginTop: 10, flexDirection: 'row', justifyContent: 'space-between' }}>
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                        <LinkButton title='Forgot Password' titleStyle={{ color: 'white', fontSize: 16 }} />
+                        <LinkButton title='Forgot Password' titleStyle={{ color: 'white', fontSize: 16 }} onPress={props.onForgotPasswordPress} />
                     </View>
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
                         <LinkButton title='Signup' titleStyle={{ color: 'white', fontSize: 16 }} onPress={props.onSignupPress} />
@@ -51,5 +51,5 @@ export const LoginScreen = (props) => (
                 </View>
             </ImageBackground>
         </View>
-    </View>
+    </ScrollView>
 );

@@ -5,12 +5,14 @@ import { Root } from 'native-base';
 
 import { WindowDimensions, PageKeys } from '../constants';
 
+import SplashScreen from '../containers/splash-screen';
+import ForgotPassword from '../containers/forgot-password';
 import Login from '../containers/login';
 import Profile from '../containers/profile';
 import Rides from '../containers/rides';
 import { AppNavigationMenu } from '../containers/app-navigation-menu';
 import Map from '../containers/map';
-import { Signup } from '../containers/signup';
+import Signup from '../containers/signup';
 import { Passengers } from '../containers/passengers';
 import { Garage } from '../containers/garage';
 import { Notifications } from '../containers/notifications';
@@ -28,8 +30,10 @@ export default class Navigation extends Component {
                 <Root>
                     <Router>
                         <Scene key='root'>
-                            <Scene key={PageKeys.LOGIN} component={Login} hideNavBar initial></Scene>
+                            <Scene key={PageKeys.SPLASH_SCREEN} component={SplashScreen} hideNavBar initial></Scene>
+                            <Scene key={PageKeys.LOGIN} component={Login} hideNavBar></Scene>
                             <Scene key={PageKeys.SIGNUP} component={Signup} hideNavBar></Scene>
+                            <Scene key={PageKeys.FORGOT_PASSWORD} component={ForgotPassword} hideNavBar></Scene>
                             <Scene key={PageKeys.TABS} component={Tabs} hideNavBar></Scene>
                             <Scene key={PageKeys.RIDES} component={Rides} hideNavBar></Scene>
                             <Scene key={PageKeys.PROFILE} component={Profile} hideNavBar></Scene>

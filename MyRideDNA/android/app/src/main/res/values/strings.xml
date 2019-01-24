@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MyRideDNA</string>
+    <item name="white" type="color">#FFFFFF</item>
 </resources>

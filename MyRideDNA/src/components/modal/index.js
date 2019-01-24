@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, Modal, TouchableOpacity, TouchableHighlight, View, Image } from 'react-native';
+import { SafeAreaView, Modal, TouchableOpacity, ScrollView, View, Image, TouchableWithoutFeedback } from 'react-native';
 import { Icon as NBIcon } from 'native-base';
 import { AppMenuButton } from '../buttons';
 import { Actions } from 'react-native-router-flux';
@@ -61,6 +61,44 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu }) =>
             </View>
         </Modal>
     </SafeAreaView>
+);
+
+export const BaseModal = (props) => (
+    <Modal
+        animationType="slide"
+        transparent={true}
+        visible={props.isVisible}
+        onRequestClose={props.onCancel}>
+        {
+            props.onPressOutside ?
+                <TouchableOpacity style={{ height: '100%', width: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)' }} onPress={props.onPressOutside}>
+                    <ScrollView
+                        directionalLockEnabled={true}
+                        style={{ height: '100%', width: '100%' }}
+                        contentContainerStyle={{ justifyContent: 'center', height: '100%', width: '100%', alignItems: 'center' }}
+                    >
+                        <TouchableWithoutFeedback>
+                            {
+                                props.children
+                            }
+                        </TouchableWithoutFeedback>
+                    </ScrollView>
+                </TouchableOpacity>
+                : <View style={{ height: '100%', width: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)' }}>
+                    <ScrollView
+                        directionalLockEnabled={true}
+                        style={{ height: '100%', width: '100%' }}
+                        contentContainerStyle={{ justifyContent: 'center', height: '100%', width: '100%', alignItems: 'center' }}
+                    >
+                        <TouchableWithoutFeedback>
+                            {
+                                props.children
+                            }
+                        </TouchableWithoutFeedback>
+                    </ScrollView>
+                </View>
+        }
+    </Modal>
 );
 
 {/*                 <TouchableOpacity activeOpacity={0.4}>

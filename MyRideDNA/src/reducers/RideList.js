@@ -1,4 +1,4 @@
-import { UPDATE_RIDE_LIST, CLEAR_RIDE_LIST, DELETE_RIDE } from "../actions/actionConstants";
+import { UPDATE_RIDE_LIST, CLEAR_RIDE_LIST, DELETE_RIDE, REPLACE_RIDE_LIST } from "../actions/actionConstants";
 import { RIDE_TYPE } from "../constants";
 
 const initialState = {
@@ -10,18 +10,29 @@ const initialState = {
 export default (state = initialState, action) => {
     const updatedState = { ...state };
     switch (action.type) {
-        case UPDATE_RIDE_LIST:
+
+        case REPLACE_RIDE_LIST:
             var rideKey = getRideListByType(action.data.rideType);
             updatedState[rideKey] = [...action.data.rideList];
             return updatedState;
+
+        case UPDATE_RIDE_LIST:
+            var rideKey = getRideListByType(action.data.rideType);
+            updatedState[rideKey] = typeof action.data.index === 'number' && action.data.index >= 0
+                ? [...state[rideKey].slice(0, action.data.index), ...action.data.rideList, ...state[rideKey].slice(action.data.index + 1)]
+                : [...state[rideKey], ...action.data.rideList]
+            return updatedState;
+
         case DELETE_RIDE:
             var rideKey = getRideListByType(action.data.rideType);
             updatedState[rideKey] = [...state[rideKey].slice(0, action.data.index), ...state[rideKey].slice(action.data.index + 1)];
             return updatedState;
+
         case CLEAR_RIDE_LIST:
             var rideKey = getRideListByType(action.data.rideType);
             updatedState[rideKey] = [];
             return updatedState;
+
         default: return state
     }
 }
@@ -32,6 +43,7 @@ const getRideListByType = (rideType) => {
             return 'buildRides'
         case RIDE_TYPE.RECORD_RIDE:
             return 'recordedRides'
-        // TODO: Create for shared rides also
+        case RIDE_TYPE.SHARED_RIDE:
+            return 'sharedRides'
     }
 }

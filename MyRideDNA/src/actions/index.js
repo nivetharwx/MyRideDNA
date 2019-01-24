@@ -1,9 +1,18 @@
-import { LOGIN_RESPONSE, APP_NAV_MENU_VISIBILITY, UPDTAE_RIDE, CLEAR_RIDE, 
-    DEVICE_GPS_STATE, UPDATE_WAYPOINT, CURRENT_USER, UPDATE_USER, TOGGLE_LOADER, SCREEN_CHANGE, UPDATE_RIDE_LIST, LOAD_RIDE, DELETE_RIDE } from './actionConstants';
+import {
+    LOGIN_RESPONSE, APP_NAV_MENU_VISIBILITY, UPDTAE_RIDE, CLEAR_RIDE,
+    DEVICE_GPS_STATE, UPDATE_WAYPOINT, CURRENT_USER, UPDATE_USER, TOGGLE_LOADER, SCREEN_CHANGE,
+    UPDATE_RIDE_LIST, LOAD_RIDE, DELETE_RIDE, REPLACE_RIDE_LIST, UPDATE_EMAIL_STATUS, UPDATE_SIGNUP_RESULT, TOGGLE_NETWORK_STATUS
+} from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
     {
         type: TOGGLE_LOADER,
+        data: data
+    }
+);
+export const toggleNetworkStatusAction = (data) => (
+    {
+        type: TOGGLE_NETWORK_STATUS,
         data: data
     }
 );
@@ -16,6 +25,18 @@ export const loginAction = (data) => (
 export const storeUserAction = (data) => (
     {
         type: CURRENT_USER,
+        data: data
+    }
+);
+export const updateSignupResultAction = (data) => (
+    {
+        type: UPDATE_SIGNUP_RESULT,
+        data: data
+    }
+);
+export const updateEmailStatusAction = (data) => (
+    {
+        type: UPDATE_EMAIL_STATUS,
         data: data
     }
 );
@@ -34,6 +55,12 @@ export const appNavMenuVisibilityAction = (data) => (
 export const screenChangeAction = (data) => (
     {
         type: SCREEN_CHANGE,
+        data: data
+    }
+);
+export const replaceRideListAction = (data) => (
+    {
+        type: REPLACE_RIDE_LIST,
         data: data
     }
 );

@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform } from 'react-native';
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform, StatusBar, Alert } from 'react-native';
 import { Icon as NBIcon } from 'native-base';
 import { Actions } from 'react-native-router-flux';
+import { connect } from 'react-redux';
 
 import { IconicInput, IconicList } from '../../components/inputs';
 import { BasicHeader } from '../../components/headers';
@@ -9,55 +10,157 @@ import { BasicHeader } from '../../components/headers';
 import { LoginStyles } from '../../containers/login/styles';
 import { WindowDimensions } from '../../constants';
 import { LoginButton, SocialButtons, IconButton, RoundButton } from '../../components/buttons';
+import { isValidEmailFormat } from '../../util';
+import Spinner from 'react-native-loading-spinner-overlay';
+import { validateEmailOnServer, registerUser } from '../../api';
+import Md5 from 'react-native-md5';
+import { toggleNetworkStatusAction } from '../../actions';
+// import Snackbar from 'react-native-snackbar';
 
 const ANDROID_HEADER_HEIGHT = 50;
 const IOS_HEADER_HEIGHT = 90;
 const HEADER_HEIGHT = Platform.OS === 'android' ? ANDROID_HEADER_HEIGHT : IOS_HEADER_HEIGHT;
 
-export class Signup extends Component {
+class Signup extends Component {
+    isVerifyingEmail = false;
     constructor(props) {
         super(props);
         this.state = {
             user: {},
             isPasswdVisible: false,
-            isConfirmPasswdVisible: false
+            isConfirmPasswdVisible: false,
+            confirmPassword: '',
+            showLoader: false,
         };
     }
 
-    onEmailChange = (val) => {
+    componentDidUpdate(prevProps) {
+        if (prevProps.emailStatus !== this.props.emailStatus) {
+            this.isVerifyingEmail = false;
+        }
+        if (prevProps.signupResult !== this.props.signupResult) {
+            this.setState({ showLoader: false }, () => {
+                if (this.props.signupResult.success) {
+                    Alert.alert('Registration success', this.props.signupResult.success);
+                    this.onPressBackButton();
+                } else {
+                    Alert.alert('Registration failed', this.props.signupResult.userMessage);
+                }
+            });
+        }
+    }
+
+    onChangeName = (name) => {
+        this.setState(prevState => ({ user: { ...prevState.user, name: name + '' } }));
+    }
+
+    onEmailChange = (email) => {
+        this.setState(prevState => ({ user: { ...prevState.user, email: email + '' } }));
+    }
+
+    onGenderChange = (gender) => {
+        this.setState(prevState => ({ user: { ...prevState.user, gender } }));
+    }
+
+    showNetworkError() {
+        Alert.alert('Network Info', "Please connect to a network to continue", undefined, { cancelable: false });
+    }
+
+    validateEmail = () => {
+        if (!this.props.hasNetwork) {
+            this.showNetworkError();
+            return;
+        }
+        if (isValidEmailFormat(this.state.user.email)) {
+            this.isVerifyingEmail = true;
+            this.props.validateEmailOnServer(this.state.user.email);
+        } else {
+            if (this.state.user.email && this.state.user.email.length > 0) {
+                Alert.alert('Error', 'Entered email is not in the proper format');
+            }
+        }
+    }
+
+    onPasswordsChange = (passwd) => {
+        this.setState(prevState => ({ user: { ...prevState.user, password: passwd } }));
+    }
+
+    onConfrimPassworddChange = (confirmPassword) => {
+        this.setState({ confirmPassword });
+    }
+
+    validateFields() {
+        if (!this.state.user.name) {
+            Alert.alert('Field Error', 'Please provide your name');
+            return false;
+        }
+        if (!this.state.user.gender) {
+            Alert.alert('Field Error', 'Please select a gender');
+            return false;
+        }
+        if (!this.isVerifyingEmail) {
+            if (this.props.emailStatus.isExists === true) {
+                Alert.alert('Email exists', 'Entered email is already registered with MyRideDNA');
+                return false;
+            } else if (!this.state.user.email) {
+                Alert.alert('Field Error', 'Please provide your email');
+                return false;
+            }
+        } else {
+            return false
+        }
+        if (this.state.user.password !== this.state.confirmPassword) {
+            Alert.alert('Field Error', 'Entered passwords are not matching');
+            return false;
+        }
+        return true;
     }
 
     onSubmit = () => {
-
+        if (!this.props.hasNetwork) {
+            this.showNetworkError();
+            return;
+        }
+        // TODO: All validations
+        if (this.validateFields()) {
+            this.setState({ showLoader: true });
+            this.props.registerUser({ ...this.state.user, password: Md5.hex_md5(this.state.user.password + '') });
+        }
     }
 
     onPressBackButton = () => {
         Actions.pop();
     }
 
-
-
     render() {
-        const { user, isPasswdVisible, isConfirmPasswdVisible } = this.state;
+        const { user, isPasswdVisible, isConfirmPasswdVisible, showLoader } = this.state;
         return (
             <View style={{ flex: 1, backgroundColor: 'white' }}>
-                <BasicHeader headerHeight={HEADER_HEIGHT} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                    title='Sign up' />
+                <StatusBar
+                    backgroundColor="rgba(0,118,181,0.9)"
+                    barStyle="default"
+                />
+                <Spinner
+                    visible={showLoader}
+                    textContent={'Loading...'}
+                    textStyle={{ color: '#fff' }}
+                />
+                <BasicHeader title='Signup' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} searchbarMode={false} />
                 <ScrollView style={{ backgroundColor: 'white', marginTop: HEADER_HEIGHT }} contentContainerStyle={{ paddingTop: 20, justifyContent: 'space-between', flex: 1 }}>
-                    <IconicInput iconProps={{ style: styles.formFieldIcon, name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Name'></IconicInput>
+                    <IconicInput iconProps={{ style: styles.formFieldIcon, name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Name' onChange={this.onChangeName} />
                     <IconicList iconProps={{ style: styles.formFieldIcon, name: 'transgender', type: 'FontAwesome' }}
                         selectedValue={user.gender} placeholder='Gender' values={[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }]}
-                        onChange={val => this.setState({ user: { ...user, gender: val } })}></IconicList>
-                    <IconicInput iconProps={{ style: styles.formFieldIcon, name: 'email', type: 'MaterialIcons' }} inputType='emailAddress' placeholder='Email'></IconicInput>
+                        onChange={this.onGenderChange}></IconicList>
+                    <IconicInput iconProps={{ style: styles.formFieldIcon, name: 'email', type: 'MaterialIcons' }} inputType='emailAddress' placeholder='Email' onChange={this.onEmailChange} onFocusout={this.validateEmail} />
                     <IconicInput
                         iconEnd={<IconButton onPress={() => this.setState({ isPasswdVisible: !isPasswdVisible })} style={{ backgroundColor: '#0083CA', borderRadius: 10, paddingHorizontal: 1, paddingVertical: 1, marginRight: 10 }} iconProps={{ name: isPasswdVisible ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: 20, color: 'white', borderRadius: 10 } }} />}
-                        iconProps={{ style: styles.formFieldIcon, name: 'vpn-key', type: 'MaterialIcons' }} inputType={isPasswdVisible ? 'text' : 'password'} placeholder='Password'></IconicInput>
+                        iconProps={{ style: styles.formFieldIcon, name: 'vpn-key', type: 'MaterialIcons' }} inputType={isPasswdVisible ? 'none' : 'password'} placeholder='Password' onChange={this.onPasswordsChange} />
                     <IconicInput
                         iconEnd={<IconButton onPress={() => this.setState({ isConfirmPasswdVisible: !isConfirmPasswdVisible })} style={{ backgroundColor: '#0083CA', borderRadius: 10, paddingHorizontal: 1, paddingVertical: 1, marginRight: 10 }} iconProps={{ name: isConfirmPasswdVisible ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: 20, color: 'white', borderRadius: 10 } }} />}
-                        iconProps={{ style: styles.formFieldIcon, name: 'vpn-key', type: 'MaterialIcons' }} inputType={isConfirmPasswdVisible ? 'text' : 'password'} placeholder='Confirm password'></IconicInput>
+                        iconProps={{ style: styles.formFieldIcon, name: 'vpn-key', type: 'MaterialIcons' }} inputType={isConfirmPasswdVisible ? 'none' : 'password'} placeholder='Confirm password' onChange={this.onConfrimPassworddChange} />
 
                     <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 10, justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                        <RoundButton title='GO' style={{ height: 100, width: 100, borderRadius: 100 }} titleStyle={{ fontSize: 25 }} onPress={() => { }} />
+                        <RoundButton title='GO' style={{ height: 100, width: 100, borderRadius: 100 }} titleStyle={{ fontSize: 25 }} onPress={this.onSubmit} />
                         <TouchableOpacity><Text style={{ color: '#0083CA', fontSize: 17 }}>Privacy policy</Text></TouchableOpacity>
                     </View>
                     {/* <View style={{ justifyContent: 'space-around', borderColor: 'red', borderWidth: 1 }}> */}
@@ -85,6 +188,22 @@ export class Signup extends Component {
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    const { emailStatus, signupResult, user } = state.UserAuth;
+    const { hasNetwork } = state.PageState;
+    return { emailStatus, signupResult, user, hasNetwork };
+}
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        validateEmailOnServer: (email) => dispatch(validateEmailOnServer(email)),
+        registerUser: (user) => dispatch(registerUser(user)),
+        toggleNetworkStatus: (status) => dispatch(toggleNetworkStatusAction(status)),
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Signup);
 
 const styles = StyleSheet.create({
     formFieldIcon: {

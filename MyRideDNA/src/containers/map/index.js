@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import {
     SafeAreaView, View, TouchableOpacity, Alert,
     Keyboard, Image, BackHandler, Animated,
-    DeviceEventEmitter, Text, AsyncStorage,
+    DeviceEventEmitter, Text, AsyncStorage, StatusBar
 } from 'react-native';
 import { connect } from 'react-redux';
 
@@ -280,7 +280,7 @@ export class Map extends Component {
                             this.gpsPointTimestamps.push(new Date().toISOString()); // TODO: Use Date.now() for sending to mapbox api, if it is supporting timestamps
                             trackpointTick = 0;
                             if (this.gpsPointTimestamps.length === 100) {
-                                this.getCoordsOnRoad(points.slice(-this.gpsPointTimestamps.length), this.gpsPointTimestamps, (responseBody, trackpoints) => this.props.addTrackpoints(trackpoints, ride, this.props.user.userId));
+                                this.getCoordsOnRoad(points.slice(-this.gpsPointTimestamps.length), this.gpsPointTimestamps, (responseBody, trackpoints, distance) => this.props.addTrackpoints(trackpoints, distance, ride, this.props.user.userId));
                                 this.gpsPointTimestamps = [];
                             }
                         }
@@ -312,7 +312,7 @@ export class Map extends Component {
             const { matchings } = response.body;
             if (matchings.length === 0) {
                 console.log("No matching coords found");
-                callback(response.body, []);
+                callback(response.body, [], 0);
                 return;
             }
             // TODO: Return distance and duration from matching object (here matchings[0])
@@ -320,13 +320,14 @@ export class Map extends Component {
                 arr.push(coord[1], coord[0], gpsPointTimestamps[index]);
                 return arr;
             }, []);
-            callback(response.body, trackpoints);
+            callback(response.body, trackpoints, matchings[0].distance);
         } catch (er) {
             console.log(er);
         }
     }
 
     onBackButtonPress = () => {
+        console.log("onBackButtonPress: ", Actions.state.index);
         if (Actions.state.index != 0) {
             Actions.pop();
             this.props.changeScreen(Actions.currentScene);
@@ -600,7 +601,7 @@ export class Map extends Component {
         const { ride } = this.props;
         let nextWaypointIndex = this.state.markerCollection.features.length;
         const isDestinationSelected = ride.destination && (this.state.activeMarkerIndex === (nextWaypointIndex - 1) || this.state.activeMarkerIndex === -1);
-        let markerIcon = 'waypointDefault';
+        let markerIcon = ICON_NAMES.WAYPOINT_DEFAULT;
         if (nextWaypointIndex === 0 || (this.state.isUpdatingWaypoint && this.state.activeMarkerIndex === 0)) {
             markerIcon = ICON_NAMES.SOURCE_DEFAULT;
         } else if (isDestinationSelected && this.state.isUpdatingWaypoint) {
@@ -999,12 +1000,12 @@ export class Map extends Component {
         const { gpsPointCollection } = this.state;
         if (this.gpsPointTimestamps.length > 1) {
             this.getCoordsOnRoad(gpsPointCollection.features[0].geometry.coordinates.slice(-this.gpsPointTimestamps.length),
-                this.gpsPointTimestamps, (responseBody, trackpoints) => {
-                    this.props.pauseRecordRide(new Date().toISOString(), trackpoints, ride, this.props.user.userId)
+                this.gpsPointTimestamps, (responseBody, trackpoints, distance) => {
+                    this.props.pauseRecordRide(new Date().toISOString(), trackpoints, distance, ride, this.props.user.userId)
                 });
             this.gpsPointTimestamps = [];
         } else {
-            this.props.pauseRecordRide(new Date().toISOString(), [], ride, this.props.user.userId);
+            this.props.pauseRecordRide(new Date().toISOString(), [], 0, ride, this.props.user.userId);
         }
     }
 
@@ -1021,11 +1022,11 @@ export class Map extends Component {
         const { gpsPointCollection } = this.state;
         if (this.gpsPointTimestamps.length > 1) {
             this.getCoordsOnRoad(gpsPointCollection.features[0].geometry.coordinates.slice(-this.gpsPointTimestamps.length),
-                this.gpsPointTimestamps, (responseBody, trackpoints) => {
-                    this.props.completeRecordRide(new Date().toISOString(), trackpoints, ride, this.props.user.userId)
+                this.gpsPointTimestamps, (responseBody, trackpoints, distance) => {
+                    this.props.completeRecordRide(new Date().toISOString(), trackpoints, distance, ride, this.props.user.userId)
                 });
         } else {
-            this.props.completeRecordRide(new Date().toISOString(), [], ride, this.props.user.userId);
+            this.props.completeRecordRide(new Date().toISOString(), [], 0, ride, this.props.user.userId);
         }
     }
 
@@ -1062,22 +1063,22 @@ export class Map extends Component {
         if (ride.rideId && (ride.status === null || ride.status === RECORD_RIDE_STATUS.COMPLETED)) {
             return (
                 <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
-                    <LinkButton title='CLOSE RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressCloseRide} />
+                    <LinkButton style={{ paddingVertical: 20 }} title='CLOSE RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressCloseRide} />
                 </View>
             )
         } else if (ride.status === RECORD_RIDE_STATUS.PAUSED) {
             return (
                 <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
-                    <LinkButton title='CONTINUE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressContinueRide} />
-                    <LinkButton title='STOP' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressStopRide} />
-                    <LinkButton title='CLOSE RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressCloseRide} />
+                    <LinkButton style={{ paddingVertical: 20 }} title='CONTINUE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressContinueRide} />
+                    <LinkButton style={{ paddingVertical: 20 }} title='STOP' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressStopRide} />
+                    <LinkButton style={{ paddingVertical: 20 }} title='CLOSE RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressCloseRide} />
                 </View>
             )
         } else {
             return (
                 <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
-                    <LinkButton title='PAUSE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressPauseRide} />
-                    <LinkButton title='STOP' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressStopRide} />
+                    <LinkButton style={{ paddingVertical: 20 }} title='PAUSE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressPauseRide} />
+                    <LinkButton style={{ paddingVertical: 20 }} title='STOP' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressStopRide} />
                 </View>
             )
         }
@@ -1202,8 +1203,8 @@ export class Map extends Component {
     }
 
     onPressMarker = (e) => {
-        const { ride } = this.props;
-        if (ride.isRecorded === true) return;
+        const { ride, user } = this.props;
+        if (ride.isRecorded === true || ride.userId !== user.userId) return;
 
         const selectedFeature = e.nativeEvent.payload;
         const selectedMarkerIndex = this.state.markerCollection.features.findIndex(marker => marker.geometry.coordinates.join('') === selectedFeature.id);
@@ -1265,6 +1266,10 @@ export class Map extends Component {
         const MAP_VIEW_TOP_OFFSET = showCreateRide ? (CREATE_RIDE_CONTAINER_HEIGHT - WINDOW_HALF_HEIGHT) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2) : (isEditable ? 130 : 60) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2);
         return (
             <SafeAreaView style={{ flex: 1 }}>
+                <StatusBar
+                    backgroundColor="rgba(0,118,181,0.9)"
+                    barStyle="default"
+                />
                 <MenuModal isVisible={showMenu} onClose={this.onCloseAppNavMenu} onPressNavMenu={this.onPressAppNavMenu} />
                 <Spinner
                     visible={showLoader}
@@ -1279,8 +1284,8 @@ export class Map extends Component {
                                     searchResults.length === 0
                                         ? ride.rideId === null
                                             ? <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
-                                                <LinkButton title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
-                                                <LinkButton title='RECORD RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
+                                                <LinkButton style={{ paddingVertical: 20 }} title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
+                                                <LinkButton style={{ paddingVertical: 20 }} title='RECORD RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
                                             </View>
                                             : this.renderMapControlsForRide()
                                         : null
@@ -1554,10 +1559,10 @@ const mapDispatchToProps = (dispatch) => {
         makeWaypointAsDestination: (ride, index) => dispatch(makeWaypointAsDestination(ride, index)),
         makeDestinationAsWaypoint: (ride) => dispatch(makeDestinationAsWaypoint(ride)),
         createRecordRide: (rideInfo) => dispatch(createRecordRide(rideInfo)),
-        addTrackpoints: (trackpoints, ride, userId) => dispatch(addTrackpoints(trackpoints, ride, userId)),
-        pauseRecordRide: (pauseTime, trackpoints, ride, userId) => dispatch(pauseRecordRide(pauseTime, trackpoints, ride, userId)),
+        addTrackpoints: (trackpoints, distance, ride, userId) => dispatch(addTrackpoints(trackpoints, distance, ride, userId)),
+        pauseRecordRide: (pauseTime, trackpoints, distance, ride, userId) => dispatch(pauseRecordRide(pauseTime, trackpoints, distance, ride, userId)),
         continueRecordRide: (resumeTime, ride, userId) => dispatch(continueRecordRide(resumeTime, ride, userId)),
-        completeRecordRide: (endTime, trackpoints, ride, userId) => dispatch(completeRecordRide(endTime, trackpoints, ride, userId)),
+        completeRecordRide: (endTime, trackpoints, distance, ride, userId) => dispatch(completeRecordRide(endTime, trackpoints, distance, ride, userId)),
         getRideByRideId: (rideId) => dispatch(getRideByRideId(rideId)),
         submitNewRide: (rideInfo) => dispatch(createNewRide(rideInfo))
     }

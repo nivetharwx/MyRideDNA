@@ -25,6 +25,8 @@ export const PageKeys = {
     PASSENGERS: 'passengers',
     LOGIN: 'login',
     SIGNUP: 'signup',
+    SPLASH_SCREEN: 'splashScreen',
+    FORGOT_PASSWORD: 'forgotPassword',
     TABS: 'tabs',
     PROFILE: 'profile',
     GALLERY: 'gallery',
@@ -42,11 +44,11 @@ export const TAB_CONTAINER_HEIGHT = 50;
 export const BULLSEYE_SIZE = 40;
 
 export const ShortMonthNames = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' };
-export const ACCESS_TOKEN = 'accessToken';
+export const USER_AUTH_TOKEN = 'userAuthToken';
 
 export const RECORD_RIDE_STATUS = { RUNNING: 'running', COMPLETED: 'completed', PAUSED: 'paused' };
 
-export const RIDE_TYPE = { RECORD_RIDE: 'recordRide', BUILD_RIDE: 'buildRide' };
+export const RIDE_TYPE = { RECORD_RIDE: 'recordRide', BUILD_RIDE: 'buildRide', SHARED_RIDE: 'sharedRide' };
 
 export const ICON_NAMES = {
     SOURCE_DEFAULT: 'sourceDefault', SOURCE_SELECTED: 'sourceSelected',

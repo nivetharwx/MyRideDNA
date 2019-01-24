@@ -1,7 +1,8 @@
-import { TOGGLE_LOADER } from "../actions/actionConstants";
+import { TOGGLE_LOADER, TOGGLE_NETWORK_STATUS } from "../actions/actionConstants";
 
 const initialState = {
     showLoader: false,
+    hasNetwork: true,
 };
 
 export default (state = initialState, action) => {
@@ -10,6 +11,11 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 showLoader: action.data
+            }
+        case TOGGLE_NETWORK_STATUS:
+            return {
+                ...state,
+                hasNetwork: action.data
             }
         default: return state
     }

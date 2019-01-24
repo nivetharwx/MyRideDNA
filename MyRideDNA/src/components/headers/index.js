@@ -59,7 +59,7 @@ export class BasicHeader extends React.Component {
         });
 
         return (
-            <SafeAreaView style={[styles.header, { height: headerHeight ? headerHeight : 60 }]}>
+            <SafeAreaView style={[styles.header, { height: headerHeight || 60 }]}>
                 {
                     searchbarMode === false
                         ? <View style={{ flex: 1, flexDirection: 'row' }}>

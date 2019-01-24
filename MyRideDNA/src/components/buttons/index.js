@@ -46,8 +46,8 @@ export const BasicButton = ({ title, iconProps, onPress, style }) => (
 );
 
 export const RoundButton = ({ title, onPress, style, titleStyle }) => (
-    <TouchableOpacity activeOpacity={0.6}>
-        <View onPress={onPress} style={[{ backgroundColor: '#0083CA', borderRadius: 30, height: 30, width: 30, alignItems: 'center', justifyContent: 'center' }, style]}>
+    <TouchableOpacity activeOpacity={0.6} onPress={onPress}>
+        <View style={[{ backgroundColor: '#0083CA', borderRadius: 30, height: 30, width: 30, alignItems: 'center', justifyContent: 'center' }, style]}>
             <Text style={[{ color: '#fff', alignSelf: 'center', fontSize: 15, fontWeight: 'bold' }, titleStyle]}>{title}</Text>
         </View>
     </TouchableOpacity>
@@ -55,7 +55,7 @@ export const RoundButton = ({ title, onPress, style, titleStyle }) => (
 
 export const IconButton = ({ iconProps, onPress, style }) => (
     <TouchableOpacity activeOpacity={0.6} onPress={onPress}>
-        <View style={[{ paddingHorizontal: 10, backgroundColor: 'rgba(0,0,0,0.4)' }, style]}>
+        <View style={[{ paddingHorizontal: 10 }, style]}>
             <NBIcon name={iconProps.name}
                 type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style]} />
         </View>
@@ -72,8 +72,8 @@ export const AppMenuButton = ({ containerStyle, iconProps, onPress }) => (
     </TouchableOpacity>
 );
 
-export const LinkButton = ({ title, titleStyle, onPress }) => (
-    <TouchableOpacity activeOpacity={0.6} style={{ padding: 20 }} onPress={onPress}>
+export const LinkButton = ({ style, title, titleStyle, onPress }) => (
+    <TouchableOpacity activeOpacity={0.6} style={[{ paddingHorizontal: 20 }, style]} onPress={onPress}>
         <Text style={titleStyle}>{title}</Text>
     </TouchableOpacity>
 );

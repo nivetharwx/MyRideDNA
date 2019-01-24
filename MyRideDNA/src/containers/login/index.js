@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { SafeAreaView, AsyncStorage } from 'react-native';
+import { SafeAreaView, View, AsyncStorage, StatusBar, NetInfo, Alert } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { connect } from 'react-redux';
 import axios from 'axios';
@@ -10,19 +10,57 @@ import Md5 from 'react-native-md5'; // DOC: Check https://www.npmjs.com/package/
 
 import { LoginScreen } from './login';
 import { loginUser } from '../../api';
-import { PageKeys, ACCESS_TOKEN, USER_BASE_URL } from '../../constants';
-import { storeUserAction } from '../../actions';
+import { PageKeys, USER_AUTH_TOKEN, USER_BASE_URL, WindowDimensions } from '../../constants';
+import { storeUserAction, toggleNetworkStatusAction } from '../../actions';
+import { BaseModal } from '../../components/modal';
+import ForgotPassword from '../forgot-password';
+import { LabeledInput } from '../../components/inputs';
+import { BasicButton } from '../../components/buttons';
 
 class Login extends Component {
-    // TODO: Create splash screen and do authToken login there
     constructor(props) {
         super(props);
         this.state = {
             username: '',
             password: '',
             spinner: false,
-            isVisiblePassword: false
+            isVisiblePassword: false,
+            showForgotPasswordModal: false,
         };
+    }
+
+    componentWillMount() {
+        NetInfo.getConnectionInfo().then((connectionInfo) => { });
+
+        NetInfo.addEventListener(
+            'connectionChange',
+            this.handleFirstConnectivityChange
+        );
+    }
+
+    componentDidUpdate(prevProps) {
+        if (!this.props.hasNetwork) {
+            this.showNetworkError();
+        }
+    }
+
+    showNetworkError() {
+        Alert.alert('Network Info', "Please connect to a network to continue", undefined, { cancelable: false });
+    }
+
+    handleFirstConnectivityChange = (connectionInfo) => {
+        if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
+            this.props.toggleNetworkStatus(true);
+        } else if (connectionInfo.type === 'none') {
+            this.props.toggleNetworkStatus(false);
+        }
+    }
+
+    componentWillUnmount() {
+        NetInfo.removeEventListener(
+            'connectionChange',
+            this.handleFirstConnectivityChange
+        );
     }
 
     onEmailChange = (username) => {
@@ -39,31 +77,39 @@ class Login extends Component {
     }
 
     onSubmit = async () => {
+        if (!this.props.hasNetwork) {
+            this.showNetworkError();
+            return;
+        }
         const { username, password } = this.state;
         const userData = {};
         userData.deviceId = DeviceInfo.getUniqueID();
         userData.date = new Date().toISOString();
-        userData.email = 'madhavan.v@reactiveworks.in'; // FIXME: Remove static value
-        userData.password = Md5.hex_md5(890 + ''); // FIXME: Remove static value
+        userData.email = username;//'madhavan.v@reactiveworks.in'; // FIXME: Remove static value
+        userData.password = Md5.hex_md5(password + '');//Md5.hex_md5(890 + ''); // FIXME: Remove static value
 
         this.setState({ spinner: !this.state.spinner });
         axios.post(USER_BASE_URL + 'loginUser', userData)
             .then(res => {
                 if (res.status === 200) {
-                    AsyncStorage.setItem(ACCESS_TOKEN, res.data.accessToken);
+                    AsyncStorage.setItem(USER_AUTH_TOKEN, res.data.accessToken);
                     this.props.storeUser(res.data.user);
                     this.setState({ spinner: !this.state.spinner });
                     Actions.reset(PageKeys.MAP);
                 }
             })
-            .catch(er => {
-                console.log(er);
+            .catch(error => {
                 this.setState({ spinner: !this.state.spinner });
+                Alert.alert('Login failed', error.response.data.userMessage);
             });
     }
 
     onSignupPress = () => {
-        Actions.push('signup');
+        Actions.push(PageKeys.SIGNUP);
+    }
+
+    toggleForgotPasswordForm = () => {
+        this.setState(prevState => ({ showForgotPasswordModal: !prevState.showForgotPasswordModal }));
     }
 
     togglePasswordVisibility = () => {
@@ -73,16 +119,22 @@ class Login extends Component {
     render() {
         return (
             <SafeAreaView style={{ flex: 1 }}>
+                <StatusBar
+                    backgroundColor="#7AC0E9"
+                    barStyle="default"
+                />
                 <Spinner
                     visible={this.state.spinner}
                     textContent={'Loading...'}
                     textStyle={{ color: '#fff' }}
                 />
+                <ForgotPassword isVisible={this.state.showForgotPasswordModal} onCancel={this.toggleForgotPasswordForm} onPressOutside={this.toggleForgotPasswordForm} />
                 <LoginScreen
                     onEmailChange={(value) => this.onEmailChange(value)}
                     onPasswordChange={(value) => this.onPasswordChange(value)}
                     togglePasswordVisibility={this.togglePasswordVisibility}
                     onSubmit={this.onSubmit} onSignupPress={this.onSignupPress}
+                    onForgotPasswordPress={this.toggleForgotPasswordForm}
                     isVisiblePassword={this.state.isVisiblePassword}
                 />
             </SafeAreaView>
@@ -92,13 +144,15 @@ class Login extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    return { user };
+    const { hasNetwork } = state.PageState;
+    return { user, hasNetwork };
 }
 
 const mapDispatchToProps = (dispatch) => {
     return {
         loginUser: (userData) => dispatch(loginUser(userData)),
-        storeUser: (userInfo) => dispatch(storeUserAction(userInfo))
+        storeUser: (userInfo) => dispatch(storeUserAction(userInfo)),
+        toggleNetworkStatus: (status) => dispatch(toggleNetworkStatusAction(status)),
     }
 }
 

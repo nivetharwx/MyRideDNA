@@ -11,14 +11,15 @@ import { Icon as NBIcon, Picker, DatePicker } from 'native-base';
 import { WindowDimensions, ShortMonthNames } from '../../constants';
 import { getFormattedDate } from '../../util';
 
-export const LabeledInput = ({ label, placeholder, inputType, onChange }) => (
-    <View style={{ backgroundColor: '#848484', opacity: 0.7, marginBottom: 10, borderRadius: 5, paddingLeft: 10 }}>
-        <Text style={{ color: 'white' }}>{label}</Text>
-        <TextInput secureTextEntry={inputType === 'password'} style={{ color: 'white' }} placeholderTextColor='white' placeholder={placeholder} textContentType={inputType}
-            onChange={(event) => onChange && onChange(event.nativeEvent.text)} />
+export const LabeledInput = ({ hideKeyboardOnSubmit, containerStyle, label, labelStyle, placeholder, placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef }) => (
+    <View style={[{ flexDirection: 'row', marginBottom: 10, borderRadius: 5 }, containerStyle]}>
+        <Text style={[{ alignSelf: 'center', marginRight: 10 }, labelStyle]}>{label}</Text>
+        <TextInput blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ flex: 1, borderBottomWidth: 1, borderBottomColor: '#acacac' }, inputStyle]} placeholderTextColor={placeholderColor} placeholder={placeholder} textContentType={inputType}
+            onChangeText={(val) => onChange && onChange(val)} onSubmitEditing={({ nativeEvent }) => onSubmit && onSubmit(nativeEvent.text)}
+            returnKeyType={returnKeyType || 'done'} returnKeyLabel={returnKeyLabel} ref={(el) => inputRef && inputRef(el)} />
     </View>
 );
-export const IconicInput = ({ inputColor, containerStyle, iconProps, placeholder, value, inputType, onChange, iconEnd }) => (
+export const IconicInput = ({ inputColor, containerStyle, iconProps, placeholder, value, inputType, onChange, iconEnd, onFocusout }) => (
     <View style={[{ flexDirection: 'row', marginVertical: 10 }, containerStyle]}>
         {
             iconProps.onPress
@@ -30,7 +31,7 @@ export const IconicInput = ({ inputColor, containerStyle, iconProps, placeholder
                 </View>
         }
         <TextInput secureTextEntry={inputType === 'password'} style={{ flex: 10, borderBottomColor: '#D4D4D4', borderBottomWidth: 1, color: inputColor }}
-            placeholder={placeholder} textContentType='password' value={value} onChangeText={(val) => onChange && onChange(val)} />
+            placeholder={placeholder} textContentType={inputType} value={value} onChangeText={(val) => onChange && onChange(val)} onBlur={onFocusout} />
         {
             iconEnd
                 ? iconEnd
