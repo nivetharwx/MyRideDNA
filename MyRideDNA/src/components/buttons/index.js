@@ -12,6 +12,7 @@ import {
 import { Icon as NBIcon } from 'native-base';
 
 import styles from './styles';
+import { widthPercentageToDP, heightPercentageToDP } from '../../constants';
 
 export const LoginButton = ({ title, onPress }) => (
     <TouchableHighlight
@@ -32,17 +33,12 @@ export const MapControlPair = ({ firstIcon, secondIcon, containerStyle }) => (
     </View>
 );
 
-export const BasicButton = ({ title, iconProps, onPress, style }) => (
-    <View style={[{ backgroundColor: '#0076B5', borderRadius: 5, height: 30 }, style]}>
-        <TouchableOpacity activeOpacity={0.6} style={{ flexDirection: 'row', height: '100%', paddingVertical: 10, paddingHorizontal: 20 }} onPress={onPress}>
-            <Text style={{ color: '#fff', alignSelf: 'center', fontSize: 15, fontWeight: 'bold' }}>{title}</Text>
-            {
-                iconProps
-                    ? <NBIcon name={iconProps.name} type={iconProps.type} style={[{ marginLeft: 5, color: '#fff', fontSize: 22, alignSelf: 'center' }, iconProps.style]} />
-                    : null
-            }
-        </TouchableOpacity>
-    </View>
+export const BasicButton = ({ title, titleStyle, onPress, style }) => (
+    <TouchableOpacity activeOpacity={0.6} style={[{ backgroundColor: '#0076B5', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} onPress={onPress}>
+        <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={[{ color: '#fff', fontSize: 15, fontWeight: 'bold' }, titleStyle]}>{title}</Text>
+        </View>
+    </TouchableOpacity>
 );
 
 export const RoundButton = ({ title, onPress, style, titleStyle }) => (
@@ -72,10 +68,15 @@ export const AppMenuButton = ({ containerStyle, iconProps, onPress }) => (
     </TouchableOpacity>
 );
 
-export const LinkButton = ({ style, title, titleStyle, onPress }) => (
-    <TouchableOpacity activeOpacity={0.6} style={[{ paddingHorizontal: 20 }, style]} onPress={onPress}>
-        <Text style={titleStyle}>{title}</Text>
-    </TouchableOpacity>
+export const LinkButton = ({ style, title, titleStyle, onPress, highlightColor }) => (
+    highlightColor
+        ? <TouchableHighlight onPress={onPress}
+            underlayColor={highlightColor} style={style}>
+            <Text style={titleStyle}>{title}</Text>
+        </TouchableHighlight>
+        : <TouchableOpacity activeOpacity={0.6} style={[{ paddingHorizontal: 20 }, style]} onPress={onPress}>
+            <Text style={titleStyle}>{title}</Text>
+        </TouchableOpacity>
 );
 
 export class SwitchIconButton extends React.Component {
@@ -105,13 +106,13 @@ export class SwitchIconButton extends React.Component {
         const { activeIcon, inactiveIcon, value } = this.props;
         const { switchAnim } = this.state;
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-end', padding: 10 }}>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-end', padding: widthPercentageToDP(2) }}>
                 <TouchableWithoutFeedback onPress={this.onSwitchStateChange}>
-                    <View style={{ width: 70, height: 25, borderRadius: 15, borderWidth: 1, backgroundColor: value ? 'black' : 'green', justifyContent: 'center' }}>
+                    <View style={{ width: widthPercentageToDP(17), height: heightPercentageToDP(3.7), borderRadius: heightPercentageToDP(2), borderWidth: 1, backgroundColor: value ? 'black' : 'green', justifyContent: 'center' }}>
                         {
                             value === true ? activeIcon : null
                         }
-                        <Animated.View style={{ position: 'absolute', zIndex: 100, elevation: 10, width: 32, height: 32, borderRadius: 16, backgroundColor: '#fff', translateX: switchAnim }} />
+                        <Animated.View style={{ position: 'absolute', zIndex: 100, elevation: 10, width: widthPercentageToDP(7.5), height: widthPercentageToDP(7.5), borderRadius: widthPercentageToDP(3.75), backgroundColor: '#fff', translateX: switchAnim }} />
                         {
                             value === false ? inactiveIcon : null
                         }
@@ -122,10 +123,18 @@ export class SwitchIconButton extends React.Component {
     }
 }
 
-export const ShifterButton = ({ onPress }) => (
-    <TouchableOpacity onPress={onPress} style={{ position: 'absolute', zIndex: 900, elevation: 10, bottom: 0, right: 0 }}>
-        <View style={{ width: 80, height: 80, backgroundColor: 'none' }}>
-            <Image source={require('../../assets/img/shifter.png')} style={{ flex: 1, height: null, width: null }} />
+export const ImageButton = ({ onPress, styles, imageSrc }) => (
+    <TouchableOpacity activeOpacity={0.7} onPress={onPress}>
+        <View style={[{ width: 120, height: 120, borderRadius: 60 }, styles]}>
+            <Image style={{ width: null, height: null, flex: 1 }} source={imageSrc} />
+        </View>
+    </TouchableOpacity>
+);
+
+export const ShifterButton = ({ onPress, styles, size = 20 }) => (
+    <TouchableOpacity onPress={onPress} style={[{ position: 'absolute', zIndex: 900, elevation: 10, bottom: 0, right: 0 }, styles, { width: widthPercentageToDP(size), height: widthPercentageToDP(size) }]}>
+        <View style={{ flex: 1, backgroundColor: 'none', backgroundColor: 'rgba(235, 134, 30, 0.6)', borderTopStartRadius: widthPercentageToDP(size) }}>
+            <Image source={require('../../assets/img/shifter.png')} style={{ position: 'absolute', bottom: 0, right: 0, height: widthPercentageToDP(size - 5), width: widthPercentageToDP(size - 5) }} />
         </View>
     </TouchableOpacity>
 );

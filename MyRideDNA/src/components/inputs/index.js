@@ -9,13 +9,22 @@ import {
 } from 'react-native';
 import { Icon as NBIcon, Picker, DatePicker } from 'native-base';
 import { WindowDimensions, ShortMonthNames } from '../../constants';
-import { getFormattedDate } from '../../util';
+import { getFormattedDateFromISO } from '../../util';
 
-export const LabeledInput = ({ hideKeyboardOnSubmit, containerStyle, label, labelStyle, placeholder, placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef }) => (
+const getKeyboardTypeForContentType = (contentType) => {
+    if (contentType === 'telephoneNumber' || contentType === 'postalCode' || contentType === 'creditCardNumber') {
+        return 'number-pad';
+    } else if (contentType === 'emailAddress') {
+        return 'email-address';
+    }
+}
+
+export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder, placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus }) => (
     <View style={[{ flexDirection: 'row', marginBottom: 10, borderRadius: 5 }, containerStyle]}>
         <Text style={[{ alignSelf: 'center', marginRight: 10 }, labelStyle]}>{label}</Text>
-        <TextInput blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ flex: 1, borderBottomWidth: 1, borderBottomColor: '#acacac' }, inputStyle]} placeholderTextColor={placeholderColor} placeholder={placeholder} textContentType={inputType}
-            onChangeText={(val) => onChange && onChange(val)} onSubmitEditing={({ nativeEvent }) => onSubmit && onSubmit(nativeEvent.text)}
+        <TextInput onFocus={onFocus && onFocus} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ flex: 1, borderBottomWidth: 1, borderBottomColor: '#acacac' }, inputStyle]}
+            placeholderTextColor={placeholderColor} placeholder={placeholder} textContentType={inputType} keyboardType={getKeyboardTypeForContentType(inputType)}
+            onChangeText={onChange && onChange} onSubmitEditing={({ nativeEvent }) => onSubmit && onSubmit(nativeEvent.text)}
             returnKeyType={returnKeyType || 'done'} returnKeyLabel={returnKeyLabel} ref={(el) => inputRef && inputRef(el)} />
     </View>
 );
@@ -86,9 +95,13 @@ export const IconicDatePicker = ({ iconProps, selectedDate, selectedDateString, 
     return (
         <View>
             <View style={{ flexDirection: 'row', marginVertical: 10 }}>
-                <View style={{ paddingLeft: 10, paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
-                    <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, iconProps.style]} />
-                </View>
+                {
+                    iconProps
+                        ? <View style={{ paddingLeft: 10, paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
+                            <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, iconProps.style]} />
+                        </View>
+                        : null
+                }
                 <DatePicker
                     defaultDate={selectedDateString ? new Date(selectedDateString) : selectedDate ? selectedDate : currentDate}
                     minimumDate={minDate || new Date(currentDate.getFullYear() - 100, currentDate.getMonth() + 1, currentDate.getDay())}
@@ -98,7 +111,7 @@ export const IconicDatePicker = ({ iconProps, selectedDate, selectedDateString, 
                     modalTransparent={false}
                     animationType={"fade"}
                     androidMode={"default"}
-                    placeHolderText={placeholder || selectedDate || (selectedDateString && getFormattedDate(new Date(selectedDateString).toString().substr(4, 12), '/')) || 'Select date'}
+                    placeHolderText={placeholder || selectedDate || (selectedDateString && getFormattedDateFromISO(new Date(selectedDateString).toISOString(), '/')) || 'Select date'}
                     textStyle={styles.datePickerDefaultStyles}
                     placeHolderTextStyle={[styles.datePickerDefaultStyles, { color: selectedDate || (selectedDateString && new Date(selectedDateString)) ? "black" : "#a9a9a9" }]}
                     onDateChange={onChange && onChange}

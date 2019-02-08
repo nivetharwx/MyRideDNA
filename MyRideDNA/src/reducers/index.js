@@ -5,5 +5,7 @@ import RideInfo from './RideInfo';
 import RideList from './RideList';
 import GPSState from './GPSState';
 import PageState from './PageState';
+import FriendList from './FriendList';
+import GarageInfo from './GarageInfo';
 
-export default combineReducers({ UserAuth, TabVisibility, RideInfo, RideList, GPSState, PageState });
+export default combineReducers({ UserAuth, TabVisibility, RideInfo, RideList, GPSState, PageState, FriendList, GarageInfo });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Alert } from 'react-native';
+import { StyleSheet, View, Alert, TouchableHighlight, Text } from 'react-native';
 import { connect } from 'react-redux';
 import { LabeledInput } from '../../components/inputs';
 import { toggleNetworkStatusAction } from '../../actions';
@@ -7,9 +7,10 @@ import { isValidEmailFormat } from '../../util';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { LinkButton } from '../../components/buttons';
 import axios from 'axios';
-import { USER_BASE_URL, WindowDimensions } from '../../constants';
+import { USER_BASE_URL, WindowDimensions, APP_COMMON_STYLES } from '../../constants';
 import { BaseModal } from '../../components/modal';
 import Md5 from 'react-native-md5';
+import { Toast } from 'native-base';
 
 class ForgotPassword extends React.Component {
     initialState = {
@@ -119,10 +120,18 @@ class ForgotPassword extends React.Component {
             this.setState({ showLoader: true });
             axios.get(USER_BASE_URL + `sendOTPToMail/${email}`, undefined, { timeout: 15 * 1000 })
                 .then(res => {
+                    Toast.show({
+                        text: 'We have sent an OTP to your email',
+                        buttonText: 'Okay'
+                    });
                     this.setState({ showLoader: false, formStep: 2 });
                 })
                 .catch(error => {
-                    this.setState({ showLoader: false });
+                    this.setState({ showLoader: false }, () => {
+                        if (error.response.data.appErrorCode === 400) {
+                            Alert.alert('Error', 'Entered email is not registered in MyRideDNA');
+                        }
+                    });
                 });
         } else {
             Alert.alert('Error', 'Entered email is not in the proper format');
@@ -135,23 +144,32 @@ class ForgotPassword extends React.Component {
                 return (
                     <View style={styles.form}>
                         <LabeledInput placeholder='Enter your registered email' onChange={this.onChangeEmail} onSubmit={this.onSubmitEmail} />
-                        <LinkButton title='Submit' style={styles.submitButton} onPress={this.onPressSubmitButton} />
+                        <View style={styles.buttonContainer}>
+                            <LinkButton title='Cancel' onPress={this.onCloseModal} />
+                            <LinkButton title='Submit' onPress={this.onPressSubmitButton} />
+                        </View>
                     </View>
                 )
             case 2:
                 return (
                     <View style={styles.form}>
                         <LabeledInput placeholder='Enter the OTP here' onChange={this.onChangeOTP} onSubmit={this.onSubmitOTP} />
-                        <LinkButton title='Resend OTP' style={styles.submitButton} onPress={() => this.onSubmitEmail(this.state.email)} />
-                        <LinkButton title='Submit' style={styles.submitButton} onPress={this.onPressSubmitButton} />
+                        <View style={styles.buttonContainer}>
+                            <LinkButton title='Cancel' onPress={this.onCloseModal} />
+                            <LinkButton title='Resend OTP' onPress={() => this.onSubmitEmail(this.state.email)} />
+                            <LinkButton title='Submit' onPress={this.onPressSubmitButton} />
+                        </View>
                     </View>
                 )
             case 3:
                 return (
                     <View style={styles.form}>
-                        <LabeledInput returnKeyType='next' placeholder='Enter new password' onChange={this.onPasswordsChange} onSubmit={this.onSubmitEditingPassword} hideKeyboardOnSubmit={false} />
-                        <LabeledInput placeholder='Confirm password' onChange={this.onConfrimPassworddChange} inputRef={this.getCPasswdRef} />
-                        <LinkButton title='Submit' style={styles.submitButton} onPress={this.onPressSubmitButton} />
+                        <LabeledInput inputType='password' returnKeyType='next' placeholder='Enter new password' onChange={this.onPasswordsChange} onSubmit={this.onSubmitEditingPassword} hideKeyboardOnSubmit={false} />
+                        <LabeledInput inputType='password' placeholder='Confirm password' onChange={this.onConfrimPassworddChange} inputRef={this.getCPasswdRef} />
+                        <View style={styles.buttonContainer}>
+                            <LinkButton title='Cancel' onPress={this.onCloseModal} />
+                            <LinkButton title='Submit' onPress={this.onPressSubmitButton} />
+                        </View>
                     </View>
                 )
         }
@@ -161,7 +179,7 @@ class ForgotPassword extends React.Component {
         const { formStep, showLoader } = this.state;
         const { isVisible, onCancel, onPressOutside } = this.props;
         return (
-            <BaseModal isVisible={isVisible} onCancel={this.onCloseModal}>
+            <BaseModal isVisible={isVisible} alignCenter={true} onCancel={this.onCloseModal}>
                 <View style={styles.fill}>
                     <Spinner
                         visible={showLoader}
@@ -196,9 +214,10 @@ const styles = StyleSheet.create({
         elevation: 3,
         justifyContent: 'center'
     },
-    submitButton: {
+    buttonContainer: {
         marginTop: 20,
-        alignSelf: 'flex-end'
+        flexDirection: 'row',
+        justifyContent: 'space-around'
     },
     form: {
         marginHorizontal: 10,

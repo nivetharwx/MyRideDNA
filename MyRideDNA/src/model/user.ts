@@ -16,6 +16,7 @@ export class User {
     distanceUnit?: string;
     locationRadius?: number;
     timeIntervalInSeconds?: number;
+    handDominance?: string;
 
     constructor(user: User) {
         this.userId = user.userId;

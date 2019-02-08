@@ -9,13 +9,9 @@ import DeviceInfo from 'react-native-device-info'; // DOC: Check https://www.npm
 import Md5 from 'react-native-md5'; // DOC: Check https://www.npmjs.com/package/react-native-md5
 
 import { LoginScreen } from './login';
-import { loginUser } from '../../api';
-import { PageKeys, USER_AUTH_TOKEN, USER_BASE_URL, WindowDimensions } from '../../constants';
+import { PageKeys, USER_AUTH_TOKEN, USER_BASE_URL } from '../../constants';
 import { storeUserAction, toggleNetworkStatusAction } from '../../actions';
-import { BaseModal } from '../../components/modal';
 import ForgotPassword from '../forgot-password';
-import { LabeledInput } from '../../components/inputs';
-import { BasicButton } from '../../components/buttons';
 
 class Login extends Component {
     constructor(props) {
@@ -150,7 +146,6 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        loginUser: (userData) => dispatch(loginUser(userData)),
         storeUser: (userInfo) => dispatch(storeUserAction(userInfo)),
         toggleNetworkStatus: (status) => dispatch(toggleNetworkStatusAction(status)),
     }

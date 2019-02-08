@@ -12,7 +12,7 @@ import { TAB_CONTAINER_HEIGHT, PageKeys } from '../../constants';
 import { deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction } from '../../actions';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { ShifterButton } from '../../components/buttons';
-import { MenuModal } from '../../components/modal';
+import MenuModal from '../../components/modal';
 import { Actions } from 'react-native-router-flux';
 
 class Tabs extends Component {
@@ -80,7 +80,7 @@ class Tabs extends Component {
                 />
                 <AppTabNavigator style={{ display: 'none', height: 0 }} />
 
-                {/* Shifter: - Brings the menu */}
+                {/* Shifter: - Brings the app navigation menu */}
                 <ShifterButton onPress={this.toggleAppNavigation} />
             </SafeAreaView>
         );

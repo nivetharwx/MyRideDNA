@@ -3,7 +3,7 @@ import { SafeAreaView, Text } from 'react-native';
 import { PageKeys } from '../../constants';
 import { ShifterButton } from '../../components/buttons';
 import { Actions } from 'react-native-router-flux';
-import { MenuModal } from '../../components/modal';
+import MenuModal from '../../components/modal';
 import Rides from '../rides';
 import Map from '../map';
 
@@ -44,7 +44,7 @@ export class AppNavigationMenu extends Component {
                 {
                     this.rootScreen != currentScreen && this.renderScreen()
                 }
-                {/* Shifter: - Brings the menu */}
+                {/* Shifter: - Brings the app navigation menu */}
                 <ShifterButton onPress={this.toggleAppNavigation} />
             </SafeAreaView>
         );

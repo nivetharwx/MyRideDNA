@@ -1,13 +1,15 @@
 import React from 'react';
 import { View, Image, Text, TouchableWithoutFeedback, StyleSheet } from 'react-native';
+import { widthPercentageToDP } from '../../constants';
 
-const THUMBNAIL_MAX_WIDTH = 234;
+const THUMBNAIL_MAX_WIDTH = widthPercentageToDP(50);
 export const Thumbnail = (props) => {
     return (
-        <TouchableWithoutFeedback onLongPress={props.onLongPress} style={{ flex: 1  }}>
+        <TouchableWithoutFeedback onLongPress={() => typeof props.onLongPress === "function" && props.onLongPress} style={{ flex: 1 }}>
             <View style={[props.horizontal ? styles.flexRow : styles.flexColumn, {
-                    borderColor: props.selected ? '#EB861E' : props.active ? 'rgba(0,118,181,0.7)' : 'white',
-                    borderWidth: props.selected ? 4 : props.active ? 4 : 2}]}>
+                borderColor: props.selected ? '#EB861E' : props.active ? 'rgba(0,118,181,0.7)' : 'transparent',
+                borderWidth: props.selected ? 4 : props.active ? 4 : 2
+            }, props.containerStyle]}>
                 {props.horizontal ? <Text style={{ alignSelf: 'center', color: 'black', fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>{props.title}</Text> : null}
                 <View style={{
                     alignSelf: 'center',
@@ -22,10 +24,9 @@ export const Thumbnail = (props) => {
                         height: null,
                         borderColor: 'white',
                         borderWidth: 1
-                    }}
-                    />
+                    }} />
                 </View>
-                {props.horizontal ? null : <Text style={{ alignSelf: 'center', color: 'black', fontSize: 16, fontWeight: 'bold' }}>{props.title}</Text>}
+                {props.horizontal ? null : <Text style={{ alignSelf: 'center', color: 'black', fontSize: 16, fontWeight: 'bold' }}>{props.title && props.title.length > 12 ? `${props.title.substring(0, 12)}...` : props.title}</Text>}
             </View>
         </TouchableWithoutFeedback>
     );

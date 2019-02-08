@@ -1,33 +1,55 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
-    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction
+    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction
 } from '../actions';
-import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE } from '../constants';
+import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL } from '../constants';
 import axios from 'axios';
 
+import { AsyncStorage } from 'react-native';
+
 import Base64 from '../util';
+import { Actions } from 'react-native-router-flux';
 
 const CancelToken = axios.CancelToken;
-const source = CancelToken.source();
+const axiosSource = CancelToken.source();
 const API_TIMEOUT = 15 * 1000; // 15 seconds
 
+export const logoutUser = (userId, accessToken) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.post(USER_BASE_URL + `logoutUser`, { userId, accessToken }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(toggleLoaderAction(false));
+                    // TODO: Clear store
+                    AsyncStorage.removeItem(USER_AUTH_TOKEN).then(() => {
+                        Actions.reset(PageKeys.LOGIN)
+                    });
+                }
+            })
+            .catch(er => {
+                console.log(er.response);
+                // TODO: Dispatch error info action
+            })
+    };
+}
 export const validateEmailOnServer = (email) => {
     return dispatch => {
-        axios.get(USER_BASE_URL + `isEmailPresent/${email}`, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.get(USER_BASE_URL + `isEmailPresent/${email}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(updateEmailStatusAction(res.data));
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
             })
     };
 }
 export const registerUser = (user) => {
     return dispatch => {
-        axios.post(USER_BASE_URL + 'registerUser', user, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.post(USER_BASE_URL + 'registerUser', user, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(updateSignupResultAction(res.data));
@@ -42,7 +64,7 @@ export const registerUser = (user) => {
 export const updateUserInfo = (userData) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(USER_BASE_URL + 'updateUserDetails', userData, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.put(USER_BASE_URL + 'updateUserDetails', userData, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -50,7 +72,7 @@ export const updateUserInfo = (userData) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -59,7 +81,7 @@ export const updateUserInfo = (userData) => {
 export const getAllBuildRides = (userId) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.get(RIDE_BASE_URL + `getAllBuildRides?userId=${userId}`, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.get(RIDE_BASE_URL + `getAllBuildRides?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -67,7 +89,7 @@ export const getAllBuildRides = (userId) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -76,7 +98,7 @@ export const getAllBuildRides = (userId) => {
 export const getAllPublicRides = (userId) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.get(RIDE_BASE_URL + `getAllPublicRides?userId=${userId}`, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.get(RIDE_BASE_URL + `getAllPublicRides?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     console.log("getAllPublicRides: ", res.data);
@@ -85,7 +107,7 @@ export const getAllPublicRides = (userId) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -94,7 +116,7 @@ export const getAllPublicRides = (userId) => {
 export const getAllRecordedRides = (userId) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.get(RIDE_BASE_URL + `getAllRecordRides?userId=${userId}`, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.get(RIDE_BASE_URL + `getAllRecordRides?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -102,7 +124,7 @@ export const getAllRecordedRides = (userId) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -111,7 +133,7 @@ export const getAllRecordedRides = (userId) => {
 export const createNewRide = (rideData) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.post(RIDE_BASE_URL + 'createRide', rideData, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.post(RIDE_BASE_URL + 'createRide', rideData, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -119,7 +141,7 @@ export const createNewRide = (rideData) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -128,7 +150,7 @@ export const createNewRide = (rideData) => {
 export const createRecordRide = (rideData) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.post(RIDE_BASE_URL + 'createRecordRide', rideData, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.post(RIDE_BASE_URL + 'createRecordRide', rideData, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -136,7 +158,7 @@ export const createRecordRide = (rideData) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -145,7 +167,7 @@ export const createRecordRide = (rideData) => {
 export const copySharedRide = (rideId, name, rideType, userId, date) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(RIDE_BASE_URL + `copySharedRide?rideId=${rideId}`, { name, userId, date }, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `copySharedRide?rideId=${rideId}`, { name, userId, date }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -153,7 +175,7 @@ export const copySharedRide = (rideId, name, rideType, userId, date) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -162,7 +184,7 @@ export const copySharedRide = (rideId, name, rideType, userId, date) => {
 export const copyRide = (rideId, name, rideType, date) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(RIDE_BASE_URL + `copyRide?rideId=${rideId}`, { name, date }, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `copyRide?rideId=${rideId}`, { name, date }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -170,7 +192,7 @@ export const copyRide = (rideId, name, rideType, date) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -179,7 +201,7 @@ export const copyRide = (rideId, name, rideType, date) => {
 export const renameRide = (ride, rideType, userId, index) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(RIDE_BASE_URL + `renameRecordRide`, { rideId: ride.rideId, name: ride.name, userId }, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `renameRecordRide`, { rideId: ride.rideId, name: ride.name, userId }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -187,7 +209,7 @@ export const renameRide = (ride, rideType, userId, index) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -196,7 +218,7 @@ export const renameRide = (ride, rideType, userId, index) => {
 export const deleteRide = (rideId, index, rideType) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.delete(RIDE_BASE_URL + `deleteRide?rideId=${rideId}`, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.delete(RIDE_BASE_URL + `deleteRide?rideId=${rideId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -204,7 +226,7 @@ export const deleteRide = (rideId, index, rideType) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -214,7 +236,7 @@ export const addTrackpoints = (trackpoints, distance, ride, userId) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
         axios.post(RIDE_BASE_URL + `addTrackpoints?rideId=${ride.rideId}&userId=${userId}`,
-            { trackpoints: Base64.encode(trackpoints.join()), distance }, { cancelToken: source.token, timeout: API_TIMEOUT })
+            { trackpoints: Base64.encode(trackpoints.join()), distance }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -222,7 +244,7 @@ export const addTrackpoints = (trackpoints, distance, ride, userId) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -232,7 +254,7 @@ export const pauseRecordRide = (pauseTime, trackpoints, distance, ride, userId) 
     return dispatch => {
         dispatch(toggleLoaderAction(true));
         axios.put(RIDE_BASE_URL + `pauseRecordRide?rideId=${ride.rideId}&userId=${userId}`,
-            { trackpoints: Base64.encode(trackpoints.join()), pauseTime, distance }, { cancelToken: source.token, timeout: API_TIMEOUT })
+            { trackpoints: Base64.encode(trackpoints.join()), pauseTime, distance }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -240,7 +262,7 @@ export const pauseRecordRide = (pauseTime, trackpoints, distance, ride, userId) 
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -250,7 +272,7 @@ export const completeRecordRide = (endTime, trackpoints, distance, ride, userId)
     return dispatch => {
         dispatch(toggleLoaderAction(true));
         axios.put(RIDE_BASE_URL + `completeRecordRide?rideId=${ride.rideId}&userId=${userId}`,
-            { trackpoints: Base64.encode(trackpoints.join()), endTime, distance }, { cancelToken: source.token, timeout: API_TIMEOUT })
+            { trackpoints: Base64.encode(trackpoints.join()), endTime, distance }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -258,7 +280,7 @@ export const completeRecordRide = (endTime, trackpoints, distance, ride, userId)
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -267,7 +289,7 @@ export const completeRecordRide = (endTime, trackpoints, distance, ride, userId)
 export const continueRecordRide = (resumeTime, ride, userId) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(RIDE_BASE_URL + `resumeRecordRide?rideId=${ride.rideId}&userId=${userId}`, { resumeTime }, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `resumeRecordRide?rideId=${ride.rideId}&userId=${userId}`, { resumeTime }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -275,7 +297,7 @@ export const continueRecordRide = (resumeTime, ride, userId) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -285,7 +307,7 @@ export const continueRecordRide = (resumeTime, ride, userId) => {
 export const addSource = (waypoint, ride) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(RIDE_BASE_URL + `addSource?rideId=${ride.rideId}`, waypoint, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `addSource?rideId=${ride.rideId}`, waypoint, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -293,7 +315,7 @@ export const addSource = (waypoint, ride) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -302,7 +324,7 @@ export const addSource = (waypoint, ride) => {
 export const addWaypoint = (waypoint, ride, index) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(RIDE_BASE_URL + `addWaypoint?rideId=${ride.rideId}&index=${index}`, waypoint, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `addWaypoint?rideId=${ride.rideId}&index=${index}`, waypoint, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -315,7 +337,7 @@ export const addWaypoint = (waypoint, ride, index) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -324,7 +346,7 @@ export const addWaypoint = (waypoint, ride, index) => {
 export const deleteWaypoint = (ride, index) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.delete(RIDE_BASE_URL + `deleteWaypoint?rideId=${ride.rideId}&index=${index}`, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.delete(RIDE_BASE_URL + `deleteWaypoint?rideId=${ride.rideId}&index=${index}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -337,7 +359,7 @@ export const deleteWaypoint = (ride, index) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -346,7 +368,7 @@ export const deleteWaypoint = (ride, index) => {
 export const updateWaypoint = (waypoint, ride, index) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(RIDE_BASE_URL + `updateWaypoint?rideId=${ride.rideId}&index=${index}`, waypoint, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `updateWaypoint?rideId=${ride.rideId}&index=${index}`, waypoint, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -359,7 +381,7 @@ export const updateWaypoint = (waypoint, ride, index) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -368,7 +390,7 @@ export const updateWaypoint = (waypoint, ride, index) => {
 export const updateSource = (waypoint, ride) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(RIDE_BASE_URL + `updateSource?rideId=${ride.rideId}`, waypoint, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `updateSource?rideId=${ride.rideId}`, waypoint, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -381,7 +403,7 @@ export const updateSource = (waypoint, ride) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -390,7 +412,7 @@ export const updateSource = (waypoint, ride) => {
 export const deleteSource = (ride) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.delete(RIDE_BASE_URL + `deleteSource?rideId=${ride.rideId}`, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.delete(RIDE_BASE_URL + `deleteSource?rideId=${ride.rideId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -403,7 +425,7 @@ export const deleteSource = (ride) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -412,7 +434,7 @@ export const deleteSource = (ride) => {
 export const updateDestination = (waypoint, ride) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(RIDE_BASE_URL + `updateDestination?rideId=${ride.rideId}`, waypoint, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `updateDestination?rideId=${ride.rideId}`, waypoint, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -425,7 +447,7 @@ export const updateDestination = (waypoint, ride) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -434,7 +456,7 @@ export const updateDestination = (waypoint, ride) => {
 export const makeWaypointAsSource = (ride, index) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(RIDE_BASE_URL + `makeWaypointAsSource?rideId=${ride.rideId}&index=${index}`, undefined, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `makeWaypointAsSource?rideId=${ride.rideId}&index=${index}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     console.log("makeWaypointAsSource response: ", {
@@ -453,7 +475,7 @@ export const makeWaypointAsSource = (ride, index) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -462,7 +484,7 @@ export const makeWaypointAsSource = (ride, index) => {
 export const makeSourceAsWaypoint = (ride) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(RIDE_BASE_URL + `makeSourceAsWaypoint?rideId=${ride.rideId}`, undefined, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `makeSourceAsWaypoint?rideId=${ride.rideId}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -476,7 +498,7 @@ export const makeSourceAsWaypoint = (ride) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -485,7 +507,7 @@ export const makeSourceAsWaypoint = (ride) => {
 export const makeWaypointAsDestination = (ride, index) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(RIDE_BASE_URL + `makeWaypointAsDestination?rideId=${ride.rideId}&index=${index}`, undefined, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `makeWaypointAsDestination?rideId=${ride.rideId}&index=${index}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -499,7 +521,7 @@ export const makeWaypointAsDestination = (ride, index) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -508,7 +530,7 @@ export const makeWaypointAsDestination = (ride, index) => {
 export const makeDestinationAsWaypoint = (ride) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(RIDE_BASE_URL + `makeDestinationAsWaypoint?rideId=${ride.rideId}`, undefined, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `makeDestinationAsWaypoint?rideId=${ride.rideId}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -522,7 +544,7 @@ export const makeDestinationAsWaypoint = (ride) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -531,7 +553,7 @@ export const makeDestinationAsWaypoint = (ride) => {
 export const deleteDestination = (ride) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.delete(RIDE_BASE_URL + `deleteDestination?rideId=${ride.rideId}`, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.delete(RIDE_BASE_URL + `deleteDestination?rideId=${ride.rideId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -544,7 +566,7 @@ export const deleteDestination = (ride) => {
                 }
             })
             .catch(er => {
-                console.log(er);
+                console.log(er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -553,7 +575,7 @@ export const deleteDestination = (ride) => {
 export const getRideByRideId = (rideId) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.get(RIDE_BASE_URL + `getRideByRideId?rideId=${rideId}`, { cancelToken: source.token, timeout: API_TIMEOUT })
+        axios.get(RIDE_BASE_URL + `getRideByRideId?rideId=${rideId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -561,7 +583,137 @@ export const getRideByRideId = (rideId) => {
                 }
             })
             .catch(er => {
-                console.log(`getRideByRideId: ${RIDE_BASE_URL}getRideByRideId?rideId=${rideId}`, er);
+                console.log(`getRideByRideId: ${RIDE_BASE_URL}getRideByRideId?rideId=${rideId}`, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const getAllFriends = (friendType, userId, pageNumber) => {
+    return dispatch => {
+        pageNumber > 0 && dispatch(toggleLoaderAction(true));
+        axios.get(FRIENDS_BASE_URL + `getFriendList?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    if (pageNumber === 0) {
+                        return dispatch(replaceFriendListAction({ friendType, friendList: res.data }))
+                    } else {
+                        dispatch(toggleLoaderAction(false));
+                        return dispatch(updateFriendListAction({ friendType, friendList: res.data }))
+                    }
+                }
+            })
+            .catch(er => {
+                console.log(`getAllFriends: `, er.response);
+                // TODO: Dispatch error info action
+                pageNumber > 0 && dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const searchForFriend = (searchParam, userId, pageNumber) => {
+    return dispatch => {
+        axios.get(FRIENDS_BASE_URL + `searchFriend?searchParam=${searchParam}&userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log(`searchForFriend request: `, `searchFriend?searchParam=${searchParam}&userId=${userId}&pageNumber=${pageNumber}`);
+                    console.log(`searchForFriend response: `, res.data);
+                }
+            })
+            .catch(er => {
+                console.log(`searchForFriend: `, er.response);
+                // TODO: Dispatch error info action
+            })
+    };
+}
+export const getGarageInfo = (userId) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.get(USER_BASE_URL + `getGarage/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("getGarageInfo: ", res);
+                dispatch(toggleLoaderAction(false));
+                return dispatch(replaceGarageInfoAction(res.data))
+            })
+            .catch(er => {
+                console.log(`getGarageInfo: `, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const updateGarageName = (garageName, garageId) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.put(USER_BASE_URL + 'updateGarage', { garageName, garageId }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                dispatch(toggleLoaderAction(false));
+                return dispatch(updateGarageNameAction(garageName))
+            })
+            .catch(er => {
+                console.log(`updateGarageName: `, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const addBikeToGarage = (userId, bike, index) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.put(USER_BASE_URL + `addSpace/${userId}`, bike, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                bike.spaceId = res.data.spaceId;
+                dispatch(toggleLoaderAction(false));
+                return dispatch(addToBikeListAction({ index, bike }))
+            })
+            .catch(er => {
+                console.log(`addBikeToGarage: `, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const editBike = (userId, bike, oldImages, index) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.put(USER_BASE_URL + `updateSpace/${userId}`, bike, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                dispatch(toggleLoaderAction(false));
+                // DOC: Updating the bike details with current and old images
+                bike.picturesList = [...oldImages, ...bike.picturesList];
+                return dispatch(updateBikeListAction({ index, bike }))
+            })
+            .catch(er => {
+                console.log(`editBike: `, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const setBikeAsActive = (userId, bike, prevActiveIndex, newActiveIndex) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.put(USER_BASE_URL + `setDefaultSpace/${userId}/${bike.spaceId}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                dispatch(toggleLoaderAction(false));
+                return dispatch(updateActiveBikeAction({ prevActiveIndex, newActiveIndex, bike }))
+            })
+            .catch(er => {
+                console.log(`getGarageInfo: `, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const deleteBike = (userId, bikeId, index) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.delete(USER_BASE_URL + `deleteSpace/${userId}/${bikeId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                dispatch(toggleLoaderAction(false));
+                return dispatch(deleteBikeFromListAction({ index }))
+            })
+            .catch(er => {
+                console.log(`deleteBike: `, er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })

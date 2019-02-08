@@ -6,6 +6,14 @@ export const WindowDimensions = {
     width: window.width
 };
 
+export const widthPercentageToDP = (percentage) => {
+    return WindowDimensions.width * percentage / 100;
+}
+
+export const heightPercentageToDP = (percentage) => {
+    return WindowDimensions.height * percentage / 100;
+}
+
 export const IS_ANDROID = Platform.OS === 'android';
 
 export const DEVICE_LOCATION_STATE = { ON: 'on', OFF: 'off' };
@@ -25,10 +33,13 @@ export const PageKeys = {
     PASSENGERS: 'passengers',
     LOGIN: 'login',
     SIGNUP: 'signup',
+    FRIENDS: 'friends',
     SPLASH_SCREEN: 'splashScreen',
     FORGOT_PASSWORD: 'forgotPassword',
     TABS: 'tabs',
     PROFILE: 'profile',
+    EDIT_PROFILE_FORM: 'editProfileForm',
+    ADD_BIKE_FORM: 'addBikeForm',
     GALLERY: 'gallery',
     NOTIFICATIONS: 'notifications',
     APP_NAVIGATION_MENU: 'appNavigation',
@@ -50,8 +61,42 @@ export const RECORD_RIDE_STATUS = { RUNNING: 'running', COMPLETED: 'completed', 
 
 export const RIDE_TYPE = { RECORD_RIDE: 'recordRide', BUILD_RIDE: 'buildRide', SHARED_RIDE: 'sharedRide' };
 
+export const FRIEND_TYPE = { ALL_FRIENDS: 'allFriends', ONLINE_FRIENDS: 'onlineFriends' };
+
 export const ICON_NAMES = {
     SOURCE_DEFAULT: 'sourceDefault', SOURCE_SELECTED: 'sourceSelected',
     DESTINATION_DEFAULT: 'destinationDefault', DESTINATION_SELECTED: 'destinationSelected',
     WAYPOINT_DEFAULT: 'waypointDefault', WAYPOINT_SELECTED: 'waypointSelected'
 }
+
+export const APP_COMMON_STYLES = {
+    infoColor: '#EB861E',
+    headerColor: '#0076B5',
+    testingBorder: { borderWidth: 2, borderColor: 'red' },
+    menuOptionsContainer: {
+        alignSelf: 'flex-end',
+        width: '50%',
+        height: '100%',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        paddingTop: '10%',
+    },
+    menuOptionHighlight: {
+        width: '100%',
+        height: '12%',
+        paddingVertical: '10%',
+    },
+    menuOption: {
+        paddingHorizontal: 0,
+    },
+    menuOptionText: {
+        color: '#fff',
+        fontSize: widthPercentageToDP(4),
+        paddingHorizontal: '20%'
+    },
+    leftDominantCont: {
+        alignSelf: 'flex-start'
+    },
+    textAlignRight: {
+        textAlign: 'right'
+    }
+};

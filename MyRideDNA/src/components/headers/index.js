@@ -3,21 +3,22 @@ import {
     SafeAreaView,
     View,
     TouchableOpacity,
-    TouchableHighlight,
     Text,
     StyleSheet,
     Animated,
     TextInput
 } from 'react-native';
-import { Icon as NBIcon, InputGroup } from 'native-base';
-import { WindowDimensions } from '../../constants';
+import { Icon as NBIcon } from 'native-base';
+import { WindowDimensions, APP_COMMON_STYLES } from '../../constants';
+import { IconButton } from '../buttons';
 
 export class BasicHeader extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             searchbarAnim: new Animated.Value(-WindowDimensions.width),
-            searchbarMode: props.searchbarMode
+            searchbarMode: props.searchbarMode,
+            titleEditingMode: false
         }
     }
 
@@ -25,6 +26,13 @@ export class BasicHeader extends React.Component {
         if (this.props.searchbarMode != this.state.searchbarMode) {
             this.animateHeader(this.props.searchbarMode);
         }
+    }
+
+    toggleTitleEditingMode = () => this.setState(prevState => ({ titleEditingMode: !prevState.titleEditingMode }));
+
+    onTitleSubmit = ({ nativeEvent }) => {
+        this.props.onSubmitTitleEditing && this.props.onSubmitTitleEditing(nativeEvent.text);
+        this.setState({ titleEditingMode: false });
     }
 
     animateHeader = (showSearchbar) => {
@@ -46,8 +54,9 @@ export class BasicHeader extends React.Component {
     }
 
     render() {
-        const { headerHeight, leftIconProps, title, rightIconProps, onCancelSearchMode, searchValue, onChangeSearchValue } = this.props;
-        const { searchbarAnim, searchbarMode } = this.state;
+        const { headerHeight, leftIconProps, title, rightIconProps, onCancelSearchMode,
+            searchValue, onChangeSearchValue, hasEditableTitle, style } = this.props;
+        const { searchbarAnim, searchbarMode, titleEditingMode } = this.state;
 
         const searchCancelAnim = searchbarAnim.interpolate({
             inputRange: [-WindowDimensions.width, 0],
@@ -59,9 +68,9 @@ export class BasicHeader extends React.Component {
         });
 
         return (
-            <SafeAreaView style={[styles.header, { height: headerHeight || 60 }]}>
+            <SafeAreaView style={[styles.header, { height: headerHeight || 60 }, style]}>
                 {
-                    searchbarMode === false
+                    searchbarMode === false || searchbarMode === undefined
                         ? <View style={{ flex: 1, flexDirection: 'row' }}>
                             {
                                 leftIconProps
@@ -75,19 +84,31 @@ export class BasicHeader extends React.Component {
                                     </View>
                                     : null
                             }
-                            {
-                                title
-                                    ? <View style={{ flex: 1, alignSelf: 'center', marginHorizontal: leftIconProps ? 0 : 20 }}>
-                                        <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
-                                            {title}
-                                        </Text>
-                                    </View>
-                                    : null
-                            }
+                            <View style={{ flex: 1, alignSelf: 'center', marginHorizontal: leftIconProps ? 0 : 20 }}>
+                                {
+                                    titleEditingMode === false
+                                        ? hasEditableTitle
+                                            ? <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
+                                                    {title}
+                                                </Text>
+                                                <IconButton style={{ paddingHorizontal: 0 }} onPress={this.toggleTitleEditingMode} iconProps={{ name: 'edit', type: 'MaterialIcons', style: { color: '#fff' } }} />
+                                            </View>
+                                            : <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
+                                                {title}
+                                            </Text>
+                                        : <View style={{ flexDirection: 'row', marginRight: rightIconProps ? 20 : 0, justifyContent: 'center', alignItems: 'center' }}>
+                                            <IconButton onPress={this.toggleTitleEditingMode} iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: { color: '#fff' } }} />
+                                            <TextInput style={{ flex: 1, color: '#fff', borderBottomColor: '#fff', borderBottomWidth: 2, fontSize: 16 }}
+                                                defaultValue={title} maxLength={20} onSubmitEditing={this.onTitleSubmit}
+                                            />
+                                        </View>
+                                }
+                            </View>
                             {
                                 rightIconProps
                                     ? <Animated.View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
-                                        <TouchableOpacity style={rightIconProps.reverse ? styles.iconPadding : null} onPress={typeof rightIconProps.onPress === 'function' && rightIconProps.onPress}>
+                                        <TouchableOpacity style={rightIconProps.reverse ? styles.iconPadding : null} onPress={rightIconProps.onPress && rightIconProps.onPress}>
                                             <NBIcon name={rightIconProps.name} type={rightIconProps.type} style={[{
                                                 fontSize: 25,
                                                 color: rightIconProps.reverse ? 'black' : 'white'
@@ -99,12 +120,12 @@ export class BasicHeader extends React.Component {
                         </View>
                         : <Animated.View style={{ flex: 1, flexDirection: 'row', translateX: searchbarAnim }}>
                             <Animated.View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center', opacity: searchCancelAnim }}>
-                                <TouchableOpacity onPress={onCancelSearchMode}>
-                                    <NBIcon name='md-arrow-round-back' type='Ionicons' style={{
+                                <IconButton onPress={onCancelSearchMode} iconProps={{
+                                    name: 'md-arrow-round-back', type: 'Ionicons', style: {
                                         fontSize: 25,
                                         color: 'white'
-                                    }} />
-                                </TouchableOpacity>
+                                    }
+                                }} />
                             </Animated.View>
                             <View style={{ flex: 1, justifyContent: 'center' }}>
                                 <TextInput style={{ color: '#fff', borderBottomColor: '#fff', borderBottomWidth: 2, marginRight: this.props.onClearSearchValue ? 0 : 10 }}
@@ -114,12 +135,12 @@ export class BasicHeader extends React.Component {
                             {
                                 this.props.onClearSearchValue
                                     ? <Animated.View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center', opacity: searchClearAnim }}>
-                                        <TouchableOpacity onPress={this.onClearSearchValue}>
-                                            <NBIcon name='close' type='MaterialCommunityIcons' style={{
+                                        <IconButton onPress={this.props.onClearSearchValue} iconProps={{
+                                            name: 'close', type: 'MaterialCommunityIcons', style: {
                                                 fontSize: 25,
                                                 color: 'white'
-                                            }} />
-                                        </TouchableOpacity>
+                                            }
+                                        }} />
                                     </Animated.View>
                                     : null
                             }
@@ -162,7 +183,7 @@ const styles = StyleSheet.create({
         left: 0,
         width: '100%',
         overflow: 'hidden',
-        backgroundColor: '#0076B5',
+        backgroundColor: APP_COMMON_STYLES.headerColor,
         zIndex: 100,
         flexDirection: 'row',
     },

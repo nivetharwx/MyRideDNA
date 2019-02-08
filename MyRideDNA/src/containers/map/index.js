@@ -41,7 +41,7 @@ import SELECTED_DESTINATION_ICON from '../../assets/img/destination-pin-green.pn
 import { updateRide, addWaypoint, addSource, createRecordRide, pauseRecordRide, updateWaypoint, updateSource, updateDestination, makeWaypointAsDestination, makeDestinationAsWaypoint, makeSourceAsWaypoint, makeWaypointAsSource, continueRecordRide, addTrackpoints, completeRecordRide, deleteWaypoint, deleteDestination, deleteSource, getRideByRideId, createNewRide } from '../../api';
 
 import Bubble from '../../components/bubble';
-import { MenuModal } from '../../components/modal';
+import MenuModal from '../../components/modal';
 import { BasicHeader } from '../../components/headers';
 import { CreateRide } from '../create-ride';
 
@@ -327,7 +327,6 @@ export class Map extends Component {
     }
 
     onBackButtonPress = () => {
-        console.log("onBackButtonPress: ", Actions.state.index);
         if (Actions.state.index != 0) {
             Actions.pop();
             this.props.changeScreen(Actions.currentScene);
@@ -1262,7 +1261,7 @@ export class Map extends Component {
     render() {
         const { mapViewHeight, directions, markerCollection, activeMarkerIndex, gpsPointCollection, controlsBarLeftAnim, showCreateRide, currentLocation,
             searchResults, searchQuery, isEditable, snapshot, hideRoute, optionsBarRightAnim, isUpdatingWaypoint, mapRadiusCircle } = this.state;
-        const { ride, showMenu, showLoader } = this.props;
+        const { ride, showMenu, showLoader, user } = this.props;
         const MAP_VIEW_TOP_OFFSET = showCreateRide ? (CREATE_RIDE_CONTAINER_HEIGHT - WINDOW_HALF_HEIGHT) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2) : (isEditable ? 130 : 60) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2);
         return (
             <SafeAreaView style={{ flex: 1 }}>
@@ -1270,7 +1269,7 @@ export class Map extends Component {
                     backgroundColor="rgba(0,118,181,0.9)"
                     barStyle="default"
                 />
-                <MenuModal isVisible={showMenu} onClose={this.onCloseAppNavMenu} onPressNavMenu={this.onPressAppNavMenu} />
+                <MenuModal isVisible={showMenu} onClose={this.onCloseAppNavMenu} onPressNavMenu={this.onPressAppNavMenu} alignCloseIconLeft={user.handDominance === 'left'} />
                 <Spinner
                     visible={showLoader}
                     textContent={'Loading...'}
@@ -1518,7 +1517,7 @@ export class Map extends Component {
                         </TouchableOpacity>
                         : null
                 }
-                {/* Shifter: - Brings the menu */}
+                {/* Shifter: - Brings the app navigation menu */}
                 {
                     !showCreateRide
                         ? <ShifterButton onPress={this.toggleAppNavigation} />

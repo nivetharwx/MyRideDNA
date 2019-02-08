@@ -1,37 +1,62 @@
 import React, { Component } from 'react';
 import {
     SafeAreaView, Text, View, FlatList, ImageBackground,
-    TouchableOpacity, Alert, Modal, ScrollView, TouchableWithoutFeedback
+    TouchableOpacity, Alert
 } from 'react-native';
 import { connect } from 'react-redux';
 
-import { Accordion, Tab, TabHeading, Tabs, ScrollableTab, Icon as NBIcon, ListItem, Left, Right, ActionSheet } from "native-base";
-import { PageKeys, WindowDimensions, RIDE_TYPE } from '../../constants';
-import { Actions } from 'react-native-router-flux';
-import { ShifterButton, BasicButton, LinkButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, loadRideAction, screenChangeAction, clearRideAction } from '../../actions';
+import { Tab, TabHeading, Tabs, ScrollableTab, Icon as NBIcon, ListItem, Left, Toast } from "native-base";
+import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES } from '../../constants';
+import { ShifterButton, LinkButton } from '../../components/buttons';
+import { appNavMenuVisibilityAction, screenChangeAction, clearRideAction } from '../../actions';
 import { BasicHeader } from '../../components/headers';
 import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide } from '../../api';
-import { getFormattedDate } from '../../util';
+import { getFormattedDateFromISO } from '../../util';
 import { LabeledInput } from '../../components/inputs';
 import { BaseModal } from '../../components/modal';
 
-const BUILD_RIDE_OPTIONS = [
-    { text: "Copy to new ride", icon: "md-copy", iconColor: "#EB861E" },
-    { text: "Remove from list", icon: "md-trash", iconColor: "#EB861E" },
-    { text: "Cancel", icon: "md-close-circle", iconColor: "#EB861E" },
-];
-const RECORD_RIDE_OPTIONS = [
-    { text: "Rename ride", icon: "md-create", iconColor: "#EB861E" },
-    { text: "Remove from list", icon: "md-trash", iconColor: "#EB861E" },
-    { text: "Cancel", icon: "md-close-circle", iconColor: "#EB861E" },
-];
-const SHARED_RIDE_OPTIONS = [
-    { text: "Copy to new ride", icon: "md-copy", iconColor: "#EB861E" },
-    { text: "Cancel", icon: "md-close-circle", iconColor: "#EB861E" },
-];
 
 export class Rides extends Component {
+    BUILD_RIDE_OPTIONS = [
+        {
+            text: 'Copy to new ride', id: 'copy', handler: () => {
+                this.setState({ isVisibleOptionsModal: false, isVisibleRenameModal: true });
+            }
+        },
+        {
+            text: 'Remove from list', id: 'remove', handler: () => {
+                const { rideId, name } = this.props.buildRides[this.state.selectedRide.index];
+                this.setState({ isVisibleOptionsModal: false }, () => {
+                    this.deleteRideConfirmation(rideId, name, this.state.selectedRide.index, RIDE_TYPE.BUILD_RIDE);
+                });
+            }
+        },
+        { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }
+    ];
+    RECORD_RIDE_OPTIONS = [
+        {
+            text: 'Rename ride', id: 'rename', handler: () => {
+                this.setState({ isVisibleOptionsModal: false, isVisibleRenameModal: true });
+            }
+        },
+        {
+            text: 'Remove from list', id: 'remove', handler: () => {
+                const { rideId, name } = this.props.buildRides[this.state.selectedRide.index];
+                this.setState({ isVisibleOptionsModal: false }, () => {
+                    this.deleteRideConfirmation(rideId, name, this.state.selectedRide.index, RIDE_TYPE.BUILD_RIDE);
+                });
+            }
+        },
+        { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }
+    ];
+    SHARED_RIDE_OPTIONS = [
+        {
+            text: 'Copy to new ride', id: 'copy', handler: () => {
+                this.setState({ isVisibleOptionsModal: false, isVisibleRenameModal: true });
+            }
+        },
+        { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }
+    ];
     constructor(props) {
         super(props);
         this.state = {
@@ -40,6 +65,7 @@ export class Rides extends Component {
             headerSearchMode: false,
             newRideName: '',
             isVisibleRenameModal: false,
+            isVisibleOptionsModal: false,
             selectedRide: null
         };
     }
@@ -69,13 +95,32 @@ export class Rides extends Component {
             }
         }
 
-        if (prevProps.buildRides !== this.props.buildRides ||
-            prevProps.recordedRides !== this.props.recordedRides ||
-            prevProps.sharedRides !== this.props.sharedRides) {
-            if (this.state.isVisibleRenameModal === true) {
-                this.onCancelRenameForm();
+        if (prevProps.buildRides !== this.props.buildRides) {
+            if (this.state.selectedRide && this.state.selectedRide.rideType === RIDE_TYPE.SHARED_RIDE) {
+                Toast.show({
+                    text: 'Ride copied to your created rides',
+                    buttonText: 'Okay'
+                });
             }
+            this.onCancelRenameForm();
+            if (this.props.buildRides.length < prevProps.buildRides.length) {
+                this.showDeleteSuccessMessage()
+            }
+        } else if (prevProps.recordedRides !== this.props.recordedRides) {
+            this.onCancelRenameForm();
+            if (this.props.buildRides.length < prevProps.buildRides.length) {
+                this.showDeleteSuccessMessage()
+            }
+        } else if (prevProps.sharedRides !== this.props.sharedRides) {
+            this.onCancelRenameForm();
         }
+    }
+
+    showDeleteSuccessMessage() {
+        Toast.show({
+            text: 'Ride removed successfully',
+            buttonText: 'Okay'
+        });
     }
 
     onChangeTab = ({ from, i }) => {
@@ -83,55 +128,6 @@ export class Rides extends Component {
     }
 
     keyExtractor = (item) => item.rideId;
-
-    showSharedRideOptions = (rideId, rideName, index, isRecorded) => {
-        ActionSheet.show(
-            {
-                options: SHARED_RIDE_OPTIONS,
-                cancelButtonIndex: SHARED_RIDE_OPTIONS.length - 1,
-                title: 'Choose an action'
-            },
-            async (buttonIndex) => {
-                if (buttonIndex === 0) {
-                    this.setState({ isVisibleRenameModal: true, selectedRide: { rideType: RIDE_TYPE.SHARED_RIDE, index } });
-                }
-            }
-        );
-    }
-
-    showBuildRideOptions = (rideId, rideName, index) => {
-        ActionSheet.show(
-            {
-                options: BUILD_RIDE_OPTIONS,
-                cancelButtonIndex: 2,
-                title: 'Choose an action'
-            },
-            async (buttonIndex) => {
-                if (buttonIndex === 0) {
-                    this.setState({ isVisibleRenameModal: true, selectedRide: { rideType: RIDE_TYPE.BUILD_RIDE, index } });
-                } else if (buttonIndex === 1) {
-                    this.deleteRideConfirmation(rideId, rideName, index, RIDE_TYPE.BUILD_RIDE);
-                }
-            }
-        );
-    }
-
-    showRecordRideOptions = (rideId, rideName, index) => {
-        ActionSheet.show(
-            {
-                options: RECORD_RIDE_OPTIONS,
-                cancelButtonIndex: 2,
-                title: 'Choose an action'
-            },
-            async (buttonIndex) => {
-                if (buttonIndex === 0) {
-                    this.setState({ isVisibleRenameModal: true, selectedRide: { rideType: RIDE_TYPE.RECORD_RIDE, index } });
-                } else if (buttonIndex === 1) {
-                    this.deleteRideConfirmation(rideId, rideName, index, RIDE_TYPE.RECORD_RIDE);
-                }
-            }
-        );
-    }
 
     deleteRideConfirmation(rideId, rideName, index, rideType) {
         Alert.alert(
@@ -178,16 +174,70 @@ export class Rides extends Component {
         }
     }
 
+    showOptionsModal = (rideType, index) => {
+        this.setState({ isVisibleOptionsModal: true, selectedRide: { rideType: rideType, index } });
+    }
+
+    renderMenuOptions = () => {
+        const { selectedRide } = this.state;
+        if (selectedRide === null) return;
+        switch (selectedRide.rideType) {
+            case RIDE_TYPE.BUILD_RIDE:
+                return (
+                    this.BUILD_RIDE_OPTIONS.map(option => (
+                        <LinkButton
+                            key={option.id}
+                            onPress={option.handler}
+                            highlightColor={APP_COMMON_STYLES.infoColor}
+                            style={APP_COMMON_STYLES.menuOptionHighlight}
+                            title={option.text}
+                            titleStyle={APP_COMMON_STYLES.menuOptionText}
+                        />
+                    ))
+                )
+            case RIDE_TYPE.RECORD_RIDE:
+                return (
+                    this.RECORD_RIDE_OPTIONS.map(option => (
+                        <LinkButton
+                            key={option.id}
+                            onPress={option.handler}
+                            highlightColor={APP_COMMON_STYLES.infoColor}
+                            style={APP_COMMON_STYLES.menuOptionHighlight}
+                            title={option.text}
+                            titleStyle={APP_COMMON_STYLES.menuOptionText}
+                        />
+                    ))
+                )
+            case RIDE_TYPE.SHARED_RIDE:
+                return (
+                    this.SHARED_RIDE_OPTIONS.map(option => (
+                        <LinkButton
+                            key={option.id}
+                            onPress={option.handler}
+                            highlightColor={APP_COMMON_STYLES.infoColor}
+                            style={APP_COMMON_STYLES.menuOptionHighlight}
+                            title={option.text}
+                            titleStyle={APP_COMMON_STYLES.menuOptionText}
+                        />
+                    ))
+                )
+        }
+    }
+
     onCancelRenameForm = () => {
         this.setState({ isVisibleRenameModal: false, newRideName: '', selectedRide: null });
     }
 
+    onCancelOptionsModal = () => {
+        this.setState({ isVisibleOptionsModal: false, selectedRide: null });
+    }
+
     render() {
-        const { activeTab, searchQuery, headerSearchMode, isVisibleRenameModal } = this.state;
-        const { buildRides, recordedRides, sharedRides } = this.props;
+        const { activeTab, searchQuery, headerSearchMode, isVisibleRenameModal, isVisibleOptionsModal } = this.state;
+        const { buildRides, recordedRides, sharedRides, user } = this.props;
         return (
             <SafeAreaView style={{ flex: 1 }}>
-                <BaseModal isVisible={isVisibleRenameModal} onCancel={this.onCancelRenameForm} onPressOutside={this.onCancelRenameForm}>
+                <BaseModal alignCenter={true} isVisible={isVisibleRenameModal} onCancel={this.onCancelRenameForm} onPressOutside={this.onCancelRenameForm}>
                     <View style={{ backgroundColor: '#fff', width: WindowDimensions.width * 0.6, padding: 20, elevation: 3 }}>
                         <LabeledInput placeholder='Enter new name here' onChange={(val) => this.setState({ newRideName: val })}
                             onSubmit={this.onSubmitRenameForm} />
@@ -197,30 +247,35 @@ export class Rides extends Component {
                         </View>
                     </View>
                 </BaseModal>
+                <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
+                    <View style={[APP_COMMON_STYLES.menuOptionsContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
+                        {
+                            this.renderMenuOptions()
+                        }
+                    </View>
+                </BaseModal>
                 <BasicHeader title='Rides' rightIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
                     searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false })}
                     onClearSearchValue={() => this.setState({ searchQuery: '' })} />
                 <Tabs onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#E3EED3', marginTop: 60 }} renderTabBar={() => <ScrollableTab activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                     <Tab
-                        heading={<TabHeading style={{ backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
+                        heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
                             <NBIcon name='motorbike' type='MaterialCommunityIcons' style={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} /><Text style={{ marginLeft: 5, color: activeTab === 0 ? '#fff' : '#6B7663' }}>Created{'\n'}Rides</Text>
                         </TabHeading>}>
                         <View>
                             {
                                 buildRides.length > 0 ?
                                     <FlatList
-                                        data={buildRides}
+                                        data={buildRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
                                         renderItem={({ item, index }) => <ListItem style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
                                             <Left style={{ flex: 1 }}>
-                                                <TouchableOpacity style={{ flex: 1 }} onPress={() => this.onPressRide(item.rideId)}>
-                                                    <Text>{`${item.name}, ${getFormattedDate(new Date(item.date).toString().substr(4, 12), '.')}`}</Text>
+                                                <TouchableOpacity style={{ flex: 1 }}
+                                                    onPress={() => this.onPressRide(item.rideId)}
+                                                    onLongPress={() => this.showOptionsModal(RIDE_TYPE.BUILD_RIDE, index)}
+                                                >
+                                                    <Text>{`${item.name}, ${getFormattedDateFromISO(new Date(item.date).toString().substr(4, 12), '.')}`}</Text>
                                                 </TouchableOpacity>
                                             </Left>
-                                            <Right>
-                                                <TouchableOpacity onPress={() => this.showBuildRideOptions(item.rideId, item.name, index)}>
-                                                    <NBIcon name="dots-vertical" type='MaterialCommunityIcons' style={{ alignSelf: 'center', color: '#EB861E' }} />
-                                                </TouchableOpacity>
-                                            </Right>
                                         </ListItem>}
                                         keyExtractor={this.keyExtractor}
                                     />
@@ -236,18 +291,16 @@ export class Rides extends Component {
                             {
                                 recordedRides.length > 0 ?
                                     <FlatList
-                                        data={recordedRides}
+                                        data={recordedRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
                                         renderItem={({ item, index }) => <ListItem style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
                                             <Left style={{ flex: 1 }}>
-                                                <TouchableOpacity style={{ flex: 1 }} onPress={() => this.onPressRide(item.rideId)}>
+                                                <TouchableOpacity style={{ flex: 1 }}
+                                                    onPress={() => this.onPressRide(item.rideId)}
+                                                    onLongPress={() => this.showOptionsModal(RIDE_TYPE.RECORD_RIDE, index)}
+                                                >
                                                     <Text>{`${item.name}`}</Text>
                                                 </TouchableOpacity>
                                             </Left>
-                                            <Right>
-                                                <TouchableOpacity onPress={() => this.showRecordRideOptions(item.rideId, item.name, index)}>
-                                                    <NBIcon name="dots-vertical" type='MaterialCommunityIcons' style={{ alignSelf: 'center', color: '#EB861E' }} />
-                                                </TouchableOpacity>
-                                            </Right>
                                         </ListItem>}
                                         keyExtractor={this.keyExtractor}
                                     />
@@ -263,22 +316,20 @@ export class Rides extends Component {
                             {
                                 sharedRides.length > 0 ?
                                     <FlatList
-                                        data={sharedRides}
+                                        data={sharedRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
                                         renderItem={({ item, index }) => <ListItem style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
                                             <Left style={{ flex: 1 }}>
-                                                <TouchableOpacity style={{ flex: 1 }} onPress={() => this.onPressRide(item.rideId)}>
-                                                    <Text>{`${item.name}, ${getFormattedDate(new Date(item.date).toString().substr(4, 12), '.')}`}</Text>
+                                                <TouchableOpacity style={{ flex: 1 }}
+                                                    onPress={() => this.onPressRide(item.rideId)}
+                                                    onLongPress={() => {
+                                                        item.isRecorded
+                                                            ? null
+                                                            : this.showOptionsModal(RIDE_TYPE.SHARED_RIDE, index)
+                                                    }}
+                                                >
+                                                    <Text>{`${item.name}, ${getFormattedDateFromISO(new Date(item.date).toString().substr(4, 12), '.')}`}</Text>
                                                 </TouchableOpacity>
                                             </Left>
-                                            <Right>
-                                                {
-                                                    item.isRecorded
-                                                        ? null
-                                                        : <TouchableOpacity onPress={() => this.showSharedRideOptions(item.rideId, item.name, index)}>
-                                                            <NBIcon name="dots-vertical" type='MaterialCommunityIcons' style={{ alignSelf: 'center', color: '#EB861E' }} />
-                                                        </TouchableOpacity>
-                                                }
-                                            </Right>
                                         </ListItem>}
                                         keyExtractor={this.keyExtractor}
                                     />
@@ -288,7 +339,7 @@ export class Rides extends Component {
                     </Tab>
                 </Tabs>
 
-                {/* Shifter: - Brings the menu */}
+                {/* Shifter: - Brings the app navigation menu */}
                 <ShifterButton onPress={this.showAppNavMenu} />
             </SafeAreaView>
         );
