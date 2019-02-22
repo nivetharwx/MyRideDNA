@@ -138,7 +138,7 @@ class Profile extends Component {
                 </Tabs>
 
                 {/* Shifter: - Brings the app navigation menu */}
-                <ShifterButton onPress={this.showAppNavMenu} />
+                <ShifterButton onPress={this.showAppNavMenu} alignLeft={this.props.user.handDominance === 'left'} />
             </SafeAreaView>
         );
     }

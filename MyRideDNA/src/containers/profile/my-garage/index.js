@@ -25,9 +25,13 @@ class MyGarageTab extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        // setTimeout(() => this.spacelistRef.scrollToEnd(), 300);
-        // this.spacelistRef.scrollToEnd();
-        if (prevProps.garage.garageId !== null) {
+        if (this.props.garage.spaceList.length > 0) {
+            if (prevProps.garage.garageId === null) {
+                /*** TODO: Iterate spaceList and call API by passing pictureIdList
+                 * Split the pictureIdList if it is more than 10 pictureIds
+                 ***/
+                return;
+            }
             if (this.props.garage.spaceList.length > prevProps.garage.spaceList.length) {
                 this.spacelistRef.scrollToEnd();
             } else if (this.props.garage.activeBikeIndex !== prevProps.garage) {
@@ -86,7 +90,8 @@ class MyGarageTab extends Component {
                         renderItem={({ item, index }) => {
                             return <BasicCard
                                 isActive={false}
-                                media={item.picturesList[0] ? { uri: `data:image/jpeg;base64,${item.picturesList[0]}` } : require('../../../assets/img/bike_placeholder.png')}
+                                // FIXME: Change this based on pictureIdList
+                                media={item.pictureList && item.pictureList[0] ? { uri: item.pictureList[0] } : require('../../../assets/img/bike_placeholder.png')}
                                 mainHeading={item.name}
                                 subHeading={`${item.make}-${item.model}, ${item.year}`}
                                 notes={item.notes}

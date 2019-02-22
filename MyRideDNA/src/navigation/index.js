@@ -11,7 +11,6 @@ import Login from '../containers/login';
 import Profile from '../containers/profile';
 import Friends from '../containers/friends';
 import Rides from '../containers/rides';
-import { AppNavigationMenu } from '../containers/app-navigation-menu';
 import Map from '../containers/map';
 import Signup from '../containers/signup';
 import { Passengers } from '../containers/passengers';
@@ -20,7 +19,6 @@ import { GalleryView } from '../components/gallery';
 
 import store from '../store/index';
 import EditProfile from '../containers/edit-profile';
-import Tabs from '../containers/tabs';
 import CreateRide from '../containers/create-ride';
 import AddBikeForm from '../containers/profile/my-garage/add-edit-bike-form';
 import EditProfileForm from '../containers/profile/my-profile/edit-profile-form';
@@ -37,7 +35,6 @@ export default class Navigation extends Component {
                             <Scene key={PageKeys.SIGNUP} component={Signup} hideNavBar></Scene>
                             <Scene key={PageKeys.FRIENDS} component={Friends} hideNavBar></Scene>
                             <Scene key={PageKeys.FORGOT_PASSWORD} component={ForgotPassword} hideNavBar></Scene>
-                            <Scene key={PageKeys.TABS} component={Tabs} hideNavBar></Scene>
                             <Scene key={PageKeys.RIDES} component={Rides} hideNavBar></Scene>
                             <Scene key={PageKeys.PROFILE} component={Profile} hideNavBar></Scene>
                             <Scene key={PageKeys.EDIT_PROFILE_FORM} component={EditProfileForm} hideNavBar></Scene>
@@ -48,7 +45,6 @@ export default class Navigation extends Component {
                             <Scene key={PageKeys.EDIT_PROFILE} modal={true} component={EditProfile} hideNavBar></Scene>
                             <Scene key={PageKeys.PASSENGERS} component={Passengers} hideNavBar></Scene>
                             <Scene key={PageKeys.NOTIFICATIONS} component={Notifications} hideNavBar></Scene>
-                            <Scene key={PageKeys.APP_NAVIGATION_MENU} component={AppNavigationMenu} hideNavBar></Scene>
                         </Scene>
                     </Router>
                 </Root>

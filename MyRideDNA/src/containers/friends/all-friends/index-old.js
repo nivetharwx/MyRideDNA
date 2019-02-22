@@ -1,12 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableNativeFeedback } from 'react-native';
+import { StyleSheet, Animated, ScrollView, Text, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableNativeFeedback } from 'react-native';
 import { getAllFriends, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend } from '../../../api';
 import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, heightPercentageToDP, RELATIONSHIP } from '../../../constants';
 import { BaseModal } from '../../../components/modal';
 import { LinkButton } from '../../../components/buttons';
 import { ThumbnailCard } from '../../../components/cards';
-import { openFriendProfileAction } from '../../../actions';
 
 
 class AllFriendsTab extends Component {
@@ -39,7 +38,6 @@ class AllFriendsTab extends Component {
             this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0);
         }
         if (prevProps.searchQuery !== this.props.searchQuery && this.props.searchQuery.slice(-1) !== '') {
-            Keyboard.dismiss();
             this.props.searchForFriend(this.props.searchQuery, this.props.user.userId, 0);
         }
     }
@@ -102,8 +100,7 @@ class AllFriendsTab extends Component {
     }
 
     showOptionsModal = (index) => {
-        const person = this.props.searchQuery.trim().length > 0 ? this.props.searchFriendList[index] : this.props.allFriends[index];
-        this.setState({ selectedPerson: person, isVisibleOptionsModal: true });
+        this.setState({ selectedPerson: this.props.searchFriendList[index], isVisibleOptionsModal: true });
     }
 
     onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false, selectedPerson: null })
@@ -123,9 +120,6 @@ class AllFriendsTab extends Component {
                 break;
             case RELATIONSHIP.UNKNOWN:
                 options = this.UNKNOWN_OPTIONS;
-                break;
-            default:
-                options = this.FRIEND_OPTIONS;
                 break;
         }
         return (
@@ -165,11 +159,68 @@ class AllFriendsTab extends Component {
     }
 
     openProfile = (index) => {
-        const person = this.props.searchQuery.trim().length > 0 ? this.props.searchFriendList[index] : this.props.allFriends[index];
         this.allImageRef[index].measure((x, y, width, height, pageX, pageY) => {
-            const userInfo = { userId: person.userId, image: require('../../../assets/img/friend-profile-pic.png') };
-            const oldPosition = { pageX, pageY, width, height };
-            this.props.openUserProfile({ userInfo, oldPosition });
+            this.oldPosition.x = pageX;
+            this.oldPosition.y = pageY;
+            this.oldPosition.width = width;
+            this.oldPosition.height = height;
+
+            this.position.setValue({ x: pageX, y: pageY });
+            this.dimensions.setValue({ x: width, y: height });
+        });
+
+        this.setState({ selectedPersonImg: require('../../../assets/img/friend-profile-pic.png') }, () => {
+            this.viewImage.measure((dx, dy, dWidth, dHeight, dPageX, dPageY) => {
+                Animated.parallel([
+                    Animated.timing(this.position.x, {
+                        toValue: (dWidth / 2) - (widthPercentageToDP(100) * 65 / 200),
+                        duration: 300
+                    }),
+                    Animated.timing(this.position.y, {
+                        toValue: heightPercentageToDP(100) * 10 / 100,
+                        duration: 300
+                    }),
+                    Animated.timing(this.dimensions.x, {
+                        toValue: widthPercentageToDP(100) * 65 / 100,
+                        duration: 300
+                    }),
+                    Animated.timing(this.dimensions.y, {
+                        toValue: widthPercentageToDP(100) * 65 / 100,
+                        duration: 300
+                    }),
+                    Animated.timing(this.animation, {
+                        toValue: 1,
+                        duration: 300
+                    }),
+                ]).start();
+            });
+        });
+    }
+
+    closeProfile = () => {
+        Animated.parallel([
+            Animated.timing(this.position.x, {
+                toValue: this.oldPosition.x,
+                duration: 300
+            }),
+            Animated.timing(this.position.y, {
+                toValue: this.oldPosition.y,
+                duration: 300
+            }),
+            Animated.timing(this.dimensions.x, {
+                toValue: this.oldPosition.width,
+                duration: 300
+            }),
+            Animated.timing(this.dimensions.y, {
+                toValue: this.oldPosition.height,
+                duration: 300
+            }),
+            Animated.timing(this.animation, {
+                toValue: 0,
+                duration: 300
+            }),
+        ]).start(() => {
+            this.setState({ selectedPersonImg: null });
         });
     }
 
@@ -177,29 +228,29 @@ class AllFriendsTab extends Component {
         const { isRefreshing, isVisibleOptionsModal } = this.state;
         const { allFriends, searchQuery, searchFriendList, user } = this.props;
 
-        // const activeImageStyle = {
-        //     width: this.dimensions.x,
-        //     height: this.dimensions.y,
-        //     left: this.position.x,
-        //     top: this.position.y
-        // };
-        // const animatedContentY = this.animation.interpolate({
-        //     inputRange: [0, 1],
-        //     outputRange: [-150, 0]
-        // });
-        // const animatedContentOpacity = this.animation.interpolate({
-        //     inputRange: [0, 0.5, 1],
-        //     outputRange: [0, 1, 1]
-        // });
-        // const animatedContentStyle = {
-        //     opacity: animatedContentOpacity,
-        //     transform: [{
-        //         translateY: animatedContentY
-        //     }]
-        // };
-        // const animatedCrossOpacity = {
-        //     opacity: this.animation
-        // };
+        const activeImageStyle = {
+            width: this.dimensions.x,
+            height: this.dimensions.y,
+            left: this.position.x,
+            top: this.position.y
+        };
+        const animatedContentY = this.animation.interpolate({
+            inputRange: [0, 1],
+            outputRange: [-150, 0]
+        });
+        const animatedContentOpacity = this.animation.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: [0, 1, 1]
+        });
+        const animatedContentStyle = {
+            opacity: animatedContentOpacity,
+            transform: [{
+                translateY: animatedContentY
+            }]
+        };
+        const animatedCrossOpacity = {
+            opacity: this.animation
+        };
 
         return (
             <View style={styles.fill}>
@@ -289,7 +340,6 @@ const mapDispatchToProps = (dispatch) => {
         approveFriendRequest: (userId, personId, actionDate) => dispatch(approveFriendRequest(userId, personId, actionDate)),
         rejectFriendRequest: (userId, personId) => dispatch(rejectFriendRequest(userId, personId)),
         doUnfriend: (userId, personId) => dispatch(doUnfriend(userId, personId)),
-        openUserProfile: (profileInfo) => dispatch(openFriendProfileAction(profileInfo))
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(AllFriendsTab);

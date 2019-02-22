@@ -13,7 +13,7 @@ import { BasicHeader } from '../headers';
 import { appNavMenuVisibilityAction } from '../../actions';
 
 
-export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, notificationCount, hideAppNavMenu, alignCloseIconLeft }) => {
+export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, notificationCount, hideAppNavMenu, alignCloseIconLeft = false }) => {
     return (
         <SafeAreaView>
             {

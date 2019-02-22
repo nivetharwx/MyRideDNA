@@ -6,14 +6,9 @@ import {
 } from 'react-native';
 import { WindowDimensions } from '../../constants';
 
-export const Loader = props => {
-    const {
-        show,
-        offsetTop,
-        ...attributes
-    } = props;
+export const Loader = ({ show, offsetTop }) => {
     return (
-        <View style={[styles.modalContent, { marginTop: offsetTop, height: show ? WindowDimensions.height - (offsetTop || 0) : 0 }]} pointerEvents='none'>
+        <View style={[styles.modalContent, { marginTop: offsetTop, height: show ? '100%' : 0 }]} pointerEvents='none'>
             <View style={styles.wrapper}>
                 <ActivityIndicator animating={show} />
             </View>
@@ -28,7 +23,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         position: 'absolute',
         zIndex: 999,
-        height: WindowDimensions.height,
+        height: '100%',
         width: '100%',
         overflow: 'hidden'
     },

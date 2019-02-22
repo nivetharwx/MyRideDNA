@@ -8,13 +8,14 @@ import { Thumbnail } from '../../../components/images';
 import { appNavMenuVisibilityAction } from '../../../actions';
 import { Accordion } from 'native-base';
 import ImagePicker from 'react-native-image-crop-picker';
-import { logoutUser } from '../../../api';
+import { logoutUser, updateProfilePicture, getPicture, getSpaceList } from '../../../api';
+import { Loader } from '../../../components/loader';
 
 class MyProfileTab extends Component {
     // DOC: Icon format is for Icon component from NativeBase Library
     PROFILE_ICONS = {
-        gallery: { name: 'md-photos', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: this.onPressGalleryIcon },
-        camera: { name: 'camera', type: 'FontAwesome', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6) }, onPress: this.onPressCameraIcon },
+        gallery: { name: 'md-photos', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.onPressGalleryIcon() },
+        camera: { name: 'camera', type: 'FontAwesome', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6) }, onPress: () => this.onPressCameraIcon() },
         passengers: { name: 'users', type: 'Entypo', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6) }, onPress: () => { console.log('Passengers pressed') } },
         edit: { name: 'account-edit', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(8) }, onPress: () => Actions.push(PageKeys.EDIT_PROFILE_FORM) },
     };
@@ -22,17 +23,31 @@ class MyProfileTab extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            profilePicString: '',
             activeTab: -1,
-            bikes: [10, 20, 30, 40, 50]
+            bikes: [10, 20, 30, 40, 50],
+            isLoadingProfPic: false
         };
+    }
+
+    componentDidMount() {
+        this.props.getSpaceList(this.props.user.userId);
+        if (this.props.user.profilePictureId) {
+            this.setState({ isLoadingProfPic: true });
+            this.props.getPicture(this.props.user.profilePictureId)
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevProps.user !== this.props.user) {
+            if (prevProps.user.profilePictureId !== this.props.user.profilePictureId ||
+                prevProps.user.profilePicture !== this.props.user.profilePicture) {
+                this.setState({ isLoadingProfPic: false });
+            }
+        }
     }
 
     onSpaceLongPress = (newSpaceIndex) => {
         // TODO: Scroll to 0th index after setting active bike
-        this.setState(prevSatate => ({
-            bikes: [prevSatate.bikes[newSpaceIndex], ...prevSatate.bikes.slice(0, newSpaceIndex), ...prevSatate.bikes.slice(newSpaceIndex + 1)]
-        }), () => this.hScrollView.scrollToItem({ item: this.state.bikes[0], viewPosition: 0 }));
     }
 
     renderAccordionItem = (item) => {
@@ -47,7 +62,7 @@ class MyProfileTab extends Component {
         } else {
             return (
                 <View style={styles.rowContent}>
-                    <ScrollView
+                    {/* <ScrollView
                         showsHorizontalScrollIndicator={false}
                         horizontal={true}
                         contentContainerStyle={styles.horizontalScroll}>
@@ -59,13 +74,21 @@ class MyProfileTab extends Component {
                             renderItem={({ item, index }) => <Thumbnail horizontal={false} height={heightPercentageToDP(12)} width={widthPercentageToDP(28)} active={index === 0} imagePath={require('../../../assets/img/harley.jpg')} title={`Harley Space - ${item}`} onLongPress={index != 0 ? () => this.onSpaceLongPress(index) : null} />}
                             ref={view => this.hScrollView = view}
                         />
-                    </ScrollView>
+                    </ScrollView> */}
+                    <FlatList
+                        horizontal={true}
+                        data={this.props.shortSpaceList}
+                        keyExtractor={(item, index) => item.spaceId}
+                        renderItem={({ item, index }) => <Thumbnail horizontal={false} height={heightPercentageToDP(12)} width={widthPercentageToDP(28)} active={item.isDefault} imagePath={require('../../../assets/img/harley.jpg')} title={item.name} onLongPress={item.isDefault ? null : () => this.onSpaceLongPress(index)} />}
+                        ref={view => this.hScrollView = view}
+                    />
                 </View>
             );
         }
     }
 
     onPressGalleryIcon = async () => {
+        this.setState({ isLoadingProfPic: true });
         try {
             const imageObj = await ImagePicker.openPicker({
                 width: 300,
@@ -73,13 +96,15 @@ class MyProfileTab extends Component {
                 cropping: false,
                 includeBase64: true,
             });
-            this.setState({ profilePicString: `data:${imageObj.mime};base64,${imageObj.data}` });
+            this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
         } catch (er) {
+            this.setState({ isLoadingProfPic: false });
             console.log("Error occurd: ", er);
         }
     }
 
     onPressCameraIcon = async () => {
+        this.setState({ isLoadingProfPic: true });
         try {
             const imageObj = await ImagePicker.openCamera({
                 width: 300,
@@ -87,8 +112,9 @@ class MyProfileTab extends Component {
                 includeBase64: true,
                 cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
             });
-            this.setState({ profilePicString: `data:${imageObj.mime};base64,${imageObj.data}` });
+            this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
         } catch (er) {
+            this.setState({ isLoadingProfPic: false });
             console.log("Error occurd: ", er);
         }
     }
@@ -100,13 +126,17 @@ class MyProfileTab extends Component {
     }
 
     render() {
-        const { user } = this.props;
-        const { profilePicString } = this.state;
+        const { user, shortSpaceList } = this.props;
+        const { isLoadingProfPic } = this.state;
         return (
             <View style={styles.fill}>
                 <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
                     <View style={styles.profilePic}>
-                        <Image source={profilePicString ? { uri: profilePicStrings } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }} />
+                        {
+                            isLoadingProfPic
+                                ? <Loader show={isLoadingProfPic} />
+                                : <Image source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }} />
+                        }
                     </View>
                     <View style={styles.profileHeader}>
                         <IconButton iconProps={{ name: 'bell', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(5) } }}
@@ -134,12 +164,16 @@ class MyProfileTab extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    return { user };
+    const { shortSpaceList } = state.GarageInfo;
+    return { user, shortSpaceList };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
+        getPicture: (pictureId) => dispatch(getPicture(pictureId)),
+        getSpaceList: (userId) => dispatch(getSpaceList(userId)),
+        updateProfilePicture: (profilePicStr, mimeType, userId) => dispatch(updateProfilePicture(profilePicStr, mimeType, userId)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MyProfileTab);

@@ -63,6 +63,10 @@ export const RIDE_TYPE = { RECORD_RIDE: 'recordRide', BUILD_RIDE: 'buildRide', S
 
 export const FRIEND_TYPE = { ALL_FRIENDS: 'allFriends', ONLINE_FRIENDS: 'onlineFriends' };
 
+export const HEADER_KEYS = { FRIENDS_LENGTH: 'friends-length', RECIEVED_REQUEST_LENGTH: 'received-request-length', SENT_REQUEST_LENGTH: 'sent-request-length' };
+
+export const RELATIONSHIP = { FRIEND: 'friend', RECIEVED_REQUEST: 'receivedRequest', SENT_REQUEST: 'sentRequest', UNKNOWN: 'unknown' };
+
 export const ICON_NAMES = {
     SOURCE_DEFAULT: 'sourceDefault', SOURCE_SELECTED: 'sourceSelected',
     DESTINATION_DEFAULT: 'destinationDefault', DESTINATION_SELECTED: 'destinationSelected',
@@ -73,22 +77,29 @@ export const APP_COMMON_STYLES = {
     infoColor: '#EB861E',
     headerColor: '#0076B5',
     testingBorder: { borderWidth: 2, borderColor: 'red' },
-    menuOptionsContainer: {
+    menuOptContainer: {
         alignSelf: 'flex-end',
         width: '50%',
         height: '100%',
         backgroundColor: 'rgba(0,0,0,0.7)',
         paddingTop: '10%',
     },
-    menuOptionHighlight: {
+    menuOptHeaderImage: {
+        width: '90%',
+        resizeMode: 'contain'
+    },
+    menuOptHeaderTitle: {
+
+    },
+    menuOptHighlight: {
         width: '100%',
         height: '12%',
         paddingVertical: '10%',
     },
-    menuOption: {
+    menuOpt: {
         paddingHorizontal: 0,
     },
-    menuOptionText: {
+    menuOptTxt: {
         color: '#fff',
         fontSize: widthPercentageToDP(4),
         paddingHorizontal: '20%'
@@ -96,7 +107,7 @@ export const APP_COMMON_STYLES = {
     leftDominantCont: {
         alignSelf: 'flex-start'
     },
-    textAlignRight: {
+    txtAlignRight: {
         textAlign: 'right'
     }
 };

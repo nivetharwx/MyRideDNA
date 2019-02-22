@@ -129,7 +129,7 @@ export class BasicHeader extends React.Component {
                             </Animated.View>
                             <View style={{ flex: 1, justifyContent: 'center' }}>
                                 <TextInput style={{ color: '#fff', borderBottomColor: '#fff', borderBottomWidth: 2, marginRight: this.props.onClearSearchValue ? 0 : 10 }}
-                                    value={searchValue} onChangeText={onChangeSearchValue}
+                                    value={searchValue} onChangeText={onChangeSearchValue} autoFocus={true}
                                 />
                             </View>
                             {

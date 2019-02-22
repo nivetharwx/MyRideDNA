@@ -90,7 +90,6 @@ const styles = StyleSheet.create({
     mapControlButton: {
         elevation: 30,
         backgroundColor: '#fff',
-        paddingHorizontal: 0,
         padding: 10,
         justifyContent: 'center',
         alignItems: 'center'

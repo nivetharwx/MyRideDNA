@@ -19,8 +19,8 @@ class AddBikeForm extends Component {
             bikeImages: [],
             bike: props.bikeIndex >= 0 ? props.spaceList[props.bikeIndex] : {}
         };
-        if (typeof this.state.bike.picturesList === 'undefined') {
-            this.state.bike.picturesList = [];
+        if (typeof this.state.bike.pictureList === 'undefined') {
+            this.state.bike.pictureList = [];
         }
     }
 
@@ -44,7 +44,7 @@ class AddBikeForm extends Component {
             });
             this.setState({
                 bikeImages: imageList.reduce((arr, { mime, data }) => {
-                    arr.push({ mime, data });
+                    arr.push({ mimeType: mime, image: data });
                     return arr;
                 }, [])
             });
@@ -72,17 +72,14 @@ class AddBikeForm extends Component {
             Alert.alert('Field Error', 'Please enter a bike name');
             return;
         }
-        const picturesList = bikeImages.reduce((arr, { data }) => {
-            arr.push(data);
-            return arr;
-        }, []);
+        const pictureList = [...bikeImages];
         if (!bike.spaceId) {
-            this.props.addBikeToGarage(this.props.user.userId, { ...bike, picturesList });
+            this.props.addBikeToGarage(this.props.user.userId, { ...bike, pictureList });
         } else {
             this.props.editBike(this.props.user.userId, {
                 ...bike,
-                picturesList
-            }, bike.picturesList, this.props.bikeIndex);
+                pictureList
+            }, bike.pictureList, this.props.bikeIndex);
         }
     }
 
@@ -107,8 +104,8 @@ class AddBikeForm extends Component {
                         /> */}
                             {
                                 bikeImages.map((imgObj, index) => (
-                                    <Thumbnail key={index + ''} horizontal={false} containerStyle={{ height: heightPercentageToDP(12), width: widthPercentageToDP(20), marginBottom: heightPercentageToDP(1) }}
-                                        height={heightPercentageToDP(12)} width={widthPercentageToDP(20)} imagePath={{ uri: `data:image/jpeg;base64,${imgObj.data}` }} />
+                                    <Thumbnail hideOverlay={true} key={index + ''} horizontal={false} containerStyle={{ height: heightPercentageToDP(12), width: widthPercentageToDP(20), marginBottom: heightPercentageToDP(1) }}
+                                        height={heightPercentageToDP(12)} width={widthPercentageToDP(20)} imagePath={{ uri: `data:${imgObj.mimeType};base64,${imgObj.image}` }} />
                                 ))
                             }
                         </View>

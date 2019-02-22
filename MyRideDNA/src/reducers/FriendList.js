@@ -1,10 +1,11 @@
-import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND } from "../actions/actionConstants";
-import { FRIEND_TYPE } from "../constants";
+import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_SEARCH_FRIEND_RELATIONSHIP } from "../actions/actionConstants";
+import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP } from "../constants";
 
 const initialState = {
     allFriends: [],
     onlineFriends: [],
     paginationNum: 0,
+    searchFriendList: []
 };
 
 export default (state = initialState, action) => {
@@ -25,6 +26,32 @@ export default (state = initialState, action) => {
                 action.data.friendList.length > 0 && updatedState.paginationNum++; // DOC: Update pagination number
             }
             return updatedState;
+
+        case REPLACE_SEARCH_FRIEND_LIST:
+            return {
+                ...state,
+                searchFriendList: action.data
+            }
+
+        case CLEAR_SEARCH_FRIEND_LIST:
+            return {
+                ...state,
+                searchFriendList: []
+            }
+
+        case UPDATE_SEARCH_FRIEND_RELATIONSHIP:
+            let personIndex = state.searchFriendList.findIndex(person => person.userId === action.data.personId);
+            if (personIndex > -1) {
+                return {
+                    ...state,
+                    searchFriendList: [
+                        ...state.searchFriendList.slice(0, personIndex),
+                        { ...state.searchFriendList[personIndex], relationship: action.data.relationship },
+                        ...state.searchFriendList.slice(personIndex + 1)
+                    ]
+                }
+            }
+            return state;
 
         case DELETE_FRIEND:
             var friendKey = getFriendListByType(action.data.friendType);

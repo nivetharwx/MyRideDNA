@@ -1,3 +1,4 @@
+//getAllOnlineFriends
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableNativeFeedback } from 'react-native';
@@ -9,7 +10,7 @@ import { ThumbnailCard } from '../../../components/cards';
 import { openFriendProfileAction } from '../../../actions';
 
 
-class AllFriendsTab extends Component {
+class OnlineFriendsTab extends Component {
     FRIEND_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: `Show\nlocation`, id: 'location', handler: () => { } }, { text: 'Chat', id: 'chat', handler: () => { } }, { text: 'Call', id: 'call', handler: () => { } }, { text: 'Garage', id: 'garage', handler: () => { } }, { text: 'Unfreind', id: 'unfriend', handler: () => this.doUnfriend() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     UNKNOWN_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Send\nRequest', id: 'sendRequest', handler: () => this.sendFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     SENT_REQUEST_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Cancel\nRequest', id: 'cancelRequest', handler: () => this.cancelFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
@@ -124,9 +125,6 @@ class AllFriendsTab extends Component {
             case RELATIONSHIP.UNKNOWN:
                 options = this.UNKNOWN_OPTIONS;
                 break;
-            default:
-                options = this.FRIEND_OPTIONS;
-                break;
         }
         return (
             options.map(option => (
@@ -174,32 +172,8 @@ class AllFriendsTab extends Component {
     }
 
     render() {
-        const { isRefreshing, isVisibleOptionsModal } = this.state;
-        const { allFriends, searchQuery, searchFriendList, user } = this.props;
-
-        // const activeImageStyle = {
-        //     width: this.dimensions.x,
-        //     height: this.dimensions.y,
-        //     left: this.position.x,
-        //     top: this.position.y
-        // };
-        // const animatedContentY = this.animation.interpolate({
-        //     inputRange: [0, 1],
-        //     outputRange: [-150, 0]
-        // });
-        // const animatedContentOpacity = this.animation.interpolate({
-        //     inputRange: [0, 0.5, 1],
-        //     outputRange: [0, 1, 1]
-        // });
-        // const animatedContentStyle = {
-        //     opacity: animatedContentOpacity,
-        //     transform: [{
-        //         translateY: animatedContentY
-        //     }]
-        // };
-        // const animatedCrossOpacity = {
-        //     opacity: this.animation
-        // };
+        const { isVisibleOptionsModal } = this.state;
+        const { user, onlineFriends } = this.props;
 
         return (
             <View style={styles.fill}>
@@ -211,65 +185,23 @@ class AllFriendsTab extends Component {
                     </View>
                 </BaseModal>
                 {
-                    searchQuery === ''
-                        ? allFriends.length === 0
-                            ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
-                            : <FlatList
-                                style={{ flexDirection: 'column' }}
-                                contentContainerStyle={styles.friendList}
-                                numColumns={2}
-                                data={allFriends}
-                                refreshing={isRefreshing}
-                                onRefresh={this.onPullRefresh}
-                                keyExtractor={this.friendKeyExtractor}
-                                renderItem={({ item, index }) => (
-                                    <ThumbnailCard
-                                        thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
-                                        item={item}
-                                        onLongPress={() => this.showOptionsModal(index)}
-                                    />
-                                )}
-                            />
-                        : searchFriendList.length === 0
-                            ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
-                            : <FlatList
-                                style={{ flexDirection: 'column' }}
-                                contentContainerStyle={styles.friendList}
-                                numColumns={2}
-                                data={searchFriendList}
-                                refreshing={isRefreshing}
-                                onRefresh={this.onPullRefresh}
-                                keyExtractor={this.friendKeyExtractor}
-                                renderItem={({ item, index }) => (
-                                    <ThumbnailCard
-                                        thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
-                                        item={item}
-                                        onLongPress={() => this.openProfile(index)} //this.showOptionsModal(index)
-                                        actions={this.getActionsForRelationship(item)}
-                                        thumbnailRef={imgRef => this.allImageRef[index] = imgRef}
-                                        onPress={() => this.openProfile(index)}
-                                    />
-                                )}
-                            />
+                    onlineFriends.length === 0
+                        ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
+                        : <FlatList
+                            style={{ flexDirection: 'column' }}
+                            contentContainerStyle={styles.friendList}
+                            numColumns={2}
+                            data={onlineFriends}
+                            keyExtractor={this.friendKeyExtractor}
+                            renderItem={({ item, index }) => (
+                                <ThumbnailCard
+                                    thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
+                                    item={item}
+                                    onLongPress={() => this.showOptionsModal(index)}
+                                />
+                            )}
+                        />
                 }
-                {/* <View style={StyleSheet.absoluteFill} pointerEvents={this.state.selectedPersonImg ? 'auto' : 'none'}>
-                    <View style={{ flex: 2, zIndex: 1000 }} ref={elRef => this.viewImage = elRef}>
-                        <ImageBackground style={{ flex: 1 }} source={this.state.selectedPersonImg ? require('../../../assets/img/profile-bg.png') : null}>
-                            <Animated.Image
-                                source={this.state.selectedPersonImg ? require('../../../assets/img/friend-profile-pic.png') : null}
-                                style={[{ resizeMode: 'cover', top: 0, left: 0, height: null, width: null, borderRadius: 15 }, activeImageStyle]}
-                            ></Animated.Image>
-                        </ImageBackground>
-                        <TouchableNativeFeedback onPress={this.closeProfile}>
-                            <Animated.View style={[{ position: 'absolute', top: 30, right: 30 }, animatedCrossOpacity]}>
-                                <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>X</Text>
-                            </Animated.View>
-                        </TouchableNativeFeedback>
-                    </View>
-                    <Animated.View style={[{ flex: 1, zIndex: 900, backgroundColor: '#fff', padding: 20, paddingTop: 50, paddingBotton: 10 }, animatedContentStyle]}>
-                        <Text>TESING TEXT CONTENT</Text>
-                    </Animated.View>
-                </View> */}
             </View>
         )
     }
@@ -277,22 +209,14 @@ class AllFriendsTab extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { allFriends, paginationNum, searchFriendList } = state.FriendList;
-    return { user, allFriends, paginationNum, searchFriendList };
+    const { onlineFriends } = state.FriendList;
+    return { user, onlineFriends };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
-        getAllFriends: (friendType, userId, pageNumber) => dispatch(getAllFriends(friendType, userId, pageNumber)),
-        searchForFriend: (searchParam, userId, pageNumber) => dispatch(searchForFriend(searchParam, userId, pageNumber)),
-        sendFriendRequest: (requestBody, personId) => dispatch(sendFriendRequest(requestBody, personId)),
-        cancelFriendRequest: (userId, personId) => dispatch(cancelFriendRequest(userId, personId)),
-        approveFriendRequest: (userId, personId, actionDate) => dispatch(approveFriendRequest(userId, personId, actionDate)),
-        rejectFriendRequest: (userId, personId) => dispatch(rejectFriendRequest(userId, personId)),
-        doUnfriend: (userId, personId) => dispatch(doUnfriend(userId, personId)),
-        openUserProfile: (profileInfo) => dispatch(openFriendProfileAction(profileInfo))
     };
 };
-export default connect(mapStateToProps, mapDispatchToProps)(AllFriendsTab);
+export default connect(mapStateToProps, mapDispatchToProps)(OnlineFriendsTab);
 
 const styles = StyleSheet.create({
     fill: {
@@ -307,7 +231,4 @@ const styles = StyleSheet.create({
         marginHorizontal: widthPercentageToDP(5),
         paddingTop: widthPercentageToDP(5)
     },
-    relationshipAction: {
-        color: APP_COMMON_STYLES.headerColor
-    }
 });

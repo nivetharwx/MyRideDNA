@@ -1520,7 +1520,7 @@ export class Map extends Component {
                 {/* Shifter: - Brings the app navigation menu */}
                 {
                     !showCreateRide
-                        ? <ShifterButton onPress={this.toggleAppNavigation} />
+                        ? <ShifterButton onPress={this.toggleAppNavigation} alignLeft={user.handDominance === 'left'} />
                         : null
                 }
             </SafeAreaView>

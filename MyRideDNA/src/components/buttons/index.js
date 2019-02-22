@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+    StyleSheet,
     View,
     Text,
     TouchableOpacity,
@@ -12,7 +13,7 @@ import {
 import { Icon as NBIcon } from 'native-base';
 
 import styles from './styles';
-import { widthPercentageToDP, heightPercentageToDP } from '../../constants';
+import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES } from '../../constants';
 
 export const LoginButton = ({ title, onPress }) => (
     <TouchableHighlight
@@ -50,11 +51,9 @@ export const RoundButton = ({ title, onPress, style, titleStyle }) => (
 );
 
 export const IconButton = ({ iconProps, onPress, style }) => (
-    <TouchableOpacity activeOpacity={0.6} onPress={onPress}>
-        <View style={[{ paddingHorizontal: 10 }, style]}>
-            <NBIcon name={iconProps.name}
-                type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style]} />
-        </View>
+    <TouchableOpacity style={[{ justifyContent: 'center', alignItems: 'center' }, style]} activeOpacity={0.6} onPress={onPress}>
+        <NBIcon name={iconProps.name}
+            type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style]} />
     </TouchableOpacity>
 );
 
@@ -131,10 +130,10 @@ export const ImageButton = ({ onPress, styles, imageSrc }) => (
     </TouchableOpacity>
 );
 
-export const ShifterButton = ({ onPress, styles, size = 20 }) => (
-    <TouchableOpacity onPress={onPress} style={[{ position: 'absolute', zIndex: 900, elevation: 10, bottom: 0, right: 0 }, styles, { width: widthPercentageToDP(size), height: widthPercentageToDP(size) }]}>
-        <View style={{ flex: 1, backgroundColor: 'none', backgroundColor: 'rgba(235, 134, 30, 0.6)', borderTopStartRadius: widthPercentageToDP(size) }}>
-            <Image source={require('../../assets/img/shifter.png')} style={{ position: 'absolute', bottom: 0, right: 0, height: widthPercentageToDP(size - 5), width: widthPercentageToDP(size - 5) }} />
+export const ShifterButton = ({ onPress, containerStyles, size = 20, alignLeft = false }) => (
+    <TouchableOpacity onPress={onPress} style={[styles.shiterButtonContainer, containerStyles, alignLeft ? styles.alignLeft : null, { width: widthPercentageToDP(size), height: widthPercentageToDP(size) }]}>
+        <View style={[styles.shiterImgContainer, alignLeft ? { borderTopEndRadius: widthPercentageToDP(size) } : { borderTopStartRadius: widthPercentageToDP(size) }]}>
+            <Image source={require('../../assets/img/shifter.png')} style={[{ position: 'absolute', bottom: 0, right: 0, height: widthPercentageToDP(size - 5), width: widthPercentageToDP(size - 5) }, alignLeft ? styles.leftImage : null]} />
         </View>
     </TouchableOpacity>
 );

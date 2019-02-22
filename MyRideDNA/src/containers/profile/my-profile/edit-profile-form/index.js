@@ -30,11 +30,14 @@ class EditProfileForm extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.user !== this.props.user) {
-            Toast.show({
-                text: 'Profile updated successfully',
-                buttonText: 'Okay'
-            });
-            this.onPressBackButton();
+            // DOC: Confirming changes happened due to api call from this form
+            if (this.changedDetails.userId) {
+                Toast.show({
+                    text: 'Profile updated successfully',
+                    buttonText: 'Okay'
+                });
+                this.onPressBackButton();
+            }
         }
     }
 

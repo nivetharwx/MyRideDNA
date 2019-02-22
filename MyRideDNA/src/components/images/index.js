@@ -25,6 +25,13 @@ export const Thumbnail = (props) => {
                         borderColor: 'white',
                         borderWidth: 1
                     }} />
+                    {
+                        props.hideOverlay
+                            ? null
+                            : !props.active
+                                ? <View style={{ position: 'absolute', width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)' }} />
+                                : null
+                    }
                 </View>
                 {props.horizontal ? null : <Text style={{ alignSelf: 'center', color: 'black', fontSize: 16, fontWeight: 'bold' }}>{props.title && props.title.length > 12 ? `${props.title.substring(0, 12)}...` : props.title}</Text>}
             </View>
@@ -32,12 +39,26 @@ export const Thumbnail = (props) => {
     );
 }
 
+export const ProgressiveImage = ({ thumbnailSource, source, imageBGColor, imageStyle }) => (
+    <View style={[styles.container, backgroundColor ? { backgroundColor: imageBGColor } : null]}>
+        <Image
+            source={thumbnailSource}
+            style={imageStyle}
+        />
+        <Image
+            source={source}
+            style={[styles.imageOverlay, imageStyle]}
+        />
+    </View>
+);
+
 const styles = StyleSheet.create({
     flexRow: {
         flexDirection: 'row',
         marginHorizontal: 5,
         width: THUMBNAIL_MAX_WIDTH,
-        maxWidth: THUMBNAIL_MAX_WIDTH
+        maxWidth: THUMBNAIL_MAX_WIDTH,
+
     },
     flexColumn: {
         flexDirection: 'column',
@@ -46,5 +67,15 @@ const styles = StyleSheet.create({
         marginHorizontal: 10,
         width: 130,
         maxWidth: 130,
-    }
+    },
+    container: {
+        backgroundColor: '#e1e4e8',
+    },
+    imageOverlay: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        top: 0,
+    },
 });

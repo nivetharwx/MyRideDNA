@@ -26,6 +26,24 @@ const styles = StyleSheet.create({
     topSeparator: {
         borderTopColor: '#acacac',
         borderTopWidth: 1
+    },
+    shiterButtonContainer: {
+        position: 'absolute',
+        zIndex: 900,
+        elevation: 10,
+        bottom: 0,
+        right: 0,
+    },
+    shiterImgContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(235, 134, 30, 0.6)',
+    },
+    alignLeft: {
+        left: 0,
+    },
+    leftImage: {
+        left: 0,
+        transform: [{ rotateY: '180deg' }]
     }
 });
 

@@ -1,7 +1,8 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, TouchableHighlight, ImageBackground, Animated, Easing } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, TouchableHighlight, ImageBackground, Image, Animated, Easing } from 'react-native';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
 import { Icon as NBIcon } from 'native-base';
+import { LinkButton } from '../buttons';
 
 export class BasicCard extends React.Component {
     constructor(props) {
@@ -33,7 +34,7 @@ export class BasicCard extends React.Component {
             outputRange: [0, 1]
         });
         return (
-            <View style={styles.container}>
+            <View style={[styles.container, this.props.isFlat ? null : styles.containerBorder, this.props.containerStyle]}>
                 <View style={[styles.fill, this.props.isActive ? styles.activeBorder : null]}>
                     <TouchableOpacity onLongPress={this.toggleActionBar} style={styles.media}>
                         <ImageBackground resizeMode='cover' source={this.props.media} style={styles.media} />
@@ -81,6 +82,47 @@ export class BasicCard extends React.Component {
     }
 }
 
+export const ThumbnailCard = ({ item, thumbnailPlaceholder, onLongPress, actions, thumbnailRef }) => (
+    <View style={styles.thumbnail}>
+        <TouchableOpacity activeOpacity={onLongPress ? 0.7 : 1} onLongPress={() => onLongPress && onLongPress()} style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center'
+        }}>
+            <View style={[{
+                width: widthPercentageToDP(30), height: widthPercentageToDP(30),
+                borderRadius: widthPercentageToDP(15), borderWidth: 6, borderColor: '#231F20', overflow: 'hidden'
+            }]} ref={elRef => thumbnailRef ? thumbnailRef(elRef) : null}>
+                <Image source={item.profilePictureThumbnail ? { uri: item.profilePictureThumbnail } : thumbnailPlaceholder}
+                    style={{ width: null, height: null, flex: 1 }} />
+            </View>
+            <Text style={{
+                fontWeight: 'bold',
+                backgroundColor: 'transparent',
+                fontSize: widthPercentageToDP(4),
+            }}
+                renderToHardwareTextureAndroid collapsable={false}>
+                {item.name}
+                <Text style={{ color: APP_COMMON_STYLES.infoColor, fontWeight: 'bold' }}>
+                    {'  '}{item.nickname}
+                </Text>
+            </Text>
+            {/* <Text style={{ color: '#A1A2A6' }}>{item.email}</Text> */}
+        </TouchableOpacity>
+        {
+            Array.isArray(actions) && actions.length > 0
+                ? <View style={styles.actionContainer}>
+                    {
+                        actions.map(action => (
+                            <LinkButton key={action.title} title={action.title} titleStyle={action.titleStyle} onPress={action.onPress} />
+                        ))
+                    }
+                </View>
+                : null
+        }
+    </View>
+);
+
 {/* <NBIcon name='md-star' type='Ionicons' />
     <View style={styles.columnContainer}>
         {
@@ -105,6 +147,8 @@ const styles = StyleSheet.create({
         height: heightPercentageToDP(60),
         width: widthPercentageToDP(95),
         marginBottom: widthPercentageToDP(2),
+    },
+    containerBorder: {
         borderRadius: 5,
         borderWidth: 1,
         borderColor: 'rgba(163,163,163,0.5)',
@@ -163,6 +207,17 @@ const styles = StyleSheet.create({
         borderTopColor: 'rgba(163,163,163,0.5)',
         paddingVertical: 5,
         overflow: 'hidden',
+        flexDirection: 'row',
+        justifyContent: 'space-around'
+    },
+    thumbnail: {
+        width: '50%',
+        height: heightPercentageToDP(30),
+        borderBottomWidth: 1,
+        borderBottomColor: '#949599',
+        paddingBottom: heightPercentageToDP(1),
+    },
+    actionContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around'
     }

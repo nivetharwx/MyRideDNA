@@ -189,9 +189,9 @@ export class Rides extends Component {
                             key={option.id}
                             onPress={option.handler}
                             highlightColor={APP_COMMON_STYLES.infoColor}
-                            style={APP_COMMON_STYLES.menuOptionHighlight}
+                            style={APP_COMMON_STYLES.menuOptHighlight}
                             title={option.text}
-                            titleStyle={APP_COMMON_STYLES.menuOptionText}
+                            titleStyle={APP_COMMON_STYLES.menuOptTxt}
                         />
                     ))
                 )
@@ -202,9 +202,9 @@ export class Rides extends Component {
                             key={option.id}
                             onPress={option.handler}
                             highlightColor={APP_COMMON_STYLES.infoColor}
-                            style={APP_COMMON_STYLES.menuOptionHighlight}
+                            style={APP_COMMON_STYLES.menuOptHighlight}
                             title={option.text}
-                            titleStyle={APP_COMMON_STYLES.menuOptionText}
+                            titleStyle={APP_COMMON_STYLES.menuOptTxt}
                         />
                     ))
                 )
@@ -215,9 +215,9 @@ export class Rides extends Component {
                             key={option.id}
                             onPress={option.handler}
                             highlightColor={APP_COMMON_STYLES.infoColor}
-                            style={APP_COMMON_STYLES.menuOptionHighlight}
+                            style={APP_COMMON_STYLES.menuOptHighlight}
                             title={option.text}
-                            titleStyle={APP_COMMON_STYLES.menuOptionText}
+                            titleStyle={APP_COMMON_STYLES.menuOptTxt}
                         />
                     ))
                 )
@@ -248,7 +248,7 @@ export class Rides extends Component {
                     </View>
                 </BaseModal>
                 <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
-                    <View style={[APP_COMMON_STYLES.menuOptionsContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
+                    <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
                         {
                             this.renderMenuOptions()
                         }
@@ -340,7 +340,7 @@ export class Rides extends Component {
                 </Tabs>
 
                 {/* Shifter: - Brings the app navigation menu */}
-                <ShifterButton onPress={this.showAppNavMenu} />
+                <ShifterButton onPress={this.showAppNavMenu} alignLeft={this.props.user.handDominance === 'left'} />
             </SafeAreaView>
         );
     }

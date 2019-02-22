@@ -1,9 +1,10 @@
-import { REPLACE_GARAGE_INFO, UPDTAE_GARAGE_NAME, UPDATE_BIKE_LIST, CLEAR_GARAGE, ADD_TO_BIKE_LIST, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE } from "../actions/actionConstants";
+import { REPLACE_GARAGE_INFO, UPDTAE_GARAGE_NAME, UPDATE_BIKE_LIST, CLEAR_GARAGE, ADD_TO_BIKE_LIST, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, UPDTAE_SHORT_SPACE_LIST, REPLACE_SHORT_SPACE_LIST } from "../actions/actionConstants";
 
 const initialState = {
     garageName: null,
     garageId: null,
     spaceList: [],
+    shortSpaceList: []
 };
 
 export default (state = initialState, action) => {
@@ -29,6 +30,16 @@ export default (state = initialState, action) => {
                 ...state,
                 garageName: action.data
             }
+        case REPLACE_SHORT_SPACE_LIST:
+            return {
+                ...state,
+                shortSpaceList: action.data
+            }
+        case UPDTAE_SHORT_SPACE_LIST:
+            return {
+                ...state,
+                shortSpaceList: []
+            }
         case ADD_TO_BIKE_LIST:
             return {
                 ...state,
@@ -46,7 +57,7 @@ export default (state = initialState, action) => {
                 ...state.spaceList.slice(action.data.index + 1)
             ];
             // DOC: Set first bike as active if only one is there
-            if (state.spaceList[action.data.index].isDefault) {
+            if (spaceList.length > 0 && state.spaceList[action.data.index].isDefault) {
                 spaceList[0].isDefault = true;
             }
             return {

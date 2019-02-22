@@ -1,8 +1,8 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
-    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction
+    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroup, resetMembersFromCurrentGroup
 } from '../actions';
-import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL } from '../constants';
+import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL } from '../constants';
 import axios from 'axios';
 
 import { AsyncStorage } from 'react-native';
@@ -14,6 +14,20 @@ const CancelToken = axios.CancelToken;
 const axiosSource = CancelToken.source();
 const API_TIMEOUT = 15 * 1000; // 15 seconds
 
+export const getPicture = (pictureId) => {
+    return dispatch => {
+        axios.get(USER_BASE_URL + `getPicture/${pictureId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200 && res.data !== '') {
+                    dispatch(updateUserAction({ profilePicture: res.data }))
+                }
+            })
+            .catch(er => {
+                console.log("getPicture error: ", er.response);
+                // TODO: Dispatch error info action
+            })
+    };
+}
 export const logoutUser = (userId, accessToken) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
@@ -78,6 +92,20 @@ export const updateUserInfo = (userData) => {
             })
     };
 }
+export const updateProfilePicture = (profilePicStr, mimeType, userId) => {
+    return dispatch => {
+        axios.put(USER_BASE_URL + 'updateProfilePicture', { userId, profilePicture: profilePicStr, mimeType }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(updateUserAction({ ...res.data, profilePicture: `data:${mimeType};base64,${profilePicStr}` }));
+                }
+            })
+            .catch(er => {
+                console.log(er.response);
+                // TODO: Dispatch error info action
+            })
+    };
+}
 export const getAllBuildRides = (userId) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
@@ -101,7 +129,6 @@ export const getAllPublicRides = (userId) => {
         axios.get(RIDE_BASE_URL + `getAllPublicRides?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log("getAllPublicRides: ", res.data);
                     dispatch(toggleLoaderAction(false));
                     dispatch(replaceRideListAction({ rideType: RIDE_TYPE.SHARED_RIDE, rideList: res.data }));
                 }
@@ -610,18 +637,191 @@ export const getAllFriends = (friendType, userId, pageNumber) => {
             })
     };
 }
-export const searchForFriend = (searchParam, userId, pageNumber) => {
+export const getAllOnlineFriends = (friendType, userId, pageNumber) => {
     return dispatch => {
-        axios.get(FRIENDS_BASE_URL + `searchFriend?searchParam=${searchParam}&userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        pageNumber > 0 && dispatch(toggleLoaderAction(true));
+        axios.get(GRAPH_BASE_URL + `getOnlineFriends?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log(`searchForFriend request: `, `searchFriend?searchParam=${searchParam}&userId=${userId}&pageNumber=${pageNumber}`);
-                    console.log(`searchForFriend response: `, res.data);
+                    dispatch(toggleLoaderAction(false));
+                    return dispatch(updateFriendListAction({ friendType, friendList: res.data }))
                 }
             })
             .catch(er => {
-                console.log(`searchForFriend: `, er.response);
+                console.log(`getAllOnlineFriends: `, er.response ? er.response : er);
                 // TODO: Dispatch error info action
+                pageNumber > 0 && dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const searchForFriend = (searchParam, userId, pageNumber) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.get(FRIENDS_BASE_URL + `searchFriend?searchParam=${searchParam}&userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(toggleLoaderAction(false));
+                    return dispatch(replaceSearchFriendListAction(res.data));
+                }
+            })
+            .catch(er => {
+                console.log(`searchForFriend: `, er, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const sendFriendRequest = (requestBody, personId) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.post(FRIENDS_BASE_URL + `sendFriendRequest`, requestBody, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(toggleLoaderAction(false));
+                    return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.SENT_REQUEST }));
+                }
+            })
+            .catch(er => {
+                console.log(`sendFriendRequest: `, er, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const cancelFriendRequest = (senderId, personId) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.delete(FRIENDS_BASE_URL + `cancelFriendRequest?senderId=${senderId}&userId=${personId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(toggleLoaderAction(false));
+                    return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
+                }
+            })
+            .catch(er => {
+                console.log(`cancelFriendRequest: `, er, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const approveFriendRequest = (senderId, personId, actionDate) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.put(FRIENDS_BASE_URL + `approveFriendRequest?senderId=${senderId}&userId=${personId}&date=${actionDate}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(toggleLoaderAction(false));
+                    return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.FRIEND }));
+                }
+            })
+            .catch(er => {
+                console.log(`cancelFriendRequest: `, er, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const rejectFriendRequest = (senderId, personId) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.put(FRIENDS_BASE_URL + `rejectFriendRequest?senderId=${senderId}&userId=${personId}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(toggleLoaderAction(false));
+                    return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
+                }
+            })
+            .catch(er => {
+                console.log(`cancelFriendRequest: `, er, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const doUnfriend = (senderId, personId) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.delete(FRIENDS_BASE_URL + `unfriend?senderId=${senderId}&userId=${personId}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(toggleLoaderAction(false));
+                    return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
+                }
+            })
+            .catch(er => {
+                console.log(`doUnfriend: `, er, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const getFriendGroups = (userId) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.get(FRIENDS_BASE_URL + `getFriendGroups?memberId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(toggleLoaderAction(false));
+                    return dispatch(replaceFriendGroupListAction(res.data))
+                }
+            })
+            .catch(er => {
+                console.log(`getFriendGroups: `, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const getAllGroupMembers = (groupId) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.get(FRIENDS_BASE_URL + `getAllGroupMembers?groupId=${groupId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log(res.data);
+                    dispatch(toggleLoaderAction(false));
+                    return dispatch(resetMembersFromCurrentGroup(res.data))
+                }
+            })
+            .catch(er => {
+                console.log(`addMembers: `, er.response ? er.response : er);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const addMembers = (groupId, memberDetails) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.put(FRIENDS_BASE_URL + `addMembers?groupId=${groupId}`, memberDetails, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log(res.data);
+                    dispatch(toggleLoaderAction(false));
+                    return dispatch(addMembersToCurrentGroup(res.data))
+                }
+            })
+            .catch(er => {
+                console.log(`addMembers: `, er.response ? er.response : er);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const getSpaceList = (userId) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.get(USER_BASE_URL + `getSpaceList?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("getSpaceList: ", res);
+                dispatch(toggleLoaderAction(false));
+                return dispatch(replaceShortSpaceListAction(res.data))
+            })
+            .catch(er => {
+                console.log(`getSpaceList: `, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
             })
     };
 }
@@ -630,7 +830,6 @@ export const getGarageInfo = (userId) => {
         dispatch(toggleLoaderAction(true));
         axios.get(USER_BASE_URL + `getGarage/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                console.log("getGarageInfo: ", res);
                 dispatch(toggleLoaderAction(false));
                 return dispatch(replaceGarageInfoAction(res.data))
             })
@@ -663,6 +862,12 @@ export const addBikeToGarage = (userId, bike, index) => {
             .then(res => {
                 bike.spaceId = res.data.spaceId;
                 dispatch(toggleLoaderAction(false));
+                // DOC: Updating the bike pictureList by combining mimeType and image string
+                bike.pictureList = bike.pictureList.reduce((arr, { mimeType, image }) => {
+                    arr.push(`data:${mimeType};base64,${image}`)
+                    return arr;
+                }, []);
+                console.log(bike.pictureList);
                 return dispatch(addToBikeListAction({ index, bike }))
             })
             .catch(er => {
@@ -679,7 +884,10 @@ export const editBike = (userId, bike, oldImages, index) => {
             .then(res => {
                 dispatch(toggleLoaderAction(false));
                 // DOC: Updating the bike details with current and old images
-                bike.picturesList = [...oldImages, ...bike.picturesList];
+                bike.pictureList = [...oldImages, ...bike.pictureList.reduce((arr, { mimeType, image }) => {
+                    arr.push(`data:${mimeType};base64,${image}`)
+                    return arr;
+                }, [])];
                 return dispatch(updateBikeListAction({ index, bike }))
             })
             .catch(er => {
@@ -698,7 +906,7 @@ export const setBikeAsActive = (userId, bike, prevActiveIndex, newActiveIndex) =
                 return dispatch(updateActiveBikeAction({ prevActiveIndex, newActiveIndex, bike }))
             })
             .catch(er => {
-                console.log(`getGarageInfo: `, er.response);
+                console.log(`setBikeAsActive: `, er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })

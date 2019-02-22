@@ -48,7 +48,7 @@ class Profile extends Component {
                     </TabHeading>}>
                         <MyProfileTab />
                     </Tab>
-                    <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 1 ? '#0083CA' : '#6C6C6B' }]}>
+                    <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 1 ? '#0083CA' : '#6C6C6B', borderColor: '#fff', borderRightWidth: 2, borderLeftWidth: 2 }]}>
                         <Text style={{ color: '#fff' }}>MY GARAGE</Text>
                     </TabHeading>}>
                         <MyGarageTab />
@@ -61,7 +61,8 @@ class Profile extends Component {
                 </Tabs>
 
                 {/* Shifter: - Brings the app navigation menu */}
-                <ShifterButton onPress={this.showAppNavMenu} styles={{ bottom: BOTTOM_TAB_HEIGHT }} size={18} />
+                <ShifterButton onPress={this.showAppNavMenu} 
+                containerStyles={{ bottom: BOTTOM_TAB_HEIGHT }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
             </SafeAreaView>
         );
     }
