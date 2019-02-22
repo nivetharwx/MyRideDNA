@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, SafeAreaView, ScrollView, View, Keyboard, Alert, TextInput, Text } from 'react-native';
+import { StyleSheet, SafeAreaView, StatusBar, ScrollView, View, Keyboard, Alert, TextInput, Text } from 'react-native';
 import { BasicHeader } from '../../../../components/headers';
-import { heightPercentageToDP, widthPercentageToDP } from '../../../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInput, IconicList, IconicDatePicker, IconicInput } from '../../../../components/inputs';
 import { BasicButton } from '../../../../components/buttons';
@@ -122,41 +122,46 @@ class EditProfileForm extends Component {
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
         const { user } = this.state;
         return (
-            <SafeAreaView style={styles.fill} >
-                <BasicHeader headerHeight={heightPercentageToDP(8.5)} title='Edit Profile' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
-                <ScrollView style={styles.formContent}>
-                    <IconicInput iconProps={{ name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Name' value={user.name}
-                        onChange={this.onChangeName} />
-                    <IconicInput iconProps={{ name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Nick Name' value={user.nickname}
-                        onChange={this.onChangeNickname} />
-                    <IconicList iconProps={{ name: 'transgender', type: 'FontAwesome' }} selectedValue={user.gender} placeholder='Gender'
-                        onChange={this.onChangeGender} values={GENDER_LIST}></IconicList>
-                    <IconicDatePicker iconProps={{ name: 'calendar', type: 'Foundation' }} onChange={this.onChangeDOB} selectedDateString={user.dob} />
-                    <View style={{ marginVertical: 10 }}>
-                        <View style={{ flexDirection: 'row' }}>
-                            <View style={{ paddingLeft: 10, paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
-                                <NBIcon name='address-card' type='FontAwesome' style={{ fontSize: 14, color: '#a9a9a9' }} />
+            <View style={styles.fill}>
+                <View style={APP_COMMON_STYLES.statusBar}>
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                </View>
+                <View style={styles.fill}>
+                    <BasicHeader title='Edit Profile' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
+                    <ScrollView style={styles.formContent}>
+                        <IconicInput iconProps={{ name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Name' value={user.name}
+                            onChange={this.onChangeName} />
+                        <IconicInput iconProps={{ name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Nick Name' value={user.nickname}
+                            onChange={this.onChangeNickname} />
+                        <IconicList iconProps={{ name: 'transgender', type: 'FontAwesome' }} selectedValue={user.gender} placeholder='Gender'
+                            onChange={this.onChangeGender} values={GENDER_LIST}></IconicList>
+                        <IconicDatePicker iconProps={{ name: 'calendar', type: 'Foundation' }} onChange={this.onChangeDOB} selectedDateString={user.dob} />
+                        <View style={{ marginVertical: 10 }}>
+                            <View style={{ flexDirection: 'row' }}>
+                                <View style={{ paddingLeft: 10, paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
+                                    <NBIcon name='address-card' type='FontAwesome' style={{ fontSize: 14, color: '#a9a9a9' }} />
+                                </View>
+                                <Text style={{ marginLeft: 5, fontSize: 16 }}>Address</Text>
                             </View>
-                            <Text style={{ marginLeft: 5, fontSize: 16 }}>Address</Text>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: 10 }}>
+                                <TextInput style={styles.addressInput} placeholder='Building number, Street line' textContentType='addressCity'
+                                    onChangeText={this.onChangeAddress} value={user.homeAddress.address} />
+                                <TextInput style={styles.addressInput} placeholder='City' textContentType='addressCity'
+                                    onChangeText={this.onChangeCity} value={user.homeAddress.city} />
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: 10 }}>
+                                <TextInput style={{ width: '48%', borderBottomColor: '#D4D4D4', borderBottomWidth: 1 }} placeholder='State' textContentType='addressState'
+                                    onChangeText={this.onChangeState} value={user.homeAddress.state} />
+                                <TextInput style={styles.addressInput} placeholder='Country' textContentType='countryName'
+                                    onChangeText={this.onChangeCountry} value={user.homeAddress.country} />
+                            </View>
+                            <TextInput style={[styles.addressInput, { marginLeft: 10 }]} placeholder='Postal code' textContentType='postalCode' keyboardType='numeric'
+                                onChangeText={this.onChangeZipCode} value={user.homeAddress.zipCode} />
                         </View>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: 10 }}>
-                            <TextInput style={styles.addressInput} placeholder='Building number, Street line' textContentType='addressCity'
-                                onChangeText={this.onChangeAddress} value={user.homeAddress.address} />
-                            <TextInput style={styles.addressInput} placeholder='City' textContentType='addressCity'
-                                onChangeText={this.onChangeCity} value={user.homeAddress.city} />
-                        </View>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: 10 }}>
-                            <TextInput style={{ width: '48%', borderBottomColor: '#D4D4D4', borderBottomWidth: 1 }} placeholder='State' textContentType='addressState'
-                                onChangeText={this.onChangeState} value={user.homeAddress.state} />
-                            <TextInput style={styles.addressInput} placeholder='Country' textContentType='countryName'
-                                onChangeText={this.onChangeCountry} value={user.homeAddress.country} />
-                        </View>
-                        <TextInput style={[styles.addressInput, { marginLeft: 10 }]} placeholder='Postal code' textContentType='postalCode' keyboardType='numeric'
-                            onChangeText={this.onChangeZipCode} value={user.homeAddress.zipCode} />
-                    </View>
-                </ScrollView>
-                <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
-            </SafeAreaView>
+                    </ScrollView>
+                    <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
+                </View>
+            </View>
         );
     }
 }
@@ -188,7 +193,7 @@ const styles = StyleSheet.create({
         flex: 1
     },
     formContent: {
-        marginTop: heightPercentageToDP(8.5),
+        marginTop: APP_COMMON_STYLES.headerHeight,
     },
     submitBtn: {
         height: heightPercentageToDP(8.5),

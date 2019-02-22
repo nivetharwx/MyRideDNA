@@ -9,7 +9,6 @@ import { BasicButton, IconButton } from '../../../components/buttons';
 import { Icon as NBIcon } from 'native-base';
 import { getGarageInfo, setBikeAsActive, deleteBike, updateGarageName } from '../../../api';
 
-const HEADER_HEIGHT = heightPercentageToDP(8.5);
 class MyGarageTab extends Component {
     spacelistRef = null;
     constructor(props) {
@@ -74,7 +73,7 @@ class MyGarageTab extends Component {
         const { headerSearchMode, searchQuery } = this.state;
         return (
             <View style={styles.fill}>
-                <BasicHeader headerHeight={HEADER_HEIGHT} title={garage.garageName}
+                <BasicHeader title={garage.garageName}
                     leftIconProps={{ name: 'md-add', type: 'Ionicons', onPress: this.openBikeForm, reverse: true }}
                     rightIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
                     searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false })}
@@ -136,7 +135,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     content: {
-        marginTop: HEADER_HEIGHT,
+        marginTop: APP_COMMON_STYLES.headerHeight,
         paddingTop: widthPercentageToDP(2),
         alignItems: 'center',
         justifyContent: 'center',

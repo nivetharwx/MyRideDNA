@@ -3,12 +3,9 @@ import { SafeAreaView, View, Text, Platform, Image, ScrollView, StyleSheet, Flat
 import { Actions } from 'react-native-router-flux';
 
 import { BasicHeader } from '../../components/headers';
-import { WindowDimensions, heightPercentageToDP } from '../../constants';
+import { WindowDimensions, heightPercentageToDP, APP_COMMON_STYLES } from '../../constants';
 import { List, ListItem, Left, Thumbnail, Body, Right } from 'native-base';
 
-const ANDROID_HEADER_HEIGHT = 50;
-const IOS_HEADER_HEIGHT = 90;
-const HEADER_HEIGHT = Platform.OS === 'android' ? ANDROID_HEADER_HEIGHT : IOS_HEADER_HEIGHT;
 const LIST_ITEM_HEIGHT = 70;
 
 export class Notifications extends Component {
@@ -51,28 +48,29 @@ export class Notifications extends Component {
     render() {
         const { notifications } = this.state;
         return (
-            <SafeAreaView style={{ flex: 1 }}>
-                <StatusBar
-                    backgroundColor="rgba(0,118,181,0.9)"
-                    barStyle="default"
-                />
-                <BasicHeader headerHeight={heightPercentageToDP(8.5)} title='Notifications' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
-                <ScrollView style={[styles.scrollArea, notifications.length > 0 ? { paddingBottom: heightPercentageToDP(5) } : null]}>
-                    <FlatList
-                        data={notifications}
-                        keyExtractor={this._keyExtractor}
-                        renderItem={this._renderItem}
-                    />
-                </ScrollView>
-                <Image source={require('../../assets/img/notifications-bg.png')} style={styles.bottomImage} />
-            </SafeAreaView>
+            <View style={{ flex: 1 }}>
+                <View style={APP_COMMON_STYLES.statusBar}>
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <BasicHeader title='Notifications' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
+                    <ScrollView style={[styles.scrollArea, notifications.length > 0 ? { paddingBottom: heightPercentageToDP(5) } : null]}>
+                        <FlatList
+                            data={notifications}
+                            keyExtractor={this._keyExtractor}
+                            renderItem={this._renderItem}
+                        />
+                    </ScrollView>
+                    <Image source={require('../../assets/img/notifications-bg.png')} style={styles.bottomImage} />
+                </View>
+            </View>
         );
     }
 }
 
 const styles = StyleSheet.create({
     scrollArea: {
-        marginTop: heightPercentageToDP(8.5),
+        marginTop: APP_COMMON_STYLES.headerHeight,
         flexShrink: 0,
         backgroundColor: '#fff',
     },

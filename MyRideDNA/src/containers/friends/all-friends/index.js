@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableNativeFeedback } from 'react-native';
+import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableHighlight } from 'react-native';
 import { getAllFriends, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend } from '../../../api';
 import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, heightPercentageToDP, RELATIONSHIP } from '../../../constants';
 import { BaseModal } from '../../../components/modal';
@@ -169,7 +169,7 @@ class AllFriendsTab extends Component {
         this.allImageRef[index].measure((x, y, width, height, pageX, pageY) => {
             const userInfo = { userId: person.userId, image: require('../../../assets/img/friend-profile-pic.png') };
             const oldPosition = { pageX, pageY, width, height };
-            this.props.openUserProfile({ userInfo, oldPosition });
+            this.props.openUserProfile({ personInfo: userInfo, oldPosition });
         });
     }
 

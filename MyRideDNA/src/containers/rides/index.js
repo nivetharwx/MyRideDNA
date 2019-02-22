@@ -236,7 +236,7 @@ export class Rides extends Component {
         const { activeTab, searchQuery, headerSearchMode, isVisibleRenameModal, isVisibleOptionsModal } = this.state;
         const { buildRides, recordedRides, sharedRides, user } = this.props;
         return (
-            <SafeAreaView style={{ flex: 1 }}>
+            <View style={{ flex: 1 }}>
                 <BaseModal alignCenter={true} isVisible={isVisibleRenameModal} onCancel={this.onCancelRenameForm} onPressOutside={this.onCancelRenameForm}>
                     <View style={{ backgroundColor: '#fff', width: WindowDimensions.width * 0.6, padding: 20, elevation: 3 }}>
                         <LabeledInput placeholder='Enter new name here' onChange={(val) => this.setState({ newRideName: val })}
@@ -257,7 +257,7 @@ export class Rides extends Component {
                 <BasicHeader title='Rides' rightIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
                     searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false })}
                     onClearSearchValue={() => this.setState({ searchQuery: '' })} />
-                <Tabs onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#E3EED3', marginTop: 60 }} renderTabBar={() => <ScrollableTab activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
+                <Tabs onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#E3EED3', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                     <Tab
                         heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
                             <NBIcon name='motorbike' type='MaterialCommunityIcons' style={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} /><Text style={{ marginLeft: 5, color: activeTab === 0 ? '#fff' : '#6B7663' }}>Created{'\n'}Rides</Text>
@@ -341,7 +341,7 @@ export class Rides extends Component {
 
                 {/* Shifter: - Brings the app navigation menu */}
                 <ShifterButton onPress={this.showAppNavMenu} alignLeft={this.props.user.handDominance === 'left'} />
-            </SafeAreaView>
+            </View>
         );
     }
 

@@ -1,4 +1,4 @@
-import { Dimensions, Platform } from 'react-native';
+import { Dimensions, Platform, StatusBar } from 'react-native';
 
 var window = Dimensions.get("window");
 export const WindowDimensions = {
@@ -15,6 +15,8 @@ export const heightPercentageToDP = (percentage) => {
 }
 
 export const IS_ANDROID = Platform.OS === 'android';
+
+const APP_HEADER_HEIGHT = Platform.OS === 'android' ? heightPercentageToDP(8.5) : heightPercentageToDP(10);
 
 export const DEVICE_LOCATION_STATE = { ON: 'on', OFF: 'off' };
 
@@ -73,10 +75,23 @@ export const ICON_NAMES = {
     WAYPOINT_DEFAULT: 'waypointDefault', WAYPOINT_SELECTED: 'waypointSelected'
 }
 
+const HEADER_COLOR = '#0076B5';
+const STATUS_BAR_COLOR = '#006297';
+
 export const APP_COMMON_STYLES = {
     infoColor: '#EB861E',
-    headerColor: '#0076B5',
+    headerColor: HEADER_COLOR,
+    headerHeight: APP_HEADER_HEIGHT,
+    statusBarColor: STATUS_BAR_COLOR,
     testingBorder: { borderWidth: 2, borderColor: 'red' },
+    statusBar: {
+        height: Platform.OS === 'ios' ? 20 : StatusBar.currentHeight,
+        backgroundColor: STATUS_BAR_COLOR,
+    },
+    appBar: {
+        backgroundColor: HEADER_COLOR,
+        height: Platform.OS === 'ios' ? 44 : 56,
+    },
     menuOptContainer: {
         alignSelf: 'flex-end',
         width: '50%',
@@ -94,7 +109,8 @@ export const APP_COMMON_STYLES = {
     menuOptHighlight: {
         width: '100%',
         height: '12%',
-        paddingVertical: '10%',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     menuOpt: {
         paddingHorizontal: 0,
@@ -102,7 +118,7 @@ export const APP_COMMON_STYLES = {
     menuOptTxt: {
         color: '#fff',
         fontSize: widthPercentageToDP(4),
-        paddingHorizontal: '20%'
+        paddingVertical: '12%',
     },
     leftDominantCont: {
         alignSelf: 'flex-start'

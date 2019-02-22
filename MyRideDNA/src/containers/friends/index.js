@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { StyleSheet, SafeAreaView, Animated, ImageBackground, TouchableNativeFeedback, TouchableWithoutFeedback, Text, View } from 'react-native';
 import { BasicHeader } from '../../components/headers';
 import { Tabs, Tab, TabHeading, ScrollableTab, Icon as NBIcon } from 'native-base';
-import { heightPercentageToDP, widthPercentageToDP } from '../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
 import styles from './styles';
 import AllFriendsTab from './all-friends';
 import GroupsTab from './groups';
@@ -144,12 +144,12 @@ class Friends extends Component {
         };
 
         return (
-            <SafeAreaView style={{ flex: 1 }}>
-                <BasicHeader headerHeight={heightPercentageToDP(8.5)} title='Friends' rightIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
+            <View style={{ flex: 1 }}>
+                <BasicHeader title='Friends' rightIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
                     searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false, searchQuery: '' })}
                     onClearSearchValue={() => this.setState({ searchQuery: '' })} />
 
-                <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: heightPercentageToDP(8.5) }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
+                <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                     <Tab
                         heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
                             <NBIcon name='user' type='Feather' style={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} /><Text style={{ marginLeft: 5, color: activeTab === 0 ? '#fff' : '#6B7663' }}>Online{'\n'}friends</Text>
@@ -184,11 +184,11 @@ class Friends extends Component {
                                 style={[{ resizeMode: 'cover', top: 0, left: 0, height: null, width: null, borderRadius: 15 }, activeImageStyle]}
                             ></Animated.Image>
                         </ImageBackground>
-                        <TouchableNativeFeedback onPress={this.closeProfile}>
+                        <TouchableWithoutFeedback onPress={this.closeProfile}>
                             <Animated.View style={[{ position: 'absolute', top: 30, right: 30 }, animatedCrossOpacity]}>
                                 <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>X</Text>
                             </Animated.View>
-                        </TouchableNativeFeedback>
+                        </TouchableWithoutFeedback>
                     </View>
                     <Animated.View style={[{ flex: 1, zIndex: 900, backgroundColor: '#fff', padding: 20, paddingTop: 50, paddingBotton: 10 }, animatedContentStyle]}>
                         <Text>TESING TEXT CONTENT</Text>
@@ -197,7 +197,7 @@ class Friends extends Component {
 
                 {/* Shifter: - Brings the app navigation menu */}
                 <ShifterButton onPress={this.toggleAppNavigation} alignLeft={this.props.user.handDominance === 'left'} />
-            </SafeAreaView>
+            </View>
         );
     }
 }

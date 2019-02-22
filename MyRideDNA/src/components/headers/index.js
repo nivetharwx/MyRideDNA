@@ -6,7 +6,8 @@ import {
     Text,
     StyleSheet,
     Animated,
-    TextInput
+    TextInput,
+    Platform
 } from 'react-native';
 import { Icon as NBIcon } from 'native-base';
 import { WindowDimensions, APP_COMMON_STYLES } from '../../constants';
@@ -68,7 +69,7 @@ export class BasicHeader extends React.Component {
         });
 
         return (
-            <SafeAreaView style={[styles.header, { height: headerHeight || 60 }, style]}>
+            <View style={[styles.header, style]}>
                 {
                     searchbarMode === false || searchbarMode === undefined
                         ? <View style={{ flex: 1, flexDirection: 'row' }}>
@@ -146,7 +147,7 @@ export class BasicHeader extends React.Component {
                             }
                         </Animated.View>
                 }
-            </SafeAreaView>
+            </View>
         );
 
     }
@@ -179,13 +180,14 @@ const styles = StyleSheet.create({
     header: {
         position: 'absolute',
         // alignItems: 'center',
-        top: 0,
+        top: 0,        
         left: 0,
         width: '100%',
         overflow: 'hidden',
         backgroundColor: APP_COMMON_STYLES.headerColor,
         zIndex: 100,
         flexDirection: 'row',
+        height: APP_COMMON_STYLES.headerHeight,
     },
     iconPadding: {
         padding: 5,

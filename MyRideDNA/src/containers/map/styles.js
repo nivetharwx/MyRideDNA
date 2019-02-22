@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BULLSEYE_SIZE, WindowDimensions } from '../../constants';
+import { BULLSEYE_SIZE, WindowDimensions, APP_COMMON_STYLES } from '../../constants';
 
 const styles = StyleSheet.create({
     fillParent: {
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     },
     mapHeader: {
         height: 60,
-        backgroundColor: '#0076B5',
+        backgroundColor: APP_COMMON_STYLES.headerColor,
         flexDirection: 'row',
     },
     mapSubHeader: {

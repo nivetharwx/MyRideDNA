@@ -1,4 +1,4 @@
-import { WindowDimensions } from '../../constants'
+import { WindowDimensions, heightPercentageToDP } from '../../constants'
 
 const LOGIN_BUTTON_HEIGHT = 100;
 
@@ -16,7 +16,9 @@ export const LoginStyles = {
     },
     loginForm: {
         backgroundColor: 'white',
-        height: 200,
+        height: heightPercentageToDP(20),
+        justifyContent: 'space-around',
+        paddingBottom: heightPercentageToDP(5)
     },
     loginButtonContainer: {
         marginTop: -(LOGIN_BUTTON_HEIGHT / 2),

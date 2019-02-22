@@ -19,7 +19,7 @@ import { default as turfDistance } from '@turf/distance';
 import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon } from 'native-base';
-import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES } from '../../constants';
+import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES } from '../../constants';
 import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction } from '../../actions';
 import { SearchBox } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
@@ -1264,18 +1264,17 @@ export class Map extends Component {
         const { ride, showMenu, showLoader, user } = this.props;
         const MAP_VIEW_TOP_OFFSET = showCreateRide ? (CREATE_RIDE_CONTAINER_HEIGHT - WINDOW_HALF_HEIGHT) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2) : (isEditable ? 130 : 60) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2);
         return (
-            <SafeAreaView style={{ flex: 1 }}>
-                <StatusBar
-                    backgroundColor="rgba(0,118,181,0.9)"
-                    barStyle="default"
-                />
+            <View style={{ flex: 1 }}>
+                {/* <View style={APP_COMMON_STYLES.statusBar}>
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                </View> */}
                 <MenuModal isVisible={showMenu} onClose={this.onCloseAppNavMenu} onPressNavMenu={this.onPressAppNavMenu} alignCloseIconLeft={user.handDominance === 'left'} />
                 <Spinner
                     visible={showLoader}
                     textContent={'Loading...'}
                     textStyle={{ color: '#fff' }}
                 />
-                <View style={styles.fillParent}>
+                <View style={[styles.fillParent, { flexShrink: 1 }]}>
                     {
                         !showCreateRide
                             ? <View style={styles.mapHeader}>
@@ -1523,7 +1522,7 @@ export class Map extends Component {
                         ? <ShifterButton onPress={this.toggleAppNavigation} alignLeft={user.handDominance === 'left'} />
                         : null
                 }
-            </SafeAreaView>
+            </View>
         );
     }
 }

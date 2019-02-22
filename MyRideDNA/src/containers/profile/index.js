@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, SafeAreaView, View, Text, StatusBar } from 'react-native';
-import { heightPercentageToDP } from '../../constants/index';
+import { StyleSheet, SafeAreaView, View, Text, StatusBar, Platform } from 'react-native';
+import { heightPercentageToDP, APP_COMMON_STYLES } from '../../constants/index';
 import { ShifterButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { Tabs, Tab, ScrollableTab, TabHeading } from 'native-base';
@@ -36,34 +36,34 @@ class Profile extends Component {
         const { user } = this.props;
         const { activeTab, profilePicString } = this.state;
         return (
-            <SafeAreaView style={styles.fill}>
-                <StatusBar
-                    backgroundColor="rgba(54,54,54,0.9)"
-                    barStyle="default"
-                />
+            <View style={styles.fill}>
+                <View style={APP_COMMON_STYLES.statusBar}>
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <Tabs locked={true} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B' }} underlineStyle={{ height: 0 }} />}>
+                        <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 0 ? '#0083CA' : '#6C6C6B' }]}>
+                            <Text style={{ color: '#fff' }}>MY PROFILE</Text>
+                        </TabHeading>}>
+                            <MyProfileTab />
+                        </Tab>
+                        <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 1 ? '#0083CA' : '#6C6C6B', borderColor: '#fff', borderRightWidth: 2, borderLeftWidth: 2 }]}>
+                            <Text style={{ color: '#fff' }}>MY GARAGE</Text>
+                        </TabHeading>}>
+                            <MyGarageTab />
+                        </Tab>
+                        <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 2 ? '#0083CA' : '#6C6C6B' }]}>
+                            <Text style={{ color: '#fff' }}>MY VEST</Text>
+                        </TabHeading>}>
+                            <View style={{ backgroundColor: '#fff', flex: 1 }}></View>
+                        </Tab>
+                    </Tabs>
 
-                <Tabs locked={true} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B' }} underlineStyle={{ height: 0 }} />}>
-                    <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 0 ? '#0083CA' : '#6C6C6B' }]}>
-                        <Text style={{ color: '#fff' }}>MY PROFILE</Text>
-                    </TabHeading>}>
-                        <MyProfileTab />
-                    </Tab>
-                    <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 1 ? '#0083CA' : '#6C6C6B', borderColor: '#fff', borderRightWidth: 2, borderLeftWidth: 2 }]}>
-                        <Text style={{ color: '#fff' }}>MY GARAGE</Text>
-                    </TabHeading>}>
-                        <MyGarageTab />
-                    </Tab>
-                    <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 2 ? '#0083CA' : '#6C6C6B' }]}>
-                        <Text style={{ color: '#fff' }}>MY VEST</Text>
-                    </TabHeading>}>
-                        <View style={{ backgroundColor: '#fff', flex: 1 }}></View>
-                    </Tab>
-                </Tabs>
-
-                {/* Shifter: - Brings the app navigation menu */}
-                <ShifterButton onPress={this.showAppNavMenu} 
-                containerStyles={{ bottom: BOTTOM_TAB_HEIGHT }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
-            </SafeAreaView>
+                    {/* Shifter: - Brings the app navigation menu */}
+                    <ShifterButton onPress={this.showAppNavMenu}
+                        containerStyles={{ bottom: BOTTOM_TAB_HEIGHT }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
+                </View>
+            </View >
         );
     }
 }

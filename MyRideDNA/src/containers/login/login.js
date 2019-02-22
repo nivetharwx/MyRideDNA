@@ -14,7 +14,7 @@ import { IconButton, LinkButton } from '../../components/buttons';
 
 import * as Animatable from 'react-native-animatable';
 
-import { WindowDimensions } from '../../constants/index';
+import { WindowDimensions, heightPercentageToDP } from '../../constants/index';
 import { LoginStyles } from './styles';
 
 export const LoginScreen = (props) => (
@@ -34,10 +34,10 @@ export const LoginScreen = (props) => (
                     <TouchableOpacity style={LoginStyles.loginButton} onPress={props.onSubmit} activeOpacity={0.9}><Text style={{ color: 'white' }}>LOGIN</Text></TouchableOpacity>
                 </View>
             </View>
-            <View style={{ position: 'absolute', zIndex: 8, width: WindowDimensions.width, backgroundColor: 'rgba(182,86,26,0.7)', height: 100, paddingTop: 15 }}>
+            <View style={{ position: 'absolute', zIndex: 8, width: WindowDimensions.width, backgroundColor: 'rgba(182,86,26,0.7)', height: heightPercentageToDP(10), paddingTop: 15 }}>
                 <View style={{ paddingStart: 5, paddingEnd: 30, marginTop: 10, flexDirection: 'row', justifyContent: 'space-between' }}>
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                        <LinkButton title='Forgot Password' titleStyle={{ color: 'white', fontSize: 16 }} onPress={props.onForgotPasswordPress} />
+                        <LinkButton title={`Forgot\nPassword`} titleStyle={{ color: 'white', fontSize: 16 }} onPress={props.onForgotPasswordPress} />
                     </View>
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
                         <LinkButton title='Signup' titleStyle={{ color: 'white', fontSize: 16 }} onPress={props.onSignupPress} />

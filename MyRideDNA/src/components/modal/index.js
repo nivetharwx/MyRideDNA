@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import {
     StyleSheet,
     SafeAreaView, Modal, TouchableOpacity, ScrollView, View, Image,
-    TouchableWithoutFeedback, Text, ImageBackground, StatusBar
+    TouchableWithoutFeedback, Text, ImageBackground, StatusBar, Platform
 } from 'react-native';
 import { Icon as NBIcon } from 'native-base';
 import { AppMenuButton, ImageButton } from '../buttons';
@@ -73,7 +73,8 @@ const mapDispatchToProps = (dispatch) => {
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MenuModal);
 
-export const BaseModal = (props) => (
+export const BaseModal = (props) => {
+    return (
     <Modal
         animationType="slide"
         transparent={true}
@@ -85,7 +86,7 @@ export const BaseModal = (props) => (
                     <ScrollView
                         directionalLockEnabled={true}
                         style={styles.fillParent}
-                        contentContainerStyle={[styles.fillParent, props.alignCenter ? styles.centerContent : null]}
+                        contentContainerStyle={[styles.fillParent, Platform.OS === 'ios' ? styles.safePadding : null, props.alignCenter ? styles.centerContent : null]}
                     >
                         <TouchableWithoutFeedback>
                             {
@@ -109,7 +110,7 @@ export const BaseModal = (props) => (
                 </View>
         }
     </Modal>
-);
+);}
 
 const styles = StyleSheet.create({
     navIconImage: {
@@ -127,6 +128,9 @@ const styles = StyleSheet.create({
     },
     modalOffSpaceBgColor: {
         backgroundColor: 'rgba(0,0,0,0.7)'
+    },
+    safePadding: {
+        paddingTop: heightPercentageToDP(2)
     }
 });
 

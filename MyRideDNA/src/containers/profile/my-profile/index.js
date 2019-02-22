@@ -130,6 +130,7 @@ class MyProfileTab extends Component {
         const { isLoadingProfPic } = this.state;
         return (
             <View style={styles.fill}>
+                <View style={APP_COMMON_STYLES.appBar} />
                 <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
                     <View style={styles.profilePic}>
                         {
@@ -239,5 +240,5 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignContent: 'center',
         alignItems: 'center',
-    }
+    },
 });
