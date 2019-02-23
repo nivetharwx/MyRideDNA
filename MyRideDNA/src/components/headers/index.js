@@ -55,7 +55,7 @@ export class BasicHeader extends React.Component {
     }
 
     render() {
-        const { headerHeight, leftIconProps, title, rightIconProps, onCancelSearchMode,
+        const { leftIconProps, title, rightIconProps, onCancelSearchMode,
             searchValue, onChangeSearchValue, hasEditableTitle, style } = this.props;
         const { searchbarAnim, searchbarMode, titleEditingMode } = this.state;
 
@@ -119,7 +119,7 @@ export class BasicHeader extends React.Component {
                                     : null
                             }
                         </View>
-                        : <Animated.View style={{ flex: 1, flexDirection: 'row', translateX: searchbarAnim }}>
+                        : <Animated.View style={{ flex: 1, flexDirection: 'row', transform: [{ translateX: searchbarAnim }] }}>
                             <Animated.View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center', opacity: searchCancelAnim }}>
                                 <IconButton onPress={onCancelSearchMode} iconProps={{
                                     name: 'md-arrow-round-back', type: 'Ionicons', style: {
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     header: {
         position: 'absolute',
         // alignItems: 'center',
-        top: 0,        
+        top: 0,
         left: 0,
         width: '100%',
         overflow: 'hidden',

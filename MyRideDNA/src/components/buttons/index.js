@@ -111,7 +111,7 @@ export class SwitchIconButton extends React.Component {
                         {
                             value === true ? activeIcon : null
                         }
-                        <Animated.View style={{ position: 'absolute', zIndex: 100, elevation: 10, width: widthPercentageToDP(7.5), height: widthPercentageToDP(7.5), borderRadius: widthPercentageToDP(3.75), backgroundColor: '#fff', translateX: switchAnim }} />
+                        <Animated.View style={{ position: 'absolute', zIndex: 100, elevation: 10, width: widthPercentageToDP(7.5), height: widthPercentageToDP(7.5), borderRadius: widthPercentageToDP(3.75), backgroundColor: '#fff', transform: [{ translateX: switchAnim }] }} />
                         {
                             value === false ? inactiveIcon : null
                         }

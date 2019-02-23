@@ -8,7 +8,7 @@ import { IconicInput, IconicList } from '../../components/inputs';
 import { BasicHeader } from '../../components/headers';
 
 import { LoginStyles } from '../../containers/login/styles';
-import { WindowDimensions } from '../../constants';
+import { WindowDimensions, APP_COMMON_STYLES } from '../../constants';
 import { LoginButton, SocialButtons, IconButton, RoundButton } from '../../components/buttons';
 import { isValidEmailFormat } from '../../util';
 import Spinner from 'react-native-loading-spinner-overlay';
@@ -135,37 +135,38 @@ class Signup extends Component {
     render() {
         const { user, isPasswdVisible, isConfirmPasswdVisible, showLoader } = this.state;
         return (
-            <View style={{ flex: 1, backgroundColor: 'white' }}>
-                <StatusBar
-                    backgroundColor="rgba(0,118,181,0.9)"
-                    barStyle="default"
-                />
-                <Spinner
-                    visible={showLoader}
-                    textContent={'Loading...'}
-                    textStyle={{ color: '#fff' }}
-                />
-                <BasicHeader title='Signup' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} searchbarMode={false} />
-                <ScrollView style={{ backgroundColor: 'white', marginTop: HEADER_HEIGHT }} contentContainerStyle={{ paddingTop: 20, justifyContent: 'space-between', flex: 1 }}>
-                    <IconicInput iconProps={{ style: styles.formFieldIcon, name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Name' onChange={this.onChangeName} />
-                    <IconicList iconProps={{ style: styles.formFieldIcon, name: 'transgender', type: 'FontAwesome' }}
-                        selectedValue={user.gender} placeholder='Gender' values={[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }]}
-                        onChange={this.onGenderChange}></IconicList>
-                    <IconicInput iconProps={{ style: styles.formFieldIcon, name: 'email', type: 'MaterialIcons' }} inputType='emailAddress' placeholder='Email' onChange={this.onEmailChange} onFocusout={this.validateEmail} />
-                    <IconicInput
-                        iconEnd={<IconButton onPress={() => this.setState({ isPasswdVisible: !isPasswdVisible })} style={{ backgroundColor: '#0083CA', borderRadius: 10, paddingHorizontal: 1, paddingVertical: 1, marginRight: 10 }} iconProps={{ name: isPasswdVisible ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: 20, color: 'white', borderRadius: 10 } }} />}
-                        iconProps={{ style: styles.formFieldIcon, name: 'vpn-key', type: 'MaterialIcons' }} inputType={isPasswdVisible ? 'none' : 'password'} placeholder='Password' onChange={this.onPasswordsChange} />
-                    <IconicInput
-                        iconEnd={<IconButton onPress={() => this.setState({ isConfirmPasswdVisible: !isConfirmPasswdVisible })} style={{ backgroundColor: '#0083CA', borderRadius: 10, paddingHorizontal: 1, paddingVertical: 1, marginRight: 10 }} iconProps={{ name: isConfirmPasswdVisible ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: 20, color: 'white', borderRadius: 10 } }} />}
-                        iconProps={{ style: styles.formFieldIcon, name: 'vpn-key', type: 'MaterialIcons' }} inputType={isConfirmPasswdVisible ? 'none' : 'password'} placeholder='Confirm password' onChange={this.onConfrimPassworddChange} />
+            <View style={{ flex: 1 }}>
 
-                    <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 10, justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                        <RoundButton title='GO' style={{ height: 100, width: 100, borderRadius: 100 }} titleStyle={{ fontSize: 25 }} onPress={this.onSubmit} />
-                        <TouchableOpacity><Text style={{ color: '#0083CA', fontSize: 17 }}>Privacy policy</Text></TouchableOpacity>
-                    </View>
-                    {/* <View style={{ justifyContent: 'space-around', borderColor: 'red', borderWidth: 1 }}> */}
+                <View style={APP_COMMON_STYLES.statusBar}>
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                </View>
+                <View style={{ flex: 1, backgroundColor: 'white' }}>
+                    <Spinner
+                        visible={showLoader}
+                        textContent={'Loading...'}
+                        textStyle={{ color: '#fff' }}
+                    />
+                    <BasicHeader title='Signup' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} searchbarMode={false} />
+                    <ScrollView style={{ backgroundColor: 'white', marginTop: HEADER_HEIGHT }} contentContainerStyle={{ paddingTop: 20, justifyContent: 'space-between', flex: 1 }}>
+                        <IconicInput iconProps={{ style: styles.formFieldIcon, name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Name' onChange={this.onChangeName} />
+                        <IconicList iconProps={{ style: styles.formFieldIcon, name: 'transgender', type: 'FontAwesome' }}
+                            selectedValue={user.gender} placeholder='Gender' values={[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }]}
+                            onChange={this.onGenderChange}></IconicList>
+                        <IconicInput iconProps={{ style: styles.formFieldIcon, name: 'email', type: 'MaterialIcons' }} inputType='emailAddress' placeholder='Email' onChange={this.onEmailChange} onFocusout={this.validateEmail} />
+                        <IconicInput
+                            iconEnd={<IconButton onPress={() => this.setState({ isPasswdVisible: !isPasswdVisible })} style={{ backgroundColor: '#0083CA', borderRadius: 10, paddingHorizontal: 1, paddingVertical: 1, marginRight: 10 }} iconProps={{ name: isPasswdVisible ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: 20, color: 'white', borderRadius: 10 } }} />}
+                            iconProps={{ style: styles.formFieldIcon, name: 'vpn-key', type: 'MaterialIcons' }} inputType={isPasswdVisible ? 'none' : 'password'} placeholder='Password' onChange={this.onPasswordsChange} />
+                        <IconicInput
+                            iconEnd={<IconButton onPress={() => this.setState({ isConfirmPasswdVisible: !isConfirmPasswdVisible })} style={{ backgroundColor: '#0083CA', borderRadius: 10, paddingHorizontal: 1, paddingVertical: 1, marginRight: 10 }} iconProps={{ name: isConfirmPasswdVisible ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: 20, color: 'white', borderRadius: 10 } }} />}
+                            iconProps={{ style: styles.formFieldIcon, name: 'vpn-key', type: 'MaterialIcons' }} inputType={isConfirmPasswdVisible ? 'none' : 'password'} placeholder='Confirm password' onChange={this.onConfrimPassworddChange} />
 
-                    {/* <TouchableOpacity>
+                        <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 10, justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                            <RoundButton title='GO' style={{ height: 100, width: 100, borderRadius: 100 }} titleStyle={{ fontSize: 25 }} onPress={this.onSubmit} />
+                            <TouchableOpacity><Text style={{ color: '#0083CA', fontSize: 17 }}>Privacy policy</Text></TouchableOpacity>
+                        </View>
+                        {/* <View style={{ justifyContent: 'space-around', borderColor: 'red', borderWidth: 1 }}> */}
+
+                        {/* <TouchableOpacity>
                             <Text style={styles.termsConditionLink}>Read and accept Terms & Conditions</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.signupButton}>
@@ -176,14 +177,15 @@ class Signup extends Component {
                             <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#E9EAED' }]}><NBIcon name="facebook-square" type="FontAwesome" style={{ fontSize: 20, color: '#3b5998' }} /><Text style={[LoginStyles.loginButtonText, { paddingLeft: 10, color: '#939598' }]}>FACEBOOK LOGIN</Text></TouchableOpacity>
                             <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#5B5B5B' }]}><NBIcon name="social-google-plus" type="Foundation" style={{ fontSize: 20, backgroundColor: 'white', color: '#DD4B39' }} /><Text style={[LoginStyles.loginButtonText, { paddingLeft: 10, color: 'white' }]}>GOOGLE+ LOGIN</Text></TouchableOpacity>
                         </View> */}
-                    {/* </View> */}
-                    <View style={{ paddingVertical: (WindowDimensions.height * 5) / 100, backgroundColor: '#EB861E', alignItems: 'flex-end', paddingEnd: 10 }}>
-                        <View style={{ flexDirection: 'row', width: '50%', justifyContent: 'space-around' }}>
-                            <IconButton onPress={() => { }} style={{ paddingHorizontal: 0 }} iconProps={{ name: 'facebook', type: 'MaterialCommunityIcons', style: { backgroundColor: '#fff', color: '#EB861E', fontSize: 60, borderRadius: 5 } }} />
-                            <IconButton onPress={() => { }} style={{ paddingHorizontal: 0 }} iconProps={{ name: 'google-', type: 'Entypo', style: { backgroundColor: '#fff', color: '#EB861E', fontSize: 60, borderRadius: 5 } }} />
+                        {/* </View> */}
+                        <View style={{ paddingVertical: (WindowDimensions.height * 5) / 100, backgroundColor: '#EB861E', alignItems: 'flex-end', paddingEnd: 10 }}>
+                            <View style={{ flexDirection: 'row', width: '50%', justifyContent: 'space-around' }}>
+                                <IconButton onPress={() => { }} style={{ paddingHorizontal: 0 }} iconProps={{ name: 'facebook', type: 'MaterialCommunityIcons', style: { backgroundColor: '#fff', color: '#EB861E', fontSize: 60, borderRadius: 5 } }} />
+                                <IconButton onPress={() => { }} style={{ paddingHorizontal: 0 }} iconProps={{ name: 'google-', type: 'Entypo', style: { backgroundColor: '#fff', color: '#EB861E', fontSize: 60, borderRadius: 5 } }} />
+                            </View>
                         </View>
-                    </View>
-                </ScrollView>
+                    </ScrollView>
+                </View>
             </View>
         );
     }

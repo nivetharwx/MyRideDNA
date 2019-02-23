@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {
     SafeAreaView, Text, View, FlatList, ImageBackground,
-    TouchableOpacity, Alert
+    TouchableOpacity, Alert, StatusBar
 } from 'react-native';
 import { connect } from 'react-redux';
 
@@ -237,110 +237,115 @@ export class Rides extends Component {
         const { buildRides, recordedRides, sharedRides, user } = this.props;
         return (
             <View style={{ flex: 1 }}>
-                <BaseModal alignCenter={true} isVisible={isVisibleRenameModal} onCancel={this.onCancelRenameForm} onPressOutside={this.onCancelRenameForm}>
-                    <View style={{ backgroundColor: '#fff', width: WindowDimensions.width * 0.6, padding: 20, elevation: 3 }}>
-                        <LabeledInput placeholder='Enter new name here' onChange={(val) => this.setState({ newRideName: val })}
-                            onSubmit={this.onSubmitRenameForm} />
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-                            <LinkButton title='Submit' onPress={this.onSubmitRenameForm} />
-                            <LinkButton title='Cancel' onPress={this.onCancelRenameForm} />
+                <View style={APP_COMMON_STYLES.statusBar}>
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <BaseModal alignCenter={true} isVisible={isVisibleRenameModal} onCancel={this.onCancelRenameForm} onPressOutside={this.onCancelRenameForm}>
+                        <View style={{ backgroundColor: '#fff', width: WindowDimensions.width * 0.6, padding: 20, elevation: 3 }}>
+                            <LabeledInput placeholder='Enter new name here' onChange={(val) => this.setState({ newRideName: val })}
+                                onSubmit={this.onSubmitRenameForm} />
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                                <LinkButton title='Submit' onPress={this.onSubmitRenameForm} />
+                                <LinkButton title='Cancel' onPress={this.onCancelRenameForm} />
+                            </View>
                         </View>
-                    </View>
-                </BaseModal>
-                <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
-                    <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
-                        {
-                            this.renderMenuOptions()
-                        }
-                    </View>
-                </BaseModal>
-                <BasicHeader title='Rides' rightIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
-                    searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false })}
-                    onClearSearchValue={() => this.setState({ searchQuery: '' })} />
-                <Tabs onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#E3EED3', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
-                    <Tab
-                        heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
-                            <NBIcon name='motorbike' type='MaterialCommunityIcons' style={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} /><Text style={{ marginLeft: 5, color: activeTab === 0 ? '#fff' : '#6B7663' }}>Created{'\n'}Rides</Text>
-                        </TabHeading>}>
-                        <View>
+                    </BaseModal>
+                    <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
+                        <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
                             {
-                                buildRides.length > 0 ?
-                                    <FlatList
-                                        data={buildRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
-                                        renderItem={({ item, index }) => <ListItem style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
-                                            <Left style={{ flex: 1 }}>
-                                                <TouchableOpacity style={{ flex: 1 }}
-                                                    onPress={() => this.onPressRide(item.rideId)}
-                                                    onLongPress={() => this.showOptionsModal(RIDE_TYPE.BUILD_RIDE, index)}
-                                                >
-                                                    <Text>{`${item.name}, ${getFormattedDateFromISO(new Date(item.date).toString().substr(4, 12), '.')}`}</Text>
-                                                </TouchableOpacity>
-                                            </Left>
-                                        </ListItem>}
-                                        keyExtractor={this.keyExtractor}
-                                    />
-                                    : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
+                                this.renderMenuOptions()
                             }
                         </View>
-                    </Tab>
-                    <Tab
-                        heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 2, borderLeftWidth: 2 }}>
-                            <NBIcon name='menu' type='MaterialCommunityIcons' style={{ color: activeTab === 1 ? '#fff' : '#6B7663' }} /><Text style={{ marginLeft: 5, color: activeTab === 1 ? '#fff' : '#6B7663' }}>Recorded{'\n'}Rides</Text>
-                        </TabHeading>}>
-                        <View>
-                            {
-                                recordedRides.length > 0 ?
-                                    <FlatList
-                                        data={recordedRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
-                                        renderItem={({ item, index }) => <ListItem style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
-                                            <Left style={{ flex: 1 }}>
-                                                <TouchableOpacity style={{ flex: 1 }}
-                                                    onPress={() => this.onPressRide(item.rideId)}
-                                                    onLongPress={() => this.showOptionsModal(RIDE_TYPE.RECORD_RIDE, index)}
-                                                >
-                                                    <Text>{`${item.name}`}</Text>
-                                                </TouchableOpacity>
-                                            </Left>
-                                        </ListItem>}
-                                        keyExtractor={this.keyExtractor}
-                                    />
-                                    : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
-                            }
-                        </View>
-                    </Tab>
-                    <Tab
-                        heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3' }}>
-                            <NBIcon name='ios-people' type='Ionicons' style={{ color: activeTab === 2 ? '#fff' : '#6B7663' }} /><Text style={{ marginLeft: 5, color: activeTab === 2 ? '#fff' : '#6B7663' }}>Shared{'\n'}Rides</Text>
-                        </TabHeading>}>
-                        <View>
-                            {
-                                sharedRides.length > 0 ?
-                                    <FlatList
-                                        data={sharedRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
-                                        renderItem={({ item, index }) => <ListItem style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
-                                            <Left style={{ flex: 1 }}>
-                                                <TouchableOpacity style={{ flex: 1 }}
-                                                    onPress={() => this.onPressRide(item.rideId)}
-                                                    onLongPress={() => {
-                                                        item.isRecorded
-                                                            ? null
-                                                            : this.showOptionsModal(RIDE_TYPE.SHARED_RIDE, index)
-                                                    }}
-                                                >
-                                                    <Text>{`${item.name}, ${getFormattedDateFromISO(new Date(item.date).toString().substr(4, 12), '.')}`}</Text>
-                                                </TouchableOpacity>
-                                            </Left>
-                                        </ListItem>}
-                                        keyExtractor={this.keyExtractor}
-                                    />
-                                    : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
-                            }
-                        </View>
-                    </Tab>
-                </Tabs>
+                    </BaseModal>
+                    <BasicHeader title='Rides' rightIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
+                        searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false })}
+                        onClearSearchValue={() => this.setState({ searchQuery: '' })} />
+                    <Tabs onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#E3EED3', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
+                        <Tab
+                            heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
+                                <NBIcon name='motorbike' type='MaterialCommunityIcons' style={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} /><Text style={{ marginLeft: 5, color: activeTab === 0 ? '#fff' : '#6B7663' }}>Created{'\n'}Rides</Text>
+                            </TabHeading>}>
+                            <View>
+                                {
+                                    buildRides.length > 0 ?
+                                        <FlatList
+                                            data={buildRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
+                                            renderItem={({ item, index }) => <ListItem style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
+                                                <Left style={{ flex: 1 }}>
+                                                    <TouchableOpacity style={{ flex: 1 }}
+                                                        onPress={() => this.onPressRide(item.rideId)}
+                                                        onLongPress={() => this.showOptionsModal(RIDE_TYPE.BUILD_RIDE, index)}
+                                                    >
+                                                        <Text>{`${item.name}, ${getFormattedDateFromISO(new Date(item.date).toString().substr(4, 12), '.')}`}</Text>
+                                                    </TouchableOpacity>
+                                                </Left>
+                                            </ListItem>}
+                                            keyExtractor={this.keyExtractor}
+                                        />
+                                        : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
+                                }
+                            </View>
+                        </Tab>
+                        <Tab
+                            heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 2, borderLeftWidth: 2 }}>
+                                <NBIcon name='menu' type='MaterialCommunityIcons' style={{ color: activeTab === 1 ? '#fff' : '#6B7663' }} /><Text style={{ marginLeft: 5, color: activeTab === 1 ? '#fff' : '#6B7663' }}>Recorded{'\n'}Rides</Text>
+                            </TabHeading>}>
+                            <View>
+                                {
+                                    recordedRides.length > 0 ?
+                                        <FlatList
+                                            data={recordedRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
+                                            renderItem={({ item, index }) => <ListItem style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
+                                                <Left style={{ flex: 1 }}>
+                                                    <TouchableOpacity style={{ flex: 1 }}
+                                                        onPress={() => this.onPressRide(item.rideId)}
+                                                        onLongPress={() => this.showOptionsModal(RIDE_TYPE.RECORD_RIDE, index)}
+                                                    >
+                                                        <Text>{`${item.name}`}</Text>
+                                                    </TouchableOpacity>
+                                                </Left>
+                                            </ListItem>}
+                                            keyExtractor={this.keyExtractor}
+                                        />
+                                        : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
+                                }
+                            </View>
+                        </Tab>
+                        <Tab
+                            heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3' }}>
+                                <NBIcon name='ios-people' type='Ionicons' style={{ color: activeTab === 2 ? '#fff' : '#6B7663' }} /><Text style={{ marginLeft: 5, color: activeTab === 2 ? '#fff' : '#6B7663' }}>Shared{'\n'}Rides</Text>
+                            </TabHeading>}>
+                            <View>
+                                {
+                                    sharedRides.length > 0 ?
+                                        <FlatList
+                                            data={sharedRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
+                                            renderItem={({ item, index }) => <ListItem style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
+                                                <Left style={{ flex: 1 }}>
+                                                    <TouchableOpacity style={{ flex: 1 }}
+                                                        onPress={() => this.onPressRide(item.rideId)}
+                                                        onLongPress={() => {
+                                                            item.isRecorded
+                                                                ? null
+                                                                : this.showOptionsModal(RIDE_TYPE.SHARED_RIDE, index)
+                                                        }}
+                                                    >
+                                                        <Text>{`${item.name}, ${getFormattedDateFromISO(new Date(item.date).toString().substr(4, 12), '.')}`}</Text>
+                                                    </TouchableOpacity>
+                                                </Left>
+                                            </ListItem>}
+                                            keyExtractor={this.keyExtractor}
+                                        />
+                                        : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
+                                }
+                            </View>
+                        </Tab>
+                    </Tabs>
 
-                {/* Shifter: - Brings the app navigation menu */}
-                <ShifterButton onPress={this.showAppNavMenu} alignLeft={this.props.user.handDominance === 'left'} />
+                    {/* Shifter: - Brings the app navigation menu */}
+                    <ShifterButton onPress={this.showAppNavMenu} alignLeft={this.props.user.handDominance === 'left'} />
+                </View>
             </View>
         );
     }

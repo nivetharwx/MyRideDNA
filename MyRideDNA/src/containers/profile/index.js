@@ -47,8 +47,8 @@ class Profile extends Component {
                         </TabHeading>}>
                             <MyProfileTab />
                         </Tab>
-                        <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 1 ? '#0083CA' : '#6C6C6B', borderColor: '#fff', borderRightWidth: 2, borderLeftWidth: 2 }]}>
-                            <Text style={{ color: '#fff' }}>MY GARAGE</Text>
+                        <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 1 ? '#0083CA' : '#6C6C6B', borderLeftWidth: 2, borderLeftColor: '#fff', borderRightWidth: 2, borderRightColor: '#fff' }]}>
+                            <Text style={{ color: '#fff' }}>{'    '}MY GARAGE{'    '}</Text>
                         </TabHeading>}>
                             <MyGarageTab />
                         </Tab>
@@ -61,7 +61,7 @@ class Profile extends Component {
 
                     {/* Shifter: - Brings the app navigation menu */}
                     <ShifterButton onPress={this.showAppNavMenu}
-                        containerStyles={{ bottom: BOTTOM_TAB_HEIGHT }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
+                        containerStyles={{ bottom: Platform.OS === 'android' ? BOTTOM_TAB_HEIGHT : BOTTOM_TAB_HEIGHT + 12 }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
             </View >
         );
@@ -89,11 +89,13 @@ const styles = StyleSheet.create({
         position: 'absolute',
         // zIndex: 50,
         bottom: 0,
+        paddingBottom: 20,
         height: '100%',
         width: '100%',
     },
     bottomTab: {
-        flex: 1,
         height: BOTTOM_TAB_HEIGHT,
+        alignItems: 'center',
+        justifyContent: 'center',
     }
 });

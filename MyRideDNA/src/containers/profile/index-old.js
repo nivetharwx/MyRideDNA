@@ -240,7 +240,7 @@ class Profile extends Component {
                                 <NBIcon name='bell' type='FontAwesome' color='#000' style={{ fontSize: 18 }} />
                             </TouchableOpacity>
                         </View>
-                        <Animated.View style={{ flex: 3, translateY: headerTextTranslateY, translateX: headerTextTranslateX }}>
+                        <Animated.View style={{ flex: 3, transform: [{ translateY: headerTextTranslateY }, { translateX: headerTextTranslateX }] }}>
                             <Text style={styles.title}
                                 renderToHardwareTextureAndroid collapsable={false}>
                                 {user.name}

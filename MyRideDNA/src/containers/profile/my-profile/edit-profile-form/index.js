@@ -122,7 +122,7 @@ class EditProfileForm extends Component {
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
         const { user } = this.state;
         return (
-            <View style={styles.fill}>
+            <View style={[styles.fill, { paddingBottom: 20 }]}>
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>

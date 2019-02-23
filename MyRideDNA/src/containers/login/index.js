@@ -114,8 +114,9 @@ class Login extends Component {
 
     render() {
         return (
-            <SafeAreaView style={{ flex: 1 }}>
+            <View style={{ flex: 1 }}>
                 <StatusBar
+                    translucent
                     backgroundColor="#7AC0E9"
                     barStyle="default"
                 />
@@ -133,7 +134,7 @@ class Login extends Component {
                     onForgotPasswordPress={this.toggleForgotPasswordForm}
                     isVisiblePassword={this.state.isVisiblePassword}
                 />
-            </SafeAreaView>
+            </View>
         );
     }
 }

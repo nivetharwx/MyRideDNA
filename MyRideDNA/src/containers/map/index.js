@@ -1404,7 +1404,7 @@ export class Map extends Component {
                     <View style={{ position: 'absolute', zIndex: 100, left: 5, top: 140, width: 55 }}>
                         <IconButton style={[styles.mapControlButton, { backgroundColor: 'transparent' }]} iconProps={{ name: 'controller-play', type: 'Entypo', style: { fontSize: 40, elevation: 10 } }} onPress={this.showMapControls} />
                     </View>
-                    <Animated.View style={[{ left: 5, elevation: 10, position: 'absolute', zIndex: 100, top: 140, width: 55 }, { translateX: controlsBarLeftAnim }]}>
+                    <Animated.View style={[{ left: 5, elevation: 10, position: 'absolute', zIndex: 100, top: 140, width: 55 }, { transform: [{ translateX: controlsBarLeftAnim }] }]}>
                         <IconButton style={styles.mapControlButton} iconProps={{ name: 'controller-play', type: 'Entypo', style: { fontSize: 40, elevation: 10, transform: [{ rotate: '180deg' }] } }} onPress={this.hideMapControls} />
                         <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'md-undo', type: 'Ionicons' }} onPress={this.onPressUndo} />
                         <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'md-redo', type: 'Ionicons' }} onPress={this.onPressRedo} />
@@ -1473,7 +1473,7 @@ export class Map extends Component {
                     </View> */}
                     {
                         activeMarkerIndex > -1
-                            ? <Animated.View style={[styles.controlsContainerRight, { translateX: optionsBarRightAnim }]}>
+                            ? <Animated.View style={[styles.controlsContainerRight, { transform: [{ translateX: optionsBarRightAnim }] }]}>
                                 <View style={{ alignItems: 'center', backgroundColor: '#fff' }}>
                                     <IconButton onPress={this.onCloseOptionsBar} style={{ paddingVertical: 5, backgroundColor: '#fff' }}
                                         iconProps={{ name: 'window-close', type: 'MaterialCommunityIcons' }} />
