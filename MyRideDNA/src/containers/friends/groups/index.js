@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, TextInput, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableNativeFeedback } from 'react-native';
+import { StyleSheet, TextInput, Animated, Text, Keyboard, FlatList, View, ImageBackground } from 'react-native';
 import { IconButton } from '../../../components/buttons';
-import { widthPercentageToDP, APP_COMMON_STYLES, heightPercentageToDP } from '../../../constants';
-import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox } from 'native-base';
+import { widthPercentageToDP, heightPercentageToDP } from '../../../constants';
+import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast } from 'native-base';
 import { ThumbnailCard } from '../../../components/cards';
 import { createFriendGroup, getFriendGroups, addMembers, getAllGroupMembers } from '../../../api';
-import { updateUpdatingGroupId, resetCurrentGroup } from '../../../actions';
+import { resetCurrentGroup } from '../../../actions';
 
 const CREATE_GROUP_WIDTH = widthPercentageToDP(9);
 class GroupsTab extends Component {
@@ -15,17 +15,30 @@ class GroupsTab extends Component {
     createGrpInputRef = null;
     addMemberInputRef = null;
     isAddingGroup = false;
+    defaultBtmOffset = widthPercentageToDP(8);
     constructor(props) {
         super(props);
+        this.defaultBtmOffset = widthPercentageToDP(props.user.handDominance === 'left' ? 20 : 8);
         this.state = {
             selectedFriendList: [],
             searchFriendList: [],
             newGroupName: null,
-        }
+            kbdBtmOffset: this.defaultBtmOffset,
+        };
     }
 
     componentDidMount() {
         this.props.getFriendGroups(this.props.user.userId);
+        Keyboard.addListener('keyboardDidShow', ({ endCoordinates }) => {
+            this.adjustLayoutOnKeyboardVisibility(endCoordinates.height);
+        });
+        Keyboard.addListener('keyboardDidHide', (evt) => {
+            this.adjustLayoutOnKeyboardVisibility(this.defaultBtmOffset);
+        });
+    }
+
+    adjustLayoutOnKeyboardVisibility = (bottomOffset) => {
+        this.setState({ kbdBtmOffset: bottomOffset });
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -58,6 +71,11 @@ class GroupsTab extends Component {
                 }
             });
         }
+    }
+
+    componentWillUnmount() {
+        // DOC: Remove all keyboard event listeners
+        Keyboard.removeAllListeners();
     }
 
     openCreateGroupSection = () => {
@@ -223,12 +241,19 @@ class GroupsTab extends Component {
     createGroup = () => {
         const { newGroupName } = this.state;
         this.closeCreateGroupSection(() => {
-            this.isAddingGroup = true;
-            this.props.createFriendGroup({
-                groupName: newGroupName,
-                createdBy: this.props.user.userId,
-                createdDate: new Date().toISOString(),
-            });
+            if (newGroupName.trim().length === 0) {
+                // Toast.show({
+                //     text: 'Please provide a group name',
+                //     buttonText: 'Okay'
+                // });
+            } else {
+                this.isAddingGroup = true;
+                this.props.createFriendGroup({
+                    groupName: newGroupName,
+                    createdBy: this.props.user.userId,
+                    createdDate: new Date().toISOString(),
+                });
+            }
         });
     }
 
@@ -283,7 +308,7 @@ class GroupsTab extends Component {
                             renderItem={this.renderFriend}
                         />
                     </View>
-                    <Animated.View style={[styles.createGrpContainer, { bottom: widthPercentageToDP(user.handDominance === 'left' ? 20 : 8), width: this.createSecAnim }]}>
+                    <Animated.View style={[styles.createGrpContainer, { bottom: this.state.kbdBtmOffset, width: this.createSecAnim }]}>
                         <Animated.View style={[styles.createGrpActionSec, { backgroundColor: '#fff', borderWidth: this.borderWidthAnim }]}>
                             {
                                 selectedFriendList.length === 0
@@ -310,7 +335,7 @@ class GroupsTab extends Component {
                             />
                             : <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
                     }
-                    <Animated.View style={[styles.createGrpContainer, { bottom: widthPercentageToDP(user.handDominance === 'left' ? 20 : 8), width: this.createSecAnim }]}>
+                    <Animated.View style={[styles.createGrpContainer, { bottom: this.state.kbdBtmOffset, width: this.createSecAnim }]}>
                         <Animated.View style={[styles.createGrpActionSec, { backgroundColor: newGroupName === null ? 'transparent' : '#fff', borderWidth: this.borderWidthAnim }]}>
                             {
                                 !newGroupName || newGroupName.trim().length === 0

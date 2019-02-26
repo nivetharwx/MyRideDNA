@@ -15,11 +15,15 @@ export class Notifications extends Component {
             notifications: []
         };
         this.count = 0;
-        this.interval = setInterval(() => {
-            if (this.count === 15) clearInterval(this.interval);
+        this.notficationInterval = setInterval(() => {
+            if (this.count === 15) clearInterval(this.notficationInterval);
             this.count++;
             this.setState({ notifications: [{ id: Date.now(), fromRiderName: 'MY_RIDE_DNA', message: '' + Date.now(), status: 'unread' }, ...this.state.notifications] })
         }, 1000);
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.notficationInterval);
     }
 
     onPressBackButton = () => {
