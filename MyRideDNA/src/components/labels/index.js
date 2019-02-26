@@ -7,9 +7,9 @@ import { Icon as NBIcon } from 'native-base';
 
 import styles from './styles';
 
-export const IconLabelPair = ({ iconProps, text, textStyle }) => {
+export const IconLabelPair = ({ containerStyle, iconProps, text, textStyle }) => {
     return (
-        <View style={styles.containerBox}>
+        <View style={[styles.containerBox, containerStyle]}>
             <NBIcon {...iconProps} />
             <Text style={[styles.textStyle, textStyle]}>{text}</Text>
         </View>

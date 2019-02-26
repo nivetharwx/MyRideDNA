@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         // zIndex: 50,
         bottom: 0,
-        paddingBottom: 20,
+        paddingBottom: Platform.OS === 'ios' ? 20 : 0,
         height: '100%',
         width: '100%',
     },

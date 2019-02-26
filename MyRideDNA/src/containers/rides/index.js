@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {
     SafeAreaView, Text, View, FlatList, ImageBackground,
-    TouchableOpacity, Alert, StatusBar
+    TouchableOpacity, Alert, StatusBar, Platform, StyleSheet
 } from 'react-native';
 import { connect } from 'react-redux';
 
@@ -13,6 +13,7 @@ import { BasicHeader } from '../../components/headers';
 import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
 import { LabeledInput } from '../../components/inputs';
+import { IconLabelPair } from '../../components/labels';
 import { BaseModal } from '../../components/modal';
 
 
@@ -261,10 +262,15 @@ export class Rides extends Component {
                     <BasicHeader title='Rides' rightIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
                         searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false })}
                         onClearSearchValue={() => this.setState({ searchQuery: '' })} />
-                    <Tabs onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#E3EED3', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
+                    <Tabs onChangeTab={this.onChangeTab} style={{ flex: 1, paddingBottom: Platform.OS === 'ios' ? 20 : 0, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                         <Tab
                             heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
-                                <NBIcon name='motorbike' type='MaterialCommunityIcons' style={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} /><Text style={{ marginLeft: 5, color: activeTab === 0 ? '#fff' : '#6B7663' }}>Created{'\n'}Rides</Text>
+                                <IconLabelPair
+                                    containerStyle={styles.tabContentCont}
+                                    iconProps={{ name: 'motorbike', type: 'MaterialCommunityIcons', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }}
+                                    text={`Created\nRides`}
+                                    textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663' }}
+                                />
                             </TabHeading>}>
                             <View>
                                 {
@@ -289,7 +295,12 @@ export class Rides extends Component {
                         </Tab>
                         <Tab
                             heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 2, borderLeftWidth: 2 }}>
-                                <NBIcon name='menu' type='MaterialCommunityIcons' style={{ color: activeTab === 1 ? '#fff' : '#6B7663' }} /><Text style={{ marginLeft: 5, color: activeTab === 1 ? '#fff' : '#6B7663' }}>Recorded{'\n'}Rides</Text>
+                                <IconLabelPair
+                                    containerStyle={styles.tabContentCont}
+                                    iconProps={{ name: 'menu', type: 'MaterialCommunityIcons', style: { color: activeTab === 1 ? '#fff' : '#6B7663' } }}
+                                    text={`Recorded\nRides`}
+                                    textStyle={{ color: activeTab === 1 ? '#fff' : '#6B7663' }}
+                                />
                             </TabHeading>}>
                             <View>
                                 {
@@ -314,7 +325,12 @@ export class Rides extends Component {
                         </Tab>
                         <Tab
                             heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3' }}>
-                                <NBIcon name='ios-people' type='Ionicons' style={{ color: activeTab === 2 ? '#fff' : '#6B7663' }} /><Text style={{ marginLeft: 5, color: activeTab === 2 ? '#fff' : '#6B7663' }}>Shared{'\n'}Rides</Text>
+                                <IconLabelPair
+                                    containerStyle={styles.tabContentCont}
+                                    iconProps={{ name: 'ios-people', type: 'Ionicons', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }}
+                                    text={`Shared\nRides`}
+                                    textStyle={{ color: activeTab === 2 ? '#fff' : '#6B7663' }}
+                                />
                             </TabHeading>}>
                             <View>
                                 {
@@ -380,3 +396,9 @@ const mapDispatchToProps = (dispatch) => {
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Rides);
+
+const styles = StyleSheet.create({
+    tabContentCont: {
+        paddingHorizontal: 0
+    }
+});

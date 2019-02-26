@@ -4,6 +4,9 @@ const styles = {
     fill: {
         width: WindowDimensions.width,
         height: WindowDimensions.height
+    },
+    tabContentCont: {
+        paddingHorizontal: 0
     }
 };
 

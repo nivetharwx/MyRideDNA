@@ -14,11 +14,8 @@ class AllFriendsTab extends Component {
     UNKNOWN_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Send\nRequest', id: 'sendRequest', handler: () => this.sendFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     SENT_REQUEST_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Cancel\nRequest', id: 'cancelRequest', handler: () => this.cancelFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     RECEIVED_REQUEST_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Accept\nRequest', id: 'acceptRequest', handler: () => { } }, { text: 'Reject\nRequest', id: 'rejectRequest', handler: () => { } }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
-    allImageRef = [];
-    oldPosition = {};
-    position = new Animated.ValueXY();
-    dimensions = new Animated.ValueXY();
-    animation = new Animated.Value(0);
+    searchResImageRef = [];
+    friendsImageRef = [];
     constructor(props) {
         super(props);
         this.state = {
@@ -165,12 +162,21 @@ class AllFriendsTab extends Component {
     }
 
     openProfile = (index) => {
-        const person = this.props.searchQuery.trim().length > 0 ? this.props.searchFriendList[index] : this.props.allFriends[index];
-        this.allImageRef[index].measure((x, y, width, height, pageX, pageY) => {
-            const userInfo = { userId: person.userId, image: require('../../../assets/img/friend-profile-pic.png') };
-            const oldPosition = { pageX, pageY, width, height };
-            this.props.openUserProfile({ personInfo: userInfo, oldPosition });
-        });
+        if (this.props.searchFriendList.length > 0) {
+            const person = this.props.searchFriendList[index];
+            this.searchResImageRef[index].measure((x, y, width, height, pageX, pageY) => {
+                const userInfo = { userId: person.userId, image: require('../../../assets/img/friend-profile-pic.png') };
+                const oldPosition = { pageX, pageY, width, height };
+                this.props.openUserProfile({ personInfo: userInfo, oldPosition });
+            });
+        } else {
+            const person = this.props.allFriends[index];
+            this.friendsImageRef[index].measure((x, y, width, height, pageX, pageY) => {
+                const userInfo = { userId: person.userId, image: require('../../../assets/img/friend-profile-pic.png') };
+                const oldPosition = { pageX, pageY, width, height };
+                this.props.openUserProfile({ personInfo: userInfo, oldPosition });
+            });
+        }
     }
 
     render() {
@@ -226,7 +232,9 @@ class AllFriendsTab extends Component {
                                     <ThumbnailCard
                                         thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                                         item={item}
+                                        thumbnailRef={imgRef => this.friendsImageRef[index] = imgRef}
                                         onLongPress={() => this.showOptionsModal(index)}
+                                        onPress={() => this.openProfile(index)}
                                     />
                                 )}
                             />
@@ -244,9 +252,9 @@ class AllFriendsTab extends Component {
                                     <ThumbnailCard
                                         thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                                         item={item}
-                                        onLongPress={() => this.openProfile(index)} //this.showOptionsModal(index)
+                                        onLongPress={() => this.showOptionsModal(index)} //this.showOptionsModal(index)
                                         actions={this.getActionsForRelationship(item)}
-                                        thumbnailRef={imgRef => this.allImageRef[index] = imgRef}
+                                        thumbnailRef={imgRef => this.searchResImageRef[index] = imgRef}
                                         onPress={() => this.openProfile(index)}
                                     />
                                 )}

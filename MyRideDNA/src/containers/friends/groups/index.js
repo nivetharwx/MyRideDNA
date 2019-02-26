@@ -54,7 +54,7 @@ class GroupsTab extends Component {
             this.setState({ selectedFriendList: [], searchFriendList: [], newGroupName: null }, () => {
                 // DOC: Clicked on group from the list
                 if (prevProps.currentGroup === null) {
-                    this.props.getAllGroupMembers(this.props.currentGroup.groupId);
+                    this.props.getAllGroupMembers(this.props.currentGroup.groupId, this.props.user.userId);
                 }
             });
         }
@@ -239,7 +239,7 @@ class GroupsTab extends Component {
 
     render() {
         const { selectedFriendList, newGroupName, searchFriendList } = this.state;
-        const { currentGroup, friendGroupList } = this.props;
+        const { currentGroup, friendGroupList, user } = this.props;
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '45deg']
@@ -261,7 +261,7 @@ class GroupsTab extends Component {
                         </Body>
                         <Right style={{ borderBottomWidth: 0, paddingTop: 0, justifyContent: 'center' }}>
                             <Text note>Members</Text>
-                            <Text note>{currentGroup.groupMembers.length === 0 ? 'Only You' : currentGroup.groupMembers.length + 1}</Text>
+                            <Text note>{currentGroup.groupMembers.length === 0 ? 'Only You' : currentGroup.groupMembers.length}</Text>
                         </Right>
                     </ListItem>
                     <FlatList
@@ -283,7 +283,7 @@ class GroupsTab extends Component {
                             renderItem={this.renderFriend}
                         />
                     </View>
-                    <Animated.View style={[styles.createGrpContainer, { bottom: 3, width: this.createSecAnim }]}>
+                    <Animated.View style={[styles.createGrpContainer, { bottom: widthPercentageToDP(user.handDominance === 'left' ? 20 : 8), width: this.createSecAnim }]}>
                         <Animated.View style={[styles.createGrpActionSec, { backgroundColor: '#fff', borderWidth: this.borderWidthAnim }]}>
                             {
                                 selectedFriendList.length === 0
@@ -310,7 +310,7 @@ class GroupsTab extends Component {
                             />
                             : <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
                     }
-                    <Animated.View style={[styles.createGrpContainer, { width: this.createSecAnim }]}>
+                    <Animated.View style={[styles.createGrpContainer, { bottom: widthPercentageToDP(user.handDominance === 'left' ? 20 : 8), width: this.createSecAnim }]}>
                         <Animated.View style={[styles.createGrpActionSec, { backgroundColor: newGroupName === null ? 'transparent' : '#fff', borderWidth: this.borderWidthAnim }]}>
                             {
                                 !newGroupName || newGroupName.trim().length === 0
@@ -341,7 +341,7 @@ const mapDispatchToProps = (dispatch) => {
         getFriendGroups: (userId) => dispatch(getFriendGroups(userId)),
         addMembers: (groupId, memberDetails) => dispatch(addMembers(groupId, memberDetails)),
         resetCurrentGroup: (groupIdx) => dispatch(resetCurrentGroup(groupIdx)),
-        getAllGroupMembers: (groupId) => dispatch(getAllGroupMembers(groupId)),
+        getAllGroupMembers: (groupId, userId) => dispatch(getAllGroupMembers(groupId, userId)),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(GroupsTab);
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     },
     createGrpContainer: {
         position: 'absolute',
-        bottom: heightPercentageToDP(4),
+        // bottom: widthPercentageToDP(20),
         marginRight: widthPercentageToDP(20),
         marginLeft: widthPercentageToDP(12.5),
         width: 0,

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, SafeAreaView, StatusBar, Animated, ImageBackground, TouchableNativeFeedback, TouchableWithoutFeedback, Text, View } from 'react-native';
+import { StyleSheet, SafeAreaView, Platform, StatusBar, Animated, ImageBackground, TouchableNativeFeedback, TouchableWithoutFeedback, Text, View } from 'react-native';
 import { BasicHeader } from '../../components/headers';
 import { Tabs, Tab, TabHeading, ScrollableTab, Icon as NBIcon } from 'native-base';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
@@ -9,6 +9,7 @@ import AllFriendsTab from './all-friends';
 import GroupsTab from './groups';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { ShifterButton } from '../../components/buttons';
+import { IconLabelPair } from '../../components/labels';
 
 class Friends extends Component {
     tabsRef = null;
@@ -79,7 +80,7 @@ class Friends extends Component {
                         toValue: 1,
                         duration: 300
                     }),
-                ]).start();
+                ]).start(() => StatusBar.setBarStyle('light-content'));
             });
         });
     }
@@ -113,7 +114,7 @@ class Friends extends Component {
 
     onPressGroupTab = () => {
         this.setState({ activeTab: 2, groupTabPressed: true }, () => this.tabsRef.props.goToPage(2));
-        setTimeout(() => this.setState(prevState => ({ groupTabPressed: false })), 100);
+        setTimeout(() => this.setState(prevState => ({ groupTabPressed: false })), 200);
     }
 
     render() {
@@ -145,18 +146,22 @@ class Friends extends Component {
 
         return (
             <View style={styles.fill}>
-                <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                </View>
+                {
+                    this.state.selectedPersonImg
+                        ? null
+                        : <View style={APP_COMMON_STYLES.statusBar}>
+                            <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                        </View>
+                }
                 <View style={{ flex: 1 }}>
                     <BasicHeader title='Friends' rightIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
                         searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false, searchQuery: '' })}
                         onClearSearchValue={() => this.setState({ searchQuery: '' })} />
 
-                    <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
+                    <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ flex: 1, paddingBottom: Platform.OS === 'ios' ? 20 : 0, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                         <Tab
                             heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
-                                <NBIcon name='user' type='Feather' style={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} /><Text style={{ marginLeft: 5, color: activeTab === 0 ? '#fff' : '#6B7663' }}>Online{'\n'}Friends{'    '}</Text>
+                                <IconLabelPair containerStyle={styles.tabContentCont} text={`Online\nFriends`} textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} iconProps={{ name: 'user', type: 'Feather', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }} />
                             </TabHeading>}>
                             <View style={{ flex: 1 }}>
 
@@ -164,17 +169,14 @@ class Friends extends Component {
                         </Tab>
                         <Tab
                             heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 2, borderLeftWidth: 2 }}>
-                                <NBIcon name='people-outline' type='MaterialIcons' style={{ color: activeTab === 1 ? '#fff' : '#6B7663' }} /><Text style={{ marginLeft: 5, color: activeTab === 1 ? '#fff' : '#6B7663' }}>All{'\n'}Friends{'    '}</Text>
+                                <IconLabelPair containerStyle={styles.tabContentCont} text={`All\nFriends`} textStyle={{ color: activeTab === 1 ? '#fff' : '#6B7663' }} iconProps={{ name: 'people-outline', type: 'MaterialIcons', style: { color: activeTab === 1 ? '#fff' : '#6B7663' } }} />
                             </TabHeading>}>
                             <AllFriendsTab refreshContent={activeTab === 1} searchQuery={searchQuery} />
                         </Tab>
                         <Tab
                             heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3', borderColor: '#fff' }}>
                                 <TouchableWithoutFeedback onPress={this.onPressGroupTab}>
-                                    <View style={{ flex: 1, flexDirection: 'row' }}>
-                                        <NBIcon name='group' type='FontAwesome' style={{ color: activeTab === 2 ? '#fff' : '#6B7663' }} />
-                                        <Text style={{ marginLeft: 5, color: activeTab === 2 ? '#fff' : '#6B7663' }}>Groups</Text>
-                                    </View>
+                                    <IconLabelPair containerStyle={styles.tabContentCont} text={`Groups`} textStyle={{ color: activeTab === 2 ? '#fff' : '#6B7663' }} iconProps={{ name: 'group', type: 'FontAwesome', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }} />
                                 </TouchableWithoutFeedback>
                             </TabHeading>}>
                             <GroupsTab goToGroupList={this.state.groupTabPressed} refreshContent={activeTab === 2} />

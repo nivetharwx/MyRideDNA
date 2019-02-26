@@ -660,6 +660,7 @@ export const searchForFriend = (searchParam, userId, pageNumber) => {
         axios.get(FRIENDS_BASE_URL + `searchFriend?searchParam=${searchParam}&userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    console.log(res.data);
                     dispatch(toggleLoaderAction(false));
                     return dispatch(replaceSearchFriendListAction(res.data));
                 }
@@ -773,10 +774,28 @@ export const getFriendGroups = (userId) => {
             })
     };
 }
-export const getAllGroupMembers = (groupId) => {
+export const createFriendGroup = (newGroupInfo) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.get(FRIENDS_BASE_URL + `getAllGroupMembers?groupId=${groupId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.post(FRIENDS_BASE_URL + `createFriendGroup`, newGroupInfo, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    newGroupInfo.groupId = res.data.groupId;
+                    dispatch(toggleLoaderAction(false));
+                    return dispatch(createFriendGroupAction(newGroupInfo))
+                }
+            })
+            .catch(er => {
+                console.log(`createFriendGroup: `, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const getAllGroupMembers = (groupId, userId) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.get(FRIENDS_BASE_URL + `getAllGroupMembers?groupId=${groupId}&memberId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     console.log(res.data);

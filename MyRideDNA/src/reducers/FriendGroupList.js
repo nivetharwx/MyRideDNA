@@ -1,4 +1,4 @@
-import { REPLACE_FRIEND_GROUP_LIST, ADD_FRIEND_GROUP_TO_LIST, ADD_MEMBERS_TO_CURRENT_GROUP, UPDATE_MEMBER_IN_CURRENT_GROUP, UPDTAE_CURRENT_GROUP, RESET_CURRENT_GROUP, RESET_MEMBERS_FROM_CURRENT_GROUP } from "../actions/actionConstants";
+import { REPLACE_FRIEND_GROUP_LIST, ADD_FRIEND_GROUP_TO_LIST, ADD_MEMBERS_TO_CURRENT_GROUP, UPDATE_MEMBER_IN_CURRENT_GROUP, UPDTAE_CURRENT_GROUP, RESET_CURRENT_GROUP, RESET_MEMBERS_FROM_CURRENT_GROUP, RESET_MEMBERS_IN_CURRENT_GROUP } from "../actions/actionConstants";
 
 const initialState = {
     friendGroupList: [],
@@ -36,7 +36,9 @@ export default (state = initialState, action) => {
                 ...state,
                 currentGroup: { ...state.currentGroup, ...action.data }
             }
-        case RESET_MEMBERS_FROM_CURRENT_GROUP:
+        case RESET_MEMBERS_IN_CURRENT_GROUP:
+            action.data[0].name = 'You';
+            action.data[0].nickname = '';
             return {
                 ...state,
                 currentGroup: { ...state.currentGroup, groupMembers: action.data }

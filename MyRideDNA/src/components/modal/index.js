@@ -16,11 +16,6 @@ import { appNavMenuVisibilityAction } from '../../actions';
 export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, notificationCount, hideAppNavMenu, alignCloseIconLeft = false }) => {
     return (
         <SafeAreaView>
-            {
-                isVisible
-                    ? <StatusBar backgroundColor="rgba(0,0,0,0.7)" barStyle="default" />
-                    : null
-            }
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -29,7 +24,7 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                 <View style={{ flex: 1, paddingVertical: 20, backgroundColor: 'rgba(0,0,0,0.7)' }}>
                     {
                         alignCloseIconLeft
-                            ? <BasicHeader style={{ backgroundColor: 'transparent' }} headerHeight={heightPercentageToDP(8.5)}
+                            ? <BasicHeader style={[{ backgroundColor: 'transparent' }, Platform.OS === 'ios' ? { marginTop: 20 } : null]} headerHeight={heightPercentageToDP(8.5)}
                                 leftIconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: 'white' }, onPress: hideAppNavMenu }} />
                             : <BasicHeader style={{ backgroundColor: 'transparent' }} headerHeight={heightPercentageToDP(8.5)}
                                 rightIconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: 'white' }, onPress: hideAppNavMenu }} />

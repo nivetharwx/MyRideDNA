@@ -82,9 +82,9 @@ export class BasicCard extends React.Component {
     }
 }
 
-export const ThumbnailCard = ({ item, thumbnailPlaceholder, onLongPress, actions, thumbnailRef }) => (
+export const ThumbnailCard = ({ item, thumbnailPlaceholder, onPress, onLongPress, actions, thumbnailRef }) => (
     <View style={styles.thumbnail}>
-        <TouchableOpacity activeOpacity={onLongPress ? 0.7 : 1} onLongPress={() => onLongPress && onLongPress()} style={{
+        <TouchableOpacity onPress={() => onPress ? onPress() : null} activeOpacity={onLongPress ? 0.7 : 1} onLongPress={() => onLongPress && onLongPress()} style={{
             flex: 1,
             alignItems: 'center',
             justifyContent: 'center'
@@ -100,12 +100,18 @@ export const ThumbnailCard = ({ item, thumbnailPlaceholder, onLongPress, actions
                 fontWeight: 'bold',
                 backgroundColor: 'transparent',
                 fontSize: widthPercentageToDP(4),
+                color: item.name === 'You' ? APP_COMMON_STYLES.infoColor : '#000'
             }}
                 renderToHardwareTextureAndroid collapsable={false}>
                 {item.name}
-                <Text style={{ color: APP_COMMON_STYLES.infoColor, fontWeight: 'bold' }}>
-                    {'  '}{item.nickname}
-                </Text>
+                {
+                    item.nickname
+                        ?
+                        <Text style={{ color: APP_COMMON_STYLES.infoColor, fontWeight: 'bold' }}>
+                            {'  '}{item.nickname}
+                        </Text>
+                        : null
+                }
             </Text>
             {/* <Text style={{ color: '#A1A2A6' }}>{item.email}</Text> */}
         </TouchableOpacity>

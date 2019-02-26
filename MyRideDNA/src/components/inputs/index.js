@@ -40,7 +40,7 @@ export const IconicInput = ({ inputColor, containerStyle, iconProps, placeholder
                 </View>
         }
         <TextInput secureTextEntry={inputType === 'password'} style={{ flex: 10, borderBottomColor: '#D4D4D4', borderBottomWidth: 1, color: inputColor }}
-            placeholder={placeholder} textContentType={inputType} value={value} onChangeText={(val) => onChange && onChange(val)} onBlur={onFocusout} />
+            placeholder={placeholder} textContentType={inputType} value={value} onChangeText={(val) => onChange && onChange(val)} keyboardType={getKeyboardTypeForContentType(inputType)} onBlur={onFocusout} />
         {
             iconEnd
                 ? iconEnd

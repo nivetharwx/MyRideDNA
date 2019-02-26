@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, SafeAreaView, StatusBar, ScrollView, View, Keyboard, Alert, TextInput, Text } from 'react-native';
+import { StyleSheet, SafeAreaView, StatusBar, Platform, ScrollView, View, Keyboard, Alert, TextInput, Text } from 'react-native';
 import { BasicHeader } from '../../../../components/headers';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
@@ -122,13 +122,13 @@ class EditProfileForm extends Component {
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
         const { user } = this.state;
         return (
-            <View style={[styles.fill, { paddingBottom: 20 }]}>
+            <View style={[styles.fill, Platform.OS === 'ios' ? { paddingBottom: heightPercentageToDP(3) } : null]}>
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={styles.fill}>
                     <BasicHeader title='Edit Profile' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
-                    <ScrollView style={styles.formContent}>
+                    <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
                         <IconicInput iconProps={{ name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Name' value={user.name}
                             onChange={this.onChangeName} />
                         <IconicInput iconProps={{ name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Nick Name' value={user.nickname}
@@ -136,26 +136,26 @@ class EditProfileForm extends Component {
                         <IconicList iconProps={{ name: 'transgender', type: 'FontAwesome' }} selectedValue={user.gender} placeholder='Gender'
                             onChange={this.onChangeGender} values={GENDER_LIST}></IconicList>
                         <IconicDatePicker iconProps={{ name: 'calendar', type: 'Foundation' }} onChange={this.onChangeDOB} selectedDateString={user.dob} />
-                        <View style={{ marginVertical: 10 }}>
+                        <View style={{ marginVertical: heightPercentageToDP(1.5) }}>
                             <View style={{ flexDirection: 'row' }}>
-                                <View style={{ paddingLeft: 10, paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
+                                <View style={{ paddingLeft: widthPercentageToDP(3), paddingRight: widthPercentageToDP(1.5), justifyContent: 'center', alignItems: 'center' }}>
                                     <NBIcon name='address-card' type='FontAwesome' style={{ fontSize: 14, color: '#a9a9a9' }} />
                                 </View>
-                                <Text style={{ marginLeft: 5, fontSize: 16 }}>Address</Text>
+                                <Text style={{ marginLeft: widthPercentageToDP(1.5), fontSize: 16 }}>Address</Text>
                             </View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: 10 }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: 10, marginTop: heightPercentageToDP(3) }}>
                                 <TextInput style={styles.addressInput} placeholder='Building number, Street line' textContentType='addressCity'
                                     onChangeText={this.onChangeAddress} value={user.homeAddress.address} />
                                 <TextInput style={styles.addressInput} placeholder='City' textContentType='addressCity'
                                     onChangeText={this.onChangeCity} value={user.homeAddress.city} />
                             </View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: 10 }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: 10, marginTop: heightPercentageToDP(3) }}>
                                 <TextInput style={{ width: '48%', borderBottomColor: '#D4D4D4', borderBottomWidth: 1 }} placeholder='State' textContentType='addressState'
                                     onChangeText={this.onChangeState} value={user.homeAddress.state} />
                                 <TextInput style={styles.addressInput} placeholder='Country' textContentType='countryName'
                                     onChangeText={this.onChangeCountry} value={user.homeAddress.country} />
                             </View>
-                            <TextInput style={[styles.addressInput, { marginLeft: 10 }]} placeholder='Postal code' textContentType='postalCode' keyboardType='numeric'
+                            <TextInput style={[styles.addressInput, { marginLeft: widthPercentageToDP(3), marginTop: heightPercentageToDP(3) }]} placeholder='Postal code' textContentType='postalCode' keyboardType='numeric'
                                 onChangeText={this.onChangeZipCode} value={user.homeAddress.zipCode} />
                         </View>
                     </ScrollView>
@@ -190,10 +190,15 @@ export default connect(mapStateToProps, mapDispatchToProps)(EditProfileForm);
 
 const styles = StyleSheet.create({
     fill: {
-        flex: 1
+        flex: 1,
+        backgroundColor: '#fff'
+    },
+    form: {
+        marginTop: APP_COMMON_STYLES.headerHeight,
     },
     formContent: {
-        marginTop: APP_COMMON_STYLES.headerHeight,
+        paddingTop: 20, 
+        flex: 1
     },
     submitBtn: {
         height: heightPercentageToDP(8.5),
