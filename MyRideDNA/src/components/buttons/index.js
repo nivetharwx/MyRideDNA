@@ -91,7 +91,7 @@ export class SwitchIconButton extends React.Component {
         if (prevProps.value != this.props.value) {
             Animated.timing(this.state.switchAnim,
                 {
-                    toValue: this.props.value === false ? -5 : 40,
+                    toValue: this.props.value === false ? 0 : 33,
                     duration: 300,
                     useNativeDriver: true
                 }

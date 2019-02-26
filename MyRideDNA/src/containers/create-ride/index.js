@@ -21,12 +21,12 @@ import { SwitchIconButton, LinkButton } from '../../components/buttons';
 import { IconLabelPair } from '../../components/labels';
 
 import { Icon as NBIcon } from 'native-base';
-import { WindowDimensions, JS_SDK_ACCESS_TOKEN } from '../../constants';
+import { WindowDimensions, JS_SDK_ACCESS_TOKEN, IS_ANDROID, widthPercentageToDP } from '../../constants';
 import { SearchResults } from '../../components/pages';
 
 const ANDROID_HEADER_HEIGHT = 50;
 const IOS_HEADER_HEIGHT = 90;
-const HEADER_HEIGHT = Platform.OS === 'android' ? ANDROID_HEADER_HEIGHT : IOS_HEADER_HEIGHT;
+const HEADER_HEIGHT = IS_ANDROID ? ANDROID_HEADER_HEIGHT : IOS_HEADER_HEIGHT;
 const FORM_AREA_HEIGHT = (WindowDimensions.height / 2) - HEADER_HEIGHT;
 const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
 const geocodingClient = mbxGeocoding({ accessToken: JS_SDK_ACCESS_TOKEN });
@@ -192,8 +192,8 @@ export class CreateRide extends Component {
                                 <IconLabelPair iconProps={{ style: { ...styles.formFieldIcon, fontSize: 22, paddingHorizontal: 8, alignSelf: 'center' }, name: 'eye', type: 'MaterialCommunityIcons' }}
                                     text={ride.privacyMode === 'private' ? 'Private' : 'Public'} textStyle={{ fontWeight: 'normal' }} />
                                 <SwitchIconButton
-                                    activeIcon={<NBIcon name='close' type='FontAwesome' style={{ color: '#fff', alignSelf: 'flex-start', paddingHorizontal: 10 }} />}
-                                    inactiveIcon={<NBIcon name='eye' type='MaterialCommunityIcons' style={{ color: '#fff', alignSelf: 'flex-end', paddingHorizontal: 10 }} />}
+                                    activeIcon={<NBIcon name='close' type='FontAwesome' style={{ color: '#fff', alignSelf: 'flex-start', paddingHorizontal: 10, fontSize: widthPercentageToDP(6) }} />}
+                                    inactiveIcon={<NBIcon name='eye' type='MaterialCommunityIcons' style={{ color: '#fff', alignSelf: 'flex-end', paddingHorizontal: 10, fontSize: widthPercentageToDP(6) }} />}
                                     value={ride.privacyMode === 'private'} onChangeValue={this.onChangePrivacyMode} />
                             </View>
 

@@ -95,8 +95,11 @@ class Login extends Component {
                 }
             })
             .catch(error => {
-                this.setState({ spinner: !this.state.spinner });
-                Alert.alert('Login failed', error.response.data.userMessage);
+                this.setState({ spinner: !this.state.spinner }, () => {
+                    setTimeout(() => {
+                        Alert.alert('Login failed', error.response.data.userMessage);
+                    }, 100);
+                });
             });
     }
 

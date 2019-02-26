@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { StyleSheet, SafeAreaView, Platform, StatusBar, Animated, ImageBackground, TouchableNativeFeedback, TouchableWithoutFeedback, Text, View } from 'react-native';
 import { BasicHeader } from '../../components/headers';
 import { Tabs, Tab, TabHeading, ScrollableTab, Icon as NBIcon } from 'native-base';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../constants';
 import styles from './styles';
 import AllFriendsTab from './all-friends';
 import GroupsTab from './groups';
@@ -158,7 +158,7 @@ class Friends extends Component {
                         searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false, searchQuery: '' })}
                         onClearSearchValue={() => this.setState({ searchQuery: '' })} />
 
-                    <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ flex: 1, paddingBottom: Platform.OS === 'ios' ? 20 : 0, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
+                    <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ flex: 1, paddingBottom: IS_ANDROID ? 0 : 20, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                         <Tab
                             heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
                                 <IconLabelPair containerStyle={styles.tabContentCont} text={`Online\nFriends`} textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} iconProps={{ name: 'user', type: 'Feather', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }} />

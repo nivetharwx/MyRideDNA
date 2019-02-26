@@ -7,11 +7,12 @@ import { IconicInput, IconicList, IconicDatePicker } from '../../components/inpu
 import { BasicHeader } from '../../components/headers';
 import { Icon as NBIcon } from 'native-base';
 import { updateUserInfo } from '../../api';
+import { IS_ANDROID } from '../../constants';
 
 
 const ANDROID_HEADER_HEIGHT = 50;
 const IOS_HEADER_HEIGHT = 90;
-const HEADER_HEIGHT = Platform.OS === 'android' ? ANDROID_HEADER_HEIGHT : IOS_HEADER_HEIGHT;
+const HEADER_HEIGHT = IS_ANDROID ? ANDROID_HEADER_HEIGHT : IOS_HEADER_HEIGHT;
 
 class EditProfile extends Component {
     changedDetails = {};

@@ -8,7 +8,7 @@ import { IconicInput, IconicList } from '../../components/inputs';
 import { BasicHeader } from '../../components/headers';
 
 import { LoginStyles } from '../../containers/login/styles';
-import { WindowDimensions, APP_COMMON_STYLES } from '../../constants';
+import { WindowDimensions, APP_COMMON_STYLES, IS_ANDROID } from '../../constants';
 import { LoginButton, SocialButtons, IconButton, RoundButton } from '../../components/buttons';
 import { isValidEmailFormat } from '../../util';
 import Spinner from 'react-native-loading-spinner-overlay';
@@ -19,7 +19,7 @@ import { toggleNetworkStatusAction } from '../../actions';
 
 const ANDROID_HEADER_HEIGHT = 50;
 const IOS_HEADER_HEIGHT = 90;
-const HEADER_HEIGHT = Platform.OS === 'android' ? ANDROID_HEADER_HEIGHT : IOS_HEADER_HEIGHT;
+const HEADER_HEIGHT = IS_ANDROID ? ANDROID_HEADER_HEIGHT : IOS_HEADER_HEIGHT;
 
 class Signup extends Component {
     isVerifyingEmail = false;
@@ -41,7 +41,9 @@ class Signup extends Component {
         if (prevProps.signupResult !== this.props.signupResult) {
             this.setState({ showLoader: false }, () => {
                 if (this.props.signupResult.success) {
-                    Alert.alert('Registration success', this.props.signupResult.success);
+                    setTimeout(() => {
+                        Alert.alert('Registration success', this.props.signupResult.success);
+                    }, 100);
                     this.onPressBackButton();
                 } else {
                     Alert.alert('Registration failed', this.props.signupResult.userMessage);

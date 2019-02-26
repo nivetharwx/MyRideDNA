@@ -71,7 +71,9 @@ class ForgotPassword extends React.Component {
                 axios.put(USER_BASE_URL + `setNewPassword`, { email: this.state.email, password: Md5.hex_md5(password + '') }, { timeout: 15 * 1000 })
                     .then(res => {
                         this.setState({ showLoader: false }, () => {
-                            Alert.alert('Updated successfully', 'Please do login with your new password');
+                            setTimeout(() => {
+                                Alert.alert('Updated successfully', 'Your password has changed successfully');
+                            }, 100);
                             this.props.onCancel();
                         });
                     })
@@ -97,8 +99,11 @@ class ForgotPassword extends React.Component {
                 this.setState({ showLoader: false, formStep: 3 });
             })
             .catch(error => {
+                console.log(error.response);
                 this.setState({ showLoader: false }, () => {
-                    Alert.alert('Error', 'Entered OTP is wrong');
+                    setTimeout(() => {
+                        Alert.alert('Error', 'Entered OTP is wrong');
+                    }, 100);
                 });
             });
     }
@@ -128,9 +133,11 @@ class ForgotPassword extends React.Component {
                 })
                 .catch(error => {
                     this.setState({ showLoader: false }, () => {
-                        if (error.response.data.appErrorCode === 400) {
-                            Alert.alert('Error', 'Entered email is not registered in MyRideDNA');
-                        }
+                        setTimeout(() => {
+                            if (error.response.data.appErrorCode === 400) {
+                                Alert.alert('Error', 'Entered email is not registered in MyRideDNA');
+                            }
+                        }, 100);
                     });
                 });
         } else {

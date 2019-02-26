@@ -8,7 +8,7 @@ import {
 import { Icon as NBIcon } from 'native-base';
 import { AppMenuButton, ImageButton } from '../buttons';
 import { Actions } from 'react-native-router-flux';
-import { PageKeys, heightPercentageToDP, widthPercentageToDP } from '../../constants';
+import { PageKeys, heightPercentageToDP, widthPercentageToDP, IS_ANDROID } from '../../constants';
 import { BasicHeader } from '../headers';
 import { appNavMenuVisibilityAction } from '../../actions';
 
@@ -24,7 +24,7 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                 <View style={{ flex: 1, paddingVertical: 20, backgroundColor: 'rgba(0,0,0,0.7)' }}>
                     {
                         alignCloseIconLeft
-                            ? <BasicHeader style={[{ backgroundColor: 'transparent' }, Platform.OS === 'ios' ? { marginTop: 20 } : null]} headerHeight={heightPercentageToDP(8.5)}
+                            ? <BasicHeader style={[{ backgroundColor: 'transparent' }, IS_ANDROID ? null : { marginTop: 20 }]} headerHeight={heightPercentageToDP(8.5)}
                                 leftIconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: 'white' }, onPress: hideAppNavMenu }} />
                             : <BasicHeader style={{ backgroundColor: 'transparent' }} headerHeight={heightPercentageToDP(8.5)}
                                 rightIconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: 'white' }, onPress: hideAppNavMenu }} />
@@ -81,7 +81,7 @@ export const BaseModal = (props) => {
                     <ScrollView
                         directionalLockEnabled={true}
                         style={styles.fillParent}
-                        contentContainerStyle={[styles.fillParent, Platform.OS === 'ios' ? styles.safePadding : null, props.alignCenter ? styles.centerContent : null]}
+                        contentContainerStyle={[styles.fillParent, IS_ANDROID ? null : styles.safePadding, props.alignCenter ? styles.centerContent : null]}
                     >
                         <TouchableWithoutFeedback>
                             {

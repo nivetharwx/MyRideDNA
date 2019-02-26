@@ -3,12 +3,12 @@ import { SafeAreaView, View, Text, Platform, ImageBackground, ScrollView, StyleS
 import { Actions } from 'react-native-router-flux';
 
 import { BasicHeader } from '../../components/headers';
-import { WindowDimensions } from '../../constants';
+import { WindowDimensions, IS_ANDROID } from '../../constants';
 import { List, ListItem, Left, Thumbnail, Body, Right } from 'native-base';
 
 const ANDROID_HEADER_HEIGHT = 50;
 const IOS_HEADER_HEIGHT = 90;
-const HEADER_HEIGHT = Platform.OS === 'android' ? ANDROID_HEADER_HEIGHT : IOS_HEADER_HEIGHT;
+const HEADER_HEIGHT = IS_ANDROID ? ANDROID_HEADER_HEIGHT : IOS_HEADER_HEIGHT;
 const LIST_ITEM_HEIGHT = 70;
 
 export class Notifications extends Component {

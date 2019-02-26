@@ -22,6 +22,7 @@ import EditProfile from '../containers/edit-profile';
 import CreateRide from '../containers/create-ride';
 import AddBikeForm from '../containers/profile/my-garage/add-edit-bike-form';
 import EditProfileForm from '../containers/profile/my-profile/edit-profile-form';
+import Settings from '../containers/settings';
 
 export default class Navigation extends Component {
     render() {
@@ -37,6 +38,7 @@ export default class Navigation extends Component {
                             <Scene key={PageKeys.FORGOT_PASSWORD} component={ForgotPassword} hideNavBar></Scene>
                             <Scene key={PageKeys.RIDES} component={Rides} hideNavBar></Scene>
                             <Scene key={PageKeys.PROFILE} component={Profile} hideNavBar></Scene>
+                            <Scene key={PageKeys.SETTINGS} component={Settings} hideNavBar></Scene>
                             <Scene key={PageKeys.EDIT_PROFILE_FORM} component={EditProfileForm} hideNavBar></Scene>
                             <Scene key={PageKeys.ADD_BIKE_FORM} component={AddBikeForm} hideNavBar></Scene>
                             <Scene key={PageKeys.MAP} component={Map} hideNavBar></Scene>

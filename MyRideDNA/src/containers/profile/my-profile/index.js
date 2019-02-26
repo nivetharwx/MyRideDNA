@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, SafeAreaView, View, Text, ImageBackground, Image, FlatList, ScrollView, AsyncStorage } from 'react-native';
+import { StyleSheet, Platform, SafeAreaView, View, Text, ImageBackground, Image, FlatList, ScrollView, AsyncStorage } from 'react-native';
 import { Actions } from 'react-native-router-flux';
-import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN } from '../../../constants/index';
+import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID } from '../../../constants/index';
 import { IconButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
 import { appNavMenuVisibilityAction } from '../../../actions';
@@ -130,7 +130,11 @@ class MyProfileTab extends Component {
         const { isLoadingProfPic } = this.state;
         return (
             <View style={styles.fill}>
-                <View style={APP_COMMON_STYLES.appBar} />
+                {
+                    IS_ANDROID
+                        ? null
+                        : <View style={APP_COMMON_STYLES.appBar} />
+                }
                 <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
                     <View style={styles.profilePic}>
                         {

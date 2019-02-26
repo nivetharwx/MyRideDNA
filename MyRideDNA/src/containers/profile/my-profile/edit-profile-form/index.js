@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, SafeAreaView, StatusBar, Platform, ScrollView, View, Keyboard, Alert, TextInput, Text } from 'react-native';
 import { BasicHeader } from '../../../../components/headers';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInput, IconicList, IconicDatePicker, IconicInput } from '../../../../components/inputs';
 import { BasicButton } from '../../../../components/buttons';
@@ -122,7 +122,7 @@ class EditProfileForm extends Component {
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
         const { user } = this.state;
         return (
-            <View style={[styles.fill, Platform.OS === 'ios' ? { paddingBottom: heightPercentageToDP(3) } : null]}>
+            <View style={[styles.fill, IS_ANDROID ? null : { paddingBottom: heightPercentageToDP(3) }]}>
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
         marginTop: APP_COMMON_STYLES.headerHeight,
     },
     formContent: {
-        paddingTop: 20, 
+        paddingTop: 20,
         flex: 1
     },
     submitBtn: {

@@ -16,7 +16,7 @@ export const heightPercentageToDP = (percentage) => {
 
 export const IS_ANDROID = Platform.OS === 'android';
 
-const APP_HEADER_HEIGHT = Platform.OS === 'android' ? heightPercentageToDP(8.5) : heightPercentageToDP(10);
+const APP_HEADER_HEIGHT = IS_ANDROID ? heightPercentageToDP(8.5) : heightPercentageToDP(10);
 
 export const DEVICE_LOCATION_STATE = { ON: 'on', OFF: 'off' };
 
@@ -40,6 +40,7 @@ export const PageKeys = {
     FORGOT_PASSWORD: 'forgotPassword',
     TABS: 'tabs',
     PROFILE: 'profile',
+    SETTINGS: 'settings',
     EDIT_PROFILE_FORM: 'editProfileForm',
     ADD_BIKE_FORM: 'addBikeForm',
     GALLERY: 'gallery',
@@ -85,12 +86,12 @@ export const APP_COMMON_STYLES = {
     statusBarColor: STATUS_BAR_COLOR,
     testingBorder: { borderWidth: 2, borderColor: 'red' },
     statusBar: {
-        height: Platform.OS === 'ios' ? 20 : StatusBar.currentHeight,
+        height: IS_ANDROID ? StatusBar.currentHeight : 20,
         backgroundColor: STATUS_BAR_COLOR,
     },
     appBar: {
         backgroundColor: HEADER_COLOR,
-        height: Platform.OS === 'ios' ? 44 : 56,
+        height: IS_ANDROID ? 56 : 44,
     },
     menuOptContainer: {
         alignSelf: 'flex-end',

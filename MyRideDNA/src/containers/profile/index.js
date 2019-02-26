@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, SafeAreaView, View, Text, StatusBar, Platform } from 'react-native';
-import { heightPercentageToDP, APP_COMMON_STYLES } from '../../constants/index';
+import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../constants/index';
 import { ShifterButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { Tabs, Tab, ScrollableTab, TabHeading } from 'native-base';
@@ -61,7 +61,7 @@ class Profile extends Component {
 
                     {/* Shifter: - Brings the app navigation menu */}
                     <ShifterButton onPress={this.showAppNavMenu}
-                        containerStyles={{ bottom: Platform.OS === 'android' ? BOTTOM_TAB_HEIGHT : BOTTOM_TAB_HEIGHT + 12 }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
+                        containerStyles={{ bottom: IS_ANDROID ? BOTTOM_TAB_HEIGHT : BOTTOM_TAB_HEIGHT + 12 }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
             </View >
         );
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         // zIndex: 50,
         bottom: 0,
-        paddingBottom: Platform.OS === 'ios' ? 20 : 0,
+        paddingBottom: IS_ANDROID ? 0 : 20,
         height: '100%',
         width: '100%',
     },

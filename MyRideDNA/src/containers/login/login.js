@@ -7,6 +7,7 @@ import {
     Image,
     ImageBackground,
     TouchableOpacity,
+    TextInput
 } from 'react-native';
 
 import { IconicInput } from '../../components/inputs';
@@ -14,8 +15,9 @@ import { IconButton, LinkButton } from '../../components/buttons';
 
 import * as Animatable from 'react-native-animatable';
 
-import { WindowDimensions, heightPercentageToDP } from '../../constants/index';
+import { WindowDimensions, heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../constants/index';
 import { LoginStyles } from './styles';
+import { Item, Icon as NBIcon } from 'native-base';
 
 export const LoginScreen = (props) => (
     <ScrollView style={{ flex: 1 }}>
@@ -23,10 +25,15 @@ export const LoginScreen = (props) => (
             <Image source={require('../../assets/img/logo.png')}></Image>
         </Animatable.View>
         <View style={LoginStyles.loginForm}>
-            <IconicInput iconProps={{ name: 'email', type: 'MaterialIcons', style: { color: '#0083CA' } }} inputType='emailAddress' onChange={props.onEmailChange} placeholder='Email' style={{ marginVertical: 20 }} />
-            <IconicInput style={{ flex: 1 }} iconProps={{ name: 'vpn-key', type: 'MaterialIcons', style: { color: '#0083CA' } }}
-                iconEnd={<IconButton onPress={props.togglePasswordVisibility} style={{ backgroundColor: '#0083CA', borderRadius: 10, paddingHorizontal: 1, paddingVertical: 1, marginRight: 10 }} iconProps={{ name: props.isVisiblePassword ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: 20, color: 'white', borderRadius: 10 } }} />}
-                inputType={props.isVisiblePassword ? 'text' : 'password'} onChange={props.onPasswordChange} placeholder='Password' />
+            <Item style={{ marginLeft: widthPercentageToDP(5), marginRight: widthPercentageToDP(5) }}>
+                <NBIcon name='email' type='MaterialIcons' style={{ color: '#0083CA' }} />
+                <TextInput style={{ flex: 1 }} textContentType='emailAddress' keyboardType='email-address' placeholder='Email' onChangeText={props.onEmailChange} />
+            </Item>
+            <Item style={{ marginLeft: widthPercentageToDP(5), marginRight: widthPercentageToDP(5) }}>
+                <NBIcon name='vpn-key' type='MaterialIcons' style={{ color: '#0083CA' }} />
+                <TextInput style={{ flex: 1 }} secureTextEntry={!props.isVisiblePassword} textContentType='password' keyboardType='default' placeholder='Password' onChangeText={props.onPasswordChange} />
+                <IconButton onPress={props.togglePasswordVisibility} style={{ backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: props.isVisiblePassword ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
+            </Item>
         </View>
         <View style={{ width: WindowDimensions.width }}>
             <View style={LoginStyles.loginButtonContainer}>

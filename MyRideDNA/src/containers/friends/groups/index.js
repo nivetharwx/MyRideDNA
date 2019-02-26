@@ -166,7 +166,7 @@ class GroupsTab extends Component {
 
     renderGroup = ({ item, index }) => {
         return (
-            <ListItem avatar onPress={() => this.openGroupDetails(index)}>
+            <ListItem style={{ marginTop: 20 }} avatar onPress={() => this.openGroupDetails(index)}>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
                     {
                         item.groupProfilePictureThumbnail
