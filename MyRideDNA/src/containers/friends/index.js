@@ -6,7 +6,7 @@ import { Tabs, Tab, TabHeading, ScrollableTab, Icon as NBIcon } from 'native-bas
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../constants';
 import styles from './styles';
 import AllFriendsTab from './all-friends';
-import GroupsTab from './groups';
+import GroupsTab from './group-list';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { ShifterButton } from '../../components/buttons';
 import { IconLabelPair } from '../../components/labels';
@@ -175,11 +175,9 @@ class Friends extends Component {
                         </Tab>
                         <Tab
                             heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3', borderColor: '#fff' }}>
-                                <TouchableWithoutFeedback onPress={this.onPressGroupTab}>
-                                    <IconLabelPair containerStyle={styles.tabContentCont} text={`Groups`} textStyle={{ color: activeTab === 2 ? '#fff' : '#6B7663' }} iconProps={{ name: 'group', type: 'FontAwesome', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }} />
-                                </TouchableWithoutFeedback>
+                                <IconLabelPair containerStyle={styles.tabContentCont} text={`Groups`} textStyle={{ color: activeTab === 2 ? '#fff' : '#6B7663' }} iconProps={{ name: 'group', type: 'FontAwesome', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }} />
                             </TabHeading>}>
-                            <GroupsTab goToGroupList={this.state.groupTabPressed} refreshContent={activeTab === 2} />
+                            <GroupsTab refreshContent={activeTab === 2} />
                         </Tab>
                     </Tabs>
 

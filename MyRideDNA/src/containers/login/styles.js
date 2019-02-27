@@ -16,7 +16,7 @@ export const LoginStyles = {
     },
     loginForm: {
         backgroundColor: 'white',
-        height: heightPercentageToDP(20),
+        height: heightPercentageToDP(30),
         justifyContent: 'space-around',
         paddingBottom: heightPercentageToDP(5)
     },

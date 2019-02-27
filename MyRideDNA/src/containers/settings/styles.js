@@ -14,8 +14,8 @@ const styles = StyleSheet.create({
         marginTop: APP_COMMON_STYLES.headerHeight,
     },
     containerItem: {
-        paddingBottom: heightPercentageToDP(2), 
-        marginLeft: widthPercentageToDP(4), 
+        paddingBottom: heightPercentageToDP(2),
+        marginLeft: widthPercentageToDP(4),
         marginRight: widthPercentageToDP(4),
         marginTop: heightPercentageToDP(2)
     },
@@ -24,13 +24,17 @@ const styles = StyleSheet.create({
         height: heightPercentageToDP(20),
         justifyContent: 'space-around'
     },
+    passwdFormField: {
+        marginLeft: widthPercentageToDP(4),
+    },
     infoLink: {
         color: APP_COMMON_STYLES.infoColor,
         fontWeight: 'bold',
     },
     linkItem: {
         paddingHorizontal: 0,
-        marginLeft: widthPercentageToDP(4), 
+        marginLeft: widthPercentageToDP(4),
+        marginTop: heightPercentageToDP(1),
     },
     submitSec: {
         height: heightPercentageToDP(20),

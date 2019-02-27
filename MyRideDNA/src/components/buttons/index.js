@@ -105,7 +105,7 @@ export class SwitchIconButton extends React.Component {
         const { activeIcon, inactiveIcon, value } = this.props;
         const { switchAnim } = this.state;
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-end', padding: widthPercentageToDP(2) }}>
+            <View style={{ justifyContent: 'center', alignItems: 'flex-end', padding: widthPercentageToDP(2) }}>
                 <TouchableWithoutFeedback onPress={this.onSwitchStateChange}>
                     <View style={{ width: widthPercentageToDP(17), height: heightPercentageToDP(3.7), borderRadius: heightPercentageToDP(2), borderWidth: 1, backgroundColor: value ? 'black' : 'green', justifyContent: 'center' }}>
                         {

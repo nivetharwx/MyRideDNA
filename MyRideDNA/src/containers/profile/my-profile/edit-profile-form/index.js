@@ -32,10 +32,12 @@ class EditProfileForm extends Component {
         if (prevProps.user !== this.props.user) {
             // DOC: Confirming changes happened due to api call from this form
             if (this.changedDetails.userId) {
-                Toast.show({
-                    text: 'Profile updated successfully',
-                    buttonText: 'Okay'
-                });
+                setTimeout(() => {
+                    Toast.show({
+                        text: 'Profile updated successfully',
+                        buttonText: 'Okay'
+                    });
+                }, 100);
                 this.onPressBackButton();
             }
         }
@@ -145,7 +147,7 @@ class EditProfileForm extends Component {
                             </View>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: 10, marginTop: heightPercentageToDP(3) }}>
                                 <TextInput style={styles.addressInput} placeholder='Building number, Street line' textContentType='addressCity'
-                                    onChangeText={this.onChangeAddress} value={user.homeAddress.address} />
+                                    onChangeText={this.onChangeAddress} value={'' + user.homeAddress.address} />
                                 <TextInput style={styles.addressInput} placeholder='City' textContentType='addressCity'
                                     onChangeText={this.onChangeCity} value={user.homeAddress.city} />
                             </View>
