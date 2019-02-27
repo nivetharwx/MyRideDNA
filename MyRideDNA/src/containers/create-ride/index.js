@@ -3,7 +3,9 @@ import {
     Platform,
     View,
     ScrollView,
-    Keyboard
+    Keyboard,
+    TextInput,
+    Text
 } from 'react-native';
 import { connect } from 'react-redux';
 
@@ -20,8 +22,8 @@ import Geolocation from 'react-native-geolocation-service';
 import { SwitchIconButton, LinkButton } from '../../components/buttons';
 import { IconLabelPair } from '../../components/labels';
 
-import { Icon as NBIcon } from 'native-base';
-import { WindowDimensions, JS_SDK_ACCESS_TOKEN, IS_ANDROID, widthPercentageToDP } from '../../constants';
+import { Icon as NBIcon, Item } from 'native-base';
+import { WindowDimensions, JS_SDK_ACCESS_TOKEN, IS_ANDROID, widthPercentageToDP, heightPercentageToDP } from '../../constants';
 import { SearchResults } from '../../components/pages';
 
 const ANDROID_HEADER_HEIGHT = 50;
@@ -184,24 +186,25 @@ export class CreateRide extends Component {
                 <View style={{ height: (WindowDimensions.height / 2) }}>
                     <BasicHeader headerHeight={HEADER_HEIGHT} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
                         title='Create Ride' />
-                    <ScrollView style={{ backgroundColor: 'white', flex: 1, marginTop: HEADER_HEIGHT }} contentContainerStyle={{ flex: 1 }}>
+                    <ScrollView style={{ backgroundColor: 'white', flex: 1, paddingTop: HEADER_HEIGHT }} contentContainerStyle={{ flex: 1 }}>
                         <View style={{ maxHeight: FORM_AREA_HEIGHT }}>
-                            <IconicInput iconProps={{ style: styles.formFieldIcon, name: 'highway', type: 'MaterialCommunityIcons' }}
-                                inputType='name' placeholder='Ride name' value={ride.name} onChange={this.onChangeRideName} />
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', minHeight: 100, alignItems: 'center' }}>
-                                <IconLabelPair iconProps={{ style: { ...styles.formFieldIcon, fontSize: 22, paddingHorizontal: 8, alignSelf: 'center' }, name: 'eye', type: 'MaterialCommunityIcons' }}
-                                    text={ride.privacyMode === 'private' ? 'Private' : 'Public'} textStyle={{ fontWeight: 'normal' }} />
+                            <Item style={{ marginLeft: widthPercentageToDP(4), marginRight: widthPercentageToDP(4), paddingTop: heightPercentageToDP(4) }}>
+                                <NBIcon name='highway' type='MaterialCommunityIcons' style={styles.formFieldIcon} />
+                                <TextInput style={{ flex: 1 }} textContentType='name' keyboardType='default' placeholder='Ride name' onChangeText={this.onChangeRideName} />
+                            </Item>
+                            <Item style={{ marginLeft: widthPercentageToDP(4), marginRight: widthPercentageToDP(4), marginTop: heightPercentageToDP(4) }}>
+                                <NBIcon name='eye' type='MaterialCommunityIcons' style={styles.formFieldIcon} />
+                                <Text>{ride.privacyMode === 'private' ? 'Private' : 'Public'}</Text>
                                 <SwitchIconButton
                                     activeIcon={<NBIcon name='close' type='FontAwesome' style={{ color: '#fff', alignSelf: 'flex-start', paddingHorizontal: 10, fontSize: widthPercentageToDP(6) }} />}
                                     inactiveIcon={<NBIcon name='eye' type='MaterialCommunityIcons' style={{ color: '#fff', alignSelf: 'flex-end', paddingHorizontal: 10, fontSize: widthPercentageToDP(6) }} />}
                                     value={ride.privacyMode === 'private'} onChangeValue={this.onChangePrivacyMode} />
-                            </View>
-
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-around', minHeight: 100, alignItems: 'center' }}>
-                                <IconLabelPair iconProps={{ style: { ...styles.formFieldIcon, fontSize: 22, paddingHorizontal: 8, alignSelf: 'center' }, name: 'map-pin', type: 'FontAwesome' }}
-                                    text='Start ride from: ' textStyle={{ fontWeight: 'normal' }} />
+                            </Item>
+                            <Item style={{ marginLeft: widthPercentageToDP(4), marginRight: widthPercentageToDP(4), marginTop: heightPercentageToDP(4) }}>
+                                <NBIcon name='map-pin' type='FontAwesome' style={[styles.formFieldIcon, { paddingHorizontal: widthPercentageToDP(2) }]} />
+                                <Text>Start ride from: </Text>
                                 <SearchBox value={searchQuery} hideIcon={true} hideBoxStyle={true} onTextChange={this.onSearchPlace} onPressClear={() => this.setState({ searchQuery: '' })} />
-                            </View>
+                            </Item>
                         </View>
                     </ScrollView>
                 </View>

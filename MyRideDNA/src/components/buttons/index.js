@@ -82,7 +82,7 @@ export class SwitchIconButton extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            switchAnim: new Animated.Value(props.value === false ? 0 : 40),
+            switchAnim: new Animated.Value(props.value === false ? 0 : 33),
             toggleValue: props.value
         };
     }
