@@ -2,13 +2,14 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, TextInput, Animated, Text, Keyboard, FlatList, View, ImageBackground } from 'react-native';
 import { IconButton } from '../../../components/buttons';
-import { widthPercentageToDP, heightPercentageToDP } from '../../../constants';
+import { widthPercentageToDP, heightPercentageToDP, PageKeys } from '../../../constants';
 import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast } from 'native-base';
 import { ThumbnailCard } from '../../../components/cards';
 import { createFriendGroup, getFriendGroups, addMembers, getAllGroupMembers } from '../../../api';
+import { Actions } from 'react-native-router-flux';
 
 const CREATE_GROUP_WIDTH = widthPercentageToDP(9);
-class GroupsTab extends Component {
+class GroupListTab extends Component {
     createSecAnim = new Animated.Value(CREATE_GROUP_WIDTH / 2);
     borderWidthAnim = new Animated.Value(0);
     createGrpInputRef = null;
@@ -28,12 +29,10 @@ class GroupsTab extends Component {
 
     componentDidMount() {
         this.props.getFriendGroups(this.props.user.userId);
-        Keyboard.addListener('keyboardDidShow', this.adjustLayoutOnKeyboardVisibility);
-        Keyboard.addListener('keyboardDidHide', this.adjustLayoutOnKeyboardVisibility);
     }
 
     adjustLayoutOnKeyboardVisibility = ({ endCoordinates }) => {
-        this.setState(prevState => ({ kbdBtmOffset: prevState.kbdBtmOffset === this.defaultBtmOffset ? endCoordinates.height : this.defaultBtmOffset }));
+        this.setState({ kbdBtmOffset: endCoordinates.height });
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -46,14 +45,31 @@ class GroupsTab extends Component {
         }
     }
 
+    addKeyboardListeners() {
+        Keyboard.addListener('keyboardDidShow', this.adjustLayoutOnKeyboardVisibility);
+        Keyboard.addListener('keyboardDidHide', this.adjustLayoutAndRemoveListeners);
+    }
+
+    adjustLayoutAndRemoveListeners = () => {
+        this.setState({ kbdBtmOffset: this.defaultBtmOffset }, () => {
+            Keyboard.removeListener('keyboardDidShow', this.adjustLayoutOnKeyboardVisibility);
+            Keyboard.removeListener('keyboardDidHide', this.adjustLayoutAndRemoveListeners);
+        });
+    }
+
     componentWillUnmount() {
-        // DOC: Remove all keyboard event listeners
-        Keyboard.removeListener('keyboardDidShow', this.adjustLayoutOnKeyboardVisibility);
-        Keyboard.removeListener('keyboardDidHide', this.adjustLayoutOnKeyboardVisibility);
+    }
+
+    openGroupInfo = (index) => {
+        if (this.borderWidthAnim.__getValue() > 0) {
+            this.closeCreateGroupSection(() => Actions.push(PageKeys.GROUP, { grpIndex: index }));
+        } else {
+            Actions.push(PageKeys.GROUP, { grpIndex: index });
+        }
     }
 
     openCreateGroupSection = () => {
-        if (this.createGrpInputRef.isFocused() === true) {
+        if (this.borderWidthAnim.__getValue() > 0) {
             this.closeCreateGroupSection();
             return;
         }
@@ -67,6 +83,7 @@ class GroupsTab extends Component {
                 duration: 300
             })
         ]).start(() => {
+            this.addKeyboardListeners();
             this.setState({ newGroupName: '' });
             this.createGrpInputRef.focus();
         });
@@ -92,7 +109,7 @@ class GroupsTab extends Component {
 
     renderGroup = ({ item, index }) => {
         return (
-            <ListItem style={{ marginTop: 20 }} avatar onPress={() => {}}>
+            <ListItem style={{ marginTop: 20 }} avatar onPress={() => this.openGroupInfo(index)}>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
                     {
                         item.groupProfilePictureThumbnail
@@ -223,9 +240,9 @@ class GroupsTab extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { friendGroupList } = state.FriendGroupList;
+    const { friendGroupList, currentGroup } = state.FriendGroupList;
     const { allFriends } = state.FriendList;
-    return { user, friendGroupList, allFriends };
+    return { user, friendGroupList, allFriends, currentGroup };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -235,7 +252,7 @@ const mapDispatchToProps = (dispatch) => {
         getAllGroupMembers: (groupId, userId) => dispatch(getAllGroupMembers(groupId, userId)),
     };
 };
-export default connect(mapStateToProps, mapDispatchToProps)(GroupsTab);
+export default connect(mapStateToProps, mapDispatchToProps)(GroupListTab);
 
 const styles = StyleSheet.create({
     fill: {

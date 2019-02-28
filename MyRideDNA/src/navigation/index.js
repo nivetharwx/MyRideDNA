@@ -10,6 +10,7 @@ import ForgotPassword from '../containers/forgot-password';
 import Login from '../containers/login';
 import Profile from '../containers/profile';
 import Friends from '../containers/friends';
+import Group from '../containers/friends/group';
 import Rides from '../containers/rides';
 import Map from '../containers/map';
 import Signup from '../containers/signup';
@@ -35,6 +36,7 @@ export default class Navigation extends Component {
                             <Scene key={PageKeys.LOGIN} component={Login} hideNavBar></Scene>
                             <Scene key={PageKeys.SIGNUP} component={Signup} hideNavBar></Scene>
                             <Scene key={PageKeys.FRIENDS} component={Friends} hideNavBar></Scene>
+                            <Scene key={PageKeys.GROUP} component={Group} hideNavBar></Scene>
                             <Scene key={PageKeys.FORGOT_PASSWORD} component={ForgotPassword} hideNavBar></Scene>
                             <Scene key={PageKeys.RIDES} component={Rides} hideNavBar></Scene>
                             <Scene key={PageKeys.PROFILE} component={Profile} hideNavBar></Scene>

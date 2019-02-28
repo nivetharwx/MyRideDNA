@@ -130,6 +130,8 @@ export class Map extends Component {
         }
         if (this.props.ride != ride) {            // DOC: Reset directions and markerCollection when redux clear the ride
             if (this.props.ride.rideId != ride.rideId) {
+                updatedState.undoActions = [];
+                updatedState.redoActions = [];
                 updatedState.directions = null;
                 updatedState.markerCollection = {
                     ...this.state.markerCollection,

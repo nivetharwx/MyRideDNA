@@ -36,6 +36,7 @@ export const PageKeys = {
     LOGIN: 'login',
     SIGNUP: 'signup',
     FRIENDS: 'friends',
+    GROUP: 'group',
     SPLASH_SCREEN: 'splashScreen',
     FORGOT_PASSWORD: 'forgotPassword',
     TABS: 'tabs',

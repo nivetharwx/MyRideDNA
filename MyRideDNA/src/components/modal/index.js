@@ -26,7 +26,7 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                         alignCloseIconLeft
                             ? <BasicHeader style={[{ backgroundColor: 'transparent' }, IS_ANDROID ? null : { marginTop: 20 }]} headerHeight={heightPercentageToDP(8.5)}
                                 leftIconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: 'white' }, onPress: hideAppNavMenu }} />
-                            : <BasicHeader style={{ backgroundColor: 'transparent' }} headerHeight={heightPercentageToDP(8.5)}
+                            : <BasicHeader style={[{ backgroundColor: 'transparent' }, IS_ANDROID ? null : { marginTop: 20 }]} headerHeight={heightPercentageToDP(8.5)}
                                 rightIconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: 'white' }, onPress: hideAppNavMenu }} />
                     }
                     <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: heightPercentageToDP(8.5), padding: widthPercentageToDP(10) }}>
@@ -70,42 +70,43 @@ export default connect(mapStateToProps, mapDispatchToProps)(MenuModal);
 
 export const BaseModal = (props) => {
     return (
-    <Modal
-        animationType="slide"
-        transparent={true}
-        visible={props.isVisible}
-        onRequestClose={props.onCancel}>
-        {
-            props.onPressOutside ?
-                <TouchableOpacity style={[styles.fillParent, props.offSpaceBackgroundColor ? { backgroundColor: props.offSpaceBackgroundColor } : styles.modalOffSpaceBgColor]} onPress={props.onPressOutside}>
-                    <ScrollView
-                        directionalLockEnabled={true}
-                        style={styles.fillParent}
-                        contentContainerStyle={[styles.fillParent, IS_ANDROID ? null : styles.safePadding, props.alignCenter ? styles.centerContent : null]}
-                    >
-                        <TouchableWithoutFeedback>
-                            {
-                                props.children
-                            }
-                        </TouchableWithoutFeedback>
-                    </ScrollView>
-                </TouchableOpacity>
-                : <View style={[styles.fillParent, styles.modalOffSpaceBgColor]}>
-                    <ScrollView
-                        directionalLockEnabled={true}
-                        style={styles.fillParent}
-                        contentContainerStyle={[styles.fillParent, props.alignCenter ? styles.centerContent : null]}
-                    >
-                        <TouchableWithoutFeedback>
-                            {
-                                props.children
-                            }
-                        </TouchableWithoutFeedback>
-                    </ScrollView>
-                </View>
-        }
-    </Modal>
-);}
+        <Modal
+            animationType="slide"
+            transparent={true}
+            visible={props.isVisible}
+            onRequestClose={props.onCancel}>
+            {
+                props.onPressOutside ?
+                    <TouchableOpacity style={[styles.fillParent, props.offSpaceBackgroundColor ? { backgroundColor: props.offSpaceBackgroundColor } : styles.modalOffSpaceBgColor]} onPress={props.onPressOutside}>
+                        <ScrollView
+                            directionalLockEnabled={true}
+                            style={styles.fillParent}
+                            contentContainerStyle={[styles.fillParent, IS_ANDROID ? null : styles.safePadding, props.alignCenter ? styles.centerContent : null]}
+                        >
+                            <TouchableWithoutFeedback>
+                                {
+                                    props.children
+                                }
+                            </TouchableWithoutFeedback>
+                        </ScrollView>
+                    </TouchableOpacity>
+                    : <View style={[styles.fillParent, styles.modalOffSpaceBgColor]}>
+                        <ScrollView
+                            directionalLockEnabled={true}
+                            style={styles.fillParent}
+                            contentContainerStyle={[styles.fillParent, props.alignCenter ? styles.centerContent : null]}
+                        >
+                            <TouchableWithoutFeedback>
+                                {
+                                    props.children
+                                }
+                            </TouchableWithoutFeedback>
+                        </ScrollView>
+                    </View>
+            }
+        </Modal>
+    );
+}
 
 const styles = StyleSheet.create({
     navIconImage: {

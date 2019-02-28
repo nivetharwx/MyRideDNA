@@ -1,6 +1,6 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
-    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroup, resetMembersFromCurrentGroup
+    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL } from '../constants';
 import axios from 'axios';
@@ -800,7 +800,7 @@ export const getAllGroupMembers = (groupId, userId) => {
                 if (res.status === 200) {
                     console.log(res.data);
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(resetMembersFromCurrentGroup(res.data))
+                    return dispatch(resetMembersFromCurrentGroupAction(res.data))
                 }
             })
             .catch(er => {
@@ -818,7 +818,7 @@ export const addMembers = (groupId, memberDetails) => {
                 if (res.status === 200) {
                     console.log(res.data);
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(addMembersToCurrentGroup(res.data))
+                    return dispatch(addMembersToCurrentGroupAction(res.data))
                 }
             })
             .catch(er => {

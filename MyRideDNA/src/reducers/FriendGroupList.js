@@ -1,4 +1,4 @@
-import { REPLACE_FRIEND_GROUP_LIST, ADD_FRIEND_GROUP_TO_LIST, ADD_MEMBERS_TO_CURRENT_GROUP, UPDATE_MEMBER_IN_CURRENT_GROUP, UPDTAE_CURRENT_GROUP, RESET_CURRENT_GROUP, RESET_MEMBERS_FROM_CURRENT_GROUP, RESET_MEMBERS_IN_CURRENT_GROUP } from "../actions/actionConstants";
+import { REPLACE_FRIEND_GROUP_LIST, ADD_FRIEND_GROUP_TO_LIST, ADD_MEMBERS_TO_CURRENT_GROUP, UPDATE_MEMBER_IN_CURRENT_GROUP, UPDTAE_CURRENT_GROUP, RESET_CURRENT_GROUP, RESET_MEMBERS_FROM_CURRENT_GROUP, RESET_MEMBERS_IN_CURRENT_GROUP, GET_GROUP_INFO } from "../actions/actionConstants";
 
 const initialState = {
     friendGroupList: [],
@@ -14,6 +14,18 @@ export default (state = initialState, action) => {
                     if (!group.groupMembers) group.groupMembers = [];
                     return group;
                 }),
+                // friendGroupList: [
+                //     { groupName: 'Group 1', grouupId: 1, groupMembers: [] },
+                //     { groupName: 'Group 2', grouupId: 2, groupMembers: [] },
+                //     { groupName: 'Group 3', grouupId: 3, groupMembers: [] },
+                //     { groupName: 'Group 4', grouupId: 4, groupMembers: [] },
+                //     { groupName: 'Group 5', grouupId: 5, groupMembers: [] },
+                //     { groupName: 'Group 6', grouupId: 6, groupMembers: [] },
+                //     { groupName: 'Group 7', grouupId: 7, groupMembers: [] },
+                //     { groupName: 'Group 8', grouupId: 8, groupMembers: [] },
+                //     { groupName: 'Group 9', grouupId: 9, groupMembers: [] },
+                //     { groupName: 'Group 10', grouupId: 10, groupMembers: [] },
+                // ],
                 currentGroup: null
             }
         case ADD_FRIEND_GROUP_TO_LIST:
@@ -29,7 +41,7 @@ export default (state = initialState, action) => {
         case RESET_CURRENT_GROUP:
             return {
                 ...state,
-                currentGroup: action.data === null ? null : state.friendGroupList[action.data]
+                currentGroup: null
             }
         case UPDTAE_CURRENT_GROUP:
             return {
@@ -64,6 +76,11 @@ export default (state = initialState, action) => {
                 }
             } else {
                 return state
+            }
+        case GET_GROUP_INFO:
+            return {
+                ...state,
+                currentGroup: state.friendGroupList[action.data]
             }
         default: return state
     }
