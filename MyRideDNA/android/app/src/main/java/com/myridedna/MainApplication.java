@@ -4,6 +4,9 @@ import android.app.Application;
 
 import android.content.IntentFilter;
 import com.facebook.react.ReactApplication;
+import io.rumors.reactnativesettings.RNSettingsPackage;
+import com.rt2zz.reactnativecontacts.ReactNativeContacts;
+import com.mapbox.rctmgl.RCTMGLPackage;
 import com.RNFetchBlob.RNFetchBlobPackage;
 import com.reactnative.ivpusic.imagepicker.PickerPackage;
 import io.rumors.reactnativesettings.RNSettingsPackage;
@@ -32,6 +35,9 @@ public class MainApplication extends Application implements ReactApplication {
     @Override
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(new MainReactPackage(),
+            new RNSettingsPackage(),
+            new ReactNativeContacts(),
+            new RCTMGLPackage(),
             new RNFetchBlobPackage(),
             new PickerPackage(), new RNSettingsPackage(), new RCTMGLPackage(),
           new RNDeviceInfo(), new RNCameraPackage(), new VectorIconsPackage(),

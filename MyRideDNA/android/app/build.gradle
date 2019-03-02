@@ -139,6 +139,9 @@ android {
 }
 
 dependencies {
+    compile project(':react-native-settings')
+    compile project(':react-native-contacts')
+    compile project(':@mapbox_react-native-mapbox-gl')
     compile project(':rn-fetch-blob')
     compile project(':react-native-image-crop-picker')
     implementation project(':react-native-settings')

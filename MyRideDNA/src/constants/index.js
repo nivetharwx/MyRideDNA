@@ -46,6 +46,7 @@ export const PageKeys = {
     ADD_BIKE_FORM: 'addBikeForm',
     GALLERY: 'gallery',
     NOTIFICATIONS: 'notifications',
+    CONTACTS_SECTION: 'contactsSection',
     APP_NAVIGATION_MENU: 'appNavigation',
     RIDES: 'rides',
     MAP: 'map',
@@ -87,7 +88,7 @@ export const APP_COMMON_STYLES = {
     statusBarColor: STATUS_BAR_COLOR,
     testingBorder: { borderWidth: 2, borderColor: 'red' },
     statusBar: {
-        height: IS_ANDROID ? StatusBar.currentHeight : 20,
+        height: IS_ANDROID ? StatusBar.currentHeight : 22,
         backgroundColor: STATUS_BAR_COLOR,
     },
     appBar: {

@@ -1,76 +1,30 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableHighlight } from 'react-native';
+import { StyleSheet, Animated, ScrollView, Text, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableNativeFeedback } from 'react-native';
 import { getAllFriends, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend } from '../../../api';
-import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, heightPercentageToDP, RELATIONSHIP, PageKeys } from '../../../constants';
+import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, heightPercentageToDP, RELATIONSHIP } from '../../../constants';
 import { BaseModal } from '../../../components/modal';
 import { LinkButton } from '../../../components/buttons';
 import { ThumbnailCard } from '../../../components/cards';
-import { openFriendProfileAction } from '../../../actions';
-import { FloatingAction } from 'react-native-floating-action';
-import { Icon as NBIcon } from 'native-base';
-import { Actions } from 'react-native-router-flux';
 
-
-const FLOAT_ACTION_IDS = {
-    BTN_ADD_FRIEND: 'btn_add_friend',
-    BTN_ONLINE_FRIENDS: 'btn_online_friends',
-    BTN_ALL_FRIENDS: 'btn_all_friends',
-};
-const ACTIVE_FILTER_COLOR = '#81BB41';
-const ACTIVE_FLOAT_ACTION_STYLE = {
-    color: ACTIVE_FILTER_COLOR,
-    textBackground: ACTIVE_FILTER_COLOR,
-    textColor: '#fff',
-};
-const DEFAULT_FLOAT_ACTION_STYLE = {
-    color: APP_COMMON_STYLES.headerColor,
-    textBackground: APP_COMMON_STYLES.headerColor,
-    textColor: '#fff',
-};
-const FLOAT_ACTIONS = [{
-    text: 'Send freind request',
-    icon: <NBIcon name='add-user' type='Entypo' style={{ color: '#fff' }} />,
-    name: FLOAT_ACTION_IDS.BTN_ADD_FRIEND,
-    position: 1,
-    ...DEFAULT_FLOAT_ACTION_STYLE
-}, {
-    text: 'Online friends',
-    icon: <NBIcon name='people' type='MaterialIcons' style={{ color: '#fff' }} />,
-    name: FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS,
-    position: 2,
-    ...DEFAULT_FLOAT_ACTION_STYLE
-}, {
-    text: 'All friends',
-    icon: <NBIcon name='people-outline' type='MaterialIcons' style={{ color: '#fff' }} />,
-    name: FLOAT_ACTION_IDS.BTN_ALL_FRIENDS,
-    position: 3,
-    ...ACTIVE_FLOAT_ACTION_STYLE
-},];
 
 class AllFriendsTab extends Component {
     FRIEND_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: `Show\nlocation`, id: 'location', handler: () => { } }, { text: 'Chat', id: 'chat', handler: () => { } }, { text: 'Call', id: 'call', handler: () => { } }, { text: 'Garage', id: 'garage', handler: () => { } }, { text: 'Unfreind', id: 'unfriend', handler: () => this.doUnfriend() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     UNKNOWN_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Send\nRequest', id: 'sendRequest', handler: () => this.sendFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     SENT_REQUEST_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Cancel\nRequest', id: 'cancelRequest', handler: () => this.cancelFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     RECEIVED_REQUEST_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Accept\nRequest', id: 'acceptRequest', handler: () => { } }, { text: 'Reject\nRequest', id: 'rejectRequest', handler: () => { } }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
-    searchResImageRef = [];
-    friendsImageRef = [];
+    allImageRef = [];
+    oldPosition = {};
+    position = new Animated.ValueXY();
+    dimensions = new Animated.ValueXY();
+    animation = new Animated.Value(0);
     constructor(props) {
         super(props);
         this.state = {
             isRefreshing: false,
             isVisibleOptionsModal: false,
             selectedPerson: null,
-            selectedPersonImg: null,
-            friendsFilter: FLOAT_ACTION_IDS.BTN_ALL_FRIENDS,
-        }
-    }
-
-    componentDidMount() {
-        const actionBtnIdx = FLOAT_ACTIONS.findIndex(actionBtn => actionBtn.color === ACTIVE_FILTER_COLOR);
-        if (actionBtnIdx !== -1 && actionBtnIdx !== FLOAT_ACTIONS.length - 1) {
-            FLOAT_ACTIONS[actionBtnIdx] = { ...FLOAT_ACTIONS[actionBtnIdx], ...DEFAULT_FLOAT_ACTION_STYLE };
-            FLOAT_ACTIONS[FLOAT_ACTIONS.length - 1] = { ...FLOAT_ACTIONS[FLOAT_ACTIONS.length - 1], ...ACTIVE_FLOAT_ACTION_STYLE };
+            selectedPersonImg: null
         }
     }
 
@@ -83,10 +37,9 @@ class AllFriendsTab extends Component {
         if (this.props.refreshContent === true && prevProps.refreshContent === false) {
             this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0);
         }
-        // if (prevProps.searchQuery !== this.props.searchQuery && this.props.searchQuery.slice(-1) !== '') {
-        //     Keyboard.dismiss();
-        //     this.props.searchForFriend(this.props.searchQuery, this.props.user.userId, 0);
-        // }
+        if (prevProps.searchQuery !== this.props.searchQuery && this.props.searchQuery.slice(-1) !== '') {
+            this.props.searchForFriend(this.props.searchQuery, this.props.user.userId, 0);
+        }
     }
 
     sendFriendRequest = (person) => {
@@ -147,8 +100,7 @@ class AllFriendsTab extends Component {
     }
 
     showOptionsModal = (index) => {
-        const person = this.props.searchQuery.trim().length > 0 ? this.props.searchFriendList[index] : this.props.allFriends[index];
-        this.setState({ selectedPerson: person, isVisibleOptionsModal: true });
+        this.setState({ selectedPerson: this.props.searchFriendList[index], isVisibleOptionsModal: true });
     }
 
     onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false, selectedPerson: null })
@@ -168,9 +120,6 @@ class AllFriendsTab extends Component {
                 break;
             case RELATIONSHIP.UNKNOWN:
                 options = this.UNKNOWN_OPTIONS;
-                break;
-            default:
-                options = this.FRIEND_OPTIONS;
                 break;
         }
         return (
@@ -210,72 +159,99 @@ class AllFriendsTab extends Component {
     }
 
     openProfile = (index) => {
-        if (this.props.searchFriendList.length > 0) {
-            const person = this.props.searchFriendList[index];
-            this.searchResImageRef[index].measure((x, y, width, height, pageX, pageY) => {
-                const userInfo = { userId: person.userId, image: require('../../../assets/img/friend-profile-pic.png') };
-                const oldPosition = { pageX, pageY, width, height };
-                this.props.openUserProfile({ personInfo: userInfo, oldPosition });
+        this.allImageRef[index].measure((x, y, width, height, pageX, pageY) => {
+            this.oldPosition.x = pageX;
+            this.oldPosition.y = pageY;
+            this.oldPosition.width = width;
+            this.oldPosition.height = height;
+
+            this.position.setValue({ x: pageX, y: pageY });
+            this.dimensions.setValue({ x: width, y: height });
+        });
+
+        this.setState({ selectedPersonImg: require('../../../assets/img/friend-profile-pic.png') }, () => {
+            this.viewImage.measure((dx, dy, dWidth, dHeight, dPageX, dPageY) => {
+                Animated.parallel([
+                    Animated.timing(this.position.x, {
+                        toValue: (dWidth / 2) - (widthPercentageToDP(100) * 65 / 200),
+                        duration: 300
+                    }),
+                    Animated.timing(this.position.y, {
+                        toValue: heightPercentageToDP(100) * 10 / 100,
+                        duration: 300
+                    }),
+                    Animated.timing(this.dimensions.x, {
+                        toValue: widthPercentageToDP(100) * 65 / 100,
+                        duration: 300
+                    }),
+                    Animated.timing(this.dimensions.y, {
+                        toValue: widthPercentageToDP(100) * 65 / 100,
+                        duration: 300
+                    }),
+                    Animated.timing(this.animation, {
+                        toValue: 1,
+                        duration: 300
+                    }),
+                ]).start();
             });
-        } else {
-            const person = this.props.allFriends[index];
-            this.friendsImageRef[index].measure((x, y, width, height, pageX, pageY) => {
-                const userInfo = { userId: person.userId, image: require('../../../assets/img/friend-profile-pic.png') };
-                const oldPosition = { pageX, pageY, width, height };
-                this.props.openUserProfile({ personInfo: userInfo, oldPosition });
-            });
-        }
+        });
     }
 
-    filterOnlineFriends() {
-        this.removeFriendsFilter(false);
-        const onlineFilterIdx = FLOAT_ACTIONS.findIndex(actionBtn => actionBtn.name === FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS);
-        FLOAT_ACTIONS[onlineFilterIdx] = { ...FLOAT_ACTIONS[onlineFilterIdx], ...ACTIVE_FLOAT_ACTION_STYLE };
-        this.setState({ friendsFilter: FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS });
-    }
-
-    removeFriendsFilter(setDefaultActiveOption) {
-        // DOC: `All friends` option will be the last (bottom-most) option
-        const activeFilterIdx = FLOAT_ACTIONS.findIndex(actionBtn => actionBtn.name === this.state.friendsFilter);
-        FLOAT_ACTIONS[activeFilterIdx] = { ...FLOAT_ACTIONS[activeFilterIdx], ...DEFAULT_FLOAT_ACTION_STYLE };
-        if (setDefaultActiveOption) {
-            FLOAT_ACTIONS[FLOAT_ACTIONS.length - 1] = { ...FLOAT_ACTIONS[FLOAT_ACTIONS.length - 1], ...ACTIVE_FLOAT_ACTION_STYLE };
-            this.setState({ friendsFilter: FLOAT_ACTION_IDS.BTN_ALL_FRIENDS });
-        }
-    }
-
-    onSelectFloatActionOptions = (name) => {
-        switch (name) {
-            case FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS:
-                if (this.state.friendsFilter !== FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS) {
-                    this.filterOnlineFriends();
-                }
-                break;
-            case FLOAT_ACTION_IDS.BTN_ALL_FRIENDS:
-                this.removeFriendsFilter(true);
-                break;
-            case FLOAT_ACTION_IDS.BTN_ADD_FRIEND:
-                Actions.push(PageKeys.CONTACTS_SECTION);
-                break;
-        }
+    closeProfile = () => {
+        Animated.parallel([
+            Animated.timing(this.position.x, {
+                toValue: this.oldPosition.x,
+                duration: 300
+            }),
+            Animated.timing(this.position.y, {
+                toValue: this.oldPosition.y,
+                duration: 300
+            }),
+            Animated.timing(this.dimensions.x, {
+                toValue: this.oldPosition.width,
+                duration: 300
+            }),
+            Animated.timing(this.dimensions.y, {
+                toValue: this.oldPosition.height,
+                duration: 300
+            }),
+            Animated.timing(this.animation, {
+                toValue: 0,
+                duration: 300
+            }),
+        ]).start(() => {
+            this.setState({ selectedPersonImg: null });
+        });
     }
 
     render() {
-        const { isRefreshing, isVisibleOptionsModal, friendsFilter } = this.state;
+        const { isRefreshing, isVisibleOptionsModal } = this.state;
         const { allFriends, searchQuery, searchFriendList, user } = this.props;
-        let filteredFriends = [];
-        if (friendsFilter === FLOAT_ACTION_IDS.BTN_ALL_FRIENDS) {
-            filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
-                return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
-                    friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
-            });
-        } else if (friendsFilter === FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS) {
-            const onlineFriends = allFriends.filter(friend => friend.isOnline);
-            filteredFriends = searchQuery === '' ? onlineFriends : onlineFriends.filter(friend => {
-                return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
-                    friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
-            });
-        }
+
+        const activeImageStyle = {
+            width: this.dimensions.x,
+            height: this.dimensions.y,
+            left: this.position.x,
+            top: this.position.y
+        };
+        const animatedContentY = this.animation.interpolate({
+            inputRange: [0, 1],
+            outputRange: [-150, 0]
+        });
+        const animatedContentOpacity = this.animation.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: [0, 1, 1]
+        });
+        const animatedContentStyle = {
+            opacity: animatedContentOpacity,
+            transform: [{
+                translateY: animatedContentY
+            }]
+        };
+        const animatedCrossOpacity = {
+            opacity: this.animation
+        };
+
         return (
             <View style={styles.fill}>
                 <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
@@ -286,17 +262,14 @@ class AllFriendsTab extends Component {
                     </View>
                 </BaseModal>
                 {
-                    allFriends.length === 0
-                        ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
-                        : filteredFriends.length === 0
-                            ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage}>
-                                <Text style={{ color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6), fontWeight: 'bold', letterSpacing: 1 }}>{`No friends found`}</Text>
-                            </ImageBackground>
+                    searchQuery === ''
+                        ? allFriends.length === 0
+                            ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
                             : <FlatList
                                 style={{ flexDirection: 'column' }}
                                 contentContainerStyle={styles.friendList}
                                 numColumns={2}
-                                data={filteredFriends}
+                                data={allFriends}
                                 refreshing={isRefreshing}
                                 onRefresh={this.onPullRefresh}
                                 keyExtractor={this.friendKeyExtractor}
@@ -304,19 +277,50 @@ class AllFriendsTab extends Component {
                                     <ThumbnailCard
                                         thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                                         item={item}
-                                        thumbnailRef={imgRef => this.friendsImageRef[index] = imgRef}
                                         onLongPress={() => this.showOptionsModal(index)}
+                                    />
+                                )}
+                            />
+                        : searchFriendList.length === 0
+                            ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
+                            : <FlatList
+                                style={{ flexDirection: 'column' }}
+                                contentContainerStyle={styles.friendList}
+                                numColumns={2}
+                                data={searchFriendList}
+                                refreshing={isRefreshing}
+                                onRefresh={this.onPullRefresh}
+                                keyExtractor={this.friendKeyExtractor}
+                                renderItem={({ item, index }) => (
+                                    <ThumbnailCard
+                                        thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
+                                        item={item}
+                                        onLongPress={() => this.openProfile(index)} //this.showOptionsModal(index)
+                                        actions={this.getActionsForRelationship(item)}
+                                        thumbnailRef={imgRef => this.allImageRef[index] = imgRef}
                                         onPress={() => this.openProfile(index)}
                                     />
                                 )}
                             />
                 }
-                <FloatingAction
-                    actions={FLOAT_ACTIONS}
-                    color={APP_COMMON_STYLES.headerColor}
-                    position={user.handDominance === 'left' ? 'right' : 'left'}
-                    onPressItem={this.onSelectFloatActionOptions}
-                />
+                {/* <View style={StyleSheet.absoluteFill} pointerEvents={this.state.selectedPersonImg ? 'auto' : 'none'}>
+                    <View style={{ flex: 2, zIndex: 1000 }} ref={elRef => this.viewImage = elRef}>
+                        <ImageBackground style={{ flex: 1 }} source={this.state.selectedPersonImg ? require('../../../assets/img/profile-bg.png') : null}>
+                            <Animated.Image
+                                source={this.state.selectedPersonImg ? require('../../../assets/img/friend-profile-pic.png') : null}
+                                style={[{ resizeMode: 'cover', top: 0, left: 0, height: null, width: null, borderRadius: 15 }, activeImageStyle]}
+                            ></Animated.Image>
+                        </ImageBackground>
+                        <TouchableNativeFeedback onPress={this.closeProfile}>
+                            <Animated.View style={[{ position: 'absolute', top: 30, right: 30 }, animatedCrossOpacity]}>
+                                <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>X</Text>
+                            </Animated.View>
+                        </TouchableNativeFeedback>
+                    </View>
+                    <Animated.View style={[{ flex: 1, zIndex: 900, backgroundColor: '#fff', padding: 20, paddingTop: 50, paddingBotton: 10 }, animatedContentStyle]}>
+                        <Text>TESING TEXT CONTENT</Text>
+                    </Animated.View>
+                </View> */}
             </View>
         )
     }
@@ -336,7 +340,6 @@ const mapDispatchToProps = (dispatch) => {
         approveFriendRequest: (userId, personId, actionDate) => dispatch(approveFriendRequest(userId, personId, actionDate)),
         rejectFriendRequest: (userId, personId) => dispatch(rejectFriendRequest(userId, personId)),
         doUnfriend: (userId, personId) => dispatch(doUnfriend(userId, personId)),
-        openUserProfile: (profileInfo) => dispatch(openFriendProfileAction(profileInfo))
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(AllFriendsTab);
@@ -348,9 +351,7 @@ const styles = StyleSheet.create({
     backgroundImage: {
         height: null,
         width: null,
-        flex: 1,
-        alignItems: 'center',
-        paddingTop: heightPercentageToDP(5)
+        flex: 1
     },
     friendList: {
         marginHorizontal: widthPercentageToDP(5),
@@ -358,5 +359,5 @@ const styles = StyleSheet.create({
     },
     relationshipAction: {
         color: APP_COMMON_STYLES.headerColor
-    },
+    }
 });

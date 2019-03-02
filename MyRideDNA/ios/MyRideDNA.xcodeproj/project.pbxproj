@@ -71,6 +71,7 @@
 		B32331EB2C524D51A057BBA3 /* FontAwesome5_Brands.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4739494596C04DBABFEA3F49 /* FontAwesome5_Brands.ttf */; };
 		C2A76034CCEF4862BD121C0C /* Octicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3E5A56930BB24FE9A71C870D /* Octicons.ttf */; };
 		C6195EED1406470590A5CE8E /* Zocial.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B8F127CE1B744313B17CF557 /* Zocial.ttf */; };
+		C68C5ADF995C4C67A62A8C3A /* libRCTContacts.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F88526D4D154C709AD0BBC4 /* libRCTContacts.a */; };
 		CB310A9FEF9A45E9B6813A9C /* libRNSettings.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D94E6BA1CE64E3A915EF7B3 /* libRNSettings.a */; };
 		CC5D5D2DA3AC44AFB3DA1CED /* FontAwesome5_Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7496A7A3B4F84D878C228107 /* FontAwesome5_Regular.ttf */; };
 		D268362817B545DDBA707F87 /* Ionicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6A53981BE5B7427CBD529EF2 /* Ionicons.ttf */; };
@@ -334,6 +335,13 @@
 			remoteGlobalIDString = 2D2A28201D9B03D100D4039D;
 			remoteInfo = "RCTAnimation-tvOS";
 		};
+		6306713F222A61210067B932 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A86D4A6B344C405ABAFCB0E5 /* RCTContacts.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1441618E1BD0A79300FA4F59;
+			remoteInfo = RCTContacts;
+		};
 		6312AC8E22007D310051DE01 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E1E6817CC43141AEB7EDCA0E /* imageCropPicker.xcodeproj */;
@@ -476,6 +484,7 @@
 		2D02E47B1E0B4A5D006451C7 /* MyRideDNA-tvOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MyRideDNA-tvOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D02E4901E0B4A5D006451C7 /* MyRideDNA-tvOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MyRideDNA-tvOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D16E6891FA4F8E400B85C8A /* libReact.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libReact.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		2F88526D4D154C709AD0BBC4 /* libRCTContacts.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRCTContacts.a; sourceTree = "<group>"; };
 		341F3DC6933D402F85173EB8 /* MaterialIcons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = MaterialIcons.ttf; path = "../node_modules/native-base/Fonts/MaterialIcons.ttf"; sourceTree = "<group>"; };
 		35C66E17F99B4303A149EA4E /* SimpleLineIcons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = SimpleLineIcons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/SimpleLineIcons.ttf"; sourceTree = "<group>"; };
 		3E5A56930BB24FE9A71C870D /* Octicons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Octicons.ttf; path = "../node_modules/native-base/Fonts/Octicons.ttf"; sourceTree = "<group>"; };
@@ -501,6 +510,7 @@
 		8D94E6BA1CE64E3A915EF7B3 /* libRNSettings.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRNSettings.a; sourceTree = "<group>"; };
 		8E7BFE78270B49D59CD0963E /* Octicons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Octicons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Octicons.ttf"; sourceTree = "<group>"; };
 		990C196F49CC463DBF8564B0 /* RNFetchBlob.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = RNFetchBlob.xcodeproj; path = "../node_modules/rn-fetch-blob/ios/RNFetchBlob.xcodeproj"; sourceTree = "<group>"; };
+		A86D4A6B344C405ABAFCB0E5 /* RCTContacts.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = RCTContacts.xcodeproj; path = "../node_modules/react-native-contacts/ios/RCTContacts.xcodeproj"; sourceTree = "<group>"; };
 		AC1DA7473F9E46A19027D6B4 /* FontAwesome5_Solid.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = FontAwesome5_Solid.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Solid.ttf"; sourceTree = "<group>"; };
 		AD1687C7C22A4B3C80EBECAE /* MaterialCommunityIcons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = MaterialCommunityIcons.ttf; path = "../node_modules/native-base/Fonts/MaterialCommunityIcons.ttf"; sourceTree = "<group>"; };
 		ADBDB91F1DFEBF0600ED6528 /* RCTBlob.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTBlob.xcodeproj; path = "../node_modules/react-native/Libraries/Blob/RCTBlob.xcodeproj"; sourceTree = "<group>"; };
@@ -551,6 +561,7 @@
 				0068BD2B5BB14CDC9A0DB5AF /* libimageCropPicker.a in Frameworks */,
 				20DAA847CCCD4ABFBA91D8B4 /* libRNFetchBlob.a in Frameworks */,
 				6312ACD422007DCC0051DE01 /* Mapbox.framework in Frameworks */,
+				C68C5ADF995C4C67A62A8C3A /* libRCTContacts.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -715,6 +726,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		6306713C222A61200067B932 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				63067140222A61210067B932 /* libRCTContacts.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		6312AC8322007D310051DE01 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -776,6 +795,7 @@
 				264BCBC2926F4F1786447140 /* libimageCropPicker.a */,
 				08CF47422D7149DFA7DD9EA9 /* libRNFetchBlob.a */,
 				8912D1BD134248A7BC4170DC /* libRNDeviceInfo-tvOS.a */,
+				2F88526D4D154C709AD0BBC4 /* libRCTContacts.a */,
 			);
 			name = "Recovered References";
 			sourceTree = "<group>";
@@ -829,6 +849,7 @@
 				84194AF3364F4A349FA31A3E /* RNSettings.xcodeproj */,
 				E1E6817CC43141AEB7EDCA0E /* imageCropPicker.xcodeproj */,
 				990C196F49CC463DBF8564B0 /* RNFetchBlob.xcodeproj */,
+				A86D4A6B344C405ABAFCB0E5 /* RCTContacts.xcodeproj */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -1043,6 +1064,10 @@
 				{
 					ProductGroup = ADBDB9201DFEBF0600ED6528 /* Products */;
 					ProjectRef = ADBDB91F1DFEBF0600ED6528 /* RCTBlob.xcodeproj */;
+				},
+				{
+					ProductGroup = 6306713C222A61200067B932 /* Products */;
+					ProjectRef = A86D4A6B344C405ABAFCB0E5 /* RCTContacts.xcodeproj */;
 				},
 				{
 					ProductGroup = 00C302B61ABCB90400DB3ED1 /* Products */;
@@ -1358,6 +1383,13 @@
 			remoteRef = 5E9157341DD0AC6500FF2AA8 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		63067140222A61210067B932 /* libRCTContacts.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libRCTContacts.a;
+			remoteRef = 6306713F222A61210067B932 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		6312AC8F22007D310051DE01 /* libimageCropPicker.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -1641,11 +1673,15 @@
 					"$(SRCROOT)..\node_modules\neact-native-image-crop-pickerios/**",
 					"$(SRCROOT)..\node_modules\nn-fetch-blobios/**",
 					"$(SRCROOT)..\node_modules\neact-native-snackbarios",
+					"$(SRCROOT)/../node_modules/react-native-contacts/ios/RCTContacts",
 				);
 				INFOPLIST_FILE = MyRideDNATests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
+				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lc++",
@@ -1673,11 +1709,15 @@
 					"$(SRCROOT)..\node_modules\neact-native-image-crop-pickerios/**",
 					"$(SRCROOT)..\node_modules\nn-fetch-blobios/**",
 					"$(SRCROOT)..\node_modules\neact-native-snackbarios",
+					"$(SRCROOT)/../node_modules/react-native-contacts/ios/RCTContacts",
 				);
 				INFOPLIST_FILE = MyRideDNATests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
+				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lc++",
@@ -1708,6 +1748,7 @@
 					"$(SRCROOT)..\node_modules\neact-native-image-crop-pickerios/**",
 					"$(SRCROOT)..\node_modules\nn-fetch-blobios/**",
 					"$(SRCROOT)..\node_modules\neact-native-snackbarios",
+					"$(SRCROOT)/../node_modules/react-native-contacts/ios/RCTContacts",
 				);
 				INFOPLIST_FILE = MyRideDNA/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -1741,6 +1782,7 @@
 					"$(SRCROOT)..\node_modules\neact-native-image-crop-pickerios/**",
 					"$(SRCROOT)..\node_modules\nn-fetch-blobios/**",
 					"$(SRCROOT)..\node_modules\neact-native-snackbarios",
+					"$(SRCROOT)/../node_modules/react-native-contacts/ios/RCTContacts",
 				);
 				INFOPLIST_FILE = MyRideDNA/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -1779,10 +1821,14 @@
 					"$(SRCROOT)..\node_modules\neact-native-image-crop-pickerios/**",
 					"$(SRCROOT)..\node_modules\nn-fetch-blobios/**",
 					"$(SRCROOT)..\node_modules\neact-native-snackbarios",
+					"$(SRCROOT)/../node_modules/react-native-contacts/ios/RCTContacts",
 				);
 				INFOPLIST_FILE = "MyRideDNA-tvOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
+				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lc++",
@@ -1819,10 +1865,14 @@
 					"$(SRCROOT)..\node_modules\neact-native-image-crop-pickerios/**",
 					"$(SRCROOT)..\node_modules\nn-fetch-blobios/**",
 					"$(SRCROOT)..\node_modules\neact-native-snackbarios",
+					"$(SRCROOT)/../node_modules/react-native-contacts/ios/RCTContacts",
 				);
 				INFOPLIST_FILE = "MyRideDNA-tvOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
+				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lc++",
@@ -1858,10 +1908,14 @@
 					"$(SRCROOT)..\node_modules\neact-native-image-crop-pickerios/**",
 					"$(SRCROOT)..\node_modules\nn-fetch-blobios/**",
 					"$(SRCROOT)..\node_modules\neact-native-snackbarios",
+					"$(SRCROOT)/../node_modules/react-native-contacts/ios/RCTContacts",
 				);
 				INFOPLIST_FILE = "MyRideDNA-tvOSTests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
+				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lc++",
@@ -1897,10 +1951,14 @@
 					"$(SRCROOT)..\node_modules\neact-native-image-crop-pickerios/**",
 					"$(SRCROOT)..\node_modules\nn-fetch-blobios/**",
 					"$(SRCROOT)..\node_modules\neact-native-snackbarios",
+					"$(SRCROOT)/../node_modules/react-native-contacts/ios/RCTContacts",
 				);
 				INFOPLIST_FILE = "MyRideDNA-tvOSTests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
+				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lc++",

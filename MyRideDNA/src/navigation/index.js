@@ -20,6 +20,7 @@ import { GalleryView } from '../components/gallery';
 
 import store from '../store/index';
 import EditProfile from '../containers/edit-profile';
+import ContactsSection from '../containers/contacts-section';
 import CreateRide from '../containers/create-ride';
 import AddBikeForm from '../containers/profile/my-garage/add-edit-bike-form';
 import EditProfileForm from '../containers/profile/my-profile/edit-profile-form';
@@ -49,6 +50,7 @@ export default class Navigation extends Component {
                             <Scene key={PageKeys.EDIT_PROFILE} modal={true} component={EditProfile} hideNavBar></Scene>
                             <Scene key={PageKeys.PASSENGERS} component={Passengers} hideNavBar></Scene>
                             <Scene key={PageKeys.NOTIFICATIONS} component={Notifications} hideNavBar></Scene>
+                            <Scene key={PageKeys.CONTACTS_SECTION} component={ContactsSection} hideNavBar></Scene>
                         </Scene>
                     </Router>
                 </Root>

@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, StatusBar, Animated, ImageBackground, TouchableWithoutFeedback, Text, View } from 'react-native';
+import { StyleSheet, SafeAreaView, Platform, StatusBar, Animated, ImageBackground, TouchableNativeFeedback, TouchableWithoutFeedback, Text, View } from 'react-native';
 import { BasicHeader } from '../../components/headers';
-import { Tabs, Tab, TabHeading, ScrollableTab } from 'native-base';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
+import { Tabs, Tab, TabHeading, ScrollableTab, Icon as NBIcon } from 'native-base';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../constants';
 import styles from './styles';
 import AllFriendsTab from './all-friends';
 import GroupListTab from './group-list';
@@ -30,7 +30,7 @@ class Friends extends Component {
 
     componentDidMount() {
         setTimeout(() => {
-            this.tabsRef.props.goToPage(0)
+            this.tabsRef.props.goToPage(1)
         }, 50);
     }
 
@@ -112,6 +112,11 @@ class Friends extends Component {
         });
     }
 
+    onPressGroupTab = () => {
+        this.setState({ activeTab: 2, groupTabPressed: true }, () => this.tabsRef.props.goToPage(2));
+        setTimeout(() => this.setState(prevState => ({ groupTabPressed: false })), 200);
+    }
+
     render() {
         const { headerSearchMode, searchQuery, activeTab } = this.state;
 
@@ -153,18 +158,26 @@ class Friends extends Component {
                         searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false, searchQuery: '' })}
                         onClearSearchValue={() => this.setState({ searchQuery: '' })} />
 
-                    <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
+                    <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ flex: 1, paddingBottom: IS_ANDROID ? 0 : 20, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                         <Tab
-                            heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 1 }}>
-                                <IconLabelPair containerStyle={styles.tabContentCont} text={`Friends`} textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} iconProps={{ name: 'people-outline', type: 'MaterialIcons', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }} />
+                            heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
+                                <IconLabelPair containerStyle={styles.tabContentCont} text={`Online\nFriends`} textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} iconProps={{ name: 'user', type: 'Feather', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }} />
                             </TabHeading>}>
-                            <AllFriendsTab refreshContent={activeTab === 0} searchQuery={searchQuery} />
+                            <View style={{ flex: 1 }}>
+
+                            </View>
                         </Tab>
                         <Tab
-                            heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderColor: '#fff', borderLeftWidth: 1 }}>
-                                <IconLabelPair containerStyle={styles.tabContentCont} text={`Groups`} textStyle={{ color: activeTab === 1 ? '#fff' : '#6B7663' }} iconProps={{ name: 'group', type: 'FontAwesome', style: { color: activeTab === 1 ? '#fff' : '#6B7663' } }} />
+                            heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 2, borderLeftWidth: 2 }}>
+                                <IconLabelPair containerStyle={styles.tabContentCont} text={`All\nFriends`} textStyle={{ color: activeTab === 1 ? '#fff' : '#6B7663' }} iconProps={{ name: 'people-outline', type: 'MaterialIcons', style: { color: activeTab === 1 ? '#fff' : '#6B7663' } }} />
                             </TabHeading>}>
-                            <GroupListTab refreshContent={activeTab === 1} />
+                            <AllFriendsTab refreshContent={activeTab === 1} searchQuery={searchQuery} />
+                        </Tab>
+                        <Tab
+                            heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3', borderColor: '#fff' }}>
+                                <IconLabelPair containerStyle={styles.tabContentCont} text={`Groups`} textStyle={{ color: activeTab === 2 ? '#fff' : '#6B7663' }} iconProps={{ name: 'group', type: 'FontAwesome', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }} />
+                            </TabHeading>}>
+                            <GroupListTab refreshContent={activeTab === 2} />
                         </Tab>
                     </Tabs>
 

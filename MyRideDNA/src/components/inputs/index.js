@@ -55,16 +55,20 @@ export const IconicList = ({ iconProps, values, selectedValue, placeholder, onCh
     return (
         <View>
             <View style={{ flexDirection: 'row', marginVertical: 10 }}>
-                <View style={{ paddingLeft: 10, paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
-                    <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, iconProps.style]} />
-                </View>
+                {
+                    iconProps
+                        ? <View style={{ paddingLeft: 10, paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
+                            <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, iconProps.style]} />
+                        </View>
+                        : null
+                }
                 <Picker
                     mode="dropdown"
                     iosIcon={<NBIcon name="ios-arrow-down-outline" />}
                     placeholder={placeholder}
                     placeholderStyle={{ color: "#a9a9a9", marginLeft: 0, paddingLeft: 0 }}
                     placeholderIconColor="#a9a9a9"
-                    style={{ width: WindowDimensions.width - 30, borderBottomWidth: 1, borderBottomColor: '#a9a9a9' }}
+                    style={{ width: iconProps ? WindowDimensions.width - 30 : WindowDimensions.width, borderBottomWidth: 1, borderBottomColor: '#a9a9a9' }}
                     selectedValue={selectedValue}
                     onValueChange={onChange && onChange}
                 >

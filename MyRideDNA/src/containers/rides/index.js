@@ -6,7 +6,7 @@ import {
 import { connect } from 'react-redux';
 
 import { Tab, TabHeading, Tabs, ScrollableTab, Icon as NBIcon, ListItem, Left, Toast } from "native-base";
-import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES, IS_ANDROID } from '../../constants';
+import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP } from '../../constants';
 import { ShifterButton, LinkButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, screenChangeAction, clearRideAction } from '../../actions';
 import { BasicHeader } from '../../components/headers';
@@ -264,7 +264,7 @@ export class Rides extends Component {
                         onClearSearchValue={() => this.setState({ searchQuery: '' })} />
                     <Tabs onChangeTab={this.onChangeTab} style={{ flex: 1, paddingBottom: IS_ANDROID ? 0 : 20, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                         <Tab
-                            heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
+                            heading={<TabHeading style={{ width: widthPercentageToDP(33.3), backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
                                 <IconLabelPair
                                     containerStyle={styles.tabContentCont}
                                     iconProps={{ name: 'motorbike', type: 'MaterialCommunityIcons', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }}
@@ -294,7 +294,7 @@ export class Rides extends Component {
                             </View>
                         </Tab>
                         <Tab
-                            heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 2, borderLeftWidth: 2 }}>
+                            heading={<TabHeading style={{ width: widthPercentageToDP(33.3), backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 2, borderLeftWidth: 2 }}>
                                 <IconLabelPair
                                     containerStyle={styles.tabContentCont}
                                     iconProps={{ name: 'menu', type: 'MaterialCommunityIcons', style: { color: activeTab === 1 ? '#fff' : '#6B7663' } }}
@@ -324,7 +324,7 @@ export class Rides extends Component {
                             </View>
                         </Tab>
                         <Tab
-                            heading={<TabHeading style={{ flex: 1, backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3' }}>
+                            heading={<TabHeading style={{ width: widthPercentageToDP(33.3), backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3' }}>
                                 <IconLabelPair
                                     containerStyle={styles.tabContentCont}
                                     iconProps={{ name: 'ios-people', type: 'Ionicons', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }}

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Platform, SafeAreaView, View, Text, ImageBackground, Image, FlatList, ScrollView, AsyncStorage } from 'react-native';
+import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView, AsyncStorage } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID } from '../../../constants/index';
 import { IconButton } from '../../../components/buttons';
@@ -27,6 +27,10 @@ class MyProfileTab extends Component {
             bikes: [10, 20, 30, 40, 50],
             isLoadingProfPic: false
         };
+    }
+
+    componentWillMount() {
+        StatusBar.setBarStyle('light-content');
     }
 
     componentDidMount() {
@@ -131,9 +135,9 @@ class MyProfileTab extends Component {
         return (
             <View style={styles.fill}>
                 {
-                    IS_ANDROID
-                        ? null
-                        : <View style={APP_COMMON_STYLES.appBar} />
+                    // IS_ANDROID
+                    //     ? null
+                    //     : <View style={APP_COMMON_STYLES.appBar} />
                 }
                 <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
                     <View style={styles.profilePic}>
@@ -199,7 +203,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: heightPercentageToDP(6),
         flexDirection: 'row',
-        marginTop: heightPercentageToDP(1)
+        marginTop: APP_COMMON_STYLES.statusBar.height + heightPercentageToDP(1.5)
     },
     headerIcon: {
         paddingHorizontal: 0,
@@ -223,6 +227,7 @@ const styles = StyleSheet.create({
     profileBG: {
         width: '100%',
         height: heightPercentageToDP(55),
+        paddingTop: heightPercentageToDP(1.5)
     },
     profilePic: {
         height: widthPercentageToDP(65),

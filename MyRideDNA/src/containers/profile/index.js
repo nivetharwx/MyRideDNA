@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, SafeAreaView, View, Text, StatusBar, Platform } from 'react-native';
-import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../constants/index';
+import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP } from '../../constants/index';
 import { ShifterButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { Tabs, Tab, ScrollableTab, TabHeading } from 'native-base';
@@ -37,9 +37,13 @@ class Profile extends Component {
         const { activeTab, profilePicString } = this.state;
         return (
             <View style={styles.fill}>
-                <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                </View>
+                {
+                    activeTab === 0
+                        ? null
+                        : <View style={APP_COMMON_STYLES.statusBar}>
+                            <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                        </View>
+                }
                 <View style={{ flex: 1 }}>
                     <Tabs locked={true} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B' }} underlineStyle={{ height: 0 }} />}>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 0 ? '#0083CA' : '#6C6C6B' }]}>
@@ -48,7 +52,7 @@ class Profile extends Component {
                             <MyProfileTab />
                         </Tab>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 1 ? '#0083CA' : '#6C6C6B', borderLeftWidth: 2, borderLeftColor: '#fff', borderRightWidth: 2, borderRightColor: '#fff' }]}>
-                            <Text style={{ color: '#fff' }}>{'    '}MY GARAGE{'    '}</Text>
+                            <Text style={{ color: '#fff' }}>MY GARAGE</Text>
                         </TabHeading>}>
                             <MyGarageTab />
                         </Tab>
@@ -61,7 +65,7 @@ class Profile extends Component {
 
                     {/* Shifter: - Brings the app navigation menu */}
                     <ShifterButton onPress={this.showAppNavMenu}
-                        containerStyles={{ bottom: IS_ANDROID ? BOTTOM_TAB_HEIGHT : BOTTOM_TAB_HEIGHT + 12 }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
+                        containerStyles={{ bottom: IS_ANDROID ? BOTTOM_TAB_HEIGHT : BOTTOM_TAB_HEIGHT - 8 }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
             </View >
         );
@@ -89,7 +93,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         // zIndex: 50,
         bottom: 0,
-        paddingBottom: IS_ANDROID ? 0 : 20,
+        // paddingBottom: IS_ANDROID ? 0 : 20,
         height: '100%',
         width: '100%',
     },
@@ -97,5 +101,6 @@ const styles = StyleSheet.create({
         height: BOTTOM_TAB_HEIGHT,
         alignItems: 'center',
         justifyContent: 'center',
+        width: widthPercentageToDP(33.3),
     }
 });

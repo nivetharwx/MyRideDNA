@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, SafeAreaView, StatusBar, Platform, ScrollView, View, Keyboard, Alert, TextInput, Text } from 'react-native';
+import { StyleSheet, KeyboardAvoidingView, StatusBar, Platform, ScrollView, View, Keyboard, Alert, TextInput, Text } from 'react-native';
 import { BasicHeader } from '../../../../components/headers';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
@@ -124,14 +124,32 @@ class EditProfileForm extends Component {
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
         const { user } = this.state;
         return (
-            <View style={[styles.fill, IS_ANDROID ? null : { paddingBottom: heightPercentageToDP(3) }]}>
+            <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
-                <View style={styles.fill}>
+                <KeyboardAvoidingView behavior='padding' style={styles.fill}>
                     <BasicHeader title='Edit Profile' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
                     <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
-                        <IconicInput iconProps={{ name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Name' value={user.name}
+                        <LabeledInput inputValue={user.name} inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
+                        <IconicList
+                            selectedValue={user.gender} placeholder='Gender' values={[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }]}
+                            onChange={this.onChangeGender} />
+                        <LabeledInput inputValue={user.dob} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onChangeDOB} placeholder='DOB' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
+                        <IconicDatePicker />
+                        <LabeledInput inputValue={user.address} inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChange={this.onChangeAddress} placeholder='Building number, street' onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
+                        <LabeledInput inputValue={user.city} inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChange={this.onChangeCity} placeholder='City' onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
+                        <LabeledInput inputValue={user.state} inputRef={elRef => this.fieldRefs[4] = elRef} returnKeyType='next' onChange={this.onChangeState} placeholder='State' onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
+                        <LabeledInput inputValue={user.country} inputRef={elRef => this.fieldRefs[5] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} />
+                    </ScrollView>
+                    <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
+                </KeyboardAvoidingView>
+            </View>
+        );
+    }
+}
+
+{/* <IconicInput iconProps={{ name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Name' value={user.name}
                             onChange={this.onChangeName} />
                         <IconicInput iconProps={{ name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Nick Name' value={user.nickname}
                             onChange={this.onChangeNickname} />
@@ -160,15 +178,7 @@ class EditProfileForm extends Component {
                             <TextInput style={[styles.addressInput, { marginLeft: widthPercentageToDP(3), marginTop: heightPercentageToDP(3) }]} placeholder='Postal code' textContentType='postalCode' keyboardType='numeric'
                                 onChangeText={this.onChangeZipCode} value={user.homeAddress.zipCode} />
                         </View>
-                    </ScrollView>
-                    <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
-                </View>
-            </View>
-        );
-    }
-}
-
-{/* <LabeledInput inputValue={user.name} inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
+    <LabeledInput inputValue={user.name} inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
                     <IconicList iconProps={{ style: styles.formFieldIcon, name: 'transgender', type: 'FontAwesome' }}
                         selectedValue={user.gender} placeholder='Gender' values={[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }]}
                         onChange={this.onChangeGender} />
@@ -200,7 +210,8 @@ const styles = StyleSheet.create({
     },
     formContent: {
         paddingTop: 20,
-        flex: 1
+        flex: 1,
+        justifyContent: 'space-around'
     },
     submitBtn: {
         height: heightPercentageToDP(8.5),
