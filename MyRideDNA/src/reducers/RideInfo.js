@@ -1,4 +1,5 @@
-import { UPDTAE_RIDE, CLEAR_RIDE, UPDATE_WAYPOINT, LOAD_RIDE } from "../actions/actionConstants";
+import { UPDTAE_RIDE, CLEAR_RIDE, UPDATE_WAYPOINT, LOAD_RIDE, ADD_WAYPOINT, DELETE_WAYPOINT } from "../actions/actionConstants";
+import { undoable } from "./Undoable";
 
 const initialState = {
     ride: {
@@ -20,11 +21,10 @@ const initialState = {
         isRecorded: false,
         status: null,
         fromRideId: null
-    },
-    rides: []
+    }
 };
 
-export default (state = initialState, action) => {
+const rideInfo = (state = initialState, action) => {
     switch (action.type) {
         case UPDTAE_RIDE:
             return {
@@ -34,10 +34,40 @@ export default (state = initialState, action) => {
                     ...action.data
                 }
             }
+        case ADD_WAYPOINT:
+            return {
+                ...state,
+                ride: {
+                    ...state.ride,
+                    waypoints: [
+                        ...state.ride.waypoints.slice(0, action.data.index),
+                        action.data.waypoint,
+                        ...state.ride.waypoints.slice(action.data.index)
+                    ]
+                }
+            }
         case UPDATE_WAYPOINT:
             return {
                 ...state,
-                ...action.data
+                ride: {
+                    ...state.ride,
+                    waypoints: [
+                        ...state.ride.waypoints.slice(0, action.data.index),
+                        waypoint,
+                        ...state.ride.waypoints.slice(action.data.index + 1)
+                    ]
+                }
+            }
+        case DELETE_WAYPOINT:
+            return {
+                ...state,
+                ride: {
+                    ...state.ride,
+                    waypoints: [
+                        ...state.ride.waypoints.slice(0, action.data.index),
+                        ...state.ride.waypoints.slice(action.data.index + 1)
+                    ]
+                }
             }
         case CLEAR_RIDE:
             return {
@@ -46,3 +76,5 @@ export default (state = initialState, action) => {
         default: return state
     }
 }
+const undoableRideInfo = undoable(rideInfo);
+export default undoableRideInfo;

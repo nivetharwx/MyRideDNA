@@ -131,23 +131,25 @@ export class Rides extends Component {
     keyExtractor = (item) => item.rideId;
 
     deleteRideConfirmation(rideId, rideName, index, rideType) {
-        Alert.alert(
-            'Confirmation to delete',
-            `Are you sure to delete the ${rideName}?`,
-            [
-                {
-                    text: 'Yes', onPress: () => {
-                        // DOC: Clear ride from map if it is currently loaded on map
-                        if (this.props.ride.rideId === rideId) {
-                            this.props.clearRideFromMap();
+        setTimeout(() => {
+            Alert.alert(
+                'Confirmation to delete',
+                `Are you sure to delete the ${rideName}?`,
+                [
+                    {
+                        text: 'Yes', onPress: () => {
+                            // DOC: Clear ride from map if it is currently loaded on map
+                            if (this.props.ride.rideId === rideId) {
+                                this.props.clearRideFromMap();
+                            }
+                            this.props.deleteRide(rideId, index, rideType);
                         }
-                        this.props.deleteRide(rideId, index, rideType);
-                    }
-                },
-                { text: 'Cancel', onPress: () => { }, style: 'cancel' },
-            ],
-            { cancelable: false }
-        );
+                    },
+                    { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+                ],
+                { cancelable: false }
+            );
+        }, 100);
     }
 
     onPressRide(rideId) {
@@ -375,7 +377,7 @@ const mapStateToProps = (state) => {
     const { showMenu } = state.TabVisibility;
     const { user } = state.UserAuth;
     const { buildRides, recordedRides, sharedRides } = state.RideList;
-    const { ride } = state.RideInfo;
+    const { ride } = state.RideInfo.present;
     return { showMenu, user, buildRides, recordedRides, sharedRides, ride };
 }
 

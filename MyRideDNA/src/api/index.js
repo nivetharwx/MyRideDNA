@@ -1,6 +1,6 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
-    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction
+    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction, deleteWaypointAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL } from '../constants';
 import axios from 'axios';
@@ -355,12 +355,7 @@ export const addWaypoint = (waypoint, ride, index) => {
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(updateWaypointAction({
-                        ride: {
-                            ...ride,
-                            waypoints: [...ride.waypoints.slice(0, index), waypoint, ...ride.waypoints.slice(index)]
-                        }
-                    }));
+                    return dispatch(addWaypointAction({ index, waypoint }));
                 }
             })
             .catch(er => {
@@ -377,12 +372,7 @@ export const deleteWaypoint = (ride, index) => {
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(updateWaypointAction({
-                        ride: {
-                            ...ride,
-                            waypoints: [...ride.waypoints.slice(0, index), ...ride.waypoints.slice(index + 1)]
-                        }
-                    }));
+                    return dispatch(deleteWaypointAction({ index }));
                 }
             })
             .catch(er => {
@@ -399,12 +389,7 @@ export const updateWaypoint = (waypoint, ride, index) => {
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(updateWaypointAction({
-                        ride: {
-                            ...ride,
-                            waypoints: [...ride.waypoints.slice(0, index), waypoint, ...ride.waypoints.slice(index + 1)]
-                        }
-                    }));
+                    return dispatch(updateWaypointAction({ index, waypoint }));
                 }
             })
             .catch(er => {
@@ -421,12 +406,7 @@ export const updateSource = (waypoint, ride) => {
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(updateWaypointAction({
-                        ride: {
-                            ...ride,
-                            source: waypoint
-                        }
-                    }));
+                    return dispatch(updateRideAction({ source: waypoint }));
                 }
             })
             .catch(er => {
@@ -443,12 +423,7 @@ export const deleteSource = (ride) => {
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(updateWaypointAction({
-                        ride: {
-                            ...ride,
-                            source: null
-                        }
-                    }));
+                    return dispatch(updateRideAction({ source: null }));
                 }
             })
             .catch(er => {
@@ -465,12 +440,7 @@ export const updateDestination = (waypoint, ride) => {
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(updateWaypointAction({
-                        ride: {
-                            ...ride,
-                            destination: waypoint
-                        }
-                    }));
+                    return dispatch(updateRideAction({ destination: waypoint }));
                 }
             })
             .catch(er => {
@@ -486,18 +456,10 @@ export const makeWaypointAsSource = (ride, index) => {
         axios.put(RIDE_BASE_URL + `makeWaypointAsSource?rideId=${ride.rideId}&index=${index}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log("makeWaypointAsSource response: ", {
-                        ...ride,
+                    dispatch(toggleLoaderAction(false));
+                    return dispatch(updateRideAction({
                         waypoints: [...ride.waypoints.slice(index + 1)],
                         source: ride.waypoints[index]
-                    });
-                    dispatch(toggleLoaderAction(false));
-                    return dispatch(updateWaypointAction({
-                        ride: {
-                            ...ride,
-                            waypoints: [...ride.waypoints.slice(index + 1)],
-                            source: ride.waypoints[index]
-                        }
                     }));
                 }
             })
@@ -515,12 +477,9 @@ export const makeSourceAsWaypoint = (ride) => {
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(updateWaypointAction({
-                        ride: {
-                            ...ride,
-                            waypoints: [ride.source, ...ride.waypoints],
-                            source: null
-                        }
+                    return dispatch(updateRideAction({
+                        waypoints: [ride.source, ...ride.waypoints],
+                        source: null
                     }));
                 }
             })
@@ -538,12 +497,9 @@ export const makeWaypointAsDestination = (ride, index) => {
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(updateWaypointAction({
-                        ride: {
-                            ...ride,
-                            waypoints: [...ride.waypoints.slice(0, index)],
-                            destination: ride.waypoints[index]
-                        }
+                    return dispatch(updateRideAction({
+                        waypoints: [...ride.waypoints.slice(0, index)],
+                        destination: ride.waypoints[index]
                     }));
                 }
             })
@@ -561,12 +517,9 @@ export const makeDestinationAsWaypoint = (ride) => {
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(updateWaypointAction({
-                        ride: {
-                            ...ride,
-                            waypoints: [...ride.waypoints, ride.destination],
-                            destination: null
-                        }
+                    return dispatch(updateRideAction({
+                        waypoints: [...ride.waypoints, ride.destination],
+                        destination: null
                     }));
                 }
             })
@@ -584,12 +537,7 @@ export const deleteDestination = (ride) => {
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(updateWaypointAction({
-                        ride: {
-                            ...ride,
-                            destination: null
-                        }
-                    }));
+                    return dispatch(updateRideAction({ destination: null }));
                 }
             })
             .catch(er => {
@@ -598,6 +546,18 @@ export const deleteDestination = (ride) => {
                 dispatch(toggleLoaderAction(false));
             })
     };
+}
+// DOC: This API call is for syncing the state of ride with the server. There will not be any dispatcher
+export const replaceRide = (rideId, ride) => {
+    axios.put(RIDE_BASE_URL + `replaceRide?rideId=${rideId}`, ride, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        .then(res => {
+            if (res.status === 200) {
+                console.log("Synced with server");
+            }
+        })
+        .catch(er => {
+            console.log(er.response);
+        })
 }
 export const getRideByRideId = (rideId) => {
     return dispatch => {
