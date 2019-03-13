@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, TextInput, Animated, Text, Keyboard, FlatList, View, ImageBackground } from 'react-native';
-import { IconButton } from '../../../components/buttons';
-import { widthPercentageToDP, heightPercentageToDP, PageKeys } from '../../../constants';
+import { StyleSheet, TextInput, Animated, Text, Alert, Keyboard, FlatList, View, ImageBackground } from 'react-native';
+import { IconButton, LinkButton } from '../../../components/buttons';
+import { widthPercentageToDP, heightPercentageToDP, PageKeys, APP_COMMON_STYLES } from '../../../constants';
 import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast } from 'native-base';
 import { ThumbnailCard } from '../../../components/cards';
-import { createFriendGroup, getFriendGroups, addMembers, getAllGroupMembers } from '../../../api';
+import { createFriendGroup, getFriendGroups, addMembers, getAllGroupMembers, exitFriendGroup } from '../../../api';
 import { Actions } from 'react-native-router-flux';
+import { BaseModal } from '../../../components/modal';
 
 const CREATE_GROUP_WIDTH = widthPercentageToDP(9);
 class GroupListTab extends Component {
@@ -24,6 +25,8 @@ class GroupListTab extends Component {
             searchFriendList: [],
             newGroupName: null,
             kbdBtmOffset: this.defaultBtmOffset,
+            isVisibleOptionsModal: false,
+            selectedGroup: null
         };
     }
 
@@ -59,6 +62,8 @@ class GroupListTab extends Component {
 
     componentWillUnmount() {
     }
+
+    onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false, selectedGroup: null })
 
     openGroupInfo = (index) => {
         if (this.borderWidthAnim.__getValue() > 0) {
@@ -107,9 +112,50 @@ class GroupListTab extends Component {
         });
     }
 
+    showOptionsModal = (index) => {
+        this.setState({ selectedGroup: this.props.friendGroupList[index], isVisibleOptionsModal: true });
+    }
+
+    renderMenuOptions = () => {
+        if (this.state.selectedGroup === null) return;
+        const options = [{ text: 'Exit group', id: 'exitGroup', handler: () => this.showExitGroupConfirmation() }, { text: 'Clear chat', id: 'clearChat', handler: () => { } }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
+        return (
+            options.map(option => (
+                <LinkButton
+                    key={option.id}
+                    onPress={option.handler}
+                    highlightColor={APP_COMMON_STYLES.infoColor}
+                    style={APP_COMMON_STYLES.menuOptHighlight}
+                    title={option.text}
+                    titleStyle={APP_COMMON_STYLES.menuOptTxt}
+                />
+            ))
+        )
+    }
+
+    showExitGroupConfirmation = () => {
+        const { groupId, groupName } = this.state.selectedGroup;
+        setTimeout(() => {
+            Alert.alert(
+                'Confirmation to exit group',
+                `Are you sure to exit from ${groupName}?`,
+                [
+                    {
+                        text: 'Yes', onPress: () => {
+                            this.props.exitFriendGroup(groupId, this.props.user.userId);
+                            this.onCancelOptionsModal();
+                        }
+                    },
+                    { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+                ],
+                { cancelable: false }
+            );
+        }, 100);
+    }
+
     renderGroup = ({ item, index }) => {
         return (
-            <ListItem style={{ marginTop: 20 }} avatar onPress={() => this.openGroupInfo(index)}>
+            <ListItem style={{ marginTop: 20 }} avatar onLongPress={() => this.showOptionsModal(index)} onPress={() => this.openGroupInfo(index)}>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
                     {
                         item.groupProfilePictureThumbnail
@@ -201,7 +247,7 @@ class GroupListTab extends Component {
     }
 
     render() {
-        const { newGroupName } = this.state;
+        const { newGroupName, isVisibleOptionsModal } = this.state;
         const { friendGroupList, user } = this.props;
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
@@ -209,6 +255,13 @@ class GroupListTab extends Component {
         });
         return (
             <View style={styles.fill}>
+                <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
+                    <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
+                        {
+                            this.renderMenuOptions()
+                        }
+                    </View>
+                </BaseModal>
                 {
                     friendGroupList.length > 0
                         ? <FlatList
@@ -248,6 +301,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         createFriendGroup: (newGroupInfo) => dispatch(createFriendGroup(newGroupInfo)),
         getFriendGroups: (userId) => dispatch(getFriendGroups(userId)),
+        exitFriendGroup: (groupId, memberId) => dispatch(exitFriendGroup(groupId, memberId)),
         addMembers: (groupId, memberDetails) => dispatch(addMembers(groupId, memberDetails)),
         getAllGroupMembers: (groupId, userId) => dispatch(getAllGroupMembers(groupId, userId)),
     };

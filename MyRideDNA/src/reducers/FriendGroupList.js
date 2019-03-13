@@ -1,4 +1,4 @@
-import { REPLACE_FRIEND_GROUP_LIST, ADD_FRIEND_GROUP_TO_LIST, ADD_MEMBERS_TO_CURRENT_GROUP, UPDATE_MEMBER_IN_CURRENT_GROUP, UPDTAE_CURRENT_GROUP, RESET_CURRENT_GROUP, RESET_MEMBERS_FROM_CURRENT_GROUP, RESET_MEMBERS_IN_CURRENT_GROUP, GET_GROUP_INFO, REMOVE_MEMBER_FROM_CURRENT_GROUP } from "../actions/actionConstants";
+import { REPLACE_FRIEND_GROUP_LIST, ADD_FRIEND_GROUP_TO_LIST, ADD_MEMBERS_TO_CURRENT_GROUP, UPDATE_MEMBER_IN_CURRENT_GROUP, UPDTAE_CURRENT_GROUP, RESET_CURRENT_GROUP, RESET_MEMBERS_FROM_CURRENT_GROUP, RESET_MEMBERS_IN_CURRENT_GROUP, GET_GROUP_INFO, REMOVE_MEMBER_FROM_CURRENT_GROUP, REMOVE_FRIEND_GROUP_FROM_LIST } from "../actions/actionConstants";
 
 const initialState = {
     friendGroupList: [],
@@ -35,8 +35,18 @@ export default (state = initialState, action) => {
                 friendGroupList: [
                     ...state.friendGroupList,
                     action.data
+                ]
+            }
+        case REMOVE_FRIEND_GROUP_FROM_LIST:
+            const groupIndex = state.friendGroupList.findIndex(group => group.groupId === action.data);
+            const selGroupId = state.friendGroupList[groupIndex].groupId;
+            return {
+                ...state,
+                friendGroupList: [
+                    ...state.friendGroupList.slice(0, groupIndex),
+                    ...state.friendGroupList.slice(groupIndex + 1)
                 ],
-                currentGroup: action.data
+                currentGroup: state.currentGroup && selGroupId === state.currentGroup.groupId ? null : state.currentGroup
             }
         case RESET_CURRENT_GROUP:
             return {

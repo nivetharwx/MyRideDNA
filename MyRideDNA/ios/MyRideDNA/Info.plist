@@ -21,7 +21,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>7</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -37,10 +37,26 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>NSAppleMusicUsageDescription</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>NSBluetoothPeripheralUsageDescription </string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>NSCalendarsUsageDescription</string>
+	<key>NSCameraUsageDescription</key>
+	<string>NSCameraUsageDescription</string>
 	<key>NSContactsUsageDescription</key>
-	<string></string>
+	<string>Contacts usage permissions</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Always use permissions</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>When in use permissions</string>
+	<key>NSMotionUsageDescription</key>
+	<string>NSMotionUsageDescription</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>NSPhotoLibraryUsageDescription</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>NSSpeechRecognitionUsageDescription </string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>AntDesign.ttf</string>
@@ -76,5 +92,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>kTCCServiceMediaLibrary</key>
+	<string>NSAppleMusicUsageDescription</string>
 </dict>
 </plist>

@@ -56,6 +56,10 @@
 		6312ACD422007DCC0051DE01 /* Mapbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6312ACD322007DCC0051DE01 /* Mapbox.framework */; };
 		6312ACD522007DCC0051DE01 /* Mapbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6312ACD322007DCC0051DE01 /* Mapbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6312ACDD22007E9F0051DE01 /* libRCTMGL.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6312ACDC22007E5D0051DE01 /* libRCTMGL.a */; };
+		637CBEA82239101700D9845B /* RSKImageCropper.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 637CBEA72239101700D9845B /* RSKImageCropper.framework */; };
+		637CBEA92239101700D9845B /* RSKImageCropper.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 637CBEA72239101700D9845B /* RSKImageCropper.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		637CBEAB2239101C00D9845B /* QBImagePicker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 637CBEAA2239101C00D9845B /* QBImagePicker.framework */; };
+		637CBEAC2239101C00D9845B /* QBImagePicker.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 637CBEAA2239101C00D9845B /* QBImagePicker.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		700134E7DE0740D98339334B /* libReactNativePermissions.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CF0FED53DEBD4255B9738514 /* libReactNativePermissions.a */; };
 		7483C39CA6F24C04947DDCFB /* MaterialIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 341F3DC6933D402F85173EB8 /* MaterialIcons.ttf */; };
 		7612D5FBCA6A4B389BAF4D23 /* Zocial.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F843638B307C4887BC3382DF /* Zocial.ttf */; };
@@ -443,6 +447,8 @@
 			dstSubfolderSpec = 10;
 			files = (
 				6312ACD522007DCC0051DE01 /* Mapbox.framework in Embed Frameworks */,
+				637CBEA92239101700D9845B /* RSKImageCropper.framework in Embed Frameworks */,
+				637CBEAC2239101C00D9845B /* QBImagePicker.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -495,6 +501,8 @@
 		5E91572D1DD0AC6500FF2AA8 /* RCTAnimation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTAnimation.xcodeproj; path = "../node_modules/react-native/Libraries/NativeAnimation/RCTAnimation.xcodeproj"; sourceTree = "<group>"; };
 		6312ACD322007DCC0051DE01 /* Mapbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Mapbox.framework; path = "../node_modules/@mapbox/react-native-mapbox-gl/ios/Mapbox.framework"; sourceTree = "<group>"; };
 		6312ACD722007E5D0051DE01 /* RCTMGL.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTMGL.xcodeproj; path = "../node_modules/@mapbox/react-native-mapbox-gl/ios/RCTMGL.xcodeproj"; sourceTree = "<group>"; };
+		637CBEA72239101700D9845B /* RSKImageCropper.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RSKImageCropper.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		637CBEAA2239101C00D9845B /* QBImagePicker.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = QBImagePicker.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6A53981BE5B7427CBD529EF2 /* Ionicons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Ionicons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Ionicons.ttf"; sourceTree = "<group>"; };
 		6BB2E64997EE48D68F037728 /* libRNDeviceInfo.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRNDeviceInfo.a; sourceTree = "<group>"; };
 		7486953E0C9343129862E2E7 /* FontAwesome.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = FontAwesome.ttf; path = "../node_modules/native-base/Fonts/FontAwesome.ttf"; sourceTree = "<group>"; };
@@ -542,6 +550,7 @@
 			files = (
 				6312ACDD22007E9F0051DE01 /* libRCTMGL.a in Frameworks */,
 				ADBDB9381DFEBF1600ED6528 /* libRCTBlob.a in Frameworks */,
+				637CBEA82239101700D9845B /* RSKImageCropper.framework in Frameworks */,
 				11D1A2F320CAFA9E000508D9 /* libRCTAnimation.a in Frameworks */,
 				146834051AC3E58100842450 /* libReact.a in Frameworks */,
 				00C302E51ABCBA2D00DB3ED1 /* libRCTActionSheet.a in Frameworks */,
@@ -562,6 +571,7 @@
 				20DAA847CCCD4ABFBA91D8B4 /* libRNFetchBlob.a in Frameworks */,
 				6312ACD422007DCC0051DE01 /* Mapbox.framework in Frameworks */,
 				C68C5ADF995C4C67A62A8C3A /* libRCTContacts.a in Frameworks */,
+				637CBEAB2239101C00D9845B /* QBImagePicker.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -866,6 +876,8 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				637CBEAA2239101C00D9845B /* QBImagePicker.framework */,
+				637CBEA72239101700D9845B /* RSKImageCropper.framework */,
 				6312ACD322007DCC0051DE01 /* Mapbox.framework */,
 				13B07FAE1A68108700A75B9A /* MyRideDNA */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
@@ -1025,6 +1037,10 @@
 					00E356ED1AD99517003FC87E = {
 						CreatedOnToolsVersion = 6.2;
 						TestTargetID = 13B07F861A680F5B00A75B9A;
+					};
+					13B07F861A680F5B00A75B9A = {
+						DevelopmentTeam = AWZJ43N4AV;
+						ProvisioningStyle = Automatic;
 					};
 					2D02E47A1E0B4A5D006451C7 = {
 						CreatedOnToolsVersion = 8.2.1;
@@ -1732,9 +1748,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = NO;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = AWZJ43N4AV;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/../node_modules/@mapbox/react-native-mapbox-gl/ios";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1757,8 +1775,9 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.myridedna;
 				PRODUCT_NAME = MyRideDNA;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -1767,8 +1786,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = AWZJ43N4AV;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/../node_modules/@mapbox/react-native-mapbox-gl/ios";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1791,8 +1812,9 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.myridedna;
 				PRODUCT_NAME = MyRideDNA;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;

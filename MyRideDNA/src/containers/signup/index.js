@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform, StatusBar, Alert } from 'react-native';
-import { Icon as NBIcon } from 'native-base';
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, SafeAreaView, Platform, StatusBar, Alert } from 'react-native';
+import { Icon as NBIcon, Item } from 'native-base';
 import { Actions } from 'react-native-router-flux';
 import { connect } from 'react-redux';
 
-import { IconicInput, IconicList } from '../../components/inputs';
+import { IconicInput, IconicList, LabeledInput } from '../../components/inputs';
 import { BasicHeader } from '../../components/headers';
 
 import { LoginStyles } from '../../containers/login/styles';
-import { WindowDimensions, APP_COMMON_STYLES, IS_ANDROID } from '../../constants';
+import { WindowDimensions, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP } from '../../constants';
 import { LoginButton, SocialButtons, IconButton, RoundButton } from '../../components/buttons';
 import { isValidEmailFormat } from '../../util';
 import Spinner from 'react-native-loading-spinner-overlay';
@@ -23,12 +23,13 @@ const HEADER_HEIGHT = IS_ANDROID ? ANDROID_HEADER_HEIGHT : IOS_HEADER_HEIGHT;
 
 class Signup extends Component {
     isVerifyingEmail = false;
+    fieldRefs = [];
     constructor(props) {
         super(props);
         this.state = {
             user: {},
-            isPasswdVisible: false,
-            isConfirmPasswdVisible: false,
+            hidePasswd: true,
+            hideConfPasswd: true,
             confirmPassword: '',
             showLoader: false,
         };
@@ -46,7 +47,9 @@ class Signup extends Component {
                     }, 100);
                     this.onPressBackButton();
                 } else {
-                    Alert.alert('Registration failed', this.props.signupResult.userMessage);
+                    setTimeout(() => {
+                        Alert.alert('Registration failed', this.props.signupResult.userMessage);
+                    }, 100);
                 }
             });
         }
@@ -87,7 +90,7 @@ class Signup extends Component {
         this.setState(prevState => ({ user: { ...prevState.user, password: passwd } }));
     }
 
-    onConfrimPassworddChange = (confirmPassword) => {
+    onConfrimPasswordChange = (confirmPassword) => {
         this.setState({ confirmPassword });
     }
 
@@ -118,6 +121,14 @@ class Signup extends Component {
         return true;
     }
 
+    togglePasswordVisibility = () => {
+        this.setState(prevState => ({ hidePasswd: !prevState.hidePasswd }));
+    }
+
+    toggleConfirmPasswordVisibility = () => {
+        this.setState(prevState => ({ hideConfPasswd: !prevState.hideConfPasswd }));
+    }
+
     onSubmit = () => {
         if (!this.props.hasNetwork) {
             this.showNetworkError();
@@ -135,7 +146,7 @@ class Signup extends Component {
     }
 
     render() {
-        const { user, isPasswdVisible, isConfirmPasswdVisible, showLoader } = this.state;
+        const { user, hidePasswd, hideConfPasswd, showLoader, confirmPassword } = this.state;
         return (
             <View style={{ flex: 1 }}>
 
@@ -150,36 +161,24 @@ class Signup extends Component {
                     />
                     <BasicHeader title='Signup' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} searchbarMode={false} />
                     <ScrollView style={{ backgroundColor: 'white', marginTop: HEADER_HEIGHT }} contentContainerStyle={{ paddingTop: 20, justifyContent: 'space-between', flex: 1 }}>
-                        <IconicInput iconProps={{ style: styles.formFieldIcon, name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Name' onChange={this.onChangeName} />
-                        <IconicList iconProps={{ style: styles.formFieldIcon, name: 'transgender', type: 'FontAwesome' }}
+                        <LabeledInput inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
+                        <IconicList
                             selectedValue={user.gender} placeholder='Gender' values={[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }]}
-                            onChange={this.onGenderChange}></IconicList>
-                        <IconicInput iconProps={{ style: styles.formFieldIcon, name: 'email', type: 'MaterialIcons' }} inputType='emailAddress' placeholder='Email' onChange={this.onEmailChange} onFocusout={this.validateEmail} />
-                        <IconicInput
-                            iconEnd={<IconButton onPress={() => this.setState({ isPasswdVisible: !isPasswdVisible })} style={{ backgroundColor: '#0083CA', borderRadius: 10, paddingHorizontal: 1, paddingVertical: 1, marginRight: 10 }} iconProps={{ name: isPasswdVisible ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: 20, color: 'white', borderRadius: 10 } }} />}
-                            iconProps={{ style: styles.formFieldIcon, name: 'vpn-key', type: 'MaterialIcons' }} inputType={isPasswdVisible ? 'none' : 'password'} placeholder='Password' onChange={this.onPasswordsChange} />
-                        <IconicInput
-                            iconEnd={<IconButton onPress={() => this.setState({ isConfirmPasswdVisible: !isConfirmPasswdVisible })} style={{ backgroundColor: '#0083CA', borderRadius: 10, paddingHorizontal: 1, paddingVertical: 1, marginRight: 10 }} iconProps={{ name: isConfirmPasswdVisible ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: 20, color: 'white', borderRadius: 10 } }} />}
-                            iconProps={{ style: styles.formFieldIcon, name: 'vpn-key', type: 'MaterialIcons' }} inputType={isConfirmPasswdVisible ? 'none' : 'password'} placeholder='Confirm password' onChange={this.onConfrimPassworddChange} />
+                            onChange={this.onGenderChange} />
+                        <LabeledInput onBlur={this.validateEmail} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onEmailChange} placeholder='Email' inputType='emailAddress' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
+                        <Item style={{ marginLeft: widthPercentageToDP(4) }}>
+                            <TextInput secureTextEntry={hidePasswd} style={{ flex: 1 }} value={user.password} ref={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChangeText={this.onPasswordsChange} placeholder='New Password' onSubmitEditing={() => this.fieldRefs[3].focus()} blurOnSubmit={false} />
+                            <IconButton onPress={this.togglePasswordVisibility} style={{ backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: hidePasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
+                        </Item>
+                        <Item style={{ marginLeft: widthPercentageToDP(4) }}>
+                            <TextInput secureTextEntry={hideConfPasswd} style={{ flex: 1 }} value={confirmPassword} ref={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChangeText={this.onConfrimPasswordChange} placeholder='Confirm Password' onSubmitEditing={() => { }} blurOnSubmit={true} />
+                            <IconButton onPress={this.toggleConfirmPasswordVisibility} style={{ backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: hideConfPasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
+                        </Item>
 
                         <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 10, justifyContent: 'space-between', alignItems: 'flex-end' }}>
                             <RoundButton title='GO' style={{ height: 100, width: 100, borderRadius: 100 }} titleStyle={{ fontSize: 25 }} onPress={this.onSubmit} />
                             <TouchableOpacity><Text style={{ color: '#0083CA', fontSize: 17 }}>Privacy policy</Text></TouchableOpacity>
                         </View>
-                        {/* <View style={{ justifyContent: 'space-around', borderColor: 'red', borderWidth: 1 }}> */}
-
-                        {/* <TouchableOpacity>
-                            <Text style={styles.termsConditionLink}>Read and accept Terms & Conditions</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.signupButton}>
-                            <Text style={{ color: 'white', fontSize: 19, letterSpacing: (WindowDimensions.width / 50), alignSelf: 'center', fontWeight: 'bold', }}>SIGN UP</Text>
-                        </TouchableOpacity>
-                        <Text style={{ alignSelf: 'center', fontWeight: 'bold', paddingVertical: 10, fontSize: 18 }}>OR</Text>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', marginVertical: 20 }}>
-                            <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#E9EAED' }]}><NBIcon name="facebook-square" type="FontAwesome" style={{ fontSize: 20, color: '#3b5998' }} /><Text style={[LoginStyles.loginButtonText, { paddingLeft: 10, color: '#939598' }]}>FACEBOOK LOGIN</Text></TouchableOpacity>
-                            <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#5B5B5B' }]}><NBIcon name="social-google-plus" type="Foundation" style={{ fontSize: 20, backgroundColor: 'white', color: '#DD4B39' }} /><Text style={[LoginStyles.loginButtonText, { paddingLeft: 10, color: 'white' }]}>GOOGLE+ LOGIN</Text></TouchableOpacity>
-                        </View> */}
-                        {/* </View> */}
                         <View style={{ paddingVertical: (WindowDimensions.height * 5) / 100, backgroundColor: '#EB861E', alignItems: 'flex-end', paddingEnd: 10 }}>
                             <View style={{ flexDirection: 'row', width: '50%', justifyContent: 'space-around' }}>
                                 <IconButton onPress={() => { }} style={{ paddingHorizontal: 0 }} iconProps={{ name: 'facebook', type: 'MaterialCommunityIcons', style: { backgroundColor: '#fff', color: '#EB861E', fontSize: 60, borderRadius: 5 } }} />

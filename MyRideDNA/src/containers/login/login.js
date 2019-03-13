@@ -21,7 +21,7 @@ import { Item, Icon as NBIcon } from 'native-base';
 
 export const LoginScreen = (props) => (
     <ScrollView style={{ flex: 1 }}>
-        <Animatable.View animation='zoomIn' iterationCount={1} style={{ height: 200, width: WindowDimensions.width }}>
+        <Animatable.View animation='zoomIn' iterationCount={1} style={{ flex: 1, width: WindowDimensions.width }}>
             <Image source={require('../../assets/img/logo.png')}></Image>
         </Animatable.View>
         <View style={LoginStyles.loginForm}>
@@ -35,7 +35,7 @@ export const LoginScreen = (props) => (
                 <IconButton onPress={props.togglePasswordVisibility} style={{ backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: props.isVisiblePassword ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
             </Item>
         </View>
-        <View style={{ width: WindowDimensions.width }}>
+        <View style={{ width: WindowDimensions.width, height: heightPercentageToDP(42) }}>
             <View style={LoginStyles.loginButtonContainer}>
                 <View style={{ backgroundColor: '#fff', width: 120, alignSelf: 'center', padding: 10, borderRadius: 120 }}>
                     <TouchableOpacity style={LoginStyles.loginButton} onPress={props.onSubmit} activeOpacity={0.9}><Text style={{ color: 'white' }}>LOGIN</Text></TouchableOpacity>
@@ -51,7 +51,7 @@ export const LoginScreen = (props) => (
                     </View>
                 </View>
             </View>
-            <ImageBackground style={{ width: '100%', height: WindowDimensions.height - 420 }} source={require('../../assets/img/login-bottom.png')}>
+            <ImageBackground style={{ width: '100%', flex: 1 }} source={require('../../assets/img/login-bottom.png')}>
                 <View style={{ backgroundColor: 'rgba(62, 62, 61, 0.7)', paddingTop: 100, height: '100%', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' }}>
                     <IconButton onPress={() => { }} style={{ paddingHorizontal: 0 }} iconProps={{ name: 'facebook', type: 'MaterialCommunityIcons', style: { backgroundColor: '#fff', fontSize: 60, borderRadius: 5 } }} />
                     <IconButton onPress={() => { }} style={{ paddingHorizontal: 0 }} iconProps={{ name: 'google-', type: 'Entypo', style: { backgroundColor: '#fff', fontSize: 60, borderRadius: 5 } }} />

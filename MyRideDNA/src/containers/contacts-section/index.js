@@ -5,7 +5,7 @@ import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { Tabs, Tab, TabHeading, ScrollableTab, Item, Toast, ListItem, Left, Body, Thumbnail, Right } from 'native-base';
 import styles from './styles';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID } from '../../constants';
 import { IconLabelPair } from '../../components/labels';
 import { IconButton } from '../../components/buttons';
 import Contacts from 'react-native-contacts';
@@ -138,7 +138,7 @@ class ContactsSection extends PureComponent {
                             heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
                                 <IconLabelPair containerStyle={styles.tabHeaderContent} text={`Community`} textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} iconProps={{ name: 'account-group', type: 'MaterialCommunityIcons', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }} />
                             </TabHeading>}>
-                            <KeyboardAvoidingView behavior='padding' style={styles.tabContent}>
+                            <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.tabContent}>
                                 <View>
                                     <Item style={styles.itemField}>
                                         <TextInput onChangeText={this.searchInCommunity} style={styles.fill} placeholder='Name of MyRideDNA user' placeholderTextColor='#6B7663' />

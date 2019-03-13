@@ -19,10 +19,10 @@ const getKeyboardTypeForContentType = (contentType) => {
     }
 }
 
-export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder, placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus }) => (
+export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder, placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus, onBlur }) => (
     <View style={[{ flexDirection: 'row', marginBottom: 10, borderRadius: 5 }, containerStyle]}>
         <Text style={[{ alignSelf: 'center', marginRight: 10 }, labelStyle]}>{label}</Text>
-        <TextInput onFocus={onFocus && onFocus} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ flex: 1, borderBottomWidth: 1, borderBottomColor: '#acacac' }, inputStyle]}
+        <TextInput onFocus={onFocus && onFocus} onBlur={onBlur && onBlur} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ flex: 1, borderBottomWidth: 1, borderBottomColor: '#acacac' }, inputStyle]}
             placeholderTextColor={placeholderColor} placeholder={placeholder} textContentType={inputType} keyboardType={getKeyboardTypeForContentType(inputType)}
             onChangeText={onChange && onChange} onSubmitEditing={({ nativeEvent }) => onSubmit && onSubmit(nativeEvent.text)}
             returnKeyType={returnKeyType || 'done'} returnKeyLabel={returnKeyLabel} ref={(el) => inputRef && inputRef(el)} />
@@ -54,10 +54,10 @@ export const IconicList = ({ iconProps, values, selectedValue, placeholder, onCh
     let options = selectedValue ? values : [{ label: placeholder || 'Select any', value: '' }, ...values];
     return (
         <View>
-            <View style={{ flexDirection: 'row', marginVertical: 10 }}>
+            <View style={{ flexDirection: 'row', paddingLeft: 10 }}>
                 {
                     iconProps
-                        ? <View style={{ paddingLeft: 10, paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
+                        ? <View style={{ paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
                             <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, iconProps.style]} />
                         </View>
                         : null
