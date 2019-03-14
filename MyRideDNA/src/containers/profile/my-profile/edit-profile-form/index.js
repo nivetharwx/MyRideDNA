@@ -133,14 +133,18 @@ class EditProfileForm extends Component {
                     <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
                         <LabeledInput inputValue={user.name} inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
                         <IconicList
-                            selectedValue={user.gender} placeholder='Gender' values={[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }]}
+                            selectedValue={user.gender} placeholder='Gender' values={GENDER_LIST}
                             onChange={this.onChangeGender} />
                         <LabeledInput inputValue={user.dob} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onChangeDOB} placeholder='DOB' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
                         <IconicDatePicker />
-                        <LabeledInput inputValue={user.address} inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChange={this.onChangeAddress} placeholder='Building number, street' onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
-                        <LabeledInput inputValue={user.city} inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChange={this.onChangeCity} placeholder='City' onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
-                        <LabeledInput inputValue={user.state} inputRef={elRef => this.fieldRefs[4] = elRef} returnKeyType='next' onChange={this.onChangeState} placeholder='State' onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
-                        <LabeledInput inputValue={user.country} inputRef={elRef => this.fieldRefs[5] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} />
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.address} inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChange={this.onChangeAddress} placeholder='Building number, street' onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.city} inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChange={this.onChangeCity} placeholder='City' onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
+                        </View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.state} inputRef={elRef => this.fieldRefs[4] = elRef} returnKeyType='next' onChange={this.onChangeState} placeholder='State' onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.country} inputRef={elRef => this.fieldRefs[5] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} />
+                        </View>
                     </ScrollView>
                     <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
                 </KeyboardAvoidingView>

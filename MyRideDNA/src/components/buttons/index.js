@@ -138,7 +138,7 @@ export const ImageButton = ({ onPress, styles, imageSrc }) => (
 export const ShifterButton = ({ onPress, containerStyles, size = 20, alignLeft = false }) => (
     <TouchableOpacity onPress={onPress} style={[styles.shiterButtonContainer, containerStyles, alignLeft ? styles.alignLeft : null, { width: widthPercentageToDP(size), height: widthPercentageToDP(size) }]}>
         <View style={[styles.shiterImgContainer, alignLeft ? { borderTopEndRadius: widthPercentageToDP(size) } : { borderTopStartRadius: widthPercentageToDP(size) }]}>
-            <Image source={require('../../assets/img/shifter.png')} style={[{ position: 'absolute', bottom: 0, right: 0, height: widthPercentageToDP(size - 5), width: widthPercentageToDP(size - 5) }, alignLeft ? styles.leftImage : null]} />
+            <Image source={require('../../assets/img/shifter_shadow.png')} style={[{ position: 'absolute', bottom: 0, right: 0, height: widthPercentageToDP(size - 5), width: widthPercentageToDP(size - 5) }, alignLeft ? styles.leftImage : null]} />
         </View>
     </TouchableOpacity>
 );
