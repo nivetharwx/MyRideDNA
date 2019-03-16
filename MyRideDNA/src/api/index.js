@@ -19,7 +19,7 @@ export const getPicture = (pictureId) => {
         axios.get(USER_BASE_URL + `getPicture/${pictureId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200 && res.data !== '') {
-                    dispatch(updateUserAction({ profilePicture: res.data }))
+                    dispatch(updateUserAction({ profilePicture: res.data.picture }))
                 }
             })
             .catch(er => {
@@ -103,7 +103,17 @@ export const updateProfilePicture = (profilePicStr, mimeType, userId) => {
             .catch(er => {
                 console.log(er.response);
                 // TODO: Dispatch error info action
-            })
+            });
+
+        // axios.put(USER_BASE_URL + `updateProfilePicture?userId=${userId}`, formData, ).then(res => {
+        //     if (res.status === 200) {
+        //         console.log("updateProfilePicture: ", res.data);
+        //         // dispatch(updateUserAction({ ...res.data, profilePicture: `data:${mimeType};base64,${profilePicStr}` }));
+        //     }
+        // }).catch(er => {
+        //     console.log(er.response);
+        //     // TODO: Dispatch error info action
+        // })
     };
 }
 export const getAllBuildRides = (userId) => {
@@ -864,7 +874,7 @@ export const getSpaceList = (userId) => {
         dispatch(toggleLoaderAction(true));
         axios.get(USER_BASE_URL + `getSpaceList?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                console.log("getSpaceList: ", res);
+                console.log("getSpaceList success: ", res.data);
                 dispatch(toggleLoaderAction(false));
                 return dispatch(replaceShortSpaceListAction(res.data))
             })

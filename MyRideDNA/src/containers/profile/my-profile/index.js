@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView, AsyncStorage } from 'react-native';
 import { Actions } from 'react-native-router-flux';
-import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID } from '../../../constants/index';
+import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG } from '../../../constants/index';
 import { IconButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
 import { appNavMenuVisibilityAction } from '../../../actions';
@@ -37,7 +37,8 @@ class MyProfileTab extends Component {
         this.props.getSpaceList(this.props.user.userId);
         if (this.props.user.profilePictureId) {
             this.setState({ isLoadingProfPic: true });
-            this.props.getPicture(this.props.user.profilePictureId)
+            this.props.getPicture(this.props.user.profilePictureId);
+            setTimeout(() => this.props.getPicture(this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, '')), 300);
         }
     }
 
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: heightPercentageToDP(6),
         flexDirection: 'row',
-        marginTop: APP_COMMON_STYLES.statusBar.height + heightPercentageToDP(1.5)
+        marginTop: IS_ANDROID ? 0 : APP_COMMON_STYLES.statusBar.height + heightPercentageToDP(1.5)
     },
     headerIcon: {
         paddingHorizontal: 0,
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
     profileBG: {
         width: '100%',
         height: heightPercentageToDP(55),
-        paddingTop: heightPercentageToDP(1.5)
+        paddingTop: IS_ANDROID ? 0 : heightPercentageToDP(1.5)
     },
     profilePic: {
         height: widthPercentageToDP(65),
