@@ -6,11 +6,13 @@ import { APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN } f
 import { BasicHeader } from '../../components/headers';
 import { SwitchIconButton, ShifterButton, LinkButton, IconButton } from '../../components/buttons';
 import { Item, Icon as NBIcon, Accordion, Toast } from 'native-base';
-import { appNavMenuVisibilityAction } from '../../actions';
+import { appNavMenuVisibilityAction, resetPasswordErrorAction } from '../../actions';
 import { LabeledInput } from '../../components/inputs';
-import { logoutUser } from '../../api';
+import { logoutUser, updateUserInfo, updateShareLocationState, updatePassword } from '../../api';
 import { BaseModal } from '../../components/modal';
 import ForgotPassword from '../../containers/forgot-password';
+import Md5 from 'react-native-md5';
+import { Actions } from 'react-native-router-flux';
 
 export class Settings extends Component {
     fieldRefs = [];
@@ -25,8 +27,29 @@ export class Settings extends Component {
             hideNewPasswd: true,
             hideConfPasswd: true,
             showForgotPasswordModal: false,
+            expandedItem: null
         };
-        console.log(props.user);
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (this.props.updatePasswordError && (prevProps.updatePasswordError !== this.props.updatePasswordError)) {
+            Toast.show({
+                text: this.props.updatePasswordError.userMessage,
+                buttonText: 'Okay',
+                position: 'bottom',
+                onClose: () => this.props.resetUpdatePasswordError()
+            });
+        }
+        if (this.props.updatePasswordSuccess && (prevProps.updatePasswordSuccess !== this.props.updatePasswordSuccess)) {
+            Toast.show({
+                text: 'Your password has updated successfully. Please do login again',
+                buttonText: 'Okay',
+                position: 'bottom',
+            });
+            this.fieldRefs.forEach(field => field.clear());
+            this.setState({ currentPasswd: '', newPasswd: '', confirmPasswd: '' });
+            this.onPressLogout();
+        }
     }
 
     onChangeCurrentPasswordField = (val) => this.setState({ currentPasswd: val });
@@ -111,6 +134,31 @@ export class Settings extends Component {
         }
     }
 
+    hasSettingsChanged = () => {
+        const { currentPasswd, newPasswd, confirmPasswd, locationEnable } = this.state;
+        return (currentPasswd !== '' && newPasswd !== '' && confirmPasswd !== '') || locationEnable !== this.props.user.locationEnable;
+    }
+
+    submitSettingsChanges = () => {
+        let canSubmit = true;
+        const { currentPasswd, newPasswd, confirmPasswd, locationEnable } = this.state;
+        if (currentPasswd !== '' && newPasswd !== '' && confirmPasswd !== '') {
+            if (newPasswd === confirmPasswd) {
+                this.props.updatePassword({ userId: this.props.user.userId, currentPassword: Md5.hex_md5(currentPasswd + ''), newPassword: Md5.hex_md5(newPasswd + '') });
+            } else {
+                canSubmit = false;
+                Toast.show({
+                    text: 'Entered passwords are not matching',
+                    buttonText: 'Okay',
+                    position: 'bottom'
+                });
+            }
+        }
+        if (canSubmit && (this.props.user.locationEnable !== locationEnable)) {
+            this.props.updateShareLocationState(this.props.user.userId, locationEnable);
+        }
+    }
+
     render() {
         const { user } = this.props;
         const { locationEnable } = this.state;
@@ -129,16 +177,22 @@ export class Settings extends Component {
                                 <SwitchIconButton
                                     activeIcon={<NBIcon name='close' type='FontAwesome' style={{ color: '#fff', alignSelf: 'flex-start', paddingHorizontal: 10 }} />}
                                     inactiveIcon={<NBIcon name='eye' type='MaterialCommunityIcons' style={{ color: '#fff', alignSelf: 'flex-end', paddingHorizontal: 10 }} />}
-                                    value={locationEnable} onChangeValue={() => this.setState(prevState => ({ locationEnable: !prevState.locationEnable }))} />
+                                    value={!locationEnable} onChangeValue={() => this.setState(prevState => ({ locationEnable: !prevState.locationEnable }))} />
                             </View>
                         </Item>
                         <ScrollView style={[styles.containerItem, { marginLeft: 0 }]} contentContainerStyle={styles.fill}>
-                            <Accordion style={{ borderWidth: 0 }} dataArray={[{ title: 'Change password' }]} renderContent={this.renderAccordionItem} headerStyle={{}} />
+                            <Accordion expanded={this.state.expandedItem} style={{ borderWidth: 0 }} dataArray={[{ title: 'Change password' }]} renderContent={this.renderAccordionItem} headerStyle={{}} />
                         </ScrollView>
                         <View style={styles.submitSec}>
-                            <TouchableOpacity style={styles.submitButton}>
-                                <NBIcon name='md-checkmark' type='Ionicons' style={styles.submitBtnIcon} />
-                            </TouchableOpacity>
+                            {
+                                this.hasSettingsChanged()
+                                    ? <TouchableOpacity style={styles.submitButton} onPress={this.submitSettingsChanges}>
+                                        <NBIcon name='md-checkmark' type='Ionicons' style={styles.submitBtnIcon} />
+                                    </TouchableOpacity>
+                                    : <View style={[styles.submitButton, styles.disabled]}>
+                                        <NBIcon name='md-checkmark' type='Ionicons' style={[styles.submitBtnIcon, styles.disabled]} />
+                                    </View>
+                            }
                         </View>
                     </View>
                 </View>
@@ -151,14 +205,17 @@ export class Settings extends Component {
 }
 
 const mapStateToProps = (state) => {
-    const { user } = state.UserAuth;
-    return { user };
+    const { user, updatePasswordError, updatePasswordSuccess } = state.UserAuth;
+    return { user, updatePasswordError, updatePasswordSuccess };
 }
 
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
+        updatePassword: (passwordInfo) => dispatch(updatePassword(passwordInfo)),
+        updateShareLocationState: (userId, shareLocState) => dispatch(updateShareLocationState(userId, shareLocState)),
         logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
+        resetUpdatePasswordError: () => dispatch(resetPasswordErrorAction()),
     }
 }
 

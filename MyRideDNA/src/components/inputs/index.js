@@ -107,7 +107,7 @@ export const IconicDatePicker = ({ iconProps, selectedDate, selectedDateString, 
                         : null
                 }
                 <DatePicker
-                    defaultDate={selectedDateString ? new Date(selectedDateString) : selectedDate ? selectedDate : currentDate}
+                    defaultDate={selectedDate ? new Date(selectedDate) : currentDate}
                     minimumDate={minDate || new Date(currentDate.getFullYear() - 100, currentDate.getMonth() + 1, currentDate.getDay())}
                     maximumDate={maxDate || currentDate}
                     locale={"en"}
@@ -115,9 +115,9 @@ export const IconicDatePicker = ({ iconProps, selectedDate, selectedDateString, 
                     modalTransparent={false}
                     animationType={"fade"}
                     androidMode={"default"}
-                    placeHolderText={placeholder || selectedDate || (selectedDateString && getFormattedDateFromISO(new Date(selectedDateString).toISOString(), '/')) || 'Select date'}
+                    placeHolderText={selectedDate ? getFormattedDateFromISO(new Date(selectedDate).toISOString(), '/') : placeholder ? placeholder : 'Select date'}
                     textStyle={styles.datePickerDefaultStyles}
-                    placeHolderTextStyle={[styles.datePickerDefaultStyles, { color: selectedDate || (selectedDateString && new Date(selectedDateString)) ? "black" : "#a9a9a9" }]}
+                    placeHolderTextStyle={[styles.datePickerDefaultStyles, { color: selectedDate ? "black" : "#a9a9a9" }]}
                     onDateChange={onChange && onChange}
                 />
             </View>

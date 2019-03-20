@@ -58,6 +58,10 @@ const styles = StyleSheet.create({
         left: 15,
         color: '#fff',
         fontSize: heightPercentageToDP(7),
+    },
+    disabled: {
+        color: '#6B7663',
+        borderColor: '#6B7663'
     }
 });
 

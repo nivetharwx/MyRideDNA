@@ -38,7 +38,7 @@ import SELECTED_SOURCE_ICON from '../../assets/img/source-pin-green.png';
 import DEFAULT_DESTINATION_ICON from '../../assets/img/destination-pin-red.png';
 import SELECTED_DESTINATION_ICON from '../../assets/img/destination-pin-green.png';
 
-import { updateRide, addWaypoint, addSource, createRecordRide, pauseRecordRide, updateWaypoint, updateSource, updateDestination, makeWaypointAsDestination, makeDestinationAsWaypoint, makeSourceAsWaypoint, makeWaypointAsSource, continueRecordRide, addTrackpoints, completeRecordRide, deleteWaypoint, deleteDestination, deleteSource, getRideByRideId, createNewRide, replaceRide } from '../../api';
+import { updateRide, addWaypoint, addSource, createRecordRide, pauseRecordRide, updateWaypoint, updateSource, updateDestination, makeWaypointAsDestination, makeDestinationAsWaypoint, makeSourceAsWaypoint, makeWaypointAsSource, continueRecordRide, addTrackpoints, completeRecordRide, deleteWaypoint, deleteDestination, deleteSource, getRideByRideId, createNewRide, replaceRide, pushNotification } from '../../api';
 
 import Bubble from '../../components/bubble';
 import MenuModal from '../../components/modal';
@@ -273,6 +273,8 @@ export class Map extends Component {
     }
 
     async componentDidMount() {
+        this.props.changeScreen(PageKeys.MAP);
+        this.props.pushNotification(this.props.user.userId);
         //DOC: Listen for device location settings change
         // DeviceEventEmitter.addListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent);
 
@@ -1655,6 +1657,7 @@ const mapDispatchToProps = (dispatch) => {
         clearRideFromMap: () => dispatch(initUndoRedoRideAction()),
         submitNewRide: (rideInfo) => dispatch(createNewRide(rideInfo)),
         updateRide: (data) => dispatch(updateRide(data)),
+        pushNotification: (userId) => pushNotification(userId),
 
 
         // addSource: (waypoint, ride) => dispatch(addSource(waypoint, ride)),

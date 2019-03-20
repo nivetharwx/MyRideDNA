@@ -1,8 +1,8 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
-    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction, deleteWaypointAction, removeFriendGroupAction
+    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction, deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction
 } from '../actions';
-import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL } from '../constants';
+import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL } from '../constants';
 import axios from 'axios';
 
 import { AsyncStorage } from 'react-native';
@@ -14,19 +14,42 @@ const CancelToken = axios.CancelToken;
 const axiosSource = CancelToken.source();
 const API_TIMEOUT = 15 * 1000; // 15 seconds
 
-export const getPicture = (pictureId) => {
-    return dispatch => {
-        axios.get(USER_BASE_URL + `getPicture/${pictureId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
-            .then(res => {
-                if (res.status === 200 && res.data !== '') {
-                    dispatch(updateUserAction({ profilePicture: res.data.picture }))
+/**
+ * DOC: getPicture is a common API for fetching any kind of picture from server.
+ * 
+ * @param {*} pictureId
+ * @param {*} successCallback - Calling component needs to dispatch success action
+ * @param {*} errorCallback - Calling component needs to dispatch error action 
+ */
+export const getPicture = (pictureId, successCallback, errorCallback) => {
+    axios.get(USER_BASE_URL + `getPicture/${pictureId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        .then(res => {
+            if (res.status === 200) {
+                if (res.data.picture === '') {
+                    console.log("getPicture empty response: ", res.data);
+                    errorCallback(res.data);
+                } else {
+                    console.log("getPicture success response: ", res.data);
+                    successCallback(res.data);
                 }
-            })
-            .catch(er => {
-                console.log("getPicture error: ", er.response);
-                // TODO: Dispatch error info action
-            })
-    };
+            }
+        })
+        .catch(er => {
+            console.log("getPicture error response: ", er.response);
+            errorCallback(er.response);
+            console.log("getPicture error: ", er.response || er);
+        })
+}
+export const pushNotification = (userId) => {
+    axios.get(NOTIFICATIONS_BASE_URL + `pushNotification/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        .then(res => {
+            if (res.status === 200) {
+                console.log("pushNotification success: ", res.data);
+            }
+        })
+        .catch(er => {
+            console.log("pushNotification error: ", er.response || er);
+        })
 }
 export const logoutUser = (userId, accessToken) => {
     return dispatch => {
@@ -37,7 +60,7 @@ export const logoutUser = (userId, accessToken) => {
                     dispatch(toggleLoaderAction(false));
                     // TODO: Clear store
                     AsyncStorage.removeItem(USER_AUTH_TOKEN).then(() => {
-                        Actions.reset(PageKeys.LOGIN)
+                        Actions.reset(PageKeys.LOGIN);
                     });
                 }
             })
@@ -81,12 +104,49 @@ export const updateUserInfo = (userData) => {
         axios.put(USER_BASE_URL + 'updateUserDetails', userData, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    console.log("updateUserInfo: ", res.data);
                     dispatch(toggleLoaderAction(false));
                     dispatch(updateUserAction(userData));
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log("updateUserInfo: ", er.response || er);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const updatePassword = (passwordInfo) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.put(USER_BASE_URL + 'updatePassword', passwordInfo, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log("updatePassword success: ", res.data);
+                    dispatch(toggleLoaderAction(false));
+                    dispatch(updatePasswordSuccessAction(res.data));
+                }
+            })
+            .catch(er => {
+                console.log("updatePassword error: ", er.response || er);
+                dispatch(toggleLoaderAction(false));
+                dispatch(updatePasswordErrorAction(er.response.data));
+            })
+    };
+}
+export const updateShareLocationState = (userId, shareLocState) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.put(USER_BASE_URL + 'shareLocationEnableOrDisable', { userId, locationEnable: shareLocState }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log("updateShareLocationState: ", res.data);
+                    dispatch(toggleLoaderAction(false));
+                    dispatch(updateUserAction({ locationEnable: shareLocState }));
+                }
+            })
+            .catch(er => {
+                console.log("updateShareLocationState: ", er.response || er);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -891,10 +951,11 @@ export const getGarageInfo = (userId) => {
         axios.get(USER_BASE_URL + `getGarage/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 dispatch(toggleLoaderAction(false));
-                return dispatch(replaceGarageInfoAction(res.data))
+                console.log("getGarage success: ", res.data);
+                dispatch(replaceGarageInfoAction(res.data))
             })
             .catch(er => {
-                console.log(`getGarageInfo: `, er.response);
+                console.log(`getGarage: `, er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })

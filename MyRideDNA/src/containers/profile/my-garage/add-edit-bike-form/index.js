@@ -91,7 +91,7 @@ class AddBikeForm extends Component {
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
-                    <BasicHeader headerHeight={heightPercentageToDP(8.5)} title='Add Bike' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
+                    <BasicHeader headerHeight={heightPercentageToDP(8.5)} title={bike.spaceId ? 'Edit Bike' : 'Add Bike'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
                     <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
                         <LabeledInput inputValue={bike.name} inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
                         <LabeledInput inputValue={bike.make} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onChangeMake} placeholder='Make' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />

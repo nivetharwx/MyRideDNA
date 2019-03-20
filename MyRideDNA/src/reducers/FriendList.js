@@ -1,11 +1,12 @@
-import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_SEARCH_FRIEND_RELATIONSHIP } from "../actions/actionConstants";
+import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_SEARCH_FRIEND_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND } from "../actions/actionConstants";
 import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP } from "../constants";
 
 const initialState = {
     allFriends: [],
     onlineFriends: [],
     paginationNum: 0,
-    searchFriendList: []
+    searchFriendList: [],
+    currentFriend: null
 };
 
 export default (state = initialState, action) => {
@@ -26,6 +27,18 @@ export default (state = initialState, action) => {
                 action.data.friendList.length > 0 && updatedState.paginationNum++; // DOC: Update pagination number
             }
             return updatedState;
+
+        case GET_FRIEND_INFO:
+            return {
+                ...state,
+                currentFriend: state.allFriends[action.data]
+            }
+
+        case RESET_CURRENT_FRIEND:
+            return {
+                ...state,
+                currentFriend: null
+            }
 
         case REPLACE_SEARCH_FRIEND_LIST:
             return {

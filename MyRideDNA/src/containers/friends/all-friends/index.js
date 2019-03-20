@@ -210,21 +210,22 @@ class AllFriendsTab extends Component {
     }
 
     openProfile = (index) => {
-        if (this.props.searchFriendList.length > 0) {
-            const person = this.props.searchFriendList[index];
-            this.searchResImageRef[index].measure((x, y, width, height, pageX, pageY) => {
-                const userInfo = { userId: person.userId, image: require('../../../assets/img/friend-profile-pic.png') };
-                const oldPosition = { pageX, pageY, width, height };
-                this.props.openUserProfile({ personInfo: userInfo, oldPosition });
-            });
-        } else {
-            const person = this.props.allFriends[index];
-            this.friendsImageRef[index].measure((x, y, width, height, pageX, pageY) => {
-                const userInfo = { userId: person.userId, image: require('../../../assets/img/friend-profile-pic.png') };
-                const oldPosition = { pageX, pageY, width, height };
-                this.props.openUserProfile({ personInfo: userInfo, oldPosition });
-            });
-        }
+        // if (this.props.searchFriendList.length > 0) {
+        //     const person = this.props.searchFriendList[index];
+        //     this.searchResImageRef[index].measure((x, y, width, height, pageX, pageY) => {
+        //         const userInfo = { userId: person.userId, image: require('../../../assets/img/friend-profile-pic.png') };
+        //         const oldPosition = { pageX, pageY, width, height };
+        //         this.props.openUserProfile({ personInfo: userInfo, oldPosition });
+        //     });
+        // } else {
+        //     const person = this.props.allFriends[index];
+        //     this.friendsImageRef[index].measure((x, y, width, height, pageX, pageY) => {
+        //         const userInfo = { userId: person.userId, image: require('../../../assets/img/friend-profile-pic.png') };
+        //         const oldPosition = { pageX, pageY, width, height };
+        //         this.props.openUserProfile({ personInfo: userInfo, oldPosition });
+        //     });
+        // }
+        Actions.push(PageKeys.FRIENDS_PROFILE, { friendIdx: index });
     }
 
     filterOnlineFriends() {

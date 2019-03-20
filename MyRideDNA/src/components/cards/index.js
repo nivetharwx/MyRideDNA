@@ -36,7 +36,7 @@ export class BasicCard extends React.Component {
         return (
             <View style={[styles.container, this.props.isFlat ? null : styles.containerBorder, this.props.containerStyle]}>
                 <View style={[styles.fill, this.props.isActive ? styles.activeBorder : null]}>
-                    <TouchableOpacity onLongPress={this.toggleActionBar} style={styles.media}>
+                    <TouchableOpacity onLongPress={this.props.onLongPress} style={styles.media}>
                         <ImageBackground resizeMode='cover' source={this.props.media} style={styles.media} />
                     </TouchableOpacity>
                     <View style={styles.content}>
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
         borderColor: 'blue'
     },
     container: {
-        height: heightPercentageToDP(60),
+        height: heightPercentageToDP(50),
         width: widthPercentageToDP(95),
         marginBottom: widthPercentageToDP(2),
     },
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
         fontSize: widthPercentageToDP(3),
     },
     notes: {
-        flex: 1,
+        // flex: 1,
     },
     actionbar: {
         // position: 'absolute',

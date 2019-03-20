@@ -1,70 +1,70 @@
 import React from 'react';
-import { StyleSheet, SafeAreaView, View, ScrollView, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, SafeAreaView, View, ScrollView, FlatList, TouchableOpacity, Text } from 'react-native';
 import { Icon as NBIcon, List, ListItem, Left, Body } from 'native-base';
-import { WindowDimensions } from '../../constants';
+import { WindowDimensions, APP_COMMON_STYLES, heightPercentageToDP, widthPercentageToDP } from '../../constants';
 
 export const SearchResults = ({ data, onPressClose, onSelectItem, style }) => (
     <View style={[styles.searchResultsContainer, style]}>
         <TouchableOpacity style={styles.closeIcon} onPress={onPressClose}>
-            <NBIcon name='close' />
+            <NBIcon name='close' style={{ color: '#fff' }} />
         </TouchableOpacity>
         <View style={styles.searchResults}>
-            <ScrollView>
-                <List style={{ paddingBottom: 100 }}
-                    dataArray={data}
-                    renderRow={(item) => {
-                        return (
-                            <View>
-                                <ListItem button avatar style={{ marginTop: 10, height: 80 }} onPress={() => onSelectItem(item)}>
-                                    <Left style={styles.leftContainer}>
-                                        <NBIcon style={styles.leftIcon} name='location-on' type='MaterialIcons' />
-                                    </Left>
-                                    <Body style={{ height: '100%' }}>
-                                        <Text style={styles.primaryText}>{item.place_name}</Text>
-                                        <Text style={styles.secondaryText}>{item.properties.category || ''}</Text>
-                                    </Body>
-                                </ListItem>
-                            </View>
-                        );
-                    }}
-                />
-            </ScrollView>
+            <FlatList
+                style={{ marginTop: widthPercentageToDP(4) }}
+                contentContainerStyle={{ paddingBottom: data.length > 0 ? heightPercentageToDP(8) : 0 }}
+                data={data}
+                keyExtractor={item => item.id}
+                renderItem={({ item }) => {
+                    return (
+                        <ListItem button avatar style={{ marginTop: 10, height: heightPercentageToDP(8) }} onPress={() => onSelectItem(item)}>
+                            <Left style={styles.leftContainer}>
+                                <NBIcon style={styles.leftIcon} name='location-on' type='MaterialIcons' />
+                            </Left>
+                            <Body style={{ height: '100%' }}>
+                                <Text style={styles.primaryText}>{item.place_name}</Text>
+                                <Text style={styles.secondaryText}>{item.properties.category || ''}</Text>
+                            </Body>
+                        </ListItem>
+                    );
+                }}
+            />
         </View>
     </View>
 );
 
 const styles = StyleSheet.create({
     searchResults: {
-        backgroundColor: '#fff',
-        opacity: 0.9
+        // backgroundColor: '#fff',
+        // opacity: 0.9
     },
     primaryText: {
         marginLeft: 5,
         fontWeight: 'bold',
-        color: '#373737'
+        color: '#FFF'
     },
     secondaryText: {
         fontStyle: 'italic',
-        color: '#7D7D7D'
+        color: '#FFF'
     },
     leftContainer: {
-        borderLeftColor: '#7D7D7D',
+        borderLeftColor: '#FFF',
         height: '100%',
     },
     leftIcon: {
         fontSize: 20,
-        color: '#7D7D7D',
+        color: '#FFF',
     },
     distance: {
         fontSize: 12
     },
     searchResultsContainer: {
-        // marginTop: 62,
-        height: WindowDimensions.height,
         position: 'absolute',
-        zIndex: 900,
-        width: WindowDimensions.width,
-        elevation: 10,
+        top: APP_COMMON_STYLES.headerHeight,
+        marginTop: 62,
+        zIndex: 100,
+        width: '100%',
+        height: heightPercentageToDP(50),
+        backgroundColor: 'rgba(0,0,0,0.8)',
     },
     closeIcon: {
         alignSelf: 'flex-end',

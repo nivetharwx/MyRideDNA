@@ -9,12 +9,14 @@ import SplashScreen from '../containers/splash-screen';
 import ForgotPassword from '../containers/forgot-password';
 import Login from '../containers/login';
 import Profile from '../containers/profile';
+import FriendsProfile from '../containers/friends-profile';
 import Friends from '../containers/friends';
 import Group from '../containers/friends/group';
 import Rides from '../containers/rides';
 import Map from '../containers/map';
 import Signup from '../containers/signup';
-import { Passengers } from '../containers/passengers';
+import Passengers from '../containers/passengers';
+import PaasengerForm from '../containers/passengers/add-edit-passenger-from';
 import { Notifications } from '../containers/notifications';
 import { GalleryView } from '../components/gallery';
 
@@ -49,8 +51,10 @@ export default class Navigation extends Component {
                             <Scene key={PageKeys.GALLERY} component={GalleryView} hideNavBar></Scene>
                             <Scene key={PageKeys.EDIT_PROFILE} modal={true} component={EditProfile} hideNavBar></Scene>
                             <Scene key={PageKeys.PASSENGERS} component={Passengers} hideNavBar></Scene>
+                            <Scene key={PageKeys.PASSENGER_FORM} component={PaasengerForm} hideNavBar></Scene>
                             <Scene key={PageKeys.NOTIFICATIONS} component={Notifications} hideNavBar></Scene>
                             <Scene key={PageKeys.CONTACTS_SECTION} component={ContactsSection} hideNavBar></Scene>
+                            <Scene key={PageKeys.FRIENDS_PROFILE} component={FriendsProfile} hideNavBar></Scene>
                         </Scene>
                     </Router>
                 </Root>

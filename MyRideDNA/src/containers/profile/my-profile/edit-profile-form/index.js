@@ -135,15 +135,14 @@ class EditProfileForm extends Component {
                         <IconicList
                             selectedValue={user.gender} placeholder='Gender' values={GENDER_LIST}
                             onChange={this.onChangeGender} />
-                        <LabeledInput inputValue={user.dob} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onChangeDOB} placeholder='DOB' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
-                        <IconicDatePicker />
+                        <IconicDatePicker selectedDate={user.dob} onChange={this.onChangeDOB} />
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.address} inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChange={this.onChangeAddress} placeholder='Building number, street' onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.city} inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChange={this.onChangeCity} placeholder='City' onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.address} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onChangeAddress} placeholder='Building number, street' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.city} inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChange={this.onChangeCity} placeholder='City' onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
                         </View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.state} inputRef={elRef => this.fieldRefs[4] = elRef} returnKeyType='next' onChange={this.onChangeState} placeholder='State' onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.country} inputRef={elRef => this.fieldRefs[5] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} />
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.state} inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChange={this.onChangeState} placeholder='State' onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.country} inputRef={elRef => this.fieldRefs[4] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} />
                         </View>
                     </ScrollView>
                     <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
@@ -152,46 +151,6 @@ class EditProfileForm extends Component {
         );
     }
 }
-
-{/* <IconicInput iconProps={{ name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Name' value={user.name}
-                            onChange={this.onChangeName} />
-                        <IconicInput iconProps={{ name: 'md-person', type: 'Ionicons' }} inputType='name' placeholder='Nick Name' value={user.nickname}
-                            onChange={this.onChangeNickname} />
-                        <IconicList iconProps={{ name: 'transgender', type: 'FontAwesome' }} selectedValue={user.gender} placeholder='Gender'
-                            onChange={this.onChangeGender} values={GENDER_LIST}></IconicList>
-                        <IconicDatePicker iconProps={{ name: 'calendar', type: 'Foundation' }} onChange={this.onChangeDOB} selectedDateString={user.dob} />
-                        <View style={{ marginVertical: heightPercentageToDP(1.5) }}>
-                            <View style={{ flexDirection: 'row' }}>
-                                <View style={{ paddingLeft: widthPercentageToDP(3), paddingRight: widthPercentageToDP(1.5), justifyContent: 'center', alignItems: 'center' }}>
-                                    <NBIcon name='address-card' type='FontAwesome' style={{ fontSize: 14, color: '#a9a9a9' }} />
-                                </View>
-                                <Text style={{ marginLeft: widthPercentageToDP(1.5), fontSize: 16 }}>Address</Text>
-                            </View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: 10, marginTop: heightPercentageToDP(3) }}>
-                                <TextInput style={styles.addressInput} placeholder='Building number, Street line' textContentType='addressCity'
-                                    onChangeText={this.onChangeAddress} value={'' + user.homeAddress.address} />
-                                <TextInput style={styles.addressInput} placeholder='City' textContentType='addressCity'
-                                    onChangeText={this.onChangeCity} value={user.homeAddress.city} />
-                            </View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: 10, marginTop: heightPercentageToDP(3) }}>
-                                <TextInput style={{ width: '48%', borderBottomColor: '#D4D4D4', borderBottomWidth: 1 }} placeholder='State' textContentType='addressState'
-                                    onChangeText={this.onChangeState} value={user.homeAddress.state} />
-                                <TextInput style={styles.addressInput} placeholder='Country' textContentType='countryName'
-                                    onChangeText={this.onChangeCountry} value={user.homeAddress.country} />
-                            </View>
-                            <TextInput style={[styles.addressInput, { marginLeft: widthPercentageToDP(3), marginTop: heightPercentageToDP(3) }]} placeholder='Postal code' textContentType='postalCode' keyboardType='numeric'
-                                onChangeText={this.onChangeZipCode} value={user.homeAddress.zipCode} />
-                        </View>
-    <LabeledInput inputValue={user.name} inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
-                    <IconicList iconProps={{ style: styles.formFieldIcon, name: 'transgender', type: 'FontAwesome' }}
-                        selectedValue={user.gender} placeholder='Gender' values={[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }]}
-                        onChange={this.onChangeGender} />
-                    <LabeledInput inputValue={user.dob} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onChangeDOB} placeholder='DOB' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
-                    <IconicDatePicker />
-                    <LabeledInput inputValue={user.address} inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChange={this.onChangeAddress} placeholder='Building number, street' onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
-                    <LabeledInput inputValue={user.city} inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChange={this.onChangeCity} placeholder='City' onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
-                    <LabeledInput inputValue={user.state} inputRef={elRef => this.fieldRefs[4] = elRef} returnKeyType='next' onChange={this.onChangeState} placeholder='State' onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
-                    <LabeledInput inputValue={user.country} inputRef={elRef => this.fieldRefs[5] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} /> */}
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;

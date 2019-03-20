@@ -5,7 +5,7 @@ import { Actions } from 'react-native-router-flux';
 import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG } from '../../../constants/index';
 import { IconButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
-import { appNavMenuVisibilityAction } from '../../../actions';
+import { appNavMenuVisibilityAction, updateUserAction } from '../../../actions';
 import { Accordion } from 'native-base';
 import ImagePicker from 'react-native-image-crop-picker';
 import { logoutUser, updateProfilePicture, getPicture, getSpaceList } from '../../../api';
@@ -16,7 +16,7 @@ class MyProfileTab extends Component {
     PROFILE_ICONS = {
         gallery: { name: 'md-photos', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.onPressGalleryIcon() },
         camera: { name: 'camera', type: 'FontAwesome', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6) }, onPress: () => this.onPressCameraIcon() },
-        passengers: { name: 'users', type: 'Entypo', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6) }, onPress: () => { console.log('Passengers pressed') } },
+        passengers: { name: 'users', type: 'Entypo', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6) }, onPress: () => Actions.push(PageKeys.PASSENGERS) },
         edit: { name: 'account-edit', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(8) }, onPress: () => Actions.push(PageKeys.EDIT_PROFILE_FORM) },
     };
     hScrollView = null;
@@ -25,7 +25,8 @@ class MyProfileTab extends Component {
         this.state = {
             activeTab: -1,
             bikes: [10, 20, 30, 40, 50],
-            isLoadingProfPic: false
+            isLoadingProfPic: false,
+            profilePicId: props.user.profilePictureId
         };
     }
 
@@ -35,18 +36,24 @@ class MyProfileTab extends Component {
 
     componentDidMount() {
         this.props.getSpaceList(this.props.user.userId);
-        if (this.props.user.profilePictureId) {
+        if (this.props.user.profilePictureId && !this.props.user.profilePicture) {
             this.setState({ isLoadingProfPic: true });
-            this.props.getPicture(this.props.user.profilePictureId);
-            setTimeout(() => this.props.getPicture(this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, '')), 300);
+            this.props.getUserProfilePicture(this.state.profilePicId);
         }
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.user !== this.props.user) {
-            if (prevProps.user.profilePictureId !== this.props.user.profilePictureId ||
-                prevProps.user.profilePicture !== this.props.user.profilePicture) {
-                this.setState({ isLoadingProfPic: false });
+            if (!prevProps.user.profilePicture || prevProps.user.profilePictureId !== this.state.profilePicId) {
+                if (this.state.profilePicId.indexOf(THUMBNAIL_TAIL_TAG) > -1) {
+                    setTimeout(() => {
+                        this.setState(prevState => ({ profilePicId: prevState.profilePicId.replace(THUMBNAIL_TAIL_TAG, '') }), () => {
+                            this.props.getUserProfilePicture(this.state.profilePicId)
+                        });
+                    }, 300);
+                } else {
+                    this.setState({ isLoadingProfPic: false });
+                }
             }
         }
     }
@@ -142,11 +149,13 @@ class MyProfileTab extends Component {
                 }
                 <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
                     <View style={styles.profilePic}>
-                        {
-                            isLoadingProfPic
-                                ? <Loader show={isLoadingProfPic} />
-                                : <Image source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }} />
-                        }
+                        <ImageBackground source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}>
+                            {
+                                isLoadingProfPic
+                                    ? <Loader show={isLoadingProfPic} />
+                                    : null
+                            }
+                        </ImageBackground>
                     </View>
                     <View style={styles.profileHeader}>
                         <IconButton iconProps={{ name: 'bell', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(5) } }}
@@ -181,7 +190,11 @@ const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
-        getPicture: (pictureId) => dispatch(getPicture(pictureId)),
+        getUserProfilePicture: (pictureId) => getPicture(pictureId, ({ picture }) => {
+            dispatch(updateUserAction({ profilePicture: picture }))
+        }, (error) => {
+            dispatch(updateUserAction({}))
+        }),
         getSpaceList: (userId) => dispatch(getSpaceList(userId)),
         updateProfilePicture: (profilePicStr, mimeType, userId) => dispatch(updateProfilePicture(profilePicStr, mimeType, userId)),
     }
