@@ -16,7 +16,7 @@ const styles = StyleSheet.create({
     bottomTab: {
         alignItems: 'center',
         justifyContent: 'center',
-        width: widthPercentageToDP(33.33),
+        width: widthPercentageToDP(25),
     },
     profileBG: {
         width: '100%',

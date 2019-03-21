@@ -1,4 +1,4 @@
-import { REPLACE_PASSENGER_LIST, ADD_PASSENGER_TO_LIST, REMOVE_PASSENGER_FROM_LIST } from "../actions/actionConstants";
+import { REPLACE_PASSENGER_LIST, ADD_PASSENGER_TO_LIST, REMOVE_PASSENGER_FROM_LIST, UPDATE_PASSENGER_IN_LIST } from "../actions/actionConstants";
 
 const initialState = {
     passengerList: [],
@@ -19,11 +19,21 @@ export default (state = initialState, action) => {
                     action.data
                 ]
             }
-        case REMOVE_PASSENGER_FROM_LIST:
-            const passengerIdx = state.passengerList.findIndex(passenger => passenger.userId === action.data);
+        case UPDATE_PASSENGER_IN_LIST:
+            const passengerIndex = state.passengerList.findIndex(passenger => passenger.passengerId === action.data.passengerId);
             return {
                 ...state,
-                friendGroupList: [
+                passengerList: [
+                    ...state.passengerList.slice(0, passengerIndex),
+                    { ...stat.passengerList[passengerIndex], ...action.data },
+                    ...state.passengerList.slice(passengerIndex + 1)
+                ],
+            }
+        case REMOVE_PASSENGER_FROM_LIST:
+            const passengerIdx = state.passengerList.findIndex(passenger => passenger.passengerId === action.data);
+            return {
+                ...state,
+                passengerList: [
                     ...state.passengerList.slice(0, passengerIdx),
                     ...state.passengerList.slice(passengerIdx + 1)
                 ],

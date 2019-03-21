@@ -8,16 +8,15 @@ import { LabeledInput, IconicList, IconicDatePicker } from '../../../components/
 import { BasicButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import { addBikeToGarage, editBike } from '../../../api';
+import { addBikeToGarage, editBike, registerPassenger, updatePassengerDetails } from '../../../api';
 import { toggleLoaderAction } from '../../../actions';
 
 class PaasengerForm extends Component {
     fieldRefs = [];
-    changedDetails = {};
     constructor(props) {
         super(props);
         this.state = {
-            passenger: props.passengerIdx >= 0 ? props.passengerList[props.passengerIdx] : { dob: '04/15/1993' }
+            passenger: props.passengerIdx >= 0 ? props.passengerList[props.passengerIdx] : {}
         };
         if (!this.state.passenger.homeAddress) {
             this.state.passenger.homeAddress = { address: '', city: '', state: '', country: '', zipCode: '' };
@@ -31,49 +30,30 @@ class PaasengerForm extends Component {
     }
 
     onChangeName = (val) => {
-        this.changedDetails['name'] = val;
         this.setState(prevState => ({ passenger: { ...prevState.passenger, name: val + '' } }));
     }
 
     onChangeGender = (val) => {
-        this.changedDetails['gender'] = val;
         this.setState(prevState => ({ passenger: { ...prevState.passenger, gender: val + '' } }));
     }
 
     onChangeDOB = (val) => {
-        this.changedDetails['dob'] = new Date(val).toISOString();
         this.setState(prevState => ({ passenger: { ...prevState.passenger, dob: val + '' } }));
     }
 
     onChangeAddress = (val) => {
-        this.changedDetails['homeAddress'] = {
-            ...this.changedDetails.homeAddress,
-            address: val
-        };
         this.setState(prevState => ({ passenger: { ...prevState.passenger, homeAddress: { ...prevState.passenger.homeAddress, address: val + '' } } }));
     }
 
     onChangeCity = (val) => {
-        this.changedDetails['homeAddress'] = {
-            ...this.changedDetails.homeAddress,
-            city: val
-        };
         this.setState(prevState => ({ passenger: { ...prevState.passenger, homeAddress: { ...prevState.passenger.homeAddress, city: val + '' } } }));
     }
 
     onChangeState = (val) => {
-        this.changedDetails['homeAddress'] = {
-            ...this.changedDetails.homeAddress,
-            state: val
-        };
         this.setState(prevState => ({ passenger: { ...prevState.passenger, homeAddress: { ...prevState.passenger.homeAddress, state: val + '' } } }));
     }
 
     onChangeCountry = (val) => {
-        this.changedDetails['homeAddress'] = {
-            ...this.changedDetails.homeAddress,
-            country: val
-        };
         this.setState(prevState => ({ passenger: { ...prevState.passenger, homeAddress: { ...prevState.passenger.homeAddress, country: val + '' } } }));
     }
 
@@ -84,10 +64,10 @@ class PaasengerForm extends Component {
             Alert.alert('Field Error', 'Please enter a passenger name');
             return;
         }
-        if (!passenger.userId) {
-            // TODO: Add passenger API call
+        if (!passenger.passengerId) {
+            this.props.registerPassenger(this.props.user.userId, passenger);
         } else {
-            // TODO: Edit passenger API call
+            this.props.updatePassengerDetails(passenger);
         }
     }
 
@@ -100,7 +80,7 @@ class PaasengerForm extends Component {
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
-                    <BasicHeader headerHeight={heightPercentageToDP(8.5)} title={passenger.userId ? 'Edit Passenger' : 'Add Passenger'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
+                    <BasicHeader headerHeight={heightPercentageToDP(8.5)} title={passenger.passengerId ? 'Edit Passenger' : 'Add Passenger'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
                     <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
                         <LabeledInput inputValue={passenger.name} inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
                         <IconicList
@@ -124,13 +104,14 @@ class PaasengerForm extends Component {
 }
 
 const mapStateToProps = (state) => {
-    const { passenger } = state.UserAuth;
+    const { user } = state.UserAuth;
     const { passengerList } = state.PassengerList;
-    return { passenger, passengerList };
+    return { user, passengerList };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-
+        registerPassenger: (userId, passenger) => dispatch(registerPassenger(userId, passenger)),
+        updatePassengerDetails: (passenger) => dispatch(updatePassengerDetails(passenger)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(PaasengerForm);
