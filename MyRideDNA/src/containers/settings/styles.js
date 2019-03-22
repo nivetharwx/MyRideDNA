@@ -16,13 +16,13 @@ const styles = StyleSheet.create({
     containerItem: {
         paddingBottom: heightPercentageToDP(2),
         marginLeft: widthPercentageToDP(4),
-        marginRight: widthPercentageToDP(4),
+        marginRight: widthPercentageToDP(2),
         marginTop: heightPercentageToDP(2)
     },
     changePasswdFrom: {
         backgroundColor: '#fff',
-        height: heightPercentageToDP(20),
-        justifyContent: 'space-around'
+        height: heightPercentageToDP(30),
+        justifyContent: 'space-around',
     },
     passwdFormField: {
         marginLeft: widthPercentageToDP(4),
@@ -36,11 +36,14 @@ const styles = StyleSheet.create({
         marginLeft: widthPercentageToDP(4),
         marginTop: heightPercentageToDP(1),
     },
+    distanceMeasurementUnit:{
+
+    },
     submitSec: {
         height: heightPercentageToDP(20),
         backgroundColor: APP_COMMON_STYLES.infoColor,
         paddingTop: heightPercentageToDP(2),
-        paddingLeft: widthPercentageToDP(8)
+        paddingLeft: widthPercentageToDP(8),
     },
     submitButton: {
         position: 'absolute',
