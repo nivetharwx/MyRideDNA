@@ -1,14 +1,15 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, View, Text, StatusBar, ImageBackground, ScrollView } from 'react-native';
-import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP } from '../../constants/index';
+import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG } from '../../constants/index';
 import { ShifterButton, IconButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction } from '../../actions';
+import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateFriendAction, toggleLoaderAction } from '../../actions';
 import { Tabs, Tab, ScrollableTab, TabHeading, Accordion } from 'native-base';
 import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { Loader } from '../../components/loader';
 import styles from './styles';
+import { getPicture, getGarageInfo } from '../../api';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
 class FriendsProfile extends Component {
@@ -24,7 +25,8 @@ class FriendsProfile extends Component {
         super(props);
         this.state = {
             activeTab: 0,
-            isLoadingProfPic: false
+            isLoadingProfPic: false,
+            profilePicId: null
         };
     }
 
@@ -33,7 +35,8 @@ class FriendsProfile extends Component {
         //     this.tabsRef.props.goToPage(0);
         //     this.setState({ activeTab: 0 });
         // }, 50);
-        this.props.getFriendsInfo(this.props.friendIdx);
+
+        this.props.getFriendsInfo(this.props.friendIdx, this.props.friendType);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -41,8 +44,24 @@ class FriendsProfile extends Component {
             if (this.props.currentFriend === null) {
                 Actions.pop();
                 return;
-            } else if (prevProps.currentFriend === null) {
-                // TODO: Fetch profile picture
+            }
+            if (prevProps.currentFriend === null) {
+                if (this.props.currentFriend.profilePictureId) {
+                    this.setState({ profilePicId: this.props.currentFriend.profilePictureId, isLoadingProfPic: true });
+                    this.props.getPicture(this.props.currentFriend.profilePictureId, this.props.currentFriend.userId, this.props.friendType);
+                }
+                return;
+            }
+            if (this.state.profilePicId) {
+                if (this.state.profilePicId.indexOf(THUMBNAIL_TAIL_TAG) > -1) {
+                    setTimeout(() => {
+                        this.setState(prevState => ({ profilePicId: prevState.profilePicId.replace(THUMBNAIL_TAIL_TAG, '') }), () => {
+                            this.props.getPicture(this.state.profilePicId, this.props.currentFriend.userId, this.props.friendType);
+                        });
+                    }, 300);
+                } else {
+                    this.setState({ isLoadingProfPic: false });
+                }
             }
         }
     }
@@ -54,7 +73,12 @@ class FriendsProfile extends Component {
     showAppNavMenu = () => this.props.showAppNavMenu();
 
     onChangeTab = ({ from, i }) => {
-        this.setState({ activeTab: i });
+        this.setState({ activeTab: i }, () => {
+            if (this.state.activeTab === 1) {
+                // GARAGE Tab
+                this.props.getGarageInfo(this.props.currentFriend.userId, this.props.friendType);
+            }
+        });
     }
 
 
@@ -73,6 +97,7 @@ class FriendsProfile extends Component {
     render() {
         const { user, currentFriend } = this.props;
         const { activeTab, isLoadingProfPic } = this.state;
+        currentFriend && console.log("Friend's garage: ", currentFriend.garage);
         return currentFriend === null
             ? <View style={styles.fill} />
             : <View style={styles.fill}>
@@ -92,7 +117,7 @@ class FriendsProfile extends Component {
                             {'  '}{currentFriend.nickname}
                         </Text>
                     </Text>} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
-                    <Tabs locked={true} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B' }} underlineStyle={{ height: 0 }} />}>
+                    <Tabs onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B' }} underlineStyle={{ height: 0 }} />}>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, backgroundColor: activeTab === 0 ? '#0083CA' : '#6C6C6B' }]}>
                             <Text style={{ color: '#fff' }}>PROFILE</Text>
                         </TabHeading>}>
@@ -118,7 +143,7 @@ class FriendsProfile extends Component {
                             <Text style={{ color: '#fff' }}>GARAGE</Text>
                         </TabHeading>}>
                             <View style={{ backgroundColor: '#fff', flex: 1 }}>
-                                <Text>GARAGE</Text>
+
                             </View>
                         </Tab>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, backgroundColor: activeTab === 2 ? '#0083CA' : '#6C6C6B', borderLeftWidth: 1, borderLeftColor: '#fff', borderRightWidth: 2, borderRightColor: '#fff' }]}>
@@ -154,8 +179,23 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        getFriendsInfo: (friendIdx) => dispatch(getFriendsInfoAction(friendIdx)),
+        getFriendsInfo: (friendIdx, friendType) => dispatch(getFriendsInfoAction({ index: friendIdx, friendType })),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
+        getPicture: (pictureId, friendId, friendType) => getPicture(pictureId, ({ picture }) => {
+            dispatch(updateFriendAction({ friendType, friend: { userId: friendId, profilePicture: picture } }))
+        }, (error) => {
+            dispatch(updateFriendAction({ friendType, friend: { userId: friendId } }))
+        }),
+        getGarageInfo: (friendId, friendType) => {
+            dispatch(toggleLoaderAction(true));
+            getGarageInfo(friendId, (garage) => {
+                dispatch(toggleLoaderAction(false));
+                dispatch(updateFriendAction({ friendType, friend: { userId: friendId, garage } }));
+            }, (error) => {
+                dispatch(toggleLoaderAction(false));
+                console.log(`getGarage error: `, error);
+            })
+        },
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(FriendsProfile);

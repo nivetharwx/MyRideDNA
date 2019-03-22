@@ -16,6 +16,7 @@ class EditProfileForm extends Component {
     fieldRefs = [];
     vScroll = null;
     changedDetails = {};
+    updatingUser = false;
     constructor(props) {
         super(props);
         this.state = {
@@ -31,75 +32,73 @@ class EditProfileForm extends Component {
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.user !== this.props.user) {
             // DOC: Confirming changes happened due to api call from this form
-            if (this.changedDetails.userId) {
-                setTimeout(() => {
-                    Toast.show({
-                        text: 'Profile updated successfully',
-                        buttonText: 'Okay'
-                    });
-                }, 100);
+            if (this.updatingUser === true) {
+                Toast.show({
+                    text: 'Profile updated successfully',
+                    buttonText: 'Okay'
+                });
                 this.onPressBackButton();
             }
         }
     }
 
     onChangeName = (val) => {
-        this.changedDetails['name'] = val;
+        // this.changedDetails['name'] = val;
         this.setState(prevState => ({ user: { ...prevState.user, name: val + '' } }));
     }
 
     onChangeNickname = (val) => {
-        this.changedDetails['nickname'] = val;
+        // this.changedDetails['nickname'] = val;
         this.setState(prevState => ({ user: { ...prevState.user, nickname: val + '' } }));
     }
 
     onChangeGender = (val) => {
-        this.changedDetails['gender'] = val;
+        // this.changedDetails['gender'] = val;
         this.setState(prevState => ({ user: { ...prevState.user, gender: val + '' } }));
     }
 
     onChangeDOB = (val) => {
-        this.changedDetails['dob'] = new Date(val).toISOString();
-        this.setState(prevState => ({ user: { ...prevState.user, dob: this.changedDetails.dob } }));
+        // this.changedDetails['dob'] = new Date(val).toISOString();
+        this.setState(prevState => ({ user: { ...prevState.user, dob: new Date(val).toISOString() } }));
     }
 
     onChangeAddress = (val) => {
-        this.changedDetails['homeAddress'] = {
-            ...this.changedDetails.homeAddress,
-            address: val
-        };
+        // this.changedDetails['homeAddress'] = {
+        //     ...this.changedDetails.homeAddress,
+        //     address: val
+        // };
         this.setState(prevState => ({ user: { ...prevState.user, homeAddress: { ...prevState.user.homeAddress, address: val + '' } } }));
     }
 
     onChangeCity = (val) => {
-        this.changedDetails['homeAddress'] = {
-            ...this.changedDetails.homeAddress,
-            city: val
-        };
+        // this.changedDetails['homeAddress'] = {
+        //     ...this.changedDetails.homeAddress,
+        //     city: val
+        // };
         this.setState(prevState => ({ user: { ...prevState.user, homeAddress: { ...prevState.user.homeAddress, city: val + '' } } }));
     }
 
     onChangeState = (val) => {
-        this.changedDetails['homeAddress'] = {
-            ...this.changedDetails.homeAddress,
-            state: val
-        };
+        // this.changedDetails['homeAddress'] = {
+        //     ...this.changedDetails.homeAddress,
+        //     state: val
+        // };
         this.setState(prevState => ({ user: { ...prevState.user, homeAddress: { ...prevState.user.homeAddress, state: val + '' } } }));
     }
 
     onChangeCountry = (val) => {
-        this.changedDetails['homeAddress'] = {
-            ...this.changedDetails.homeAddress,
-            country: val
-        };
+        // this.changedDetails['homeAddress'] = {
+        //     ...this.changedDetails.homeAddress,
+        //     country: val
+        // };
         this.setState(prevState => ({ user: { ...prevState.user, homeAddress: { ...prevState.user.homeAddress, country: val + '' } } }));
     }
 
     onChangeZipCode = (val) => {
-        this.changedDetails['homeAddress'] = {
-            ...this.changedDetails.homeAddress,
-            zipCode: val
-        };
+        // this.changedDetails['homeAddress'] = {
+        //     ...this.changedDetails.homeAddress,
+        //     zipCode: val
+        // };
         this.setState(prevState => ({ user: { ...prevState.user, homeAddress: { ...prevState.user.homeAddress, zipCode: val + '' } } }));
     }
 
@@ -107,17 +106,8 @@ class EditProfileForm extends Component {
 
     onSubmit = () => {
         Keyboard.dismiss();
-        if (Object.keys(this.changedDetails).length > 0) {
-            this.changedDetails.userId = this.state.user.userId;
-            this.changedDetails.email = this.state.user.email;
-            this.props.updateUser(this.changedDetails);
-        } else {
-            Toast.show({
-                text: 'Profile updated successfully',
-                buttonText: 'Okay',
-                onClose: this.onPressBackButton
-            });
-        }
+        this.updatingUser = true;
+        this.props.updateUser(this.state.user);
     }
 
     render() {
@@ -137,12 +127,12 @@ class EditProfileForm extends Component {
                             onChange={this.onChangeGender} />
                         <IconicDatePicker selectedDate={user.dob} onChange={this.onChangeDOB} />
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.address} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onChangeAddress} placeholder='Building number, street' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.city} inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChange={this.onChangeCity} placeholder='City' onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.homeAddress.address} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onChangeAddress} placeholder='Building number, street' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.homeAddress.city} inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChange={this.onChangeCity} placeholder='City' onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
                         </View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.state} inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChange={this.onChangeState} placeholder='State' onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.country} inputRef={elRef => this.fieldRefs[4] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} />
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.homeAddress.state} inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChange={this.onChangeState} placeholder='State' onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={user.homeAddress.country} inputRef={elRef => this.fieldRefs[4] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} />
                         </View>
                     </ScrollView>
                     <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />

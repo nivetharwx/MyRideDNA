@@ -9,6 +9,7 @@ import { BasicButton, IconButton, LinkButton } from '../../../components/buttons
 import { Icon as NBIcon } from 'native-base';
 import { getGarageInfo, setBikeAsActive, deleteBike, updateGarageName } from '../../../api';
 import { BaseModal } from '../../../components/modal';
+import { replaceGarageInfoAction, toggleLoaderAction } from '../../../actions';
 
 class MyGarageTab extends Component {
     spacelistRef = null;
@@ -172,7 +173,16 @@ const mapStateToProps = (state) => {
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        getGarageInfo: (userId) => dispatch(getGarageInfo(userId)),
+        getGarageInfo: (userId) => {
+            dispatch(toggleLoaderAction(true));
+            getGarageInfo(userId, (garage) => {
+                dispatch(toggleLoaderAction(false));
+                dispatch(replaceGarageInfoAction(garage));
+            }, (error) => {
+                dispatch(toggleLoaderAction(false));
+                console.log(`getGarage error: `, error);
+            })
+        },
         updateGarageName: (garageName, garageId) => dispatch(updateGarageName(garageName, garageId)),
         setBikeAsActive: (userId, bike, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, bike, prevActiveIndex, index)),
         deleteBike: (userId, bikeId, index) => dispatch(deleteBike(userId, bikeId, index)),

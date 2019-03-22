@@ -8,6 +8,7 @@ import { LabeledInput, IconicList, IconicDatePicker, IconicInput } from '../../c
 import { BasicButton, LinkButton } from '../../components/buttons';
 import { DatePicker, Icon as NBIcon, Toast, ListItem, Left, Body, Right, Thumbnail } from 'native-base';
 import { BaseModal } from '../../components/modal';
+import { getPassengerList, deletePassenger } from '../../api';
 
 class Passengers extends Component {
     constructor(props) {
@@ -16,6 +17,10 @@ class Passengers extends Component {
             selectedPassenger: null,
             isVisibleOptionsModal: false
         };
+    }
+
+    componentDidMount() {
+        this.props.getPassengerList(this.props.user.userId);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -48,13 +53,13 @@ class Passengers extends Component {
     }
 
     openPassengerForm = () => {
-        const passengerIdx = this.props.passengerList.findIndex(passenger => passenger.userId === this.state.selectedPassenger.userId);
+        const passengerIdx = this.props.passengerList.findIndex(passenger => passenger.passengerId === this.state.selectedPassenger.passengerId);
         Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx });
         this.onCancelOptionsModal();
     }
 
     showRemovePassengerConfirmation = () => {
-        const { userId, name } = this.state.selectedPassenger;
+        const { passengerId, name } = this.state.selectedPassenger;
         setTimeout(() => {
             Alert.alert(
                 'Confirmation to remove passenger',
@@ -62,7 +67,7 @@ class Passengers extends Component {
                 [
                     {
                         text: 'Yes', onPress: () => {
-                            // TODO: Call delete passenger API
+                            this.props.deletePassenger(passengerId);
                             this.onCancelOptionsModal();
                         }
                     },
@@ -73,24 +78,24 @@ class Passengers extends Component {
         }, 100);
     }
 
-    passengerKeyExtractor = (item) => item.userId;
+    passengerKeyExtractor = (item) => item.passengerId;
 
     renderPassenger = ({ item, index }) => {
         return (
-            <ListItem style={{ marginTop: 20 }} avatar onLongPress={() => this.showOptionsModal(index)} onPress={() => this.openGroupInfo(index)}>
+            <ListItem style={{ marginTop: 20 }} avatar onLongPress={() => this.showOptionsModal(index)}>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
                     {
                         item.groupProfilePictureThumbnail
                             ? <Thumbnail source={{ uri: 'Image URL' }} />
-                            : <NBIcon active name="group" type='FontAwesome' style={{ width: widthPercentageToDP(6) }} />
+                            : <NBIcon active name="person" type='MaterialIcons' style={{ width: widthPercentageToDP(7) }} />
                     }
                 </Left>
                 <Body>
-                    <Text>{item.groupName}</Text>
-                    <Text note></Text>
+                    <Text>{item.name}</Text>
+                    {/* <Text note></Text> */}
                 </Body>
                 <Right>
-                    <Text note></Text>
+                    {/* <Text note></Text> */}
                 </Right>
             </ListItem>
         );
@@ -136,7 +141,8 @@ const mapStateToProps = (state) => {
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-
+        getPassengerList: (userId) => dispatch(getPassengerList(userId)),
+        deletePassenger: (passengerId) => dispatch(deletePassenger(passengerId)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Passengers);

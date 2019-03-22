@@ -209,7 +209,7 @@ class AllFriendsTab extends Component {
         }
     }
 
-    openProfile = (index) => {
+    openProfile = (index, friendType) => {
         // if (this.props.searchFriendList.length > 0) {
         //     const person = this.props.searchFriendList[index];
         //     this.searchResImageRef[index].measure((x, y, width, height, pageX, pageY) => {
@@ -225,7 +225,7 @@ class AllFriendsTab extends Component {
         //         this.props.openUserProfile({ personInfo: userInfo, oldPosition });
         //     });
         // }
-        Actions.push(PageKeys.FRIENDS_PROFILE, { friendIdx: index });
+        Actions.push(PageKeys.FRIENDS_PROFILE, { friendIdx: index, friendType });
     }
 
     filterOnlineFriends() {
@@ -307,7 +307,7 @@ class AllFriendsTab extends Component {
                                         item={item}
                                         thumbnailRef={imgRef => this.friendsImageRef[index] = imgRef}
                                         onLongPress={() => this.showOptionsModal(index)}
-                                        onPress={() => this.openProfile(index)}
+                                        onPress={() => this.openProfile(index, FRIEND_TYPE.ALL_FRIENDS)}
                                     />
                                 )}
                             />

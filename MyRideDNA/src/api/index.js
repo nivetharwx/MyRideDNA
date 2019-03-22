@@ -1,6 +1,6 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
-    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction, deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction
+    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction, deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL } from '../constants';
 import axios from 'axios';
@@ -99,6 +99,7 @@ export const registerUser = (user) => {
     };
 }
 export const updateUserInfo = (userData) => {
+    console.log("updateUserInfo with ", userData);
     return dispatch => {
         dispatch(toggleLoaderAction(true));
         axios.put(USER_BASE_URL + 'updateUserDetails', userData, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
@@ -945,21 +946,28 @@ export const getSpaceList = (userId) => {
             })
     };
 }
-export const getGarageInfo = (userId) => {
-    return dispatch => {
-        dispatch(toggleLoaderAction(true));
-        axios.get(USER_BASE_URL + `getGarage/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
-            .then(res => {
-                dispatch(toggleLoaderAction(false));
-                console.log("getGarage success: ", res.data);
-                dispatch(replaceGarageInfoAction(res.data))
-            })
-            .catch(er => {
-                console.log(`getGarage: `, er.response);
-                // TODO: Dispatch error info action
-                dispatch(toggleLoaderAction(false));
-            })
-    };
+export const getGarageInfo = (userId, successCallback, errorCallback) => {
+    // return dispatch => {
+    //     dispatch(toggleLoaderAction(true));
+    //     axios.get(USER_BASE_URL + `getGarage/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+    //         .then(res => {
+    //             dispatch(toggleLoaderAction(false));
+    //             console.log("getGarage success: ", res.data);
+    //             dispatch(replaceGarageInfoAction(res.data))
+    //         })
+    //         .catch(er => {
+    //             console.log(`getGarage: `, er.response);
+    //             // TODO: Dispatch error info action
+    //             dispatch(toggleLoaderAction(false));
+    //         })
+    // };
+    axios.get(USER_BASE_URL + `getGarage/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        .then(res => {
+            successCallback(res.data);
+        })
+        .catch(er => {
+            errorCallback(er.response || er);
+        })
 }
 export const updateGarageName = (garageName, garageId) => {
     return dispatch => {
@@ -1043,6 +1051,70 @@ export const deleteBike = (userId, bikeId, index) => {
             })
             .catch(er => {
                 console.log(`deleteBike: `, er.response);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const getPassengerList = (userId) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.get(USER_BASE_URL + `getAllPassengersByUserId/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("getAllPassengersByUserId success: ", res.data);
+                dispatch(toggleLoaderAction(false));
+                dispatch(replacePassengerListAction(Array.isArray(res.data) ? res.data : []))
+            })
+            .catch(er => {
+                console.log(`getAllPassengersByUserId error: `, er.response || er);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const registerPassenger = (userId, passenger) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.post(USER_BASE_URL + `registerPassenger`, { userId, ...passenger }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                dispatch(toggleLoaderAction(false));
+                passenger.passengerId = res.data.passengerId;
+                dispatch(addToPassengerListAction(passenger))
+            })
+            .catch(er => {
+                console.log(`registerPassenger error: `, er.response || er);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const updatePassengerDetails = (passenger) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.put(USER_BASE_URL + `updatePassengerDetails`, passenger, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("updatePassengerDetails success: ", res.data);
+                dispatch(toggleLoaderAction(false));
+                dispatch(updatePassengerInListAction(passenger))
+            })
+            .catch(er => {
+                console.log(`updatePassengerDetails error: `, er.response || er);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const deletePassenger = (passengerId) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.delete(USER_BASE_URL + `deletePassenger/${passengerId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("deletePassenger success: ", res.data);
+                dispatch(toggleLoaderAction(false));
+                dispatch(updatePassengerInListAction(passengerId))
+            })
+            .catch(er => {
+                console.log(`deletePassenger error: `, er.response || er);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })

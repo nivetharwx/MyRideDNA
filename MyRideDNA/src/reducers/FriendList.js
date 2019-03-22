@@ -1,4 +1,4 @@
-import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_SEARCH_FRIEND_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND } from "../actions/actionConstants";
+import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_SEARCH_FRIEND_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDTAE_FRIEND_IN_LIST } from "../actions/actionConstants";
 import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP } from "../constants";
 
 const initialState = {
@@ -29,10 +29,22 @@ export default (state = initialState, action) => {
             return updatedState;
 
         case GET_FRIEND_INFO:
-            return {
-                ...state,
-                currentFriend: state.allFriends[action.data]
+            var friendKey = getFriendListByType(action.data.friendType);
+            updatedState.currentFriend = state[friendKey][action.data.index];
+            if (!updatedState.currentFriend.profilePictureId) {
+                updatedState.currentFriend.profilePictureId = null;
             }
+            return updatedState;
+
+        case UPDTAE_FRIEND_IN_LIST:
+            var friendKey = getFriendListByType(action.data.friendType);
+            const friendIdx = updatedState[friendKey].findIndex(friend => friend.userId === action.data.friend.userId);
+            updatedState.currentFriend = {
+                ...state.currentFriend,
+                ...action.data.friend
+            };
+            // updatedState[friendKey] = [...state[friendKey].slice(0, friendIdx), { ...state[friendKey][friendIdx], ...action.data.friend }, ...state[friendKey].slice(friendIdx + 1)];
+            return updatedState;
 
         case RESET_CURRENT_FRIEND:
             return {

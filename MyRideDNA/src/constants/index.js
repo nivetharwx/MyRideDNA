@@ -24,10 +24,11 @@ export const THUMBNAIL_TAIL_TAG = '_thumb';
 
 const BASE_URL = 'http://104.43.254.82';
 const GRAPH_URL = 'http://40.113.216.90';
+const NOTIFICATION_URL = 'http://168.61.214.135';
 export const USER_BASE_URL = BASE_URL + ':5051/';
 export const RIDE_BASE_URL = BASE_URL + ':5052/';
 export const FRIENDS_BASE_URL = BASE_URL + ':5053/';
-export const NOTIFICATIONS_BASE_URL = BASE_URL + ':5054/';
+export const NOTIFICATIONS_BASE_URL = NOTIFICATION_URL + ':5054/';
 export const CHAT_BASE_URL = BASE_URL + ':5056/';
 export const GRAPH_BASE_URL = GRAPH_URL + ':5057/';
 

@@ -37,13 +37,9 @@ class Profile extends Component {
         const { activeTab, profilePicString } = this.state;
         return (
             <View style={styles.fill}>
-                {
-                    activeTab === 0
-                        ? null
-                        : <View style={APP_COMMON_STYLES.statusBar}>
-                            <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                        </View>
-                }
+                <View style={APP_COMMON_STYLES.statusBar}>
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                </View>
                 <View style={{ flex: 1 }}>
                     <Tabs locked={true} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B' }} underlineStyle={{ height: 0 }} />}>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 0 ? '#0083CA' : '#6C6C6B' }]}>

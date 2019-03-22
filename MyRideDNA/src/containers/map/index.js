@@ -179,6 +179,8 @@ export class Map extends Component {
                         }
                     }
                 } else {
+                    // TODO: Check for changing the waypoint order
+
                     this.initializeEmptyRide(updatedState);
                     // if (this.props.ride.source === null) {
                     //     if (ride.source) {
@@ -204,7 +206,7 @@ export class Map extends Component {
                         updatedState.markerCollection.features = ride.waypoints.reduce((arr, loc) => {
                             arr.push(this.createMarkerFeature([loc.lng, loc.lat], ICON_NAMES.WAYPOINT_DEFAULT));
                             return arr;
-                        }, [...updatedState.markerCollection.features]);
+                        }, updatedState.markerCollection.features);
                     }
 
                     if (ride.destination) {
@@ -695,39 +697,67 @@ export class Map extends Component {
     addWaypointAtIndex(index, marker, callback) {
         this.setState((prevState) => {
             const { features } = prevState.markerCollection;
-            const undoActions = [...prevState.undoActions];
-            const redoActions = [...prevState.redoActions];
-            if (undoActions.length === 10) undoActions.shift();
-            if (redoActions.length > 0) redoActions.splice(0);
-            undoActions.push({
-                action: 'insert',
-                opppositeAction: 'delete',
-                actionFunctionName: 'addWaypointAtIndex',
-                actionParams: { p1: index, p2: marker },
-                oppositeActionFunctionName: 'deleteWaypointFromIndex',
-                oppositeActionParams: { p1: index }
-            });
-            let prevMarker = features[this.state.activeMarkerIndex];
-            let isLastWaypointSelected = false;
-            if (!prevMarker) {
-                prevMarker = features[features.length - 1];
-                isLastWaypointSelected = true;
-            }
-            const isDestinationSelected = this.isDestination(prevMarker);
-            return {
-                rideUpdateCount: prevState.rideUpdateCount + 1,
-                markerCollection: {
-                    ...prevState.markerCollection,
-                    ...{
-                        features: isLastWaypointSelected
-                            ? [...features.slice(0, index), marker, { ...prevMarker, properties: { ...prevMarker.properties, icon: isDestinationSelected ? ICON_NAMES.DESTINATION_DEFAULT : ICON_NAMES.WAYPOINT_DEFAULT } }]
-                            : [...features.slice(0, index), marker, ...features.slice(index)]
+            // const undoActions = [...prevState.undoActions];
+            // const redoActions = [...prevState.redoActions];
+            // if (undoActions.length === 10) undoActions.shift();
+            // if (redoActions.length > 0) redoActions.splice(0);
+            // undoActions.push({
+            //     action: 'insert',
+            //     opppositeAction: 'delete',
+            //     actionFunctionName: 'addWaypointAtIndex',
+            //     actionParams: { p1: index, p2: marker },
+            //     oppositeActionFunctionName: 'deleteWaypointFromIndex',
+            //     oppositeActionParams: { p1: index }
+            // });
+            if (prevState.activeMarkerIndex === -1) {
+                return {
+                    rideUpdateCount: prevState.rideUpdateCount + 1,
+                    markerCollection: {
+                        ...prevState.markerCollection,
+                        features: [...features, marker]
                     }
-                },
-                undoActions: undoActions,
-                redoActions: redoActions,
-                activeMarkerIndex: isDestinationSelected ? -1 : this.state.activeMarkerIndex
+                }
+            } else {
+                const prevMarker = features[prevState.activeMarkerIndex];
+                const isDestinationSelected = this.isDestination(prevMarker);
+                return {
+                    rideUpdateCount: prevState.rideUpdateCount + 1,
+                    markerCollection: {
+                        ...prevState.markerCollection,
+                        features: [
+                            ...features.slice(0, prevState.activeMarkerIndex),
+                            marker,
+                            ...features.slice(prevState.activeMarkerIndex)
+                        ]
+                    },
+                    activeMarkerIndex: isDestinationSelected ? -1 : prevState.activeMarkerIndex
+                }
             }
+
+
+
+
+            // let prevMarker = features[this.state.activeMarkerIndex];
+            // let isLastWaypointSelected = false;
+            // if (!prevMarker) {
+            //     prevMarker = features[features.length - 1];
+            //     isLastWaypointSelected = true;
+            // }
+            // const isDestinationSelected = this.isDestination(prevMarker);
+            // return {
+            //     rideUpdateCount: prevState.rideUpdateCount + 1,
+            //     markerCollection: {
+            //         ...prevState.markerCollection,
+            //         ...{
+            //             features: isLastWaypointSelected
+            //                 ? [...features.slice(0, index), { ...prevMarker, properties: { ...prevMarker.properties, icon: isDestinationSelected ? ICON_NAMES.DESTINATION_DEFAULT : ICON_NAMES.WAYPOINT_DEFAULT } }, marker]
+            //                 : [...features.slice(0, index), marker, ...features.slice(index)]
+            //         }
+            //     },
+            //     undoActions: undoActions,
+            //     redoActions: redoActions,
+            //     activeMarkerIndex: isDestinationSelected ? -1 : prevState.activeMarkerIndex
+            // }
         }, () => {
             // DOC: Call the callback function, if any.
             callback && callback();
@@ -736,10 +766,10 @@ export class Map extends Component {
             const { ride } = this.props;
             let waypoint = { name: '', address: '', lat: marker.geometry.coordinates[1], lng: marker.geometry.coordinates[0] };
             if (!ride.source) {
-                this.props.addSource(waypoint, ride);
+                this.props.addSource(waypoint);
             } else {
                 const indexOnServer = index - 1;
-                this.props.addWaypoint(waypoint, ride, indexOnServer);
+                this.props.addWaypoint(waypoint, indexOnServer);
             }
             // this.fetchDirections();
         });
@@ -988,7 +1018,7 @@ export class Map extends Component {
 
     createRide = () => {
         // Actions.push(PageKeys.CREATE_RIDE);
-
+        this.hideMapControls();
         this.setState({ showCreateRide: true });
 
         // this.watchID != null && clearInterval(this.watchID);
@@ -1033,6 +1063,7 @@ export class Map extends Component {
     }
 
     onPressRecordRide = () => {
+        this.hideMapControls();
         console.log("RecordRide called");
         // this.watchLocation(); // FIXME: Remove this and Uncomment following
 
@@ -1661,7 +1692,7 @@ const mapDispatchToProps = (dispatch) => {
 
 
         // addSource: (waypoint, ride) => dispatch(addSource(waypoint, ride)),
-        addSource: (waypoint, ride) => dispatch(updateRideAction({ source: waypoint })),
+        addSource: (waypoint) => dispatch(updateRideAction({ source: waypoint })),
         // updateSource: (waypoint, ride) => dispatch(updateSource(waypoint, ride)),
         updateSource: (waypoint) => dispatch(updateRideAction({ source: waypoint })),
         // deleteSource: (ride) => dispatch(deleteSource(ride)),
