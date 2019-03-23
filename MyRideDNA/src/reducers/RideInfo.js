@@ -1,4 +1,4 @@
-import { UPDTAE_RIDE, CLEAR_RIDE, UPDATE_WAYPOINT, LOAD_RIDE, ADD_WAYPOINT, DELETE_WAYPOINT } from "../actions/actionConstants";
+import { UPDATE_RIDE, CLEAR_RIDE, UPDATE_WAYPOINT, LOAD_RIDE, ADD_WAYPOINT, DELETE_WAYPOINT } from "../actions/actionConstants";
 import { undoable } from "./Undoable";
 
 const initialState = {
@@ -26,7 +26,7 @@ const initialState = {
 
 const rideInfo = (state = initialState, action) => {
     switch (action.type) {
-        case UPDTAE_RIDE:
+        case UPDATE_RIDE:
             return {
                 ...state,
                 ride: {

@@ -1,4 +1,4 @@
-import { UPDTAE_IMAGE_INFO, CLEAR_IMAGE_INFO } from "../actions/actionConstants";
+import { UPDATE_IMAGE_INFO, CLEAR_IMAGE_INFO } from "../actions/actionConstants";
 
 const initialState = {
     oldPosition: null,
@@ -7,7 +7,7 @@ const initialState = {
 
 export default (state = initialState, action) => {
     switch (action.type) {
-        case UPDTAE_IMAGE_INFO:
+        case UPDATE_IMAGE_INFO:
             return {
                 ...action.data
             }

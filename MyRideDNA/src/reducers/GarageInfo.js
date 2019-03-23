@@ -1,4 +1,4 @@
-import { REPLACE_GARAGE_INFO, UPDTAE_GARAGE_NAME, UPDATE_BIKE_LIST, CLEAR_GARAGE, ADD_TO_BIKE_LIST, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, UPDTAE_SHORT_SPACE_LIST, REPLACE_SHORT_SPACE_LIST } from "../actions/actionConstants";
+import { REPLACE_GARAGE_INFO, UPDATE_GARAGE_NAME, UPDATE_BIKE_LIST, CLEAR_GARAGE, ADD_TO_BIKE_LIST, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, UPDATE_SHORT_SPACE_LIST, REPLACE_SHORT_SPACE_LIST } from "../actions/actionConstants";
 
 const initialState = {
     garageName: null,
@@ -25,7 +25,7 @@ export default (state = initialState, action) => {
                     ]
                 }
             }
-        case UPDTAE_GARAGE_NAME:
+        case UPDATE_GARAGE_NAME:
             return {
                 ...state,
                 garageName: action.data
@@ -35,7 +35,7 @@ export default (state = initialState, action) => {
                 ...state,
                 shortSpaceList: action.data
             }
-        case UPDTAE_SHORT_SPACE_LIST:
+        case UPDATE_SHORT_SPACE_LIST:
             return {
                 ...state,
                 shortSpaceList: []

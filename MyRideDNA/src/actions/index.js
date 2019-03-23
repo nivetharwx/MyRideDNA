@@ -1,7 +1,7 @@
 import {
-    LOGIN_RESPONSE, APP_NAV_MENU_VISIBILITY, UPDTAE_RIDE, CLEAR_RIDE,
+    LOGIN_RESPONSE, APP_NAV_MENU_VISIBILITY, UPDATE_RIDE, CLEAR_RIDE,
     DEVICE_GPS_STATE, UPDATE_WAYPOINT, CURRENT_USER, UPDATE_USER, TOGGLE_LOADER, SCREEN_CHANGE,
-    UPDATE_RIDE_LIST, LOAD_RIDE, DELETE_RIDE, REPLACE_RIDE_LIST, UPDATE_EMAIL_STATUS, UPDATE_SIGNUP_RESULT, TOGGLE_NETWORK_STATUS, UPDATE_FRIEND_LIST, REPLACE_FRIEND_LIST, DELETE_FRIEND, UPDTAE_GARAGE_INFO, UPDTAE_GARAGE_NAME, UPDATE_BIKE_LIST, ADD_TO_BIKE_LIST, REPLACE_GARAGE_INFO, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, REPLACE_SHORT_SPACE_LIST, REPLACE_SEARCH_RESULTS, CLEAR_SEARCH_RESULTS, UPDATE_SEARCH_FRIEND_RELATIONSHIP, UPDTAE_IMAGE_INFO, UPDTAE_FRIEND_GROUP_LIST, ADD_FRIEND_GROUP_TO_LIST, REPLACE_FRIEND_GROUP_LIST, UPDTAE_UPDATING_GROUP_ID, UPDTAE_CURRENT_GROUP, RESET_CURRENT_GROUP, ADD_MEMBERS_TO_CURRENT_GROUP, RESET_MEMBERS_IN_CURRENT_GROUP, GET_GROUP_INFO, UPDATE_MEMBER_IN_CURRENT_GROUP, REMOVE_MEMBER_FROM_CURRENT_GROUP, REDO, UNDO, INIT_UNDO_REDO, ADD_WAYPOINT, DELETE_WAYPOINT, REMOVE_FRIEND_GROUP_FROM_LIST, UPDATE_PASSWORD_SUCCESS, UPDATE_PASSWORD_ERROR, RESET_PASSWORD_ERROR, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, ADD_PASSENGER_TO_LIST, REMOVE_PASSENGER_FROM_LIST, REPLACE_PASSENGER_LIST, UPDATE_PASSENGER_IN_LIST, UPDTAE_FRIEND_IN_LIST
+    UPDATE_RIDE_LIST, LOAD_RIDE, DELETE_RIDE, REPLACE_RIDE_LIST, UPDATE_EMAIL_STATUS, UPDATE_SIGNUP_RESULT, TOGGLE_NETWORK_STATUS, UPDATE_FRIEND_LIST, REPLACE_FRIEND_LIST, DELETE_FRIEND, UPDATE_GARAGE_INFO, UPDATE_GARAGE_NAME, UPDATE_BIKE_LIST, ADD_TO_BIKE_LIST, REPLACE_GARAGE_INFO, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, REPLACE_SHORT_SPACE_LIST, REPLACE_SEARCH_RESULTS, CLEAR_SEARCH_RESULTS, UPDATE_RELATIONSHIP, UPDATE_IMAGE_INFO, UPDATE_FRIEND_GROUP_LIST, ADD_FRIEND_GROUP_TO_LIST, REPLACE_FRIEND_GROUP_LIST, UPDATE_UPDATING_GROUP_ID, UPDATE_CURRENT_GROUP, RESET_CURRENT_GROUP, ADD_MEMBERS_TO_CURRENT_GROUP, RESET_MEMBERS_IN_CURRENT_GROUP, GET_GROUP_INFO, UPDATE_MEMBER_IN_CURRENT_GROUP, REMOVE_MEMBER_FROM_CURRENT_GROUP, REDO, UNDO, INIT_UNDO_REDO, ADD_WAYPOINT, DELETE_WAYPOINT, REMOVE_FRIEND_GROUP_FROM_LIST, UPDATE_PASSWORD_SUCCESS, UPDATE_PASSWORD_ERROR, RESET_PASSWORD_ERROR, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, ADD_PASSENGER_TO_LIST, REMOVE_PASSENGER_FROM_LIST, REPLACE_PASSENGER_LIST, UPDATE_PASSENGER_IN_LIST, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_FRIEND_REQUEST_RESPONSE, CLEAR_FRIEND_REQUEST_RESPONSE, UPDATE_ONLINE_STATUS
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -72,7 +72,7 @@ export const updateRideListAction = (data) => (
 );
 export const updateRideAction = (data) => (
     {
-        type: UPDTAE_RIDE,
+        type: UPDATE_RIDE,
         data: data
     }
 );
@@ -150,7 +150,7 @@ export const replaceShortSpaceListAction = (data) => (
 );
 export const updateGarageNameAction = (data) => (
     {
-        type: UPDTAE_GARAGE_NAME,
+        type: UPDATE_GARAGE_NAME,
         data: data
     }
 );
@@ -184,6 +184,18 @@ export const updateFriendListAction = (data) => (
         data: data
     }
 );
+export const updateOnlineStatusAction = (data) => (
+    {
+        type: UPDATE_ONLINE_STATUS,
+        data: data
+    }
+);
+export const doUnfriendAction = (data) => (
+    {
+        type: UNFRIEND,
+        data: data
+    }
+);
 export const replaceSearchFriendListAction = (data) => (
     {
         type: REPLACE_SEARCH_RESULTS,
@@ -192,7 +204,7 @@ export const replaceSearchFriendListAction = (data) => (
 );
 export const updateRelationshipAction = (data) => (
     {
-        type: UPDATE_SEARCH_FRIEND_RELATIONSHIP,
+        type: UPDATE_RELATIONSHIP,
         data: data
     }
 );
@@ -216,13 +228,13 @@ export const deleteFriendAction = (data) => (
 );
 export const openFriendProfileAction = (data) => (
     {
-        type: UPDTAE_IMAGE_INFO,
+        type: UPDATE_IMAGE_INFO,
         data: data
     }
 );
 export const updateFriendAction = (data) => (
     {
-        type: UPDTAE_FRIEND_IN_LIST,
+        type: UPDATE_FRIEND_IN_LIST,
         data: data
     }
 );
@@ -256,6 +268,18 @@ export const removeFriendGroupAction = (data) => (
         data: data
     }
 );
+export const updateFriendRequestResponseAction = (data) => (
+    {
+        type: UPDATE_FRIEND_REQUEST_RESPONSE,
+        data: data
+    }
+);
+export const resetFriendRequestResponseAction = (data) => (
+    {
+        type: CLEAR_FRIEND_REQUEST_RESPONSE,
+        data: data
+    }
+);
 export const resetCurrentGroupAction = (data) => (
     {
         type: RESET_CURRENT_GROUP,
@@ -264,7 +288,7 @@ export const resetCurrentGroupAction = (data) => (
 );
 export const updateCurrentGroupAction = (data) => (
     {
-        type: UPDTAE_CURRENT_GROUP,
+        type: UPDATE_CURRENT_GROUP,
         data: data
     }
 );
