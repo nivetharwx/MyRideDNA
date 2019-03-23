@@ -1,50 +1,70 @@
-import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_SEARCH_FRIEND_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDTAE_FRIEND_IN_LIST } from "../actions/actionConstants";
+import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS } from "../actions/actionConstants";
 import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP } from "../constants";
 
 const initialState = {
     allFriends: [],
-    onlineFriends: [],
+    // onlineFriends: [],
     paginationNum: 0,
-    searchFriendList: [],
+    // searchFriendList: [],
     currentFriend: null
 };
 
 export default (state = initialState, action) => {
-    const updatedState = { ...state };
     switch (action.type) {
 
         case REPLACE_FRIEND_LIST:
-            var friendKey = getFriendListByType(action.data.friendType);
-            updatedState[friendKey] = [...action.data.friendList];
-            return updatedState;
+            return {
+                ...state,
+                allFriends: action.data.friendList
+            };
 
         case UPDATE_FRIEND_LIST:
-            var friendKey = getFriendListByType(action.data.friendType);
             if (typeof action.data.index === 'number' && action.data.index >= 0) {
-                updatedState[friendKey] = [...state[friendKey].slice(0, action.data.index), ...action.data.friendList, ...state[friendKey].slice(action.data.index + 1)];
+                return {
+                    ...state,
+                    allFriends: [...state.allFriends.slice(0, action.data.index), ...action.data.friendList, ...state.allFriends.slice(action.data.index + 1)]
+                }
             } else {
-                updatedState[friendKey] = [...state[friendKey], ...action.data.friendList];
-                action.data.friendList.length > 0 && updatedState.paginationNum++; // DOC: Update pagination number
+                const { paginationNum } = state;
+                action.data.friendList.length > 0 && paginationNum++;
+                return {
+                    ...state,
+                    allFriends: [...state.allFriends, ...action.data.friendList],
+                    paginationNum
+                }
             }
-            return updatedState;
 
         case GET_FRIEND_INFO:
-            var friendKey = getFriendListByType(action.data.friendType);
-            updatedState.currentFriend = state[friendKey][action.data.index];
-            if (!updatedState.currentFriend.profilePictureId) {
-                updatedState.currentFriend.profilePictureId = null;
+            const currentFriend = state.allFriends[action.data.index];
+            if (!currentFriend.profilePictureId) {
+                currentFriend.profilePictureId = null;
             }
-            return updatedState;
-
-        case UPDTAE_FRIEND_IN_LIST:
-            // var friendKey = getFriendListByType(action.data.friendType);
-            // const friendIdx = updatedState[friendKey].findIndex(friend => friend.userId === action.data.friend.userId);
-            updatedState.currentFriend = {
-                ...state.currentFriend,
-                ...action.data
+            return {
+                ...state,
+                currentFriend
             };
-            // updatedState[friendKey] = [...state[friendKey].slice(0, friendIdx), { ...state[friendKey][friendIdx], ...action.data.friend }, ...state[friendKey].slice(friendIdx + 1)];
-            return updatedState;
+
+        case UNFRIEND:
+            const personIndex = state.allFriends.findIndex(person => person.userId === action.data.personId);
+            if (personIndex > -1) {
+                return {
+                    ...state,
+                    allFriends: [
+                        ...state.allFriends.slice(0, personIndex),
+                        ...state.allFriends.slice(personIndex + 1)
+                    ]
+                }
+            }
+            return state;
+
+        case UPDATE_FRIEND_IN_LIST:
+            return {
+                ...state,
+                currentFriend: {
+                    ...state.currentFriend,
+                    ...action.data
+                }
+            };
 
         case RESET_CURRENT_FRIEND:
             return {
@@ -52,41 +72,32 @@ export default (state = initialState, action) => {
                 currentFriend: null
             }
 
-        case REPLACE_SEARCH_FRIEND_LIST:
-            return {
-                ...state,
-                searchFriendList: action.data
-            }
-
-        case CLEAR_SEARCH_FRIEND_LIST:
-            return {
-                ...state,
-                searchFriendList: []
-            }
-
-        case UPDATE_SEARCH_FRIEND_RELATIONSHIP:
-            let personIndex = state.searchFriendList.findIndex(person => person.userId === action.data.personId);
-            if (personIndex > -1) {
-                return {
-                    ...state,
-                    searchFriendList: [
-                        ...state.searchFriendList.slice(0, personIndex),
-                        { ...state.searchFriendList[personIndex], relationship: action.data.relationship },
-                        ...state.searchFriendList.slice(personIndex + 1)
-                    ]
-                }
-            }
-            return state;
-
         case DELETE_FRIEND:
-            var friendKey = getFriendListByType(action.data.friendType);
-            updatedState[friendKey] = [...state[friendKey].slice(0, action.data.index), ...state[friendKey].slice(action.data.index + 1)];
-            return updatedState;
+            return {
+                ...state,
+                allFriends: [...state.allFriends.slice(0, action.data.index), ...state.allFriends.slice(action.data.index + 1)]
+            };
 
-        case CLEAR_FRIEND_LIST:
-            var friendKey = getFriendListByType(action.data.friendType);
-            updatedState[friendKey] = [];
-            return updatedState;
+        case UPDATE_ONLINE_STATUS:
+            const { allFriends } = state;
+            action.data.friendList.forEach(friend => {
+                const idx = allFriends.findIndex(frnd => frnd.userId === friend.userId);
+                if (idx > -1) {
+                    allFriends[idx].isOnline = true;
+                }
+            });
+            return {
+                ...state,
+                allFriends: allFriends
+            };
+
+        // case CLEAR_FRIEND_LIST:
+        //     // var friendKey = getFriendListByType(action.data.friendType);
+        //     // updatedState.allFriends = [];
+        //     return {
+        //         ...state,
+        //         allFriends: []
+        //     };
 
         default: return state
     }
