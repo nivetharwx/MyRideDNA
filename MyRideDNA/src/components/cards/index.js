@@ -96,6 +96,11 @@ export const ThumbnailCard = ({ item, thumbnailPlaceholder, onPress, onLongPress
                 <Image source={item.profilePictureThumbnail ? { uri: item.profilePictureThumbnail } : thumbnailPlaceholder}
                     style={{ width: null, height: null, flex: 1 }} />
             </View>
+            {
+                item.isOnline
+                    ? <View style={{ backgroundColor: '#37B603', position: 'absolute', zIndex: 100, alignSelf: 'flex-start', bottom: '70%', left: '20%', width: widthPercentageToDP(6), height: widthPercentageToDP(6), borderRadius: widthPercentageToDP(3), elevation: 10 }} />
+                    : null
+            }
             <Text style={{
                 fontWeight: 'bold',
                 backgroundColor: 'transparent',

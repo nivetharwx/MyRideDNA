@@ -1,6 +1,6 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
-    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction, deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction
+    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction, deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL } from '../constants';
 import axios from 'axios';
@@ -225,21 +225,21 @@ export const getAllRecordedRides = (userId) => {
     };
 }
 
-export const getFriendsRideList = (friendUserId,relationship) =>{
+export const getFriendsRideList = (friendUserId, relationship) => {
     return dispatch => {
-        dispatch(toggleLoaderAction(true));  
-        axios.get(RIDE_BASE_URL + `getFriendRides?userId=${friendUserId}&relationshipStatus=${relationship}`) 
-        .then(res => {
-            if(res.status === 200){
-                dispatch(toggleLoaderAction(false));   
-                dispatch(updateFriendAction({rideList:res.data}));
-                console.log('getFriendRides : ',res)
-            }
-        })
-        .catch(er => {
-            dispatch(toggleLoaderAction(false)); 
-            console.log('friendsRideError : ',er)
-        }) 
+        dispatch(toggleLoaderAction(true));
+        axios.get(RIDE_BASE_URL + `getFriendRides?userId=${friendUserId}&relationshipStatus=${relationship}`)
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(toggleLoaderAction(false));
+                    dispatch(updateFriendAction({ rideList: res.data }));
+                    console.log('getFriendRides : ', res)
+                }
+            })
+            .catch(er => {
+                dispatch(toggleLoaderAction(false));
+                console.log('friendsRideError : ', er)
+            })
     }
 }
 export const createNewRide = (rideData) => {
@@ -682,20 +682,22 @@ export const getAllFriends = (friendType, userId, pageNumber) => {
             })
     };
 }
-export const getAllOnlineFriends = (friendType, userId, pageNumber) => {
+export const getAllOnlineFriends = (userId) => {
+    console.log(GRAPH_BASE_URL + `getOnlineFriends?userId=${userId}`);
     return dispatch => {
-        pageNumber > 0 && dispatch(toggleLoaderAction(true));
+        dispatch(toggleLoaderAction(true));
         axios.get(GRAPH_BASE_URL + `getOnlineFriends?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    console.log(`getOnlineFriends success: `, res.data);
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(updateFriendListAction({ friendType, friendList: res.data }))
+                    return dispatch(updateOnlineStatusAction({ friendList: res.data }))
                 }
             })
             .catch(er => {
-                console.log(`getAllOnlineFriends: `, er.response ? er.response : er);
+                console.log(`getOnlineFriends error: `, er.response || er);
                 // TODO: Dispatch error info action
-                pageNumber > 0 && dispatch(toggleLoaderAction(false));
+                dispatch(toggleLoaderAction(false));
             })
     };
 }
@@ -717,20 +719,22 @@ export const searchForFriend = (searchParam, userId, pageNumber) => {
             })
     };
 }
-export const sendFriendRequest = (requestBody, personId) => {
+export const sendFriendRequest = (requestBody) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
         axios.post(FRIENDS_BASE_URL + `sendFriendRequest`, requestBody, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    console.log("sendFriendRequest: ", res.data);
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.SENT_REQUEST }));
+                    dispatch(updateFriendRequestResponseAction(res.data));
                 }
             })
             .catch(er => {
-                console.log(`sendFriendRequest: `, er, er.response);
+                console.log(`sendFriendRequest: `, er.response || er);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
+                dispatch(updateFriendRequestResponseAction({ error: er.response.data || "Something went wrong" }));
             })
     };
 }
@@ -792,11 +796,11 @@ export const doUnfriend = (senderId, personId) => {
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
+                    return dispatch(doUnfriendAction({ personId }));
                 }
             })
             .catch(er => {
-                console.log(`doUnfriend: `, er, er.response);
+                console.log(`doUnfriend: `, er.response || er);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })

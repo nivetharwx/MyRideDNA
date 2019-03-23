@@ -1755,7 +1755,7 @@ const MapboxStyles = MapboxGL.StyleSheet.create({
     },
     icon: {
         iconImage: '{icon}',
-        iconSize: IS_ANDROID ? 1 : 2,
+        iconSize: 1,
         iconOffset: MapboxGL.StyleSheet.source(
             [
                 [ICON_NAMES.SOURCE_DEFAULT, [1, -25]],

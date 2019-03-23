@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableHighlight } from 'react-native';
-import { getAllFriends, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend } from '../../../api';
+import { getAllFriends, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend, getAllOnlineFriends } from '../../../api';
 import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, heightPercentageToDP, RELATIONSHIP, PageKeys } from '../../../constants';
 import { BaseModal } from '../../../components/modal';
 import { LinkButton } from '../../../components/buttons';
@@ -72,6 +72,7 @@ class AllFriendsTab extends Component {
             FLOAT_ACTIONS[actionBtnIdx] = { ...FLOAT_ACTIONS[actionBtnIdx], ...DEFAULT_FLOAT_ACTION_STYLE };
             FLOAT_ACTIONS[FLOAT_ACTIONS.length - 1] = { ...FLOAT_ACTIONS[FLOAT_ACTIONS.length - 1], ...ACTIVE_FLOAT_ACTION_STYLE };
         }
+        this.props.getAllOnlineFriends(this.props.user.userId);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -225,11 +226,11 @@ class AllFriendsTab extends Component {
         //         this.props.openUserProfile({ personInfo: userInfo, oldPosition });
         //     });
         // }
-        if (!index) {
+        if (typeof index !== 'number') {
             index = this.props.allFriends.findIndex(person => person.userId === this.state.selectedPerson.userId);
         }
-        if (this.state.isVisibleOptionsModal){
-            this.setState({isVisibleOptionsModal:false})
+        if (this.state.isVisibleOptionsModal) {
+            this.setState({ isVisibleOptionsModal: false })
         }
         Actions.push(PageKeys.FRIENDS_PROFILE, { friendIdx: index, friendType: FRIEND_TYPE.ALL_FRIENDS });
     }
@@ -337,6 +338,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         getAllFriends: (friendType, userId, pageNumber) => dispatch(getAllFriends(friendType, userId, pageNumber)),
+        getAllOnlineFriends: (userId) => dispatch(getAllOnlineFriends(userId)),
         searchForFriend: (searchParam, userId, pageNumber) => dispatch(searchForFriend(searchParam, userId, pageNumber)),
         sendFriendRequest: (requestBody, personId) => dispatch(sendFriendRequest(requestBody, personId)),
         cancelFriendRequest: (userId, personId) => dispatch(cancelFriendRequest(userId, personId)),

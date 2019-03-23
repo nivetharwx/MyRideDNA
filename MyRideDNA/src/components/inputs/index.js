@@ -20,7 +20,7 @@ const getKeyboardTypeForContentType = (contentType) => {
 }
 
 export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder, placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus, onBlur }) => (
-    <View style={[{ flexDirection: 'row', marginBottom: 10, borderRadius: 5 }, containerStyle]}>
+    <View style={[{ flexDirection: 'row', marginBottom: 10 }, containerStyle]}>
         {
             label
                 ? <Text style={[{ alignSelf: 'center', marginRight: 10 }, labelStyle]}>{label}</Text>
