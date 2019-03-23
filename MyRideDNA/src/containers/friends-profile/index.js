@@ -1,15 +1,16 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, View, Text, StatusBar, ImageBackground, ScrollView } from 'react-native';
-import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG } from '../../constants/index';
+import { StyleSheet, View, Text, StatusBar, ImageBackground, ScrollView, FlatList, TouchableOpacity } from 'react-native';
+import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG, RELATIONSHIP, PageKeys } from '../../constants/index';
 import { ShifterButton, IconButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateFriendAction, toggleLoaderAction } from '../../actions';
-import { Tabs, Tab, ScrollableTab, TabHeading, Accordion } from 'native-base';
+import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateFriendAction, toggleLoaderAction, screenChangeAction } from '../../actions';
+import { Tabs, Tab, ScrollableTab, TabHeading, Accordion, ListItem, Left } from 'native-base';
 import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { Loader } from '../../components/loader';
 import styles from './styles';
-import { getPicture, getGarageInfo } from '../../api';
+import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId } from '../../api';
+import { BasicCard } from '../../components/cards';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
 class FriendsProfile extends Component {
@@ -66,6 +67,11 @@ class FriendsProfile extends Component {
         }
     }
 
+    onPressRide(rideId) {
+        this.props.changeScreen(PageKeys.MAP);
+        this.props.loadRideOnMap(rideId);
+    }
+    rideKeyExtractor = (item) => item.rideId;
     onPressBackButton = () => {
         setTimeout(() => this.props.resetCurrentFriend(), 100);
     }
@@ -77,6 +83,9 @@ class FriendsProfile extends Component {
             if (this.state.activeTab === 1) {
                 // GARAGE Tab
                 this.props.getGarageInfo(this.props.currentFriend.userId, this.props.friendType);
+            }
+            else if (this.state.activeTab === 2) {
+                this.props.getFirendsRideInfo(this.props.currentFriend.userId, RELATIONSHIP.FRIEND)
             }
         });
     }
@@ -117,9 +126,9 @@ class FriendsProfile extends Component {
                             {'  '}{currentFriend.nickname}
                         </Text>
                     </Text>} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
-                    <Tabs onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B' }} underlineStyle={{ height: 0 }} />}>
+                    <Tabs onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B', height: BOTTOM_TAB_HEIGHT }} underlineStyle={{ height: 0 }} />}>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, backgroundColor: activeTab === 0 ? '#0083CA' : '#6C6C6B' }]}>
-                            <Text style={{ color: '#fff' }}>PROFILE</Text>
+                            <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>PROFILE</Text>
                         </TabHeading>}>
                             <View style={{ backgroundColor: '#fff', flex: 1 }}>
                                 <ImageBackground source={require('../../assets/img/profile-bg.png')} style={styles.profileBG}>
@@ -140,21 +149,56 @@ class FriendsProfile extends Component {
                             </View>
                         </Tab>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, backgroundColor: activeTab === 1 ? '#0083CA' : '#6C6C6B', borderLeftWidth: 2, borderLeftColor: '#fff', borderRightWidth: 1, borderRightColor: '#fff' }]}>
-                            <Text style={{ color: '#fff' }}>GARAGE</Text>
+                            <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>GARAGE</Text>
                         </TabHeading>}>
                             <View style={{ backgroundColor: '#fff', flex: 1 }}>
-
+                               {currentFriend.garage?<View style={styles.content}>
+                                    <FlatList
+                                        data={currentFriend.garage.spaceList}
+                                        keyExtractor={(item, index) => item.spaceId + ''}
+                                        showsVerticalScrollIndicator={false}
+                                        extraData={this.state}
+                                        renderItem={({ item, index }) => {
+                                            return <BasicCard
+                                                isActive={false}
+                                                // FIXME: Change this based on pictureIdList
+                                                media={item.pictureList && item.pictureList[0] ? { uri: item.pictureList[0] } : require('../../assets/img/bike_placeholder.png')}
+                                                mainHeading={item.name}
+                                                subHeading={`${item.make}-${item.model}, ${item.year}`}
+                                                notes={item.notes}
+                                                // onLongPress={() => this.showOptionsModal(index)}
+                                            >                                             
+                                            </BasicCard>
+                                        }}
+                                    />
+                                </View>:null}
                             </View>
                         </Tab>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, backgroundColor: activeTab === 2 ? '#0083CA' : '#6C6C6B', borderLeftWidth: 1, borderLeftColor: '#fff', borderRightWidth: 2, borderRightColor: '#fff' }]}>
-                            <Text style={{ color: '#fff' }}>RIDES</Text>
+                            <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>RIDES</Text>
                         </TabHeading>}>
                             <View style={{ backgroundColor: '#fff', flex: 1 }}>
-                                <Text>RIDES</Text>
+
+                                {
+                                    currentFriend.rideList && currentFriend.rideList.length > 0 ?
+                                        <FlatList
+                                            data={currentFriend.rideList}
+                                            renderItem={({ item, index }) => <ListItem style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
+                                                <Left style={{ flex: 1 }}>
+                                                    <TouchableOpacity style={{ flex: 1 }}
+                                                        onPress={() => this.onPressRide(item.rideId)}>
+                                                        <Text>{item.name}</Text>
+                                                    </TouchableOpacity>
+                                                </Left>
+                                            </ListItem>}
+                                            keyExtractor={this.rideKeyExtractor}
+                                        />
+                                        : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
+                                }
                             </View>
                         </Tab>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, backgroundColor: activeTab === 3 ? '#0083CA' : '#6C6C6B' }]}>
-                            <Text style={{ color: '#fff' }}>VEST</Text>
+                            <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>VEST</Text>
                         </TabHeading>}>
                             <View style={{ backgroundColor: '#fff', flex: 1 }}>
                                 <Text>VEST</Text>
@@ -182,20 +226,25 @@ const mapDispatchToProps = (dispatch) => {
         getFriendsInfo: (friendIdx, friendType) => dispatch(getFriendsInfoAction({ index: friendIdx, friendType })),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
         getPicture: (pictureId, friendId, friendType) => getPicture(pictureId, ({ picture }) => {
-            dispatch(updateFriendAction({ friendType, friend: { userId: friendId, profilePicture: picture } }))
+            dispatch(updateFriendAction({ profilePicture: picture }))
         }, (error) => {
-            dispatch(updateFriendAction({ friendType, friend: { userId: friendId } }))
+            dispatch(updateFriendAction({}))
         }),
         getGarageInfo: (friendId, friendType) => {
             dispatch(toggleLoaderAction(true));
             getGarageInfo(friendId, (garage) => {
                 dispatch(toggleLoaderAction(false));
-                dispatch(updateFriendAction({ friendType, friend: { userId: friendId, garage } }));
+                dispatch(updateFriendAction({ garage }));
             }, (error) => {
                 dispatch(toggleLoaderAction(false));
                 console.log(`getGarage error: `, error);
             })
         },
+        getFirendsRideInfo: (friendId, relationship) => {
+            dispatch(getFriendsRideList(friendId, relationship))
+        },
+        loadRideOnMap: (rideId) => dispatch(getRideByRideId(rideId)),
+        changeScreen: (screenKey) => dispatch(screenChangeAction(screenKey)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(FriendsProfile);

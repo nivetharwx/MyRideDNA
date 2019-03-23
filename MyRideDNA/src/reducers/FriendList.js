@@ -37,11 +37,11 @@ export default (state = initialState, action) => {
             return updatedState;
 
         case UPDTAE_FRIEND_IN_LIST:
-            var friendKey = getFriendListByType(action.data.friendType);
-            const friendIdx = updatedState[friendKey].findIndex(friend => friend.userId === action.data.friend.userId);
+            // var friendKey = getFriendListByType(action.data.friendType);
+            // const friendIdx = updatedState[friendKey].findIndex(friend => friend.userId === action.data.friend.userId);
             updatedState.currentFriend = {
                 ...state.currentFriend,
-                ...action.data.friend
+                ...action.data
             };
             // updatedState[friendKey] = [...state[friendKey].slice(0, friendIdx), { ...state[friendKey][friendIdx], ...action.data.friend }, ...state[friendKey].slice(friendIdx + 1)];
             return updatedState;
