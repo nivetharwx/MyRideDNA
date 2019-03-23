@@ -26,25 +26,21 @@ export const getPicture = (pictureId, successCallback, errorCallback) => {
         .then(res => {
             if (res.status === 200) {
                 if (res.data.picture === '') {
-                    console.log("getPicture empty response: ", res.data);
                     errorCallback(res.data);
                 } else {
-                    console.log("getPicture success response: ", res.data);
                     successCallback(res.data);
                 }
             }
         })
         .catch(er => {
-            console.log("getPicture error response: ", er.response);
-            errorCallback(er.response);
-            console.log("getPicture error: ", er.response || er);
+            errorCallback(er.response || er);
         })
 }
 export const pushNotification = (userId) => {
-    axios.get(NOTIFICATIONS_BASE_URL + `pushNotification/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+    axios.get(NOTIFICATIONS_BASE_URL + `pushNotification?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
             if (res.status === 200) {
-                console.log("pushNotification success: ", res.data);
+                console.log("pushNotification success: ", res.data || res);
             }
         })
         .catch(er => {
@@ -687,19 +683,19 @@ export const getAllOnlineFriends = (friendType, userId, pageNumber) => {
 }
 export const searchForFriend = (searchParam, userId, pageNumber) => {
     return dispatch => {
-        dispatch(toggleLoaderAction(true));
+        // dispatch(toggleLoaderAction(true));
         axios.get(FRIENDS_BASE_URL + `searchFriend?searchParam=${searchParam}&userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log(res.data);
-                    dispatch(toggleLoaderAction(false));
+                    console.log("searchFriend success: ", res.data);
+                    // dispatch(toggleLoaderAction(false));
                     return dispatch(replaceSearchFriendListAction(res.data));
                 }
             })
             .catch(er => {
-                console.log(`searchForFriend: `, er, er.response);
+                console.log(`searchFriend: `, er.response || er);
                 // TODO: Dispatch error info action
-                dispatch(toggleLoaderAction(false));
+                // dispatch(toggleLoaderAction(false));
             })
     };
 }

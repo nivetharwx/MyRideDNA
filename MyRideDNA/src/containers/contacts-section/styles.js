@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingTop: heightPercentageToDP(2),
         paddingHorizontal: widthPercentageToDP(2),
-        justifyContent: 'space-around',
+        justifyContent: 'space-around'
     },
     itemField: {
         borderBottomColor: '#6B7663',
@@ -44,6 +44,15 @@ const styles = StyleSheet.create({
     enabledStyle: {
         color: APP_COMMON_STYLES.infoColor,
         borderColor: APP_COMMON_STYLES.infoColor
+    },
+    searchMemberModal: {
+        position: 'absolute',
+        top: APP_COMMON_STYLES.headerHeight,
+        zIndex: 100,
+        width: '100%',
+        height: heightPercentageToDP(100) - APP_COMMON_STYLES.headerHeight,
+        // flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.8)'
     }
 });
 export default styles;

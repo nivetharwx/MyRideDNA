@@ -53,13 +53,13 @@ class Passengers extends Component {
     }
 
     openPassengerForm = () => {
-        const passengerIdx = this.props.passengerList.findIndex(passenger => passenger.passengerId === this.state.selectedPassenger.passengerId);
+        const passengerIdx = this.props.passengerList.findIndex(passenger => passenger.id === this.state.selectedPassenger.id);
         Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx });
         this.onCancelOptionsModal();
     }
 
     showRemovePassengerConfirmation = () => {
-        const { passengerId, name } = this.state.selectedPassenger;
+        const { id, name } = this.state.selectedPassenger;
         setTimeout(() => {
             Alert.alert(
                 'Confirmation to remove passenger',
@@ -67,7 +67,7 @@ class Passengers extends Component {
                 [
                     {
                         text: 'Yes', onPress: () => {
-                            this.props.deletePassenger(passengerId);
+                            this.props.deletePassenger(id);
                             this.onCancelOptionsModal();
                         }
                     },
@@ -78,7 +78,7 @@ class Passengers extends Component {
         }, 100);
     }
 
-    passengerKeyExtractor = (item) => item.passengerId;
+    passengerKeyExtractor = (item) => item.id
 
     renderPassenger = ({ item, index }) => {
         return (

@@ -34,7 +34,7 @@ class Friends extends Component {
     componentDidMount() {
         setTimeout(() => {
             this.tabsRef.props.goToPage(0)
-        }, 50);
+        }, 0);
     }
 
     componentDidUpdate(prevProps, prevState) {

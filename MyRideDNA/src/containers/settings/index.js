@@ -206,7 +206,7 @@ export class Settings extends Component {
         const { locationEnable } = this.state;
         console.log(user)
         return (
-            <View style={[styles.fill, IS_ANDROID ? null : styles.iosBottomMargin]}>
+            <View style={styles.fill}>
                 <ForgotPassword isVisible={this.state.showForgotPasswordModal} onCancel={this.toggleForgotPasswordForm} onPressOutside={this.toggleForgotPasswordForm} />
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
@@ -234,10 +234,11 @@ export class Settings extends Component {
                                     placeholder='Distance measurement unit' values={MEASUREMENT_UNITS}
                                     onChange={this.onChangedistanceUnit}
                                 />
-
-                                <LabeledInput inputValue={!this.state.locationRadiusState ? '' : this.state.locationRadiusState + ''}
-                                    placeholder='Location Radius' onChange={this.onChangeLoactionradius} inputType='telephoneNumber'
-                                />
+                                <Item style={styles.containerItem}>
+                                    <LabeledInput containerStyle={{ marginBottom: 0 }} inputStyle={{ borderBottomWidth: 0 }} inputValue={!this.state.locationRadiusState ? '' : this.state.locationRadiusState + ''}
+                                        placeholder='Location Radius' onChange={this.onChangeLoactionradius} inputType='telephoneNumber'
+                                    />
+                                </Item>
                                 <IconicList
                                     selectedValue={this.state.handDominanceState}
                                     placeholder='User hand dominance' values={HAND_DOMINANCE}
