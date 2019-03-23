@@ -11,7 +11,7 @@ import { IconButton } from '../../components/buttons';
 import Contacts from 'react-native-contacts';
 import Permissions from 'react-native-permissions';
 import { searchForFriend, sendFriendRequest } from '../../api';
-import { clearSearchFriendListAction } from '../../actions';
+import { clearSearchFriendListAction, resetFriendRequestResponseAction } from '../../actions';
 import { isValidEmailFormat } from '../../util';
 
 class ContactsSection extends PureComponent {
@@ -48,6 +48,28 @@ class ContactsSection extends PureComponent {
                 if (this.state.isVisibleSearchModal === false) {
                     this.setState({ isVisibleSearchModal: true });
                 }
+            }
+        }
+        if (prevProps.friendRequestSuccess !== this.props.friendRequestSuccess) {
+            if (this.props.friendRequestSuccess !== null) {
+                Toast.show({
+                    text: "Friend request sent successfully",
+                    buttonText: 'Okay',
+                    type: 'success',
+                    position: 'bottom',
+                    onClose: () => this.props.clearFriendRequestResponse()
+                });
+                this.setState({ selectedMember: null, searchName: null, userEnteredEmail: '', customMessage: '' });
+            }
+        } else if (prevProps.friendRequestError !== this.props.friendRequestError) {
+            if (this.props.friendRequestError !== null) {
+                Toast.show({
+                    text: this.props.friendRequestError.userMessage,
+                    buttonText: 'Okay',
+                    position: 'bottom',
+                    type: 'danger',
+                    onClose: () => this.props.clearFriendRequestResponse()
+                });
             }
         }
     }
@@ -189,7 +211,6 @@ class ContactsSection extends PureComponent {
     }
 
     sendFriendRequest = () => {
-        console.log("sendFriendRequest called");
         const { user } = this.props;
         const { selectedMember } = this.state;
         const requestBody = {
@@ -203,7 +224,7 @@ class ContactsSection extends PureComponent {
             email: selectedMember.email,
             actionDate: new Date().toISOString()
         };
-        this.props.sendFriendRequest(requestBody, selectedMember.userId);
+        this.props.sendFriendRequest(requestBody);
     }
 
     sendFriendInvitation = () => {
@@ -271,26 +292,26 @@ class ContactsSection extends PureComponent {
                             heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
                                 <IconLabelPair containerStyle={styles.tabHeaderContent} text={`Community`} textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663', fontSize: widthPercentageToDP(3) }} iconProps={{ name: 'account-group', type: 'MaterialCommunityIcons', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }} />
                             </TabHeading>}>
-                            {/* <ScrollView style={styles.fill} contentContainerStyle={styles.tabContent}> */}
-                            <KeyboardAvoidingView style={styles.tabContent} behavior={IS_ANDROID ? null : 'padding'}>
-                                <View>
-                                    <Item style={styles.itemField}>
-                                        <TextInput clearButtonMode='always' value={searchName} onChangeText={this.searchInCommunity} style={styles.fill} placeholder='Name of MyRideDNA user' placeholderTextColor='#6B7663' />
-                                        <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearSearchName} />
-                                    </Item>
-                                    <Text style={styles.sectionDeviderText}>OR</Text>
-                                    <Item disabled={selectedMember !== null} style={styles.itemField}>
-                                        <TextInput value={userEnteredEmail} onChangeText={this.onChangeEmail} onBlur={this.validateEmail} editable={selectedMember === null} style={styles.fill} placeholder='Send to email' placeholderTextColor='#6B7663' />
-                                        <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearUserEnteredEmail} />
-                                    </Item>
-                                    <Item disabled={selectedMember !== null} style={[styles.itemField, styles.textareaItem]}>
-                                        <TextInput editable={selectedMember === null} multiline={true} maxLength={160} value={customMessage} onChangeText={this.onChangeCustomMessage} style={styles.fill} placeholder='Your message to the person (160 characters or less)' placeholderTextColor='#6B7663' />
-                                        <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearCustomMessage} />
-                                    </Item>
-                                </View>
+                            <View style={styles.fill}>
+                                <ScrollView>
+                                    <View>
+                                        <Item style={styles.itemField}>
+                                            <TextInput clearButtonMode='always' value={searchName} onChangeText={this.searchInCommunity} style={styles.fill} placeholder='Name of MyRideDNA user' placeholderTextColor='#6B7663' />
+                                            <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearSearchName} />
+                                        </Item>
+                                        <Text style={styles.sectionDeviderText}>OR</Text>
+                                        <Item disabled={selectedMember !== null} style={styles.itemField}>
+                                            <TextInput value={userEnteredEmail} onChangeText={this.onChangeEmail} onBlur={this.validateEmail} editable={selectedMember === null} style={styles.fill} placeholder='Send to email' placeholderTextColor='#6B7663' />
+                                            <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearUserEnteredEmail} />
+                                        </Item>
+                                        <Item disabled={selectedMember !== null} style={[styles.itemField, styles.textareaItem]}>
+                                            <TextInput editable={selectedMember === null} multiline={true} maxLength={160} value={customMessage} onChangeText={this.onChangeCustomMessage} style={styles.fill} placeholder='Your message to the person (160 characters or less)' placeholderTextColor='#6B7663' />
+                                            <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearCustomMessage} />
+                                        </Item>
+                                    </View>
+                                </ScrollView>
                                 <IconButton iconProps={{ name: 'send-o', type: 'FontAwesome', style: styles.enabledStyle }} style={[styles.submitBtn, styles.enabledStyle]} onPress={this.sendInvitationOrRequest} disabled={!canSubmit} />
-                            </KeyboardAvoidingView>
-                            {/* </ScrollView> */}
+                            </View>
                         </Tab>
                         <Tab
                             heading={<TabHeading style={{ width: widthPercentageToDP(33.3), backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 1, borderLeftWidth: 1 }}>
@@ -320,14 +341,15 @@ class ContactsSection extends PureComponent {
 }
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { searchResults } = state.CommunitySearchList;
-    return { user, searchResults };
+    const { searchResults, friendRequestSuccess, friendRequestError } = state.CommunitySearchList;
+    return { user, searchResults, friendRequestSuccess, friendRequestError };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
         searchForFriend: (searchParam, userId, pageNumber) => dispatch(searchForFriend(searchParam, userId, pageNumber)),
         clearSearchResults: () => dispatch(clearSearchFriendListAction()),
-        sendFriendRequest: (requestBody, personId) => dispatch(sendFriendRequest(requestBody, personId)),
+        clearFriendRequestResponse: () => dispatch(resetFriendRequestResponseAction()),
+        sendFriendRequest: (requestBody) => dispatch(sendFriendRequest(requestBody)),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(ContactsSection);
