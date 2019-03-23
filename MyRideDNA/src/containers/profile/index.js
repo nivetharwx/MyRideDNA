@@ -41,19 +41,19 @@ class Profile extends Component {
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={{ flex: 1 }}>
-                    <Tabs locked={true} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B' }} underlineStyle={{ height: 0 }} />}>
+                    <Tabs locked={true} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B', height: BOTTOM_TAB_HEIGHT }} underlineStyle={{ height: 0 }} />}>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 0 ? '#0083CA' : '#6C6C6B' }]}>
-                            <Text style={{ color: '#fff' }}>MY PROFILE</Text>
+                            <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>MY PROFILE</Text>
                         </TabHeading>}>
                             <MyProfileTab />
                         </Tab>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 1 ? '#0083CA' : '#6C6C6B', borderLeftWidth: 2, borderLeftColor: '#fff', borderRightWidth: 2, borderRightColor: '#fff' }]}>
-                            <Text style={{ color: '#fff' }}>MY GARAGE</Text>
+                            <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>MY GARAGE</Text>
                         </TabHeading>}>
                             <MyGarageTab />
                         </Tab>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 2 ? '#0083CA' : '#6C6C6B' }]}>
-                            <Text style={{ color: '#fff' }}>MY VEST</Text>
+                            <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>MY VEST</Text>
                         </TabHeading>}>
                             <View style={{ backgroundColor: '#fff', flex: 1 }}></View>
                         </Tab>
@@ -98,5 +98,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         width: widthPercentageToDP(33.3),
+
     }
 });

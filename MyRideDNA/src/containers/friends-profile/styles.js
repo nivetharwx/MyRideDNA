@@ -43,6 +43,13 @@ const styles = StyleSheet.create({
         padding: heightPercentageToDP(5),
         flexDirection: 'row',
         justifyContent: 'space-around'
-    }
+    },
+    content: {
+        // marginTop: APP_COMMON_STYLES.headerHeight,
+        paddingTop: widthPercentageToDP(2),
+        alignItems: 'center',
+        justifyContent: 'center',
+        // marginBottom: heightPercentageToDP(7),
+    },
 });
 export default styles;
