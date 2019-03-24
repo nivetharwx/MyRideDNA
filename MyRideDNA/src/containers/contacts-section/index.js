@@ -292,26 +292,22 @@ class ContactsSection extends PureComponent {
                             heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
                                 <IconLabelPair containerStyle={styles.tabHeaderContent} text={`Community`} textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663', fontSize: widthPercentageToDP(3) }} iconProps={{ name: 'account-group', type: 'MaterialCommunityIcons', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }} />
                             </TabHeading>}>
-                            <View style={styles.fill}>
-                                <ScrollView>
-                                    <View>
-                                        <Item style={styles.itemField}>
-                                            <TextInput clearButtonMode='always' value={searchName} onChangeText={this.searchInCommunity} style={styles.fill} placeholder='Name of MyRideDNA user' placeholderTextColor='#6B7663' />
-                                            <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearSearchName} />
-                                        </Item>
-                                        <Text style={styles.sectionDeviderText}>OR</Text>
-                                        <Item disabled={selectedMember !== null} style={styles.itemField}>
-                                            <TextInput value={userEnteredEmail} onChangeText={this.onChangeEmail} onBlur={this.validateEmail} editable={selectedMember === null} style={styles.fill} placeholder='Send to email' placeholderTextColor='#6B7663' />
-                                            <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearUserEnteredEmail} />
-                                        </Item>
-                                        <Item disabled={selectedMember !== null} style={[styles.itemField, styles.textareaItem]}>
-                                            <TextInput editable={selectedMember === null} multiline={true} maxLength={160} value={customMessage} onChangeText={this.onChangeCustomMessage} style={styles.fill} placeholder='Your message to the person (160 characters or less)' placeholderTextColor='#6B7663' />
-                                            <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearCustomMessage} />
-                                        </Item>
-                                    </View>
-                                </ScrollView>
-                                <IconButton iconProps={{ name: 'send-o', type: 'FontAwesome', style: styles.enabledStyle }} style={[styles.submitBtn, styles.enabledStyle]} onPress={this.sendInvitationOrRequest} disabled={!canSubmit} />
-                            </View>
+                            <ScrollView style={styles.fill} contentContainerStyle={styles.formContent}>
+                                <Item style={styles.itemField}>
+                                    <TextInput clearButtonMode='always' value={searchName} onChangeText={this.searchInCommunity} style={styles.fill} placeholder='Name of MyRideDNA user' placeholderTextColor='#6B7663' />
+                                    <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearSearchName} />
+                                </Item>
+                                <Text style={styles.sectionDeviderText}>OR</Text>
+                                <Item disabled={selectedMember !== null} style={styles.itemField}>
+                                    <TextInput value={userEnteredEmail} onChangeText={this.onChangeEmail} onBlur={this.validateEmail} editable={selectedMember === null} style={styles.fill} placeholder='Send to email' placeholderTextColor='#6B7663' />
+                                    <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearUserEnteredEmail} />
+                                </Item>
+                                <Item disabled={selectedMember !== null} style={[styles.itemField, styles.textareaItem]}>
+                                    <TextInput editable={selectedMember === null} multiline={true} maxLength={160} value={customMessage} onChangeText={this.onChangeCustomMessage} style={styles.fill} placeholder='Your message to the person (160 characters or less)' placeholderTextColor='#6B7663' />
+                                    <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearCustomMessage} />
+                                </Item>
+                            </ScrollView>
+                            <IconButton iconProps={{ name: 'send-o', type: 'FontAwesome', style: styles.enabledStyle }} style={[styles.submitBtn, styles.enabledStyle]} onPress={this.sendInvitationOrRequest} disabled={!canSubmit} />
                         </Tab>
                         <Tab
                             heading={<TabHeading style={{ width: widthPercentageToDP(33.3), backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 1, borderLeftWidth: 1 }}>

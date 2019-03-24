@@ -8,14 +8,15 @@ const styles = StyleSheet.create({
         paddingBottom: 30
     },
     fill: {
-        flex: 1
+        flex: 1,
+        backgroundColor: '#fff'
     },
     tabHeaderContent: {
         paddingHorizontal: 0
     },
     tabContent: {
         flex: 1,
-        paddingTop: heightPercentageToDP(2),
+        // paddingTop: heightPercentageToDP(2),
         paddingHorizontal: widthPercentageToDP(2),
         justifyContent: 'space-around'
     },
@@ -53,6 +54,11 @@ const styles = StyleSheet.create({
         height: heightPercentageToDP(100) - APP_COMMON_STYLES.headerHeight,
         // flex: 1,
         backgroundColor: 'rgba(0,0,0,0.8)'
+    },
+    formContent: {
+        paddingTop: 20,
+        backgroundColor: '#fff'
+        // justifyContent: 'space-between'
     }
 });
 export default styles;

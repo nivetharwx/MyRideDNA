@@ -163,8 +163,8 @@ const styles = StyleSheet.create({
     },
     formContent: {
         paddingTop: 20,
-        flex: 1,
-        justifyContent: 'space-around'
+        // flex: 1,
+        // justifyContent: 'space-around'
     },
     submitBtn: {
         height: heightPercentageToDP(8.5),
