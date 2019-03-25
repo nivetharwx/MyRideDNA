@@ -29,7 +29,6 @@ class MyProfileTab extends Component {
             isLoadingProfPic: false,
             profilePicId: props.user.profilePictureId
         };
-        console.log("Version: ", Platform.Version);
     }
 
     componentWillMount() {
