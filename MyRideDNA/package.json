@@ -31,6 +31,7 @@
     "react-native-image-crop-picker": "^0.21.3",
     "react-native-keyboard-aware-scroll-view": "^0.8.0",
     "react-native-loading-spinner-overlay": "^1.0.1",
+    "react-native-mauron85-background-geolocation": "^0.5.1",
     "react-native-md5": "^1.0.0",
     "react-native-permissions": "^1.1.1",
     "react-native-router-flux": "^4.0.5",

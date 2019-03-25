@@ -94,5 +94,11 @@
 	<false/>
 	<key>kTCCServiceMediaLibrary</key>
 	<string>NSAppleMusicUsageDescription</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>App requires background tracking</string>
 </dict>
 </plist>
