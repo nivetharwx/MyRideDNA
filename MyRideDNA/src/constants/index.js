@@ -28,7 +28,7 @@ const NOTIFICATION_URL = 'http://168.61.214.135';
 export const USER_BASE_URL = BASE_URL + ':5051/';
 export const RIDE_BASE_URL = BASE_URL + ':5052/';
 export const FRIENDS_BASE_URL = BASE_URL + ':5053/';
-export const NOTIFICATIONS_BASE_URL = NOTIFICATION_URL + ':5054/';
+export const NOTIFICATIONS_OR_EVENT_BASE_URL = NOTIFICATION_URL + ':5054/';
 export const CHAT_BASE_URL = BASE_URL + ':5056/';
 export const GRAPH_BASE_URL = GRAPH_URL + ':5057/';
 
@@ -73,6 +73,10 @@ export const RIDE_TYPE = { RECORD_RIDE: 'recordRide', BUILD_RIDE: 'buildRide', S
 
 export const FRIEND_TYPE = { ALL_FRIENDS: 'allFriends', ONLINE_FRIENDS: 'onlineFriends' };
 
+export const APP_EVENT_TYPE = { ACTIVE: 'active', INACTIVE: 'inactive' };
+
+export const APP_EVENT_NAME = { USER_EVENT: 'userEvent' };
+
 export const HEADER_KEYS = { FRIENDS_LENGTH: 'friends-length', RECIEVED_REQUEST_LENGTH: 'received-request-length', SENT_REQUEST_LENGTH: 'sent-request-length' };
 
 export const RELATIONSHIP = { FRIEND: 'friend', RECIEVED_REQUEST: 'receivedRequest', SENT_REQUEST: 'sentRequest', UNKNOWN: 'unknown' };
@@ -93,7 +97,7 @@ export const APP_COMMON_STYLES = {
     statusBarColor: STATUS_BAR_COLOR,
     testingBorder: { borderWidth: 2, borderColor: 'red' },
     statusBar: {
-        height: IS_ANDROID ? StatusBar.currentHeight : 22,
+        height: IS_ANDROID ? StatusBar.currentHeight : heightPercentageToDP(4),
         backgroundColor: STATUS_BAR_COLOR,
     },
     appBar: {

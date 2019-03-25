@@ -19,7 +19,7 @@ import { default as turfDistance } from '@turf/distance';
 import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon } from 'native-base';
-import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP } from '../../constants';
+import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE } from '../../constants';
 import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction } from '../../actions';
 import { SearchBox } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
@@ -38,12 +38,13 @@ import SELECTED_SOURCE_ICON from '../../assets/img/source-pin-green.png';
 import DEFAULT_DESTINATION_ICON from '../../assets/img/destination-pin-red.png';
 import SELECTED_DESTINATION_ICON from '../../assets/img/destination-pin-green.png';
 
-import { updateRide, addWaypoint, addSource, createRecordRide, pauseRecordRide, updateWaypoint, updateSource, updateDestination, makeWaypointAsDestination, makeDestinationAsWaypoint, makeSourceAsWaypoint, makeWaypointAsSource, continueRecordRide, addTrackpoints, completeRecordRide, deleteWaypoint, deleteDestination, deleteSource, getRideByRideId, createNewRide, replaceRide, pushNotification } from '../../api';
+import { updateRide, addWaypoint, addSource, createRecordRide, pauseRecordRide, updateWaypoint, updateSource, updateDestination, makeWaypointAsDestination, makeDestinationAsWaypoint, makeSourceAsWaypoint, makeWaypointAsSource, continueRecordRide, addTrackpoints, completeRecordRide, deleteWaypoint, deleteDestination, deleteSource, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications } from '../../api';
 
 import Bubble from '../../components/bubble';
 import MenuModal from '../../components/modal';
 import { BasicHeader } from '../../components/headers';
 import { CreateRide } from '../create-ride';
+import BackgroundGeolocation from 'react-native-mauron85-background-geolocation';
 
 MapboxGL.setAccessToken(MAP_ACCESS_TOKEN);
 // DOC: JS mapbox library to make direction api calls
@@ -237,6 +238,14 @@ export class Map extends Component {
         }
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        if (prevProps.user.locationEnable !== this.props.user.locationEnable) {
+            this.props.user.locationEnable
+                ? this.startTrackingLocation()
+                : this.stopTrackingLocation();
+        }
+    }
+
     initializeEmptyRide(updatedState) {
         updatedState.directions = null;
         updatedState.markerCollection = {
@@ -277,6 +286,43 @@ export class Map extends Component {
     async componentDidMount() {
         this.props.changeScreen(PageKeys.MAP);
         this.props.pushNotification(this.props.user.userId);
+        setTimeout(() => {
+            this.props.getAllNotifications(this.props.user.userId);
+        }, 100);
+        BackgroundGeolocation.on('location', (location) => {
+            console.log("Got location: ", location);
+            BackgroundGeolocation.startTask(taskKey => {
+                BackgroundGeolocation.endTask(taskKey);
+            });
+        });
+        BackgroundGeolocation.on('stationary', (stationaryLocation) => {
+            console.log("Got stationary location: ", stationaryLocation);
+        });
+        BackgroundGeolocation.on('error', (error) => {
+            console.log('[ERROR] BackgroundGeolocation error: ', error);
+        });
+        BackgroundGeolocation.on('start', () => {
+            console.log('[INFO] BackgroundGeolocation service has been started');
+        });
+        BackgroundGeolocation.on('stop', () => {
+            console.log('[INFO] BackgroundGeolocation service has been stopped');
+        });
+        BackgroundGeolocation.on('background', () => {
+            this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE });
+        });
+
+        BackgroundGeolocation.on('foreground', () => {
+            this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE });
+        });
+        BackgroundGeolocation.checkStatus(status => {
+            // console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
+            // console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
+            // console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
+            if (!status.isRunning && this.props.user.locationEnable) {
+                this.startTrackingLocation();
+            }
+        });
+
         //DOC: Listen for device location settings change
         // DeviceEventEmitter.addListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent);
 
@@ -288,6 +334,10 @@ export class Map extends Component {
             // this.watchLocation();
         }
     }
+
+    startTrackingLocation = () => BackgroundGeolocation.start()
+
+    stopTrackingLocation = () => BackgroundGeolocation.stop();
 
     handleGPSProviderEvent = (e) => {
         // FIXME: Remove listener as it is listen twice :(
@@ -1174,6 +1224,7 @@ export class Map extends Component {
 
     componentWillUnmount() {
         console.log("Map unmounted");
+        BackgroundGeolocation.removeAllListeners();
         // DeviceEventEmitter.removeListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent);
         // this.watchID != null && Geolocation.clearWatch(this.watchID);
         this.watchID != null && clearInterval(this.watchID);
@@ -1273,23 +1324,25 @@ export class Map extends Component {
         } else if (this.isDestination(prevMarker)) {
             defaultIcon = ICON_NAMES.DESTINATION_DEFAULT;
         }
-        this.setState({
-            markerCollection: {
-                ...markerCollection,
-                features: this.changeDataAtIndex(markerCollection.features, activeMarkerIndex,
-                    { ...prevMarker, properties: { ...prevMarker.properties, icon: defaultIcon } })
-            },
-            activeMarkerIndex: -1
-        }, () => {
-            Animated.timing(
-                this.state.optionsBarRightAnim,
-                {
-                    toValue: 100,
-                    duration: 500,
-                    useNativeDriver: true
-                }
-            ).start()
-        });
+        Animated.timing(
+            this.state.optionsBarRightAnim,
+            {
+                toValue: 100,
+                duration: 500,
+                useNativeDriver: true
+            }
+        ).start(() => {
+            setTimeout(() => {
+                this.setState({
+                    markerCollection: {
+                        ...markerCollection,
+                        features: this.changeDataAtIndex(markerCollection.features, activeMarkerIndex,
+                            { ...prevMarker, properties: { ...prevMarker.properties, icon: defaultIcon } })
+                    },
+                    activeMarkerIndex: -1
+                });
+            }, 100)
+        })
     }
 
     isDestination(markerFeature) {
@@ -1335,12 +1388,12 @@ export class Map extends Component {
         let updatedState = {};
         if (activeMarkerIndex > -1) {
             let selectedIcon = ICON_NAMES.WAYPOINT_DEFAULT;
+            const prevMarker = markerCollection.features[activeMarkerIndex];
             if (activeMarkerIndex === 0 && ride.source) {
                 selectedIcon = ICON_NAMES.SOURCE_DEFAULT;
-            } else if (isDestinationSelected) {
+            } else if (this.isDestination(prevMarker)) {
                 selectedIcon = ICON_NAMES.DESTINATION_DEFAULT;
             }
-            const prevMarker = markerCollection.features[activeMarkerIndex];
             updatedState.markerCollection = {
                 ...markerCollection,
                 features: this.changeDataAtIndex(markerCollection.features, activeMarkerIndex,
@@ -1616,19 +1669,19 @@ export class Map extends Component {
                         activeMarkerIndex > -1
                             ? <Animated.View style={[styles.controlsContainerRight, { transform: [{ translateX: optionsBarRightAnim }] }]}>
                                 <View style={{ alignItems: 'center', backgroundColor: '#fff' }}>
-                                    <IconButton onPress={this.onCloseOptionsBar} style={{ paddingVertical: 5, backgroundColor: '#fff' }}
+                                    <IconButton onPress={this.onCloseOptionsBar} style={{ paddingVertical: 5, width: '100%', backgroundColor: '#fff' }}
                                         iconProps={{ name: 'window-close', type: 'MaterialCommunityIcons' }} />
-                                    <IconButton onPress={this.toggleReplaceOption} style={{ paddingVertical: 5, borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }}
+                                    <IconButton onPress={this.toggleReplaceOption} style={{ paddingVertical: 5, width: '100%', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }}
                                         iconProps={{ name: isUpdatingWaypoint ? 'cancel' : 'edit-location', type: 'MaterialIcons' }} />
                                     {
                                         markerCollection.features.length > 1
                                             ? this.isSource(markerCollection.features[activeMarkerIndex])
                                                 ? <IconButton onPress={this.makeSourceAsWaypoint}
-                                                    style={{ paddingVertical: 5, paddingHorizontal: 17, backgroundColor: '#0083CA', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }}
+                                                    style={{ paddingVertical: 5, width: '100%', backgroundColor: '#0083CA', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }}
                                                     iconProps={{ name: 'map-pin', type: 'FontAwesome', style: { color: '#fff' } }} />
 
                                                 : <IconButton onPress={this.makeWaypointAsSource}
-                                                    style={{ paddingVertical: 5, paddingHorizontal: 17, borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }}
+                                                    style={{ paddingVertical: 5, width: '100%', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }}
                                                     iconProps={{ name: 'map-pin', type: 'FontAwesome' }} />
                                             : null
                                     }
@@ -1636,10 +1689,10 @@ export class Map extends Component {
                                         markerCollection.features.length > 1
                                             ? this.isDestination(markerCollection.features[activeMarkerIndex])
                                                 ? <IconButton onPress={this.makeDestinationAsWaypoint}
-                                                    style={{ paddingVertical: 5, backgroundColor: '#0083CA', borderBottomColor: '#acacac', borderBottomWidth: 1 }}
+                                                    style={{ paddingVertical: 5, width: '100%', backgroundColor: '#0083CA', borderBottomColor: '#acacac', borderBottomWidth: 1 }}
                                                     iconProps={{ name: 'flag-variant', type: 'MaterialCommunityIcons', style: { color: '#fff' } }} />
                                                 : <IconButton onPress={this.makeWaypointAsDestination}
-                                                    style={{ paddingVertical: 5, backgroundColor: 'rgba(0,0,0,0.4)', borderBottomColor: '#acacac', borderBottomWidth: 1 }}
+                                                    style={{ paddingVertical: 5, width: '100%', backgroundColor: 'rgba(0,0,0,0.4)', borderBottomColor: '#acacac', borderBottomWidth: 1 }}
                                                     iconProps={{ name: 'flag-variant', type: 'MaterialCommunityIcons' }} />
                                             : null
                                     }
@@ -1688,7 +1741,12 @@ const mapDispatchToProps = (dispatch) => {
         clearRideFromMap: () => dispatch(initUndoRedoRideAction()),
         submitNewRide: (rideInfo) => dispatch(createNewRide(rideInfo)),
         updateRide: (data) => dispatch(updateRide(data)),
+        publishEvent: (eventBody) => publishEvent(eventBody),
         pushNotification: (userId) => pushNotification(userId),
+        getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
+        readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
+        deleteNotifications: (notificationIds) => dispatch(deleteNotifications(notificationIds)),
+        deleteAllNotifications: (userId) => dispatch(deleteAllNotifications(userId)),
 
 
         // addSource: (waypoint, ride) => dispatch(addSource(waypoint, ride)),

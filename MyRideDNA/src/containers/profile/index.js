@@ -37,9 +37,17 @@ class Profile extends Component {
         const { activeTab, profilePicString } = this.state;
         return (
             <View style={styles.fill}>
-                <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                </View>
+                {
+                    IS_ANDROID
+                        ? <View style={APP_COMMON_STYLES.statusBar}>
+                            <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                        </View>
+                        : activeTab !== 0
+                            ? <View style={APP_COMMON_STYLES.statusBar}>
+                                <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                            </View>
+                            : null
+                }
                 <View style={{ flex: 1 }}>
                     <Tabs locked={true} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B', height: BOTTOM_TAB_HEIGHT }} underlineStyle={{ height: 0 }} />}>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 0 ? '#0083CA' : '#6C6C6B' }]}>
@@ -61,7 +69,7 @@ class Profile extends Component {
 
                     {/* Shifter: - Brings the app navigation menu */}
                     <ShifterButton onPress={this.showAppNavMenu}
-                        containerStyles={{ bottom: IS_ANDROID ? BOTTOM_TAB_HEIGHT : BOTTOM_TAB_HEIGHT - 8 }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
+                        containerStyles={{ bottom: BOTTOM_TAB_HEIGHT }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
             </View >
         );

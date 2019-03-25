@@ -11,6 +11,7 @@ import ImagePicker from 'react-native-image-crop-picker';
 import { logoutUser, updateProfilePicture, getPicture, getSpaceList } from '../../../api';
 import { Loader } from '../../../components/loader';
 
+const hasIOSAbove10 = parseInt(Platform.Version) > 10;
 class MyProfileTab extends Component {
     // DOC: Icon format is for Icon component from NativeBase Library
     PROFILE_ICONS = {
@@ -28,6 +29,7 @@ class MyProfileTab extends Component {
             isLoadingProfPic: false,
             profilePicId: props.user.profilePictureId
         };
+        console.log("Version: ", Platform.Version);
     }
 
     componentWillMount() {
@@ -217,7 +219,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: heightPercentageToDP(6),
         flexDirection: 'row',
-        marginTop: IS_ANDROID ? 0 : APP_COMMON_STYLES.statusBar.height + heightPercentageToDP(1.5)
+        marginTop: IS_ANDROID ? 0 : hasIOSAbove10 ? APP_COMMON_STYLES.statusBar.height : 0
     },
     headerIcon: {
         paddingHorizontal: 0,
@@ -241,7 +243,7 @@ const styles = StyleSheet.create({
     profileBG: {
         width: '100%',
         height: heightPercentageToDP(55),
-        paddingTop: IS_ANDROID ? 0 : heightPercentageToDP(1.5)
+        paddingTop: IS_ANDROID ? 0 : hasIOSAbove10 ? heightPercentageToDP(1.5) : 0
     },
     profilePic: {
         height: widthPercentageToDP(65),
