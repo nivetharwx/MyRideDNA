@@ -1,8 +1,8 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
-    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction, deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction
+    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction, deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction
 } from '../actions';
-import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL } from '../constants';
+import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_OR_EVENT_BASE_URL } from '../constants';
 import axios from 'axios';
 
 import { AsyncStorage } from 'react-native';
@@ -37,7 +37,7 @@ export const getPicture = (pictureId, successCallback, errorCallback) => {
         })
 }
 export const pushNotification = (userId) => {
-    axios.get(NOTIFICATIONS_BASE_URL + `pushNotification?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+    axios.get(NOTIFICATIONS_OR_EVENT_BASE_URL + `pushNotification?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
             if (res.status === 200) {
                 console.log("pushNotification success: ", res.data || res);
@@ -45,6 +45,73 @@ export const pushNotification = (userId) => {
         })
         .catch(er => {
             console.log("pushNotification error: ", er.response || er);
+        })
+}
+export const getAllNotifications = (userId) => {
+    return dispatch => {
+        axios.get(NOTIFICATIONS_OR_EVENT_BASE_URL + `getAllNotifications?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log("getAllNotifications success: ", res.data || res);
+                    dispatch(resetNotificationListAction(res.data));
+                }
+            })
+            .catch(er => {
+                console.log("getAllNotifications error: ", er.response || er);
+            })
+    }
+}
+export const readNotification = (userId, notificationId) => {
+    return dispatch => {
+        axios.put(NOTIFICATIONS_OR_EVENT_BASE_URL + `readNotification`, { notifiedUserId: userId, id: notificationId }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log("readNotification success: ", res.data || res);
+                    dispatch(updateNotificationAction({ notificationId, notification: res.data }));
+                }
+            })
+            .catch(er => {
+                console.log("readNotification error: ", er.response || er);
+            })
+    }
+}
+export const deleteNotifications = (notificationIds) => {
+    return dispatch => {
+        axios.put(NOTIFICATIONS_OR_EVENT_BASE_URL + `deleteNotifications`, { notificationIds }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log("deleteNotifications success: ", res.data || res);
+                    dispatch(deleteNotificationsAction({ notificationIds }));
+                }
+            })
+            .catch(er => {
+                console.log("deleteNotifications error: ", er.response || er);
+            })
+    }
+}
+export const deleteAllNotifications = (userId) => {
+    return dispatch => {
+        axios.delete(NOTIFICATIONS_OR_EVENT_BASE_URL + `deleteAllNotifications?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log("deleteAllNotifications success: ", res.data || res);
+                    dispatch(updateNotificationAction({ notificationId, notification: res.data }));
+                }
+            })
+            .catch(er => {
+                console.log("deleteAllNotifications error: ", er.response || er);
+            })
+    }
+}
+export const publishEvent = (eventBody) => {
+    axios.post(NOTIFICATIONS_OR_EVENT_BASE_URL + `publishEvent`, eventBody, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        .then(res => {
+            if (res.status === 200) {
+                console.log("publishEvent success: ", res.data || res);
+            }
+        })
+        .catch(er => {
+            console.log("publishEvent error: ", er.response || er);
         })
 }
 export const logoutUser = (userId, accessToken) => {
