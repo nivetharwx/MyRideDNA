@@ -198,6 +198,23 @@ export const updatePassword = (passwordInfo) => {
             })
     };
 }
+export const updateUserSettings = (userSettings) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.put(USER_BASE_URL + 'updateUserSettings', userSettings, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log("updateUserSettings success: ", res.data);
+                    dispatch(toggleLoaderAction(false));
+                    dispatch(updateUserAction(userSettings));
+                }
+            })
+            .catch(er => {
+                console.log("updateUserSettings error: ", er.response || er);
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
 export const updateShareLocationState = (userId, shareLocState) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
@@ -1048,9 +1065,11 @@ export const getGarageInfo = (userId, successCallback, errorCallback) => {
     // };
     axios.get(USER_BASE_URL + `getGarage/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
+            console.log("getGarage success: ", res.data);
             successCallback(res.data);
         })
         .catch(er => {
+            console.log("getGarage error: ", er.response || er);
             errorCallback(er.response || er);
         })
 }
@@ -1096,16 +1115,17 @@ export const editBike = (userId, bike, oldImages, index) => {
         dispatch(toggleLoaderAction(true));
         axios.put(USER_BASE_URL + `updateSpace/${userId}`, bike, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
+                console.log("updateSpace success: ", res.data);
                 dispatch(toggleLoaderAction(false));
                 // DOC: Updating the bike details with current and old images
                 bike.pictureList = [...oldImages, ...bike.pictureList.reduce((arr, { mimeType, image }) => {
                     arr.push(`data:${mimeType};base64,${image}`)
                     return arr;
                 }, [])];
-                return dispatch(updateBikeListAction({ index, bike }))
+                dispatch(updateBikeListAction({ index, bike }))
             })
             .catch(er => {
-                console.log(`editBike: `, er.response);
+                console.log("updateSpace error: ", er.response || er);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })

@@ -8,7 +8,7 @@ import { SwitchIconButton, ShifterButton, LinkButton, IconButton } from '../../c
 import { Item, Icon as NBIcon, Accordion, Toast, Input } from 'native-base';
 import { appNavMenuVisibilityAction, resetPasswordErrorAction } from '../../actions';
 import { LabeledInput, IconicList } from '../../components/inputs';
-import { logoutUser, updateUserInfo, updateShareLocationState, updatePassword } from '../../api';
+import { logoutUser, updateUserInfo, updateShareLocationState, updatePassword, updateUserSettings } from '../../api';
 import { BaseModal } from '../../components/modal';
 import ForgotPassword from '../../containers/forgot-password';
 import Md5 from 'react-native-md5';
@@ -181,7 +181,7 @@ export class Settings extends Component {
             }
         }
         if (locationRadiusState !== '' && !isNaN(locationRadiusState) && parseInt(locationRadiusState) > 0) {
-            this.props.updateUser({
+            this.props.updateUserSettings({
                 userId: this.props.user.userId, distanceUnit: measurementDistanceUnit,
                 locationRadius: parseInt(locationRadiusState), handDominance: handDominanceState
             })
@@ -279,7 +279,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        updateUser: (userInfo) => dispatch(updateUserInfo(userInfo)),
+        updateUserSettings: (userSettings) => dispatch(updateUserSettings(userSettings)),
         updatePassword: (passwordInfo) => dispatch(updatePassword(passwordInfo)),
         updateShareLocationState: (userId, shareLocState) => dispatch(updateShareLocationState(userId, shareLocState)),
         logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
