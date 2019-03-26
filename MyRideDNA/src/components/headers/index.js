@@ -10,7 +10,7 @@ import {
     Platform
 } from 'react-native';
 import { Icon as NBIcon } from 'native-base';
-import { WindowDimensions, APP_COMMON_STYLES } from '../../constants';
+import { WindowDimensions, APP_COMMON_STYLES, widthPercentageToDP } from '../../constants';
 import { IconButton } from '../buttons';
 
 export class BasicHeader extends React.Component {
@@ -98,8 +98,8 @@ export class BasicHeader extends React.Component {
                                             : <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
                                                 {title}
                                             </Text>
-                                        : <View style={{ flexDirection: 'row', marginRight: rightIconProps ? 20 : 0, justifyContent: 'center', alignItems: 'center' }}>
-                                            <IconButton onPress={this.toggleTitleEditingMode} iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: { color: '#fff' } }} />
+                                        : <View style={{ flexDirection: 'row', marginRight: rightIconProps ? 20 : 0, justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <IconButton style={{ marginRight: '8%' }} onPress={this.toggleTitleEditingMode} iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: { color: '#fff' } }} />
                                             <TextInput style={{ flex: 1, color: '#fff', borderBottomColor: '#fff', borderBottomWidth: 2, fontSize: 16 }}
                                                 defaultValue={title} maxLength={20} onSubmitEditing={this.onTitleSubmit}
                                             />
