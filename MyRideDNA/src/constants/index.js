@@ -52,6 +52,8 @@ export const PageKeys = {
     NOTIFICATIONS: 'notifications',
     CONTACTS_SECTION: 'contactsSection',
     FRIENDS_PROFILE: 'friendsProfile',
+    CHAT_LIST: 'chatList',
+    CHAT: 'chat',
     APP_NAVIGATION_MENU: 'appNavigation',
     RIDES: 'rides',
     MAP: 'map',
@@ -95,6 +97,7 @@ export const APP_COMMON_STYLES = {
     headerColor: HEADER_COLOR,
     headerHeight: APP_HEADER_HEIGHT,
     statusBarColor: STATUS_BAR_COLOR,
+    statusBarColorDark: '#000',
     testingBorder: { borderWidth: 2, borderColor: 'red' },
     statusBar: {
         height: IS_ANDROID ? StatusBar.currentHeight : heightPercentageToDP(4),
