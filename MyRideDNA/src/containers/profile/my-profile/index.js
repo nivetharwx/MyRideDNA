@@ -27,7 +27,7 @@ class MyProfileTab extends Component {
             activeTab: -1,
             bikes: [10, 20, 30, 40, 50],
             isLoadingProfPic: false,
-            profilePicId: props.user.profilePictureId
+            profilePicId: props.user.profilePictureId || ''
         };
     }
 

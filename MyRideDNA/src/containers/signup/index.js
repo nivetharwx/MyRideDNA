@@ -99,10 +99,6 @@ class Signup extends Component {
             Alert.alert('Field Error', 'Please provide your name');
             return false;
         }
-        if (!this.state.user.gender) {
-            Alert.alert('Field Error', 'Please select a gender');
-            return false;
-        }
         if (!this.isVerifyingEmail) {
             if (this.props.emailStatus.isExists === true) {
                 Alert.alert('Email exists', 'Entered email is already registered with MyRideDNA');
