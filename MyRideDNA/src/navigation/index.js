@@ -21,7 +21,6 @@ import { Notifications } from '../containers/notifications';
 import { GalleryView } from '../components/gallery';
 
 import store from '../store/index';
-import EditProfile from '../containers/edit-profile';
 import ContactsSection from '../containers/contacts-section';
 import CreateRide from '../containers/create-ride';
 import AddBikeForm from '../containers/profile/my-garage/add-edit-bike-form';
@@ -49,7 +48,6 @@ export default class Navigation extends Component {
                             <Scene key={PageKeys.MAP} component={Map} hideNavBar></Scene>
                             <Scene key={PageKeys.CREATE_RIDE} component={CreateRide} hideNavBar></Scene>
                             <Scene key={PageKeys.GALLERY} component={GalleryView} hideNavBar></Scene>
-                            <Scene key={PageKeys.EDIT_PROFILE} modal={true} component={EditProfile} hideNavBar></Scene>
                             <Scene key={PageKeys.PASSENGERS} component={Passengers} hideNavBar></Scene>
                             <Scene key={PageKeys.PASSENGER_FORM} component={PaasengerForm} hideNavBar></Scene>
                             <Scene key={PageKeys.NOTIFICATIONS} component={Notifications} hideNavBar></Scene>
