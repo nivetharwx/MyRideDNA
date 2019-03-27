@@ -751,11 +751,11 @@ export const getAllFriends = (friendType, userId, pageNumber) => {
         axios.get(FRIENDS_BASE_URL + `getFriendList?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    dispatch(toggleLoaderAction(false));
                     if (pageNumber === 0) {
-                        return dispatch(replaceFriendListAction({ friendType, friendList: res.data }))
+                        dispatch(replaceFriendListAction({ friendType, friendList: res.data }))
                     } else {
-                        dispatch(toggleLoaderAction(false));
-                        return dispatch(updateFriendListAction({ friendType, friendList: res.data }))
+                        dispatch(updateFriendListAction({ friendType, friendList: res.data }))
                     }
                 }
             })
@@ -767,21 +767,16 @@ export const getAllFriends = (friendType, userId, pageNumber) => {
     };
 }
 export const getAllOnlineFriends = (userId) => {
-    console.log(GRAPH_BASE_URL + `getOnlineFriends?userId=${userId}`);
     return dispatch => {
-        dispatch(toggleLoaderAction(true));
         axios.get(GRAPH_BASE_URL + `getOnlineFriends?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     console.log(`getOnlineFriends success: `, res.data);
-                    dispatch(toggleLoaderAction(false));
-                    return dispatch(updateOnlineStatusAction({ friendList: res.data }))
+                    dispatch(updateOnlineStatusAction({ friendList: res.data }))
                 }
             })
             .catch(er => {
                 console.log(`getOnlineFriends error: `, er.response || er);
-                // TODO: Dispatch error info action
-                dispatch(toggleLoaderAction(false));
             })
     };
 }

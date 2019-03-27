@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
-import { View, ImageBackground, Text, StatusBar, ScrollView } from 'react-native';
+import { View, ImageBackground, Text, StatusBar, ScrollView, FlatList, TextInput } from 'react-native';
 import { connect } from 'react-redux';
 import styles from './styles';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { ShifterButton, IconButton } from '../../components/buttons';
-import { Thumbnail } from 'native-base';
+import { Thumbnail, Item, List } from 'native-base';
 import { APP_COMMON_STYLES } from '../../constants';
 import { ChatBubble } from '../../components/bubble';
 
@@ -30,82 +30,112 @@ class Chat extends Component {
                         <IconButton style={styles.headerIconRight} iconProps={{ name: 'md-more', type: 'Ionicons', style: { color: '#fff' } }} />
                     </View>
                     <View style={styles.rootContainer}>
-                        <ScrollView style={styles.chatArea}>
-                            <ChatBubble
-                                bubbleName='Me'
-                                messageTime='8.11.18, 2:21 PM'
-                                message='Talk'
-                            />
-                            <ChatBubble
-                                bubbleName='You'
-                                messageTime='8.11.18, 2:22 PM'
-                                message='Reply'
-                                bubbleStyle={styles.friendChatBubble}
-                                bubbleNameStyle={styles.friendName}
-                            />
-                            <ChatBubble
-                                bubbleName='You'
-                                messageTime='8.11.18, 2:22 PM'
-                                message='Talk again'
-                                bubbleStyle={styles.friendChatBubble}
-                                bubbleNameStyle={styles.friendName}
-                            />
-                            <ChatBubble
-                                bubbleName='Me'
-                                messageTime='8.11.18, 2:21 PM'
-                                message='Talk again and further discussion'
-                            />
-                            <ChatBubble
-                                bubbleName='You'
-                                messageTime='8.11.18, 2:22 PM'
-                                message='Talk again'
-                                bubbleStyle={styles.friendChatBubble}
-                                bubbleNameStyle={styles.friendName}
-                            />
-                            <ChatBubble
-                                bubbleName='Me'
-                                messageTime='8.11.18, 2:21 PM'
-                                message='Talk'
-                            />
-                            <ChatBubble
-                                bubbleName='You'
-                                messageTime='8.11.18, 2:22 PM'
-                                message='Reply'
-                                bubbleStyle={styles.friendChatBubble}
-                                bubbleNameStyle={styles.friendName}
-                            />
-                            <ChatBubble
-                                bubbleName='You'
-                                messageTime='8.11.18, 2:22 PM'
-                                message='Talk again'
-                                bubbleStyle={styles.friendChatBubble}
-                                bubbleNameStyle={styles.friendName}
-                            />
-                            <ChatBubble
-                                bubbleName='Me'
-                                messageTime='8.11.18, 2:21 PM'
-                                message={`Talk again and further discussion,
-                                    talk talk talk talk talk talk talk talk
-                                    talk talk talk talk talk talk talk talk
-                                    talk talk talk talk talk talk talk talk
-                                    talk talk talk talk talk talk talk talk
-                                    talk talk talk talk talk talk talk talk
-                                    talk talk talk talk talk talk talk talk
-                                `}
-                            />
-                            <ChatBubble
-                                bubbleName='You'
-                                messageTime='8.11.18, 2:22 PM'
-                                message='Talk again'
-                                bubbleStyle={styles.friendChatBubble}
-                                bubbleNameStyle={styles.friendName}
-                            />
-                        </ScrollView>
+                        <FlatList
+                            style={styles.chatArea}
+                            contentContainerStyle={{ paddingBottom: 10 }}
+                            data={[
+                                {
+                                    message: `Testing message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\n`,
+                                    time: '8.11.18, 2:21 PM'
+                                },
+                                {
+                                    message: 'Testing message',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    name: 'You',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    name: 'You',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    name: 'You',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    name: 'You',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    name: 'You',
+                                    time: '8.11.18, 2:21 PM'
+                                },
+                                {
+                                    message: `Testing message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\nTesting message\n`,
+                                    name: 'You',
+                                    time: '8.11.18, 2:21 PM'
+                                },
+                                {
+                                    message: 'Testing message',
+                                    name: 'You',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'Testing message',
+                                    name: 'You',
+                                    time: '8.11.18, 2:21 PM'
+                                }, {
+                                    message: 'last message',
+                                    time: '8.11.18, 2:21 PM'
+                                }]}
+                            keyExtractor={(item, index) => index + ''}
+                            renderItem={({ item, index }) => {
+                                return item.name
+                                    ? <ChatBubble
+                                        bubbleName={item.name}
+                                        messageTime={item.time}
+                                        message={item.message}
+                                        bubbleStyle={styles.friendChatBubble}
+                                        bubbleNameStyle={styles.friendName}
+                                    />
+                                    : <ChatBubble
+                                        bubbleName='Me'
+                                        messageTime={item.name}
+                                        message={item.message}
+                                    />
+                            }}
+                        />
                     </View>
-                    <ShifterButton onPress={this.toggleAppNavigation} />
+                    <Item style={styles.msgInputBoxContainer}>
+                        <IconButton style={styles.footerLeftIcon} iconProps={{ name: 'md-attach', type: 'Ionicons' }} />
+                        <TextInput placeholder='Type a message' style={{ flex: 1 }} onFocus={this.onFocusTextInput} onBlur={this.onBlurTextInput} />
+                        <IconButton iconProps={{ name: 'md-send', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} />
+                    </Item>
+                    <ShifterButton onPress={this.toggleAppNavigation} containerStyles={styles.shifterContainer} />
                 </ImageBackground>
             </View>
-        </View>
+        </View >
     }
 }
 const mapStateToProps = (state) => {
