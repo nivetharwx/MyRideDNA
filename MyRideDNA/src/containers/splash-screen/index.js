@@ -23,7 +23,32 @@ class SplashScreen extends React.Component {
         const connectionInfo = await NetInfo.getConnectionInfo();
         if (connectionInfo.type === 'none') {
             Alert.alert('Network Error', 'Failed to connect to internet');
-        } else if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
+           
+        } else {
+            this.handleFirstConnectivityChange(connectionInfo)
+        }
+        this.doAnimateLoader();
+        NetInfo.addEventListener(
+            'connectionChange',
+            this.handleFirstConnectivityChange
+        );
+    }
+
+
+    componentDidUpdate(prevProps) {
+        if (prevProps.user !== this.props.user) {
+            if (this.props.user.userId) {
+                Actions.reset(PageKeys.MAP);
+                // Animated.timing(this.state.pageOpacity, {
+                //     toValue: 0,
+                //     duration: 1500,
+                //     easing: Easing.linear
+                // }).start(() => setTimeout(() => Actions.reset(PageKeys.MAP), 100));
+            }
+        }
+    }
+    handleFirstConnectivityChange = async (connectionInfo) => {
+        if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
             var userAuthToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
             if (userAuthToken) {
                 axios.post(USER_BASE_URL + 'loginUserUsingAccessToken', { accessToken: userAuthToken, date: new Date().toISOString() }, { timeout: 15000 })
@@ -36,22 +61,9 @@ class SplashScreen extends React.Component {
                         console.log(error.response.data);
                         Actions.reset(PageKeys.LOGIN);
                     })
-            } else {
-                Actions.reset(PageKeys.LOGIN);
             }
-        }
-        this.doAnimateLoader();
-    }
-
-    componentDidUpdate(prevProps) {
-        if (prevProps.user !== this.props.user) {
-            if (this.props.user.userId) {
-                Actions.reset(PageKeys.MAP);
-                // Animated.timing(this.state.pageOpacity, {
-                //     toValue: 0,
-                //     duration: 1500,
-                //     easing: Easing.linear
-                // }).start(() => setTimeout(() => Actions.reset(PageKeys.MAP), 100));
+            else{
+                Actions.reset(PageKeys.LOGIN);
             }
         }
     }
