@@ -34,14 +34,14 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
 
 const styles = StyleSheet.create({
     chatBubble: {
-        padding: '4%',
+        padding: 8,
         width: widthPercentageToDP(80),
         minHeight: heightPercentageToDP(8),
         maxWidth: widthPercentageToDP(80),
         borderRadius: heightPercentageToDP(1),
         borderBottomLeftRadius: heightPercentageToDP(1),
         borderBottomRightRadius: heightPercentageToDP(1),
-        marginTop: '2%',
+        marginTop: heightPercentageToDP(2),
         backgroundColor: '#fff',
         alignSelf: 'flex-start',
     },
