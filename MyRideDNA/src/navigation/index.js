@@ -14,6 +14,7 @@ import Friends from '../containers/friends';
 import Group from '../containers/friends/group';
 import Rides from '../containers/rides';
 import Map from '../containers/map';
+import Chat from '../containers/chats';
 import Signup from '../containers/signup';
 import Passengers from '../containers/passengers';
 import PaasengerForm from '../containers/passengers/add-edit-passenger-from';
@@ -53,6 +54,7 @@ export default class Navigation extends Component {
                             <Scene key={PageKeys.NOTIFICATIONS} component={Notifications} hideNavBar></Scene>
                             <Scene key={PageKeys.CONTACTS_SECTION} component={ContactsSection} hideNavBar></Scene>
                             <Scene key={PageKeys.FRIENDS_PROFILE} component={FriendsProfile} hideNavBar></Scene>
+                            <Scene key={PageKeys.CHAT} component={Chat} hideNavBar></Scene>
                         </Scene>
                     </Router>
                 </Root>

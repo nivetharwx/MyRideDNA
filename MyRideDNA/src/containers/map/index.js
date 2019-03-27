@@ -534,7 +534,7 @@ export class Map extends Component {
         const center = regionGeo.coordinates;
         const fromPoint = turfHelpers.point(bottomLeft);
         const toPoint = turfHelpers.point(bottomRight);
-        const options = { units: 'kilometers' };
+        const options = { units: this.props.user.distanceUnit === 'km' ? 'kilometers' : 'miles' };
         const distanceBtwn = turfDistance(fromPoint, toPoint, options);
         const radius = distanceBtwn / 2;
         const mapRadiusCircle = turfCircle(center, radius, options);
@@ -866,7 +866,7 @@ export class Map extends Component {
             } else if (ride.destination && index === this.state.markerCollection.features.length - 1) {
                 this.props.updateDestination(waypoint, ride);
             } else {
-                this.props.updateWaypoint(waypoint, ride, indexOnServer);
+                this.props.updateWaypoint(waypoint, indexOnServer);
             }
             // this.fetchDirections();
         });
@@ -1471,7 +1471,7 @@ export class Map extends Component {
                         !showCreateRide && ride.rideId
                             ? <View style={styles.mapSubHeader}>
                                 <View style={{ width: '30%', backgroundColor: '#EB861E', borderWidth: 4, borderColor: '#fff', elevation: 10, shadowOffset: { width: 5, height: 5 }, shadowColor: "grey", shadowOpacity: 0.5, shadowRadius: 10 }}>
-                                    <IconLabelPair iconProps={{ name: 'road-variant', type: 'MaterialCommunityIcons' }} text={this.getDistanceAsFormattedString(directions ? directions.distance : null, 'KM')}
+                                    <IconLabelPair iconProps={{ name: 'road-variant', type: 'MaterialCommunityIcons' }} text={this.getDistanceAsFormattedString(directions ? directions.distance : null, user.distanceUnit)}
                                         textStyle={{ color: '#fff' }} />
                                     <IconLabelPair iconProps={{ name: 'access-time', type: 'MaterialIcons' }} text={this.getTimeAsFormattedString(directions ? directions.duration : null)}
                                         textStyle={{ color: '#fff' }} />
@@ -1649,7 +1649,7 @@ export class Map extends Component {
                         ride.rideId ?
                             <View style={styles.controlsContainerTopLeft}>
                                 <View style={styles.controlsWrapperTopLeft}>
-                                    <IconLabelPair iconProps={{ name: 'road-variant', type: 'MaterialCommunityIcons' }} text={this.getDistanceAsFormattedString(directions ? directions.distance : null, 'km')} />
+                                    <IconLabelPair iconProps={{ name: 'road-variant', type: 'MaterialCommunityIcons' }} text={this.getDistanceAsFormattedString(directions ? directions.distance : null, user.distanceUnit)} />
                                     <IconLabelPair iconProps={{ name: 'access-time', type: 'MaterialIcons' }} text={this.getTimeAsFormattedString(directions ? directions.duration : null)} />
                                 </View>
                             </View> : null
@@ -1706,7 +1706,7 @@ export class Map extends Component {
                 {
                     mapRadiusCircle
                         ? <TouchableOpacity style={{ position: 'absolute', zIndex: 100, elevation: 10, bottom: 20, left: 20 }}>
-                            <Text style={{ fontSize: 50, fontWeight: 'bold' }}>{`${this.state.radius}`}<Text style={{ fontSize: 30 }}> KM</Text></Text>
+                            <Text style={{ fontSize: 50, fontWeight: 'bold' }}>{`${this.state.radius}`}<Text style={{ fontSize: 30 }}> {user.distanceUnit.toUpperCase()}</Text></Text>
                         </TouchableOpacity>
                         : null
                 }

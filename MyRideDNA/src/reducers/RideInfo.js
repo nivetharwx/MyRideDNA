@@ -53,7 +53,7 @@ const rideInfo = (state = initialState, action) => {
                     ...state.ride,
                     waypoints: [
                         ...state.ride.waypoints.slice(0, action.data.index),
-                        waypoint,
+                        action.data.waypoint,
                         ...state.ride.waypoints.slice(action.data.index + 1)
                     ]
                 }
