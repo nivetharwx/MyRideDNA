@@ -44,7 +44,7 @@ export class Rides extends Component {
             text: 'Remove from list', id: 'remove', handler: () => {
                 const { rideId, name } = this.props.recordedRides[this.state.selectedRide.index];
                 this.setState({ isVisibleOptionsModal: false }, () => {
-                    this.deleteRideConfirmation(rideId, name, this.state.selectedRide.index, RIDE_TYPE.BUILD_RIDE);
+                    this.deleteRideConfirmation(rideId, name, this.state.selectedRide.index, RIDE_TYPE.RECORD_RIDE);
                 });
             }
         },
