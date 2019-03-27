@@ -42,7 +42,7 @@ export class Rides extends Component {
         },
         {
             text: 'Remove from list', id: 'remove', handler: () => {
-                const { rideId, name } = this.props.buildRides[this.state.selectedRide.index];
+                const { rideId, name } = this.props.recordedRides[this.state.selectedRide.index];
                 this.setState({ isVisibleOptionsModal: false }, () => {
                     this.deleteRideConfirmation(rideId, name, this.state.selectedRide.index, RIDE_TYPE.BUILD_RIDE);
                 });
@@ -200,6 +200,7 @@ export class Rides extends Component {
                 )
             case RIDE_TYPE.RECORD_RIDE:
                 return (
+                    
                     this.RECORD_RIDE_OPTIONS.map(option => (
                         <LinkButton
                             key={option.id}
