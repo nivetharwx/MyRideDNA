@@ -28,9 +28,10 @@ const NOTIFICATION_URL = 'http://168.61.214.135';
 export const USER_BASE_URL = BASE_URL + ':5051/';
 export const RIDE_BASE_URL = BASE_URL + ':5052/';
 export const FRIENDS_BASE_URL = BASE_URL + ':5053/';
-export const NOTIFICATIONS_OR_EVENT_BASE_URL = NOTIFICATION_URL + ':5054/';
+export const NOTIFICATIONS_BASE_URL = NOTIFICATION_URL + ':5054/';
 export const CHAT_BASE_URL = BASE_URL + ':5056/';
 export const GRAPH_BASE_URL = GRAPH_URL + ':5057/';
+export const EVENTS_BASE_URL = GRAPH_URL + ':5055/';
 
 export const PageKeys = {
     EDIT_PROFILE: 'editProfile',
