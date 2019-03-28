@@ -25,7 +25,7 @@ class Chat extends Component {
             <View style={styles.fill}>
                 <ImageBackground style={styles.chatBackgroundImage} source={require('../../assets/img/chat-bg.jpg')}>
                     <View style={styles.chatHeader}>
-                        <Thumbnail source={require('../../assets/img/friend-profile-pic.png')} />
+                        <Thumbnail style={styles.thumbnail} source={require('../../assets/img/friend-profile-pic.png')} />
                         <Text style={styles.chatHeaderText}>Name of group here</Text>
                         <IconButton style={styles.headerIconRight} iconProps={{ name: 'md-more', type: 'Ionicons', style: { color: '#fff' } }} />
                     </View>

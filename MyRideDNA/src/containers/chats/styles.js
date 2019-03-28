@@ -1,12 +1,11 @@
 import { StyleSheet } from 'react-native';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID } from '../../constants';
 
+const THUMBNAIL_SIZE = IS_ANDROID ? heightPercentageToDP(6.5) : heightPercentageToDP(8);
 const styles = StyleSheet.create({
     rootContainer: {
         flex: 1,
         padding: widthPercentageToDP(3),
-        // justifyContent: 'center',
-        // alignItems: 'center',
     },
     fill: {
         flex: 1
@@ -62,6 +61,12 @@ const styles = StyleSheet.create({
     },
     footerLeftIcon: {
         marginLeft: 10
+    },
+    thumbnail: {
+        height: THUMBNAIL_SIZE,
+        width: THUMBNAIL_SIZE,
+        borderRadius: THUMBNAIL_SIZE / 2,
+        alignSelf: 'center'
     }
 });
 export default styles;
