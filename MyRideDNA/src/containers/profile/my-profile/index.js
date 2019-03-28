@@ -173,7 +173,7 @@ class MyProfileTab extends Component {
                     </View>
                 </ImageBackground>
                 <ScrollView styles={styles.scrollBottom} contentContainerStyle={styles.scrollBottomContent}>
-                    <Accordion dataArray={[{ title: 'Change profile', content: [this.PROFILE_ICONS.gallery, this.PROFILE_ICONS.camera, this.PROFILE_ICONS.passengers, this.PROFILE_ICONS.edit] },
+                    <Accordion expanded={0} dataArray={[{ title: 'Change profile', content: [this.PROFILE_ICONS.gallery, this.PROFILE_ICONS.camera, this.PROFILE_ICONS.passengers, this.PROFILE_ICONS.edit] },
                     { title: 'Change bike', content: [] }]}
                         renderContent={this.renderAccordionItem} headerStyle={styles.accordionHeader} />
                 </ScrollView>
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     rowContent: {
         padding: heightPercentageToDP(5),
         flexDirection: 'row',
-        justifyContent: 'space-around'
+        justifyContent: 'space-around',
     },
     profileHeader: {
         position: 'absolute',

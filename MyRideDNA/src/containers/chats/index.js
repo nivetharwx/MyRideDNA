@@ -121,7 +121,7 @@ class Chat extends Component {
                                     />
                                     : <ChatBubble
                                         bubbleName='Me'
-                                        messageTime={item.name}
+                                        messageTime={item.time}
                                         message={item.message}
                                     />
                             }}
@@ -132,7 +132,7 @@ class Chat extends Component {
                         <TextInput placeholder='Type a message' style={{ flex: 1 }} onFocus={this.onFocusTextInput} onBlur={this.onBlurTextInput} />
                         <IconButton iconProps={{ name: 'md-send', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} />
                     </Item>
-                    <ShifterButton onPress={this.toggleAppNavigation} containerStyles={styles.shifterContainer} />
+                    <ShifterButton onPress={this.showAppNavigation} containerStyles={styles.shifterContainer} />
                 </ImageBackground>
             </View>
         </View >
