@@ -1437,14 +1437,14 @@ export class Map extends Component {
     render() {
         const { mapViewHeight, directions, markerCollection, activeMarkerIndex, gpsPointCollection, controlsBarLeftAnim, showCreateRide, currentLocation,
             searchResults, searchQuery, isEditable, snapshot, hideRoute, optionsBarRightAnim, isUpdatingWaypoint, mapRadiusCircle } = this.state;
-        const { ride, showMenu, showLoader, user, canUndo, canRedo } = this.props;
+        const { notificationList, ride, showMenu, showLoader, user, canUndo, canRedo } = this.props;
         const MAP_VIEW_TOP_OFFSET = showCreateRide ? (CREATE_RIDE_CONTAINER_HEIGHT - WINDOW_HALF_HEIGHT) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2) : (isEditable ? 130 : 60) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2);
         return (
             <View style={{ flex: 1 }}>
                 {/* <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View> */}
-                <MenuModal isVisible={showMenu} onClose={this.onCloseAppNavMenu} onPressNavMenu={this.onPressAppNavMenu} alignCloseIconLeft={user.handDominance === 'left'} />
+                <MenuModal notificationCount={notificationList.length} isVisible={showMenu} onClose={this.onCloseAppNavMenu} onPressNavMenu={this.onPressAppNavMenu} alignCloseIconLeft={user.handDominance === 'left'} />
                 <Spinner
                     visible={showLoader}
                     textContent={'Loading...'}
@@ -1729,7 +1729,8 @@ const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { isLocationOn } = state.GPSState;
     const { showLoader } = state.PageState;
-    return { ride, isLocationOn, user, showMenu, currentScreen, showLoader, canUndo, canRedo };
+    const { notificationList } = state.NotificationList;
+    return { ride, isLocationOn, user, showMenu, currentScreen, showLoader, canUndo, canRedo, notificationList };
 }
 
 const mapDispatchToProps = (dispatch) => {

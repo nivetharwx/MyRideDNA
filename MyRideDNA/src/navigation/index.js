@@ -18,7 +18,7 @@ import Chat from '../containers/chats';
 import Signup from '../containers/signup';
 import Passengers from '../containers/passengers';
 import PaasengerForm from '../containers/passengers/add-edit-passenger-from';
-import { Notifications } from '../containers/notifications';
+import Notifications from '../containers/notifications';
 import { GalleryView } from '../components/gallery';
 
 import store from '../store/index';

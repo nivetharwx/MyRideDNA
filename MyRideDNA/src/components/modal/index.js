@@ -43,7 +43,7 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                                                 position: 'absolute', width: widthPercentageToDP(12), height: widthPercentageToDP(12), borderRadius: widthPercentageToDP(6),
                                                 backgroundColor: '#0076B5', top: 5, right: 5, borderWidth: widthPercentageToDP(1), borderColor: '#fff', justifyContent: 'center', alignItems: 'center'
                                             }}>
-                                                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: widthPercentageToDP(4) }}>{999}</Text>
+                                                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: widthPercentageToDP(4) }}>{notificationCount}</Text>
                                             </View>
                                             : null
                                     }
