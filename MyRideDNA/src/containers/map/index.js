@@ -38,7 +38,7 @@ import SELECTED_SOURCE_ICON from '../../assets/img/source-pin-green.png';
 import DEFAULT_DESTINATION_ICON from '../../assets/img/destination-pin-red.png';
 import SELECTED_DESTINATION_ICON from '../../assets/img/destination-pin-green.png';
 
-import { updateRide, addWaypoint, addSource, createRecordRide, pauseRecordRide, updateWaypoint, updateSource, updateDestination, makeWaypointAsDestination, makeDestinationAsWaypoint, makeSourceAsWaypoint, makeWaypointAsSource, continueRecordRide, addTrackpoints, completeRecordRide, deleteWaypoint, deleteDestination, deleteSource, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser } from '../../api';
+import { updateRide, addWaypoint, addSource, createRecordRide, pauseRecordRide, updateWaypoint, updateSource, updateDestination, makeWaypointAsDestination, makeDestinationAsWaypoint, makeSourceAsWaypoint, makeWaypointAsSource, continueRecordRide, addTrackpoints, completeRecordRide, deleteWaypoint, deleteDestination, deleteSource, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser, updateLocation } from '../../api';
 
 import Bubble from '../../components/bubble';
 import MenuModal from '../../components/modal';
@@ -66,9 +66,11 @@ const shapeSourceImages = {
 const WINDOW_HALF_HEIGHT = (WindowDimensions.height / 2);
 const CREATE_RIDE_CONTAINER_HEIGHT = WindowDimensions.height;
 const RIDE_UPDATE_COUNT_TO_SYNC = 5;
+const DEFAULT_ZOOM_DIFFERENCE = 1;
 
 
 export class Map extends Component {
+    prevUserTrackTime = 0;
     _mapView = null;
     _searchRef = null;
     locationPermission = null;
@@ -285,15 +287,22 @@ export class Map extends Component {
 
     async componentDidMount() {
         this.props.changeScreen(PageKeys.MAP);
+        this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         this.props.pushNotification(this.props.user.userId);
         setTimeout(() => {
             this.props.getAllNotifications(this.props.user.userId);
         }, 100);
         BackgroundGeolocation.on('location', (location) => {
-            console.log("Got location: ", location);
-            BackgroundGeolocation.startTask(taskKey => {
-                BackgroundGeolocation.endTask(taskKey);
-            });
+            // TODO: Has to change default timeIntervalInSeconds from the backend (60 seconds)
+            if (location.time - this.prevUserTrackTime > 60000) {
+                this.prevUserTrackTime = location.time;
+                this.props.updateLocation(this.props.user.userId, { lat: location.latitude, lng: location.longitude });
+                
+                // TODO: Need to understand about the task
+                // BackgroundGeolocation.startTask(taskKey => {
+                //     BackgroundGeolocation.endTask(taskKey);
+                // });
+            }
         });
         BackgroundGeolocation.on('stationary', (stationaryLocation) => {
             console.log("Got stationary location: ", stationaryLocation);
@@ -376,7 +385,7 @@ export class Map extends Component {
                         const feature = gpsPointCollection.features[0];
                         let points = [...feature.geometry.coordinates, [coords.longitude, coords.latitude]];
                         trackpointTick++;
-                        if (trackpointTick === (this.props.user.timeIntervalInSeconds || 5)) {
+                        if (trackpointTick === 5) {
                             updatedgpsPointCollection.gpsPointCollection = {
                                 ...gpsPointCollection,
                                 features: [{
@@ -845,14 +854,54 @@ export class Map extends Component {
     }
 
     onPressZoomIn = () => {
-        this.setState((prevState) => ({ mapZoomLevel: prevState.mapZoomLevel + 1 }),
-            () => this._mapView.zoomTo(this.state.mapZoomLevel, 100));
+        this.mapZoom(true);
     }
 
     onPressZoomOut = () => {
-        this.setState((prevState) => ({ mapZoomLevel: prevState.mapZoomLevel - 1 }),
-            () => this._mapView.zoomTo(this.state.mapZoomLevel, 100));
+        this.mapZoom(false);
     }
+
+    async mapZoom(isZoomIn) {
+        clearTimeout(this.mapCircleTimeout);
+        const zoom = await this._mapView.getZoom();
+        const center = await this._mapView.getCenter();
+        let options = {
+            centerCoordinate: center,
+            zoom: zoom + DEFAULT_ZOOM_DIFFERENCE * (isZoomIn ? 1 : -1),
+            duration: 300
+        };
+        this._mapView.setCamera(options);
+    }
+
+    // onPressZoomIn = () => {
+    //     this.setState((prevState) => ({ mapZoomLevel: prevState.mapZoomLevel + 1 }),
+    //         async () => {
+    //             const zoom = await this._mapView.getZoom();
+    //             const center = await this._mapView.getCenter();
+    //             IS_ANDROID
+    //                 ? this._mapView.zoomTo(this.state.mapZoomLevel, 100)
+    //                 : this._mapView.setCamera({
+    //                     centerCoordinate: center,
+    //                     zoom: this.state.mapZoomLevel + 1,
+    //                     mode: MapboxGL.CameraModes.Flight,
+    //                 });
+    //         });
+    // }
+
+    // onPressZoomOut = () => {
+    //     this.setState((prevState) => ({ mapZoomLevel: prevState.mapZoomLevel - 1 }),
+    //         async () => {
+    //             const zoom = await this._mapView.getZoom();
+    //             const center = await this._mapView.getCenter();
+    //             IS_ANDROID
+    //                 ? this._mapView.zoomTo(this.state.mapZoomLevel, 100)
+    //                 : this._mapView.setCamera({
+    //                     centerCoordinate: center,
+    //                     zoom: this.state.mapZoomLevel - 1,
+    //                     mode: MapboxGL.CameraModes.Flight,
+    //                 });
+    //         });
+    // }
 
     onPressUndo = () => {
         if (!this.props.canUndo) return;
@@ -1090,6 +1139,7 @@ export class Map extends Component {
 
     componentWillUnmount() {
         console.log("Map unmounted");
+        this.stopTrackingLocation();
         BackgroundGeolocation.removeAllListeners();
         // DeviceEventEmitter.removeListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent);
         // this.watchID != null && Geolocation.clearWatch(this.watchID);
@@ -1601,6 +1651,7 @@ const mapDispatchToProps = (dispatch) => {
         updateRide: (data) => dispatch(updateRide(data)),
         publishEvent: (eventBody) => publishEvent(eventBody),
         pushNotification: (userId) => pushNotification(userId),
+        updateLocation: (userId, location) => updateLocation(userId, location),
         getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
         deleteNotifications: (notificationIds) => dispatch(deleteNotifications(notificationIds)),
