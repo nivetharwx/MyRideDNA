@@ -1,13 +1,14 @@
 import React, { Component } from 'react';
-import { SafeAreaView, View, Text, Platform, Image, ScrollView, StyleSheet, FlatList, StatusBar } from 'react-native';
+import { SafeAreaView, View, Text, Platform, Image, ScrollView, AsyncStorage, StyleSheet, FlatList, StatusBar } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 
 import { BasicHeader } from '../../components/headers';
-import { heightPercentageToDP, APP_COMMON_STYLES } from '../../constants';
+import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, USER_AUTH_TOKEN } from '../../constants';
 import { List, ListItem, Left, Thumbnail, Body, Right } from 'native-base';
 import { ShifterButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { connect } from 'react-redux';
+import { logoutUser } from '../../api';
 
 class Notifications extends Component {
     constructor(props) {
@@ -47,6 +48,11 @@ class Notifications extends Component {
         );
     }
 
+    onPressLogout = async () => {
+        const accessToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
+        this.props.logoutUser(this.props.user.userId, accessToken);
+    }
+
     render() {
         const { notificationList, user } = this.props;
         return (
@@ -55,7 +61,7 @@ class Notifications extends Component {
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={{ flex: 1 }}>
-                    <BasicHeader title='Notifications' />
+                    <BasicHeader title='Notifications' rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
                     <ScrollView style={[styles.scrollArea, notificationList.length > 0 ? { paddingBottom: heightPercentageToDP(5) } : null]}>
                         <FlatList
                             data={notificationList}
@@ -80,6 +86,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
+        logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Notifications);

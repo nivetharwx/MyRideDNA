@@ -19,7 +19,7 @@ import { default as turfDistance } from '@turf/distance';
 import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon } from 'native-base';
-import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE } from '../../constants';
+import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN } from '../../constants';
 import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction } from '../../actions';
 import { SearchBox } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
@@ -38,7 +38,7 @@ import SELECTED_SOURCE_ICON from '../../assets/img/source-pin-green.png';
 import DEFAULT_DESTINATION_ICON from '../../assets/img/destination-pin-red.png';
 import SELECTED_DESTINATION_ICON from '../../assets/img/destination-pin-green.png';
 
-import { updateRide, addWaypoint, addSource, createRecordRide, pauseRecordRide, updateWaypoint, updateSource, updateDestination, makeWaypointAsDestination, makeDestinationAsWaypoint, makeSourceAsWaypoint, makeWaypointAsSource, continueRecordRide, addTrackpoints, completeRecordRide, deleteWaypoint, deleteDestination, deleteSource, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications } from '../../api';
+import { updateRide, addWaypoint, addSource, createRecordRide, pauseRecordRide, updateWaypoint, updateSource, updateDestination, makeWaypointAsDestination, makeDestinationAsWaypoint, makeSourceAsWaypoint, makeWaypointAsSource, continueRecordRide, addTrackpoints, completeRecordRide, deleteWaypoint, deleteDestination, deleteSource, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser } from '../../api';
 
 import Bubble from '../../components/bubble';
 import MenuModal from '../../components/modal';
@@ -116,7 +116,7 @@ export class Map extends Component {
             },
             mapMatchinRoute: null,
             mapRadiusCircle: null,
-            radius: 0,
+            diameter: 0,
             calloutOffsets: [],
             showCreateRide: false,
             rideUpdateCount: 0,
@@ -308,11 +308,11 @@ export class Map extends Component {
             console.log('[INFO] BackgroundGeolocation service has been stopped');
         });
         BackgroundGeolocation.on('background', () => {
-            this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE });
+            this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         });
 
         BackgroundGeolocation.on('foreground', () => {
-            this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE });
+            this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         });
         BackgroundGeolocation.checkStatus(status => {
             // console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
@@ -327,12 +327,6 @@ export class Map extends Component {
         // DeviceEventEmitter.addListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent);
 
         BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPress);
-
-        this.locationPermission = await Permissions.request('location');
-        if (this.locationPermission === 'authorized') {
-            this.getCurrentLocation();
-            // this.watchLocation();
-        }
     }
 
     startTrackingLocation = () => BackgroundGeolocation.start()
@@ -351,10 +345,14 @@ export class Map extends Component {
         setTimeout(() => DeviceEventEmitter.addListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent), 50);
     }
 
-    getCurrentLocation = async () => {
+    getCurrentLocation = async (recenterMap) => {
         Geolocation.getCurrentPosition(
             ({ coords }) => {
-                this.setState({ currentLocation: { location: [coords.longitude, coords.latitude], name: '' } });
+                this.setState({ currentLocation: { location: [coords.longitude, coords.latitude], name: '' } }, () => {
+                    if (recenterMap) {
+                        this._mapView.flyTo(this.state.currentLocation.location, 500);
+                    }
+                });
             },
             (error) => {
                 console.log(error.code, error.message);
@@ -478,6 +476,10 @@ export class Map extends Component {
 
     onFinishMapLoading = async () => {
         console.log("Map loaded");
+        this.locationPermission = await Permissions.request('location');
+        if (this.locationPermission === 'authorized') {
+            this.getCurrentLocation(true);
+        }
     }
 
     getRegionForCoordinates(points) {
@@ -517,14 +519,12 @@ export class Map extends Component {
         if (this.state.showCreateRide === false) {
             const mapZoomLevel = await this._mapView.getZoom();
             if (this.state.mapZoomLevel != mapZoomLevel) {
-                const { circle, radius, coords } = this.getVisibleMapInfo(properties, geometry);
-                this.setState({ mapZoomLevel, mapRadiusCircle: circle, radius: radius.toFixed(2) }, () => {
+                const { circle, diameter, coords } = this.getVisibleMapInfo(properties, geometry);
+                this.setState({ mapZoomLevel, mapRadiusCircle: circle, diameter: diameter.toFixed(2) }, () => {
                     clearTimeout(this.mapCircleTimeout);
                     this.mapCircleTimeout = setTimeout(() => this.setState({ mapRadiusCircle: null }), 2500);
                 });
             }
-            // const { circle, radius } = this.getVisibleMapInfo(properties, geometry);
-            // this.setState({ mapRadiusCircle: circle, radius: radius.toFixed(2) }, () => setTimeout(() => this.setState({ mapRadiusCircle: null }), 3000));
         }
     }
 
@@ -538,7 +538,7 @@ export class Map extends Component {
         const distanceBtwn = turfDistance(fromPoint, toPoint, options);
         const radius = distanceBtwn / 2;
         const mapRadiusCircle = turfCircle(center, radius, options);
-        return { radius, circle: mapRadiusCircle };
+        return { diameter: distanceBtwn, circle: mapRadiusCircle };
     }
 
     toggleReplaceOption = () => this.setState({ isUpdatingWaypoint: !this.state.isUpdatingWaypoint });
@@ -747,18 +747,6 @@ export class Map extends Component {
     addWaypointAtIndex(index, marker, callback) {
         this.setState((prevState) => {
             const { features } = prevState.markerCollection;
-            // const undoActions = [...prevState.undoActions];
-            // const redoActions = [...prevState.redoActions];
-            // if (undoActions.length === 10) undoActions.shift();
-            // if (redoActions.length > 0) redoActions.splice(0);
-            // undoActions.push({
-            //     action: 'insert',
-            //     opppositeAction: 'delete',
-            //     actionFunctionName: 'addWaypointAtIndex',
-            //     actionParams: { p1: index, p2: marker },
-            //     oppositeActionFunctionName: 'deleteWaypointFromIndex',
-            //     oppositeActionParams: { p1: index }
-            // });
             if (prevState.activeMarkerIndex === -1) {
                 return {
                     rideUpdateCount: prevState.rideUpdateCount + 1,
@@ -783,31 +771,6 @@ export class Map extends Component {
                     activeMarkerIndex: isDestinationSelected ? -1 : prevState.activeMarkerIndex
                 }
             }
-
-
-
-
-            // let prevMarker = features[this.state.activeMarkerIndex];
-            // let isLastWaypointSelected = false;
-            // if (!prevMarker) {
-            //     prevMarker = features[features.length - 1];
-            //     isLastWaypointSelected = true;
-            // }
-            // const isDestinationSelected = this.isDestination(prevMarker);
-            // return {
-            //     rideUpdateCount: prevState.rideUpdateCount + 1,
-            //     markerCollection: {
-            //         ...prevState.markerCollection,
-            //         ...{
-            //             features: isLastWaypointSelected
-            //                 ? [...features.slice(0, index), { ...prevMarker, properties: { ...prevMarker.properties, icon: isDestinationSelected ? ICON_NAMES.DESTINATION_DEFAULT : ICON_NAMES.WAYPOINT_DEFAULT } }, marker]
-            //                 : [...features.slice(0, index), marker, ...features.slice(index)]
-            //         }
-            //     },
-            //     undoActions: undoActions,
-            //     redoActions: redoActions,
-            //     activeMarkerIndex: isDestinationSelected ? -1 : prevState.activeMarkerIndex
-            // }
         }, () => {
             // DOC: Call the callback function, if any.
             callback && callback();
@@ -873,44 +836,12 @@ export class Map extends Component {
     }
 
     onPressRecenterMap = (location, showBullseye) => {
-        // this.setState({
-        //     gpsPointCollection: {
-        //         ...this.state.gpsPointCollection,
-        //         ...{
-        //             "type": "FeatureCollection", "features": [{
-        //                 "type": "Feature", "geometry": {
-        //                     "type": "LineString", "coordinates":
-        //                         [[77.651344, 12.911957], [77.649152, 12.910999], [77.649218, 12.907848], [77.648865, 12.905623]]
-        //                 }
-        //             }]
-        //         }
-        //     },
-        //     mapMatchinRoute: {
-        //         "type": "FeatureCollection", "features": [{
-        //             "type": "Feature", "geometry": {
-        //                 "type": "LineString", "coordinates": [[77.651344, 12.911957],
-        //                 [77.649043, 12.911912],
-        //                 [77.649143, 12.911331],
-        //                 [77.649152, 12.910999],
-        //                 [77.649348, 12.908728],
-        //                 [77.649218, 12.907848],
-        //                 [77.649059, 12.907002],
-        //                 [77.649042, 12.906533],
-        //                 [77.648979, 12.906174],
-        //                 [77.649002, 12.905715],
-        //                 [77.648873, 12.905726],
-        //                 [77.648865, 12.905623]]
-        //             }
-        //         }]
-        //     },
-        //     // directions: matchings[0]
-        // });
         if (Array.isArray(location)) {
             this._mapView.flyTo(location, 500);
         } else if (this.state.currentLocation) {
+            console.log(this.state.currentLocation.location.join(''));
             this._mapView.flyTo(this.state.currentLocation.location, 500);
         }
-        // this.props.getRideByRideId(this.props.ride.rideId); // 5b8fd4f233db8371791bea06, 5b9bcc1e33db83297d119a7d, 5b9cfcab33db83297d119aaa
     }
 
     onPressZoomIn = () => {
@@ -928,17 +859,6 @@ export class Map extends Component {
         this.setState(prevState => ({ rideUpdateCount: prevState.rideUpdateCount + 1 }), () => {
             this.props.doUndo();
         });
-        // if (this.state.undoActions.length === 0) return;
-
-        // const undoActions = [...this.state.undoActions];
-        // const redoActions = [...this.state.redoActions];
-        // const lastIndex = undoActions.length - 1;
-        // let lastAction = undoActions[lastIndex];
-        // undoActions.splice(lastIndex, 1);
-        // redoActions.push(this.doSwap(lastAction));
-        // this.setState({ undoActions, redoActions }, () => {
-        //     this[lastAction.actionFunctionName](lastAction.actionParams.p1, lastAction.actionParams.p2)
-        // });
     }
 
     onPressRedo = () => {
@@ -946,17 +866,6 @@ export class Map extends Component {
         this.setState(prevState => ({ rideUpdateCount: prevState.rideUpdateCount + 1 }), () => {
             this.props.doRedo();
         });
-        // if (this.state.redoActions.length === 0) return;
-
-        // const undoActions = [...this.state.undoActions];
-        // const redoActions = [...this.state.redoActions];
-        // const lastIndex = redoActions.length - 1;
-        // let lastAction = redoActions[lastIndex];
-        // redoActions.splice(lastIndex, 1);
-        // undoActions.push(this.doSwap(lastAction));
-        // this.setState({ undoActions, redoActions }, () => {
-        //     this[lastAction.actionFunctionName](lastAction.actionParams.p1, lastAction.actionParams.p2);
-        // });
     }
 
     doSwap(actionObject) {
@@ -1070,53 +979,10 @@ export class Map extends Component {
         // Actions.push(PageKeys.CREATE_RIDE);
         this.hideMapControls();
         this.setState({ showCreateRide: true });
-
-        // this.watchID != null && clearInterval(this.watchID);
-        // AsyncStorage.setItem('recordRidePath', JSON.stringify(this.state.gpsPointCollection));
-        // AsyncStorage.setItem('recordPointTimestamps', JSON.stringify(this.gpsPointTimestamps));
-
-        // this.setState({
-        //     gpsPointCollection: {
-        //         ...this.state.gpsPointCollection,
-        //         ...{ "type": "FeatureCollection", "features": [{ "type": "Feature", "geometry": { "type": "LineString", "coordinates": [[77.6526567, 12.9126067], [77.6526567, 12.9126067], [77.6526567, 12.9126067], [77.6516437, 12.9146619], [77.6516437, 12.9146619], [77.6520067, 12.911325], [77.6520067, 12.911325], [77.6520067, 12.911325], [77.6533969, 12.9098469], [77.6533969, 12.9098469], [77.6533969, 12.9098469], [77.6533969, 12.9098469], [77.6533969, 12.9098469], [77.6516437, 12.9146619], [77.6516437, 12.9146619]] } }] }
-        //     },
-        //     // mapMatchinRoute: { "type": "FeatureCollection", "features": [{ "type": "Feature", "geometry": { "type": "LineString", "coordinates": [[77.652604, 12.912557], [77.651892, 12.911474], [77.653386, 12.909838], [77.651896, 12.911372], [77.653579, 12.912393]] } }] },
-        //     directions: { "confidence": 5.398283819957328e-9, "geometry": { "coordinates": [[77.652658, 12.912558], [77.65186, 12.912542], [77.651896, 12.911372], [77.652007, 12.911373], [77.652007, 12.911373], [77.652007, 12.911373], [77.65356, 12.911416], [77.653387, 12.909848], [77.653387, 12.909848], [77.653387, 12.909848]], "type": "LineString" }, "legs": [{ "summary": "", "weight": 92.7, "duration": 65.4, "steps": [], "distance": 228.8 }, { "summary": "", "weight": 0, "duration": 0, "steps": [], "distance": 0 }, { "summary": "", "weight": 0, "duration": 0, "steps": [], "distance": 0 }, { "summary": "", "weight": 191, "duration": 141.1, "steps": [], "distance": 343.9 }, { "summary": "", "weight": 0, "duration": 0, "steps": [], "distance": 0 }, { "summary": "", "weight": 0, "duration": 0, "steps": [], "distance": 0 }], "weight_name": "routability", "weight": 283.7, "duration": 206.5, "distance": 572.7 }
-        // });
-
-
-        // mapMatchingClient
-        //     .getMatch({
-        //         points: [[77.6526053, 12.9127161], [77.652008, 12.9123407], [77.6517796, 12.9119714], [77.6518378, 12.9118826], [77.6523563, 12.9114709], [77.6525564, 12.9113683], [77.6534699, 12.9114137], [77.6533004, 12.9121327], [77.6534368, 12.9126408], [77.6529647, 12.912626]]
-        //             .reduce((arr, coord) => {
-        //                 arr.push({ coordinates: coord });
-        //                 return arr
-        //             }, []),
-        //         // timestamps: this.gpsPointTimestamps,  // FIXME: Failed the param timestamps in mapbox api
-        //         tidy: true,
-        //         geometries: 'geojson',
-        //     })
-        //     .send()
-        //     .then(response => {
-        //         this.gpsPointTimestamps.length = 0; // DOC: Resetting gpsPointTimestamps array to empty.
-        //         console.log(JSON.stringify(response.body));
-        //         const { matchings } = response.body;
-        //         this.setState({
-        //             gpsPointCollection: {
-        //                 ...this.state.gpsPointCollection,
-        //                 ...{ "type": "FeatureCollection", "features": [{ "type": "Feature", "geometry": { "type": "LineString", "coordinates": [[77.6526053, 12.9127161], [77.652008, 12.9123407], [77.6517796, 12.9119714], [77.6518378, 12.9118826], [77.6523563, 12.9114709], [77.6525564, 12.9113683], [77.6534699, 12.9114137], [77.6533004, 12.9121327], [77.6534368, 12.9126408], [77.6529647, 12.912626]] } }] }
-        //             },
-        //             // mapMatchinRoute: { "type": "FeatureCollection", "features": [{ "type": "Feature", "geometry": { "type": "LineString", "coordinates": [[77.652604, 12.912557], [77.651892, 12.911474], [77.653386, 12.909838], [77.651896, 12.911372], [77.653579, 12.912393]] } }] },
-        //             directions: matchings[0]
-        //         });
-        //     })
     }
 
     onPressRecordRide = () => {
         this.hideMapControls();
-        console.log("RecordRide called");
-        // this.watchLocation(); // FIXME: Remove this and Uncomment following
-
         const { currentLocation } = this.state;
         const dateTime = new Date().toISOString();
         let rideDetails = {
@@ -1260,17 +1126,6 @@ export class Map extends Component {
     onPressMap = async (event) => {
         const { geometry, properties } = event;
         let viewCoordinate = await this._mapView.getPointInView(geometry.coordinates);
-
-        // this.setState({ calloutOffsets: [properties.screenPointX, properties.screenPointY] });
-
-        // let geoCoordinate = await this._mapView.getCoordinateFromView([properties.screenPointX, properties.screenPointY]);
-        // console.log("WindowDimensions: ", WindowDimensions);
-        // console.log("viewCoordinate: ", viewCoordinate = [viewCoordinate[1], viewCoordinate[0]]);
-        // console.log("geoCoordinate: ", geoCoordinate);
-        // console.log("coords: ", coords);
-        // if (this.state.isEditable) {
-        //     this.addMarkerFeature(geometry.coordinates);
-        // }
     }
 
     getTimeAsFormattedString(estimatedTime) {
@@ -1434,6 +1289,11 @@ export class Map extends Component {
         });
     }
 
+    onPressLogout = async () => {
+        const accessToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
+        this.props.logoutUser(this.props.user.userId, accessToken);
+    }
+
     render() {
         const { mapViewHeight, directions, markerCollection, activeMarkerIndex, gpsPointCollection, controlsBarLeftAnim, showCreateRide, currentLocation,
             searchResults, searchQuery, isEditable, snapshot, hideRoute, optionsBarRightAnim, isUpdatingWaypoint, mapRadiusCircle } = this.state;
@@ -1441,9 +1301,6 @@ export class Map extends Component {
         const MAP_VIEW_TOP_OFFSET = showCreateRide ? (CREATE_RIDE_CONTAINER_HEIGHT - WINDOW_HALF_HEIGHT) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2) : (isEditable ? 130 : 60) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2);
         return (
             <View style={{ flex: 1 }}>
-                {/* <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                </View> */}
                 <MenuModal notificationCount={notificationList.length} isVisible={showMenu} onClose={this.onCloseAppNavMenu} onPressNavMenu={this.onPressAppNavMenu} alignCloseIconLeft={user.handDominance === 'left'} />
                 <Spinner
                     visible={showLoader}
@@ -1457,9 +1314,13 @@ export class Map extends Component {
                                 {
                                     searchResults.length === 0
                                         ? ride.rideId === null
-                                            ? <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
-                                                <LinkButton style={{ paddingVertical: 20 }} title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
-                                                <LinkButton style={{ paddingVertical: 20 }} title='RECORD RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
+                                            ? <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between' }}>
+                                                <View style={{ flexDirection: 'row' }}>
+                                                    <LinkButton style={{ paddingVertical: 20 }} title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
+                                                    <LinkButton style={{ paddingVertical: 20 }} title='RECORD RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
+                                                </View>
+                                                <IconButton iconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }}
+                                                    style={styles.logoutIcon} onPress={this.onPressLogout} />
                                             </View>
                                             : this.renderMapControlsForRide()
                                         : null
@@ -1497,8 +1358,8 @@ export class Map extends Component {
                         styleURL={MapboxGL.StyleURL.Street}
                         zoomLevel={15}
                         centerCoordinate={[
-                            77.651657,
-                            12.913511
+                            4.895168,
+                            52.370216
                         ]}
                         style={[styles.fillParent, { marginTop: showCreateRide ? -WINDOW_HALF_HEIGHT : 0 }]}
                         showUserLocation={false /* onUserLocationUpdate={(e) => { console.log(e.coords) }} */}
@@ -1539,14 +1400,10 @@ export class Map extends Component {
                                 </MapboxGL.ShapeSource>
                                 : null
                         }
-                        {/* <MapboxGL.ShapeSource id='markers' shape={markerCollection} onPress={this.onPressMarker}>
-                            <MapboxGL.SymbolLayer id="waypoint" style={MapboxStyles.symbol} />
-                        </MapboxGL.ShapeSource> */}
                         {
                             mapRadiusCircle
                                 ? <MapboxGL.ShapeSource id='routeSource' shape={mapRadiusCircle}>
                                     <MapboxGL.LineLayer id='routeFill' style={MapboxStyles.circleOutline} />
-                                    {/* <MapboxGL.CircleLayer id='circleFill' style={[MapboxStyles.circleRoute, { circleRadius: parseFloat(this.state.radius) }]} /> */}
                                 </MapboxGL.ShapeSource>
                                 : null
                         }
@@ -1706,7 +1563,7 @@ export class Map extends Component {
                 {
                     mapRadiusCircle
                         ? <TouchableOpacity style={{ position: 'absolute', zIndex: 100, elevation: 10, bottom: 20, left: 20 }}>
-                            <Text style={{ fontSize: 50, fontWeight: 'bold' }}>{`${this.state.radius}`}<Text style={{ fontSize: 30 }}> {user.distanceUnit.toUpperCase()}</Text></Text>
+                            <Text style={{ fontSize: 50, fontWeight: 'bold' }}>{`${this.state.diameter}`}<Text style={{ fontSize: 30 }}> {user.distanceUnit.toUpperCase()}</Text></Text>
                         </TouchableOpacity>
                         : null
                 }
@@ -1794,6 +1651,7 @@ const mapDispatchToProps = (dispatch) => {
         getRideByRideId: (rideId) => dispatch(getRideByRideId(rideId)),
         doUndo: () => dispatch(undoRideAction()),
         doRedo: () => dispatch(redoRideAction()),
+        logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
     }
 }
 

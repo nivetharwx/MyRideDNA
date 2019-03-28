@@ -1,15 +1,16 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, StatusBar, Animated, ImageBackground, TouchableWithoutFeedback, Text, View } from 'react-native';
+import { StyleSheet, StatusBar, Animated, ImageBackground, AsyncStorage, TouchableWithoutFeedback, Text, View } from 'react-native';
 import { BasicHeader } from '../../components/headers';
 import { Tabs, Tab, TabHeading, ScrollableTab } from 'native-base';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, USER_AUTH_TOKEN } from '../../constants';
 import styles from './styles';
 import AllFriendsTab from './all-friends';
 import GroupListTab from './group-list';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { ShifterButton } from '../../components/buttons';
 import { IconLabelPair } from '../../components/labels';
+import { logoutUser } from '../../api';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
 class Friends extends Component {
@@ -119,6 +120,11 @@ class Friends extends Component {
         });
     }
 
+    onPressLogout = async () => {
+        const accessToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
+        this.props.logoutUser(this.props.user.userId, accessToken);
+    }
+
     render() {
         const { headerSearchMode, searchQuery, activeTab, friendsActiveTab } = this.state;
 
@@ -156,9 +162,10 @@ class Friends extends Component {
                         </View>
                 }
                 <View style={{ flex: 1 }}>
-                    <BasicHeader title='Friends' rightIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
+                    <BasicHeader title='Friends' searchIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
                         searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false, searchQuery: '' })}
-                        onClearSearchValue={() => this.setState({ searchQuery: '' })} />
+                        onClearSearchValue={() => this.setState({ searchQuery: '' })}
+                        rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
 
                     <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                         <Tab
@@ -238,6 +245,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
+        logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Friends);

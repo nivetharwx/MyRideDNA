@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BULLSEYE_SIZE, WindowDimensions, APP_COMMON_STYLES } from '../../constants';
+import { BULLSEYE_SIZE, WindowDimensions, APP_COMMON_STYLES, widthPercentageToDP } from '../../constants';
 
 const styles = StyleSheet.create({
     fillParent: {
@@ -103,6 +103,14 @@ const styles = StyleSheet.create({
     topBorder: {
         borderTopWidth: 1,
         borderTopColor: '#000'
+    },
+    logoutIcon: {
+        marginRight: widthPercentageToDP(2),
+        width: widthPercentageToDP(9),
+        height: widthPercentageToDP(9),
+        borderRadius: widthPercentageToDP(4.5),
+        alignSelf: 'center',
+        backgroundColor: 'transparent',
     }
 });
 

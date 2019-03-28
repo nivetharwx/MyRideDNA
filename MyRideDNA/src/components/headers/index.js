@@ -56,7 +56,7 @@ export class BasicHeader extends React.Component {
 
     render() {
         const { leftIconProps, title, rightIconProps, onCancelSearchMode,
-            searchValue, onChangeSearchValue, hasEditableTitle, style } = this.props;
+            searchValue, onChangeSearchValue, hasEditableTitle, style, searchIconProps } = this.props;
         const { searchbarAnim, searchbarMode, titleEditingMode } = this.state;
 
         const searchCancelAnim = searchbarAnim.interpolate({
@@ -106,6 +106,18 @@ export class BasicHeader extends React.Component {
                                         </View>
                                 }
                             </View>
+                            {
+                                searchIconProps
+                                    ? <Animated.View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
+                                        <TouchableOpacity style={searchIconProps.reverse ? styles.iconPadding : null} onPress={searchIconProps.onPress && searchIconProps.onPress}>
+                                            <NBIcon name={searchIconProps.name} type={searchIconProps.type} style={[{
+                                                fontSize: 25,
+                                                color: searchIconProps.reverse ? 'black' : 'white'
+                                            }, searchIconProps.style]} />
+                                        </TouchableOpacity>
+                                    </Animated.View>
+                                    : null
+                            }
                             {
                                 rightIconProps
                                     ? <Animated.View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>

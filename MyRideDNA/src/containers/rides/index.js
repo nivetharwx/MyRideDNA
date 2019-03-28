@@ -1,16 +1,17 @@
 import React, { Component } from 'react';
 import {
     SafeAreaView, Text, View, FlatList, ImageBackground,
-    TouchableOpacity, Alert, StatusBar, Platform, StyleSheet
+    TouchableOpacity, Alert, StatusBar, Platform, StyleSheet,
+    AsyncStorage
 } from 'react-native';
 import { connect } from 'react-redux';
 
 import { Tab, TabHeading, Tabs, ScrollableTab, Icon as NBIcon, ListItem, Left, Toast } from "native-base";
-import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP } from '../../constants';
+import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN } from '../../constants';
 import { ShifterButton, LinkButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, screenChangeAction, clearRideAction } from '../../actions';
 import { BasicHeader } from '../../components/headers';
-import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide } from '../../api';
+import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide, logoutUser } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
 import { LabeledInput } from '../../components/inputs';
 import { IconLabelPair } from '../../components/labels';
@@ -200,7 +201,7 @@ export class Rides extends Component {
                 )
             case RIDE_TYPE.RECORD_RIDE:
                 return (
-                    
+
                     this.RECORD_RIDE_OPTIONS.map(option => (
                         <LinkButton
                             key={option.id}
@@ -236,6 +237,11 @@ export class Rides extends Component {
         this.setState({ isVisibleOptionsModal: false, selectedRide: null });
     }
 
+    onPressLogout = async () => {
+        const accessToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
+        this.props.logoutUser(this.props.user.userId, accessToken);
+    }
+
     render() {
         const { activeTab, searchQuery, headerSearchMode, isVisibleRenameModal, isVisibleOptionsModal } = this.state;
         const { buildRides, recordedRides, sharedRides, user } = this.props;
@@ -262,9 +268,9 @@ export class Rides extends Component {
                             }
                         </View>
                     </BaseModal>
-                    <BasicHeader title='Rides' rightIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
+                    <BasicHeader title='Rides' searchIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
                         searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false })}
-                        onClearSearchValue={() => this.setState({ searchQuery: '' })} />
+                        onClearSearchValue={() => this.setState({ searchQuery: '' })} rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
                     <Tabs onChangeTab={this.onChangeTab} style={{ flex: 1, paddingBottom: IS_ANDROID ? 0 : 20, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                         <Tab
                             heading={<TabHeading style={{ width: widthPercentageToDP(33.3), backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
@@ -394,7 +400,8 @@ const mapDispatchToProps = (dispatch) => {
         copySharedRide: (rideId, rideName, rideType, userId, date) => dispatch(copySharedRide(rideId, rideName, rideType, userId, date)),
         renameRide: (ride, rideType, userId, index) => dispatch(renameRide(ride, rideType, userId, index)),
         changeScreen: (screenKey) => dispatch(screenChangeAction(screenKey)),
-        clearRideFromMap: () => dispatch(clearRideAction())
+        clearRideFromMap: () => dispatch(clearRideAction()),
+        logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
     }
 }
 
