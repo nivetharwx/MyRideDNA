@@ -1,16 +1,16 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, StatusBar, Animated, ImageBackground, AsyncStorage, TouchableWithoutFeedback, Text, View } from 'react-native';
+import { StyleSheet, StatusBar, Animated, ImageBackground, AsyncStorage, TouchableWithoutFeedback, Text, View, FlatList, TouchableOpacity } from 'react-native';
 import { BasicHeader } from '../../components/headers';
-import { Tabs, Tab, TabHeading, ScrollableTab } from 'native-base';
+import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon } from 'native-base';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, USER_AUTH_TOKEN } from '../../constants';
 import styles from './styles';
 import AllFriendsTab from './all-friends';
 import GroupListTab from './group-list';
 import { appNavMenuVisibilityAction } from '../../actions';
-import { ShifterButton } from '../../components/buttons';
+import { ShifterButton, IconButton } from '../../components/buttons';
 import { IconLabelPair } from '../../components/labels';
-import { logoutUser } from '../../api';
+import { logoutUser, getAllFriendRequests, getPicture, cancelFriendRequest, approveFriendRequest, rejectFriendRequest } from '../../api';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
 class Friends extends Component {
@@ -21,6 +21,10 @@ class Friends extends Component {
     position = new Animated.ValueXY();
     dimensions = new Animated.ValueXY();
     animation = new Animated.Value(0);
+    randomData = [{
+        name: 'ayush',
+        id: 1
+    }, { name: 'asdasd', id: 2 }]
     constructor(props) {
         super(props);
         this.state = {
@@ -36,7 +40,9 @@ class Friends extends Component {
         setTimeout(() => {
             this.tabsRef.props.goToPage(0)
         }, 0);
+        this.getAllFriendRequestFunction()
     }
+
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.personInfo !== this.props.personInfo) {
@@ -48,6 +54,10 @@ class Friends extends Component {
                 this.openProfile();
             }
         }
+    }
+
+    getAllFriendRequestFunction = () => {
+        this.props.getAllRequest(this.props.user.userId);
     }
 
     toggleAppNavigation = () => this.props.showAppNavMenu();
@@ -93,6 +103,16 @@ class Friends extends Component {
         });
     }
 
+    cancelingFriendRequest = (item) => {
+        this.props.cancelRequest(this.props.user.userId, item.userId,item.id);
+    }
+
+    approvingFriendRequest = (item) => {
+        this.props.approvedRequest(this.props.user.userId, item.senderId, new Date().toISOString(),item.id);
+    }
+    rejectingFriendRequest = (item) => {
+        this.props.rejectRequest(this.props.user.userId, item.senderId,item.id);
+    }
     closeProfile = () => {
         Animated.parallel([
             Animated.timing(this.position.x, {
@@ -123,6 +143,42 @@ class Friends extends Component {
     onPressLogout = async () => {
         const accessToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
         this.props.logoutUser(this.props.user.userId, accessToken);
+    }
+
+    renderFriendRequestList = ({ item, index }) => {
+        if (item.requestType === "sentRequest") {
+            return (
+                <ListItem avatar style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
+                    <Left style={{ alignItems: 'center', justifyContent: 'center'}}>
+                        <NBIcon active name="person" type='MaterialIcons' style={{ width: widthPercentageToDP(6), color: '#fff' }} />
+                    </Left>
+                    <Body >
+                        <Text>{item.name}</Text>
+                        <Text>({item.nickname})</Text>
+                    </Body>
+                    <Right>
+                        <IconButton iconProps={{ name: 'close', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={()=>this.cancelingFriendRequest(item)} />
+                    </Right>
+                </ListItem>
+            )
+        }
+        else {
+            return (
+                <ListItem avatar style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
+                    <Left style={{ alignItems: 'center', justifyContent: 'center'}}>
+                        <NBIcon active name="person" type='MaterialIcons' style={{ width: widthPercentageToDP(6), color: '#fff' }} />
+                    </Left>
+                    <Body >
+                        <Text>{item.senderName}</Text>
+                        <Text>({item.senderNickname})</Text>
+                    </Body>
+                    <Right style={{flex:1, flexDirection: 'row',justifyContent:'space-around'}}>
+                        <IconButton  iconProps={{ name: 'user-check', type: 'Feather', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={()=>this.approvingFriendRequest(item)} />
+                        <IconButton  iconProps={{ name: 'user-x', type: 'Feather', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={()=>this.rejectingFriendRequest(item)} />
+                    </Right>
+                </ListItem>
+            )
+        }
     }
 
     render() {
@@ -169,16 +225,39 @@ class Friends extends Component {
 
                     <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                         <Tab
-                            heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 1 }}>
+                            heading={<TabHeading style={{ width: widthPercentageToDP(33), backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 1 }}>
                                 <IconLabelPair containerStyle={styles.tabContentCont} text={`Friends`} textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} iconProps={{ name: 'people-outline', type: 'MaterialIcons', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }} />
                             </TabHeading>}>
                             <AllFriendsTab refreshContent={activeTab === 0} searchQuery={searchQuery} />
                         </Tab>
                         <Tab
-                            heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderColor: '#fff', borderLeftWidth: 1 }}>
+                            heading={<TabHeading style={{ width: widthPercentageToDP(33), backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderColor: '#fff', borderLeftWidth: 1 }}>
                                 <IconLabelPair containerStyle={styles.tabContentCont} text={`Groups`} textStyle={{ color: activeTab === 1 ? '#fff' : '#6B7663' }} iconProps={{ name: 'group', type: 'FontAwesome', style: { color: activeTab === 1 ? '#fff' : '#6B7663' } }} />
                             </TabHeading>}>
                             <GroupListTab refreshContent={activeTab === 1} />
+                        </Tab>
+                        <Tab
+                            heading={<TabHeading style={{ width: widthPercentageToDP(33), backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderColor: '#fff', borderLeftWidth: 1 }}>
+                                <IconLabelPair containerStyle={styles.tabContentCont} text={`Requests`} textStyle={{ color: activeTab === 2 ? '#fff' : '#6B7663' }} iconProps={{ name: 'people', type: 'MaterialIcons', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }} />
+                                {
+                                    this.props.allFriendRequests.length > 0 ?
+                                        <View style={{
+                                            position: 'absolute', minWidth: widthPercentageToDP(6), height: widthPercentageToDP(5), borderRadius: widthPercentageToDP(2),
+                                            backgroundColor: 'red', top: 1, left: 15, borderWidth: 2.5, borderColor: '#fff', justifyContent: 'center', alignItems: 'center', padding: 7
+                                        }}>
+                                            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: widthPercentageToDP(3) }}>{this.props.allFriendRequests.length > 99 ? '99+' : this.props.allFriendRequests.length}</Text>
+                                        </View>
+                                        : null
+                                }
+
+                            </TabHeading>}>
+
+                            <View style={{ backgroundColor: '#fff', flex: 1 }}>
+                                <FlatList
+                                    data={this.props.allFriendRequests}
+                                    renderItem={this.renderFriendRequestList}
+                                />
+                            </View>
                         </Tab>
                     </Tabs>
                     {
@@ -240,12 +319,18 @@ class Friends extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { personInfo, oldPosition } = state.PageOverTab;
-    return { user, personInfo, oldPosition };
+    const { allFriendRequests } = state.FriendRequest;
+    return { user, personInfo, oldPosition, allFriendRequests };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
+        getAllRequest: (userId, accessToken) => dispatch(getAllFriendRequests(userId)),
+        cancelRequest: (userId, personId,requestId) => dispatch(cancelFriendRequest(userId, personId,requestId)),
+        approvedRequest: (userId, personId, actionDate, requestId) => dispatch(approveFriendRequest(userId, personId, actionDate, requestId)),
+        rejectRequest: (userId, personId,requestId) => dispatch(rejectFriendRequest(userId, personId, requestId)),
+        getPicture: (userId, accessToken) => dispatch(getPicture(userId)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Friends);
