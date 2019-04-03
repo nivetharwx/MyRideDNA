@@ -12,5 +12,6 @@ import FriendGroupList from './FriendGroupList';
 import PassengerList from './PassengerList';
 import CommunitySearchList from './CommunitySearchList';
 import NotificationList from './NotificationList';
+import FriendRequest from './FriendRequest';
 
-export default combineReducers({ UserAuth, TabVisibility, RideInfo, RideList, GPSState, PageState, FriendList, GarageInfo, PageOverTab, FriendGroupList, PassengerList, CommunitySearchList, NotificationList });
+export default combineReducers({ UserAuth, TabVisibility, RideInfo, RideList, GPSState, PageState, FriendList, GarageInfo, PageOverTab, FriendGroupList, PassengerList, CommunitySearchList, NotificationList, FriendRequest });

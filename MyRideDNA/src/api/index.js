@@ -1,6 +1,7 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
-    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction, deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, updateInvitationResponseAction
+    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction, 
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE } from '../constants';
 import axios from 'axios';
@@ -25,6 +26,7 @@ export const getPicture = (pictureId, successCallback, errorCallback) => {
     axios.get(USER_BASE_URL + `getPicture/${pictureId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
             if (res.status === 200) {
+                console.log(res)
                 if (res.data.picture === '') {
                     errorCallback(res.data);
                 } else {
@@ -739,6 +741,7 @@ export const replaceRide = (rideId, ride) => {
         })
         .catch(er => {
             console.log(er.response);
+            // ToDo handle timeout error seperately for map
         })
 }
 export const getRideByRideId = (rideId) => {
@@ -764,6 +767,7 @@ export const getAllFriends = (friendType, userId, pageNumber) => {
         axios.get(FRIENDS_BASE_URL + `getFriendList?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    console.log('getFriendList success :', res.data)
                     dispatch(toggleLoaderAction(false));
                     if (pageNumber === 0) {
                         dispatch(replaceFriendListAction({ friendType, friendList: res.data }))
@@ -849,13 +853,15 @@ export const sendFriendRequest = (requestBody) => {
             })
     };
 }
-export const cancelFriendRequest = (senderId, personId) => {
+export const cancelFriendRequest = (senderId, personId,requestId) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
         axios.delete(FRIENDS_BASE_URL + `cancelFriendRequest?senderId=${senderId}&userId=${personId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    console.log('cancelFriendRequest sucess : ',res)
                     dispatch(toggleLoaderAction(false));
+                    dispatch(updateFriendRequestListAction(requestId))
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
                 }
             })
@@ -866,35 +872,55 @@ export const cancelFriendRequest = (senderId, personId) => {
             })
     };
 }
-export const approveFriendRequest = (senderId, personId, actionDate) => {
+
+export const getAllFriendRequests = (userId) => {
+    return dispatch => {
+        axios.get(FRIENDS_BASE_URL + `getAllRequests?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log(res)
+                    dispatch(replaceFriendRequestListAction(res.data))
+                }
+            })
+            .catch(err => {
+                console.log(err)
+            })
+    }
+}
+export const approveFriendRequest = (senderId, personId, actionDate, requestId) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
         axios.put(FRIENDS_BASE_URL + `approveFriendRequest?senderId=${senderId}&userId=${personId}&date=${actionDate}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    console.log('approveFriendRequest sucess: ', res)
                     dispatch(toggleLoaderAction(false));
+                    dispatch(updateFriendRequestListAction(requestId))
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.FRIEND }));
                 }
             })
             .catch(er => {
-                console.log(`cancelFriendRequest: `, er, er.response);
+                console.log(`approveFriendRequest: `, er, er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
     };
 }
-export const rejectFriendRequest = (senderId, personId) => {
+export const rejectFriendRequest = (senderId, personId,requestId) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
         axios.put(FRIENDS_BASE_URL + `rejectFriendRequest?senderId=${senderId}&userId=${personId}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    
+                    console.log('rejectFriendRequest success: ',res)
+                    dispatch(updateFriendRequestListAction(requestId))
                     dispatch(toggleLoaderAction(false));
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
                 }
             })
             .catch(er => {
-                console.log(`cancelFriendRequest: `, er, er.response);
+                console.log(`rejectFriendRequest error : `, er, er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -906,12 +932,13 @@ export const doUnfriend = (senderId, personId) => {
         axios.delete(FRIENDS_BASE_URL + `unfriend?senderId=${senderId}&userId=${personId}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    console.log('unfriend sucess : ',res)
                     dispatch(toggleLoaderAction(false));
                     return dispatch(doUnfriendAction({ personId }));
                 }
             })
             .catch(er => {
-                console.log(`doUnfriend: `, er.response || er);
+                console.log(`unfriend: `, er.response || er);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
