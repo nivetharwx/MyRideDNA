@@ -297,7 +297,7 @@ export class Map extends Component {
             if (location.time - this.prevUserTrackTime > 60000) {
                 this.prevUserTrackTime = location.time;
                 this.props.updateLocation(this.props.user.userId, { lat: location.latitude, lng: location.longitude });
-                
+
                 // TODO: Need to understand about the task
                 // BackgroundGeolocation.startTask(taskKey => {
                 //     BackgroundGeolocation.endTask(taskKey);
@@ -525,6 +525,7 @@ export class Map extends Component {
     }
 
     onRegionDidChange = async ({ properties, geometry }) => {
+        if (this.props.user.showCircle === false) return;
         if (this.state.showCreateRide === false) {
             const mapZoomLevel = await this._mapView.getZoom();
             if (this.state.mapZoomLevel != mapZoomLevel) {
@@ -1451,7 +1452,7 @@ export class Map extends Component {
                                 : null
                         }
                         {
-                            mapRadiusCircle
+                            user.showCircle && mapRadiusCircle
                                 ? <MapboxGL.ShapeSource id='routeSource' shape={mapRadiusCircle}>
                                     <MapboxGL.LineLayer id='routeFill' style={MapboxStyles.circleOutline} />
                                 </MapboxGL.ShapeSource>

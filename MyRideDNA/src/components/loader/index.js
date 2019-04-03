@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden'
     },
     wrapper: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'rgba(255,255,255,0.5)',
         height: 100,
         width: 100,
         borderRadius: 10,
