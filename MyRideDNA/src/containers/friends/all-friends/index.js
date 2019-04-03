@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableHighlight } from 'react-native';
-import { getAllFriends, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend, getAllOnlineFriends } from '../../../api';
+import { getAllFriends, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend, getAllOnlineFriends, getPicture } from '../../../api';
 import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, heightPercentageToDP, RELATIONSHIP, PageKeys } from '../../../constants';
 import { BaseModal } from '../../../components/modal';
 import { LinkButton } from '../../../components/buttons';
 import { ThumbnailCard } from '../../../components/cards';
-import { openFriendProfileAction } from '../../../actions';
+import { openFriendProfileAction, updateFriendInListAction } from '../../../actions';
 import { FloatingAction } from 'react-native-floating-action';
-import { Icon as NBIcon } from 'native-base';
+import { Icon as NBIcon, Thumbnail } from 'native-base';
 import { Actions } from 'react-native-router-flux';
 
 
@@ -63,6 +63,7 @@ class AllFriendsTab extends Component {
             selectedPerson: null,
             selectedPersonImg: null,
             friendsFilter: FLOAT_ACTION_IDS.BTN_ALL_FRIENDS,
+            refreshList: false
         }
     }
 
@@ -77,9 +78,15 @@ class AllFriendsTab extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.allFriends !== this.props.allFriends) {
+            // this.setState(prevState => ({ refreshList: !prevState.refreshList }));
             if (prevState.isRefreshing === true) {
                 this.setState({ isRefreshing: false });
             }
+            this.props.allFriends.forEach((friend) => {
+                if (!friend.profilePicture && friend.profilePictureId) {
+                    this.props.getPicture(friend.profilePictureId, friend.userId)
+                }
+            })
         }
         if (this.props.refreshContent === true && prevProps.refreshContent === false) {
             this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0);
@@ -269,6 +276,7 @@ class AllFriendsTab extends Component {
     }
 
     render() {
+        console.log('allFriend : ', this.props.allFriends)
         const { isRefreshing, isVisibleOptionsModal, friendsFilter } = this.state;
         const { allFriends, searchQuery, searchFriendList, user } = this.props;
         let filteredFriends = [];
@@ -308,7 +316,9 @@ class AllFriendsTab extends Component {
                                 refreshing={isRefreshing}
                                 onRefresh={this.onPullRefresh}
                                 keyExtractor={this.friendKeyExtractor}
+                                extraData={this.state}
                                 renderItem={({ item, index }) => (
+                                    // <Thumbnail source={item.profilePicture ? { uri: item.profilePicture } : require('../../../assets/img/friend-profile-pic.png')} />
                                     <ThumbnailCard
                                         thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                                         item={item}
@@ -345,7 +355,12 @@ const mapDispatchToProps = (dispatch) => {
         approveFriendRequest: (userId, personId, actionDate) => dispatch(approveFriendRequest(userId, personId, actionDate)),
         rejectFriendRequest: (userId, personId) => dispatch(rejectFriendRequest(userId, personId)),
         doUnfriend: (userId, personId) => dispatch(doUnfriend(userId, personId)),
-        openUserProfile: (profileInfo) => dispatch(openFriendProfileAction(profileInfo))
+        openUserProfile: (profileInfo) => dispatch(openFriendProfileAction(profileInfo)),
+        getPicture: (pictureId, friendId) => getPicture(pictureId, ({ picture, pictureId }) => {
+            dispatch(updateFriendInListAction({ profilePicture: picture, userId: friendId }))
+        }, (error) => {
+            dispatch(updateFriendInListAction({ userId: friendId }))
+        }),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(AllFriendsTab);

@@ -83,56 +83,56 @@ export class BasicCard extends React.Component {
 }
 
 export const ThumbnailCard = ({ item, thumbnailPlaceholder, onPress, onLongPress, actions, thumbnailRef }) => (
-    <View style={styles.thumbnail}>
-        <TouchableOpacity onPress={() => onPress ? onPress() : null} activeOpacity={onLongPress ? 0.7 : 1} onLongPress={() => onLongPress && onLongPress()} style={{
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center'
-        }}>
-            <View style={[{
-                width: widthPercentageToDP(30), height: widthPercentageToDP(30),
-                borderRadius: widthPercentageToDP(15), borderWidth: 6, borderColor: '#231F20', overflow: 'hidden'
-            }]} ref={elRef => thumbnailRef ? thumbnailRef(elRef) : null}>
-                <Image source={item.profilePictureThumbnail ? { uri: item.profilePictureThumbnail } : thumbnailPlaceholder}
-                    style={{ width: null, height: null, flex: 1 }} />
-            </View>
-            {
-                item.isOnline
-                    ? <View style={{ backgroundColor: '#37B603', position: 'absolute', zIndex: 100, alignSelf: 'flex-start', bottom: '70%', left: '20%', width: widthPercentageToDP(6), height: widthPercentageToDP(6), borderRadius: widthPercentageToDP(3), elevation: 10 }} />
-                    : null
-            }
-            <Text style={{
-                fontWeight: 'bold',
-                backgroundColor: 'transparent',
-                fontSize: widthPercentageToDP(4),
-                color: item.name === 'You' ? APP_COMMON_STYLES.infoColor : '#000'
-            }}
-                renderToHardwareTextureAndroid collapsable={false}>
-                {item.name}
+        <View style={styles.thumbnail}>
+            <TouchableOpacity onPress={() => onPress ? onPress() : null} activeOpacity={onLongPress ? 0.7 : 1} onLongPress={() => onLongPress && onLongPress()} style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}>
+                <View style={[{
+                    width: widthPercentageToDP(30), height: widthPercentageToDP(30),
+                    borderRadius: widthPercentageToDP(15), borderWidth: 6, borderColor: '#231F20', overflow: 'hidden'
+                }]} ref={elRef => thumbnailRef ? thumbnailRef(elRef) : null}>
+                    <Image source={item.profilePicture ? { uri: item.profilePicture } : thumbnailPlaceholder}
+                        style={{ width: null, height: null, flex: 1 }} />
+                </View>
                 {
-                    item.nickname
-                        ?
-                        <Text style={{ color: APP_COMMON_STYLES.infoColor, fontWeight: 'bold' }}>
-                            {'  '}{item.nickname}
-                        </Text>
+                    item.isOnline
+                        ? <View style={{ backgroundColor: '#37B603', position: 'absolute', zIndex: 100, alignSelf: 'flex-start', bottom: '70%', left: '20%', width: widthPercentageToDP(6), height: widthPercentageToDP(6), borderRadius: widthPercentageToDP(3), elevation: 10 }} />
                         : null
                 }
-            </Text>
-            {/* <Text style={{ color: '#A1A2A6' }}>{item.email}</Text> */}
-        </TouchableOpacity>
-        {
-            Array.isArray(actions) && actions.length > 0
-                ? <View style={styles.actionContainer}>
+                <Text style={{
+                    fontWeight: 'bold',
+                    backgroundColor: 'transparent',
+                    fontSize: widthPercentageToDP(4),
+                    color: item.name === 'You' ? APP_COMMON_STYLES.infoColor : '#000'
+                }}
+                    renderToHardwareTextureAndroid collapsable={false}>
+                    {item.name}
                     {
-                        actions.map(action => (
-                            <LinkButton key={action.title} title={action.title} titleStyle={action.titleStyle} onPress={action.onPress} />
-                        ))
+                        item.nickname
+                            ?
+                            <Text style={{ color: APP_COMMON_STYLES.infoColor, fontWeight: 'bold' }}>
+                                {'  '}{item.nickname}
+                            </Text>
+                            : null
                     }
-                </View>
-                : null
-        }
-    </View>
-);
+                </Text>
+                {/* <Text style={{ color: '#A1A2A6' }}>{item.email}</Text> */}
+            </TouchableOpacity>
+            {
+                Array.isArray(actions) && actions.length > 0
+                    ? <View style={styles.actionContainer}>
+                        {
+                            actions.map(action => (
+                                <LinkButton key={action.title} title={action.title} titleStyle={action.titleStyle} onPress={action.onPress} />
+                            ))
+                        }
+                    </View>
+                    : null
+            }
+        </View>
+    );
 
 {/* <NBIcon name='md-star' type='Ionicons' />
     <View style={styles.columnContainer}>

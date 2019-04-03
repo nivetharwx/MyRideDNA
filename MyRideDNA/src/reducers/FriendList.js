@@ -1,4 +1,4 @@
-import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS } from "../actions/actionConstants";
+import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND } from "../actions/actionConstants";
 import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP } from "../constants";
 
 const initialState = {
@@ -57,7 +57,8 @@ export default (state = initialState, action) => {
             }
             return state;
 
-        case UPDATE_FRIEND_IN_LIST:
+        case UPDATE_CURRENT_FRIEND:
+        if (state.currentFriend === null || (action.data.userId !== state.currentFriend.userId)) return state;
             return {
                 ...state,
                 currentFriend: {
@@ -91,6 +92,21 @@ export default (state = initialState, action) => {
                 allFriends: allFriends
             };
 
+        case UPDATE_FRIEND_IN_LIST:
+            let index = state.allFriends.findIndex((friend) => { return friend.userId === action.data.userId })
+            if (index > -1) {
+                const friend = state.allFriends[index];
+                friend.profilePicture = action.data.profilePicture;
+                return {
+                    ...state,
+                    allFriends: [
+                        ...state.allFriends.slice(0, index),
+                        friend,
+                        ...state.allFriends.slice(index + 1)
+                    ]
+                }
+            }
+            return state;
         // case CLEAR_FRIEND_LIST:
         //     // var friendKey = getFriendListByType(action.data.friendType);
         //     // updatedState.allFriends = [];

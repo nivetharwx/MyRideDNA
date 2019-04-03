@@ -20,7 +20,7 @@ import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon } from 'native-base';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction } from '../../actions';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction } from '../../actions';
 import { SearchBox } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -297,7 +297,7 @@ export class Map extends Component {
             if (location.time - this.prevUserTrackTime > 60000) {
                 this.prevUserTrackTime = location.time;
                 this.props.updateLocation(this.props.user.userId, { lat: location.latitude, lng: location.longitude });
-                
+
                 // TODO: Need to understand about the task
                 // BackgroundGeolocation.startTask(taskKey => {
                 //     BackgroundGeolocation.endTask(taskKey);
@@ -446,8 +446,13 @@ export class Map extends Component {
 
     onBackButtonPress = () => {
         if (Actions.state.index != 0) {
-            Actions.pop();
-            this.props.changeScreen(Actions.currentScene);
+            if (Actions.currentScene === PageKeys.FRIENDS_PROFILE) {
+                this.props.resetCurrentFriend();
+                this.props.changeScreen(Actions.currentScene);
+            } else {
+                Actions.pop();
+                this.props.changeScreen(Actions.currentScene);
+            }
             return true;
         } else {
             return true;
@@ -1700,6 +1705,7 @@ const mapDispatchToProps = (dispatch) => {
         continueRecordRide: (resumeTime, ride, userId) => dispatch(continueRecordRide(resumeTime, ride, userId)),
         completeRecordRide: (endTime, trackpoints, distance, ride, userId) => dispatch(completeRecordRide(endTime, trackpoints, distance, ride, userId)),
         getRideByRideId: (rideId) => dispatch(getRideByRideId(rideId)),
+        resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
         doUndo: () => dispatch(undoRideAction()),
         doRedo: () => dispatch(redoRideAction()),
         logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
