@@ -1,4 +1,4 @@
-import { REPLACE_GARAGE_INFO, UPDATE_GARAGE_NAME, UPDATE_BIKE_LIST, CLEAR_GARAGE, ADD_TO_BIKE_LIST, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, UPDATE_SHORT_SPACE_LIST, REPLACE_SHORT_SPACE_LIST } from "../actions/actionConstants";
+import { REPLACE_GARAGE_INFO, UPDATE_GARAGE_NAME, UPDATE_BIKE_LIST, CLEAR_GARAGE, ADD_TO_BIKE_LIST, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, UPDATE_SHORT_SPACE_LIST, REPLACE_SHORT_SPACE_LIST, UPDATE_BIKE_PICTURE_LIST } from "../actions/actionConstants";
 
 const initialState = {
     garageName: null,
@@ -40,17 +40,13 @@ export default (state = initialState, action) => {
                 ...state,
                 shortSpaceList: []
             }
+
         case ADD_TO_BIKE_LIST:
             return {
                 ...state,
-                spaceList: action.data.index >= 0
-                    ? [
-                        ...state.spaceList.slice(0, action.data.index),
-                        action.data.bike,
-                        ...state.spaceList.slice(action.data.index)
-                    ]
-                    : [...state.spaceList, action.data.bike]
+                spaceList: [...state.spaceList, action.data.bike]
             }
+
         case DELETE_BIKE_FROM_LIST:
             const spaceList = [
                 ...state.spaceList.slice(0, action.data.index),
@@ -77,14 +73,44 @@ export default (state = initialState, action) => {
                 ]
             }
         case UPDATE_BIKE_LIST:
-            return {
-                ...state,
-                spaceList: [
-                    ...state.spaceList.slice(0, action.data.index),
-                    action.data.bike,
-                    ...state.spaceList.slice(action.data.index + 1)
-                ]
+            const bikeIdx = state.spaceList.findIndex(bike => bike.spaceId === action.data.bike.spaceId);
+            if (bikeIdx > -1) {
+                return {
+                    ...state,
+                    spaceList: [
+                        ...state.spaceList.slice(0, bikeIdx),
+                        {
+                            ...state.spaceList[bikeIdx],
+                            ...action.data.bike
+                        },
+                        ...state.spaceList.slice(bikeIdx + 1)
+                    ]
+                }
             }
+            return state;
+
+        case UPDATE_BIKE_PICTURE_LIST:
+            const bikeIndex = state.spaceList.findIndex(bike => bike.spaceId === action.data.spaceId);
+            if (bikeIndex > -1) {
+                return {
+                    ...state,
+                    spaceList: [
+                        ...state.spaceList.slice(0, bikeIndex),
+                        !state.spaceList[bikeIndex].pictureList || state.spaceList[bikeIndex].pictureList.length === 0
+                            ? {
+                                ...state.spaceList[bikeIndex],
+                                pictureList: [action.data.picture]
+                            }
+                            : {
+                                ...state.spaceList[bikeIndex],
+                                pictureList: [...state.spaceList[bikeIndex].pictureList, action.data.picture]
+                            },
+                        ...state.spaceList.slice(bikeIndex + 1)
+                    ]
+                }
+            }
+            return state;
+
         case CLEAR_GARAGE:
             return {
                 ...initialState

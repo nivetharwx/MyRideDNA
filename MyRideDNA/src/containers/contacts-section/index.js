@@ -10,8 +10,8 @@ import { IconLabelPair } from '../../components/labels';
 import { IconButton } from '../../components/buttons';
 import Contacts from 'react-native-contacts';
 import Permissions from 'react-native-permissions';
-import { searchForFriend, sendFriendRequest } from '../../api';
-import { clearSearchFriendListAction, resetFriendRequestResponseAction } from '../../actions';
+import { searchForFriend, sendFriendRequest, sendInvitationOrRequest } from '../../api';
+import { clearSearchFriendListAction, resetFriendRequestResponseAction, resetInvitationResponseAction } from '../../actions';
 import { isValidEmailFormat } from '../../util';
 
 class ContactsSection extends PureComponent {
@@ -59,7 +59,7 @@ class ContactsSection extends PureComponent {
                     position: 'bottom',
                     onClose: () => this.props.clearFriendRequestResponse()
                 });
-                this.setState({ selectedMember: null, searchName: null, userEnteredEmail: '', customMessage: '' });
+                this.setState({ selectedMember: null, searchName: null, userEnteredEmail: '', customMessage: '', canSubmit: false });
             }
         } else if (prevProps.friendRequestError !== this.props.friendRequestError) {
             if (this.props.friendRequestError !== null) {
@@ -69,6 +69,28 @@ class ContactsSection extends PureComponent {
                     position: 'bottom',
                     type: 'danger',
                     onClose: () => this.props.clearFriendRequestResponse()
+                });
+            }
+        }
+        if (prevProps.invitationSuccess !== this.props.invitationSuccess) {
+            if (this.props.invitationSuccess !== null) {
+                Toast.show({
+                    text: "Request sent successfully",
+                    buttonText: 'Okay',
+                    type: 'success',
+                    position: 'bottom',
+                    onClose: () => this.props.clearInvitationResponse()
+                });
+                this.setState({ selectedMember: null, searchName: null, userEnteredEmail: '', customMessage: '', canSubmit: false });
+            }
+        } else if (prevProps.invitationError !== this.props.invitationError) {
+            if (this.props.invitationError !== null) {
+                Toast.show({
+                    text: this.props.invitationError.userMessage,
+                    buttonText: 'Okay',
+                    position: 'bottom',
+                    type: 'danger',
+                    onClose: () => this.props.clearInvitationResponse()
                 });
             }
         }
@@ -174,7 +196,7 @@ class ContactsSection extends PureComponent {
         this.setState({ searchName: '', selectedMember: null, canSubmit: false });
     }
 
-    onClearUserEnteredEmail = () => this.setState({ userEnteredEmail: '' });
+    onClearUserEnteredEmail = () => this.setState({ userEnteredEmail: '', canSubmit: false });
 
     onClearCustomMessage = () => this.setState({ customMessage: '' });
 
@@ -231,6 +253,15 @@ class ContactsSection extends PureComponent {
         // TODO: Pass proper params customMessage, email, userId
         // TODO: Check this.state.customMessage add default message if empty
         console.log("sendFriendInvitation called");
+        const { user } = this.props;
+        this.props.sendInvitationOrRequest({
+            senderId: user.userId,
+            senderName: user.name,
+            senderNickname: user.nickname,
+            senderEmail: user.email,
+            emailList: [this.state.userEnteredEmail],
+            date: new Date().toISOString()
+        })
     }
 
     renderCommunityMember = ({ item, index }) => {
@@ -337,15 +368,17 @@ class ContactsSection extends PureComponent {
 }
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { searchResults, friendRequestSuccess, friendRequestError } = state.CommunitySearchList;
-    return { user, searchResults, friendRequestSuccess, friendRequestError };
+    const { searchResults, friendRequestSuccess, friendRequestError, invitationSuccess, invitationError } = state.CommunitySearchList;
+    return { user, searchResults, friendRequestSuccess, friendRequestError, invitationSuccess, invitationError };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
         searchForFriend: (searchParam, userId, pageNumber) => dispatch(searchForFriend(searchParam, userId, pageNumber)),
         clearSearchResults: () => dispatch(clearSearchFriendListAction()),
         clearFriendRequestResponse: () => dispatch(resetFriendRequestResponseAction()),
+        clearInvitationResponse: () => dispatch(resetInvitationResponseAction()),
         sendFriendRequest: (requestBody) => dispatch(sendFriendRequest(requestBody)),
+        sendInvitationOrRequest: (requestBody) => dispatch(sendInvitationOrRequest(requestBody)),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(ContactsSection);

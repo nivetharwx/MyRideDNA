@@ -530,6 +530,7 @@ export class Map extends Component {
     }
 
     onRegionDidChange = async ({ properties, geometry }) => {
+        if (this.props.user.showCircle === false) return;
         if (this.state.showCreateRide === false) {
             const mapZoomLevel = await this._mapView.getZoom();
             if (this.state.mapZoomLevel != mapZoomLevel) {
@@ -1456,7 +1457,7 @@ export class Map extends Component {
                                 : null
                         }
                         {
-                            mapRadiusCircle
+                            user.showCircle && mapRadiusCircle
                                 ? <MapboxGL.ShapeSource id='routeSource' shape={mapRadiusCircle}>
                                     <MapboxGL.LineLayer id='routeFill' style={MapboxStyles.circleOutline} />
                                 </MapboxGL.ShapeSource>

@@ -7,9 +7,9 @@ import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, PageKeys 
 import { Actions } from 'react-native-router-flux';
 import { BasicButton, IconButton, LinkButton } from '../../../components/buttons';
 import { Icon as NBIcon } from 'native-base';
-import { getGarageInfo, setBikeAsActive, deleteBike, updateGarageName } from '../../../api';
+import { getPicture, getGarageInfo, setBikeAsActive, deleteBike, updateGarageName } from '../../../api';
 import { BaseModal } from '../../../components/modal';
-import { replaceGarageInfoAction, toggleLoaderAction } from '../../../actions';
+import { replaceGarageInfoAction, toggleLoaderAction, updateBikePictureListAction } from '../../../actions';
 
 class MyGarageTab extends Component {
     spacelistRef = null;
@@ -24,26 +24,41 @@ class MyGarageTab extends Component {
     }
 
     componentDidMount() {
-        this.props.getGarageInfo(this.props.user.userId);
+        if (this.props.garage.garageId === null) {
+            this.props.getGarageInfo(this.props.user.userId);
+        } else {
+            console.log("this.props.garage: ", this.props.garage)
+            this.props.garage.spaceList.forEach(bike => {
+                if (bike.pictureIdList.length > 0) {
+                    this.props.getBikePicture(bike.pictureIdList[0], bike.spaceId);
+                }
+            });
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (this.props.garage.spaceList.length > 0) {
             if (prevProps.garage.garageId === null) {
-                /*** TODO: Iterate spaceList and call API by passing pictureIdList
-                 * Split the pictureIdList if it is more than 10 pictureIds
-                 ***/
+                this.props.garage.spaceList.forEach(bike => {
+                    if (bike.pictureIdList.length > 0) {
+                        this.props.getBikePicture(bike.pictureIdList[0], bike.spaceId);
+                    }
+                });
                 return;
             }
             if (this.props.garage.spaceList.length > prevProps.garage.spaceList.length) {
                 this.spacelistRef.scrollToEnd();
-            } else if (this.props.garage.activeBikeIndex !== prevProps.garage) {
+                const newBike = this.props.garage.spaceList[this.props.garage.spaceList.length - 1];
+                if (newBike.pictureIdList.length > 0) {
+                    this.props.getBikePicture(newBike.pictureIdList[0], newBike.spaceId);
+                }
+            } else if (this.props.garage.activeBikeIndex !== prevProps.garage.activeBikeIndex) {
                 this.spacelistRef.scrollToIndex({ index: 0, viewPosition: 0 });
             }
         }
     }
 
-    onChangeActiveBike() {
+    onChangeActiveBike = () => {
         const { garage } = this.props;
         const { selectedBike } = this.state;
         this.onCancelOptionsModal();
@@ -74,8 +89,8 @@ class MyGarageTab extends Component {
     renderMenuOptions = () => {
         if (this.state.selectedBike === null) return;
         let options = [{ text: 'Edit', id: 'editBike', handler: () => this.openBikeForm() }];
-        if (this.state.selectedBike.isDefault === false) {
-            options.push({ text: 'Select as active', id: 'activeBike', handler: this.onChangeActiveBike() })
+        if (!this.state.selectedBike.isDefault) {
+            options.push({ text: 'Select as active', id: 'activeBike', handler: () => this.onChangeActiveBike() })
         }
         options.push({ text: 'Remove bike', id: 'removeBike', handler: () => this.onPressDeleteBike() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() });
         return (
@@ -186,6 +201,10 @@ const mapDispatchToProps = (dispatch) => {
         updateGarageName: (garageName, garageId) => dispatch(updateGarageName(garageName, garageId)),
         setBikeAsActive: (userId, bike, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, bike, prevActiveIndex, index)),
         deleteBike: (userId, bikeId, index) => dispatch(deleteBike(userId, bikeId, index)),
+        getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
+            console.log("getPicture success: ", response);
+            dispatch(updateBikePictureListAction({ spaceId, ...response }))
+        }, (error) => console.log("getPicture error: ", error)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MyGarageTab);

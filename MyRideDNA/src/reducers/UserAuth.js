@@ -23,7 +23,7 @@ export default (state = initialState, action) => {
             }
         case CURRENT_USER:
             action.data.locationEnable = action.data.locationEnable || false;
-            action.data.distanceUnit = action.data.distanceUnit || 'km';
+            action.data.distanceUnit = action.data.distanceUnit || 'mi';
             action.data.locationRadius = action.data.locationRadius || 1;
             return {
                 ...state,

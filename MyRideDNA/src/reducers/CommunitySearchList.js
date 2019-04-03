@@ -1,10 +1,12 @@
-import { REPLACE_SEARCH_RESULTS, CLEAR_SEARCH_RESULTS, UPDATE_FRIEND_REQUEST_RESPONSE, CLEAR_FRIEND_REQUEST_RESPONSE } from "../actions/actionConstants";
+import { REPLACE_SEARCH_RESULTS, CLEAR_SEARCH_RESULTS, UPDATE_FRIEND_REQUEST_RESPONSE, CLEAR_FRIEND_REQUEST_RESPONSE, UPDATE_FRIEND_INVITATION_RESPONSE, CLEAR_FRIEND_INVITATION_RESPONSE } from "../actions/actionConstants";
 
 const initialState = {
     paginationNum: 0,
     searchResults: null,
     friendRequestSuccess: null,
-    friendRequestError: null
+    friendRequestError: null,
+    invitationSuccess: null,
+    invitationError: null
 };
 
 export default (state = initialState, action) => {
@@ -32,6 +34,25 @@ export default (state = initialState, action) => {
                 ...state,
                 friendRequestError: null,
                 friendRequestSuccess: null
+            };
+
+        case UPDATE_FRIEND_INVITATION_RESPONSE:
+            if (action.data.error) {
+                return {
+                    ...state,
+                    invitationError: action.data.error
+                };
+            }
+            return {
+                ...state,
+                invitationSuccess: action.data
+            };
+
+        case CLEAR_FRIEND_INVITATION_RESPONSE:
+            return {
+                ...state,
+                invitationError: null,
+                invitationSuccess: null
             };
 
         case CLEAR_SEARCH_RESULTS:
