@@ -1,4 +1,4 @@
-import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND } from "../actions/actionConstants";
+import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE } from "../actions/actionConstants";
 import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP } from "../constants";
 
 const initialState = {
@@ -6,7 +6,12 @@ const initialState = {
     // onlineFriends: [],
     paginationNum: 0,
     // searchFriendList: [],
-    currentFriend: null
+    currentFriend: {
+        garage: {
+            garageId: null
+        },
+        userId: null
+    }
 };
 
 export default (state = initialState, action) => {
@@ -35,13 +40,16 @@ export default (state = initialState, action) => {
             }
 
         case GET_FRIEND_INFO:
-            const currentFriend = state.allFriends[action.data.index];
-            if (!currentFriend.profilePictureId) {
-                currentFriend.profilePictureId = null;
+            const friend = state.allFriends[action.data.index];
+            if (!friend.profilePictureId) {
+                friend.profilePictureId = null;
             }
             return {
                 ...state,
-                currentFriend
+                currentFriend: {
+                    ...state.currentFriend,
+                    ...friend
+                }
             };
 
         case UNFRIEND:
@@ -58,7 +66,7 @@ export default (state = initialState, action) => {
             return state;
 
         case UPDATE_CURRENT_FRIEND:
-        if (state.currentFriend === null || (action.data.userId !== state.currentFriend.userId)) return state;
+            if (state.currentFriend.userId === null || (action.data.userId !== state.currentFriend.userId)) return state;
             return {
                 ...state,
                 currentFriend: {
@@ -67,10 +75,39 @@ export default (state = initialState, action) => {
                 }
             };
 
+        case UPDATE_CURRENT_FRIEND_GARAGE:
+            if ((state.currentFriend.userId === null)||(action.data.userId !== state.currentFriend.userId)) return state;
+            let idx = state.currentFriend.garage.spaceList.findIndex((garageSpaceList) => garageSpaceList.spaceId === action.data.spaceId)
+            if (idx > -1) {
+                const bike = state.currentFriend.garage.spaceList[idx];
+                bike.profilePicture = action.data.profilePicture;
+                return {
+                    ...state,
+                    currentFriend: {
+                        ...state.currentFriend,
+                        garage: {
+                            ...state.currentFriend.garage,
+                            spaceList: [
+                                ...state.currentFriend.garage.spaceList.slice(0, idx),
+                                bike,
+                                ...state.currentFriend.garage.spaceList.slice(idx + 1)
+                            ]
+                        }
+                    }
+                }
+            }
+            return state;
+
+
         case RESET_CURRENT_FRIEND:
             return {
                 ...state,
-                currentFriend: null
+                currentFriend: {
+                    garage: {
+                        garageId: null
+                    },
+                    userId: null
+                }
             }
 
         case DELETE_FRIEND:

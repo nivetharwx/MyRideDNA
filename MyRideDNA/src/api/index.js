@@ -1,7 +1,7 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
-    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction, 
-    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction,updateCurrentFriendAction
+    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE } from '../constants';
 import axios from 'axios';
@@ -26,7 +26,7 @@ export const getPicture = (pictureId, successCallback, errorCallback) => {
     axios.get(USER_BASE_URL + `getPicture/${pictureId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
             if (res.status === 200) {
-                console.log(res)
+                console.log('get picture : ', res)
                 if (res.data.picture === '') {
                     errorCallback(res.data);
                 } else {
@@ -853,13 +853,13 @@ export const sendFriendRequest = (requestBody) => {
             })
     };
 }
-export const cancelFriendRequest = (senderId, personId,requestId) => {
+export const cancelFriendRequest = (senderId, personId, requestId) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
         axios.delete(FRIENDS_BASE_URL + `cancelFriendRequest?senderId=${senderId}&userId=${personId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log('cancelFriendRequest sucess : ',res)
+                    console.log('cancelFriendRequest sucess : ', res)
                     dispatch(toggleLoaderAction(false));
                     dispatch(updateFriendRequestListAction(requestId))
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
@@ -906,14 +906,14 @@ export const approveFriendRequest = (senderId, personId, actionDate, requestId) 
             })
     };
 }
-export const rejectFriendRequest = (senderId, personId,requestId) => {
+export const rejectFriendRequest = (senderId, personId, requestId) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
         axios.put(FRIENDS_BASE_URL + `rejectFriendRequest?senderId=${senderId}&userId=${personId}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    
-                    console.log('rejectFriendRequest success: ',res)
+
+                    console.log('rejectFriendRequest success: ', res)
                     dispatch(updateFriendRequestListAction(requestId))
                     dispatch(toggleLoaderAction(false));
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
@@ -932,7 +932,7 @@ export const doUnfriend = (senderId, personId) => {
         axios.delete(FRIENDS_BASE_URL + `unfriend?senderId=${senderId}&userId=${personId}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log('unfriend sucess : ',res)
+                    console.log('unfriend sucess : ', res)
                     dispatch(toggleLoaderAction(false));
                     return dispatch(doUnfriendAction({ personId }));
                 }
@@ -1149,8 +1149,8 @@ export const addBikeToGarage = (userId, bike, pictureList) => {
             .then(res => {
                 // console.log(`addSpace success: `, res.data);
                 dispatch(toggleLoaderAction(false));
-                bike.pictiureIdList = res.data.pictiureIdList || [];
-                bike.pictiureList = res.data.pictiureList || [];
+                bike.pictureIdList = res.data.pictureIdList || [];
+                bike.pictureList = res.data.pictureList || [];
                 dispatch(addToBikeListAction({ bike }));
             })
             .catch(er => {

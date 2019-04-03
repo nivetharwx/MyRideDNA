@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { StyleSheet, View, Text, StatusBar, ImageBackground, ScrollView, FlatList, TouchableOpacity } from 'react-native';
 import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG, RELATIONSHIP, PageKeys } from '../../constants/index';
 import { ShifterButton, IconButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction } from '../../actions';
+import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction } from '../../actions';
 import { Tabs, Tab, ScrollableTab, TabHeading, Accordion, ListItem, Left } from 'native-base';
 import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
@@ -42,34 +42,47 @@ class FriendsProfile extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.currentFriend !== this.props.currentFriend) {
-            if (this.props.currentFriend === null) {
+            if (this.props.currentFriend.userId === null) {
                 Actions.pop();
                 return;
             }
-            if (prevProps.currentFriend === null) {
-                if (this.props.currentFriend.profilePictureId) {
-                    this.setState({ profilePicId: this.props.currentFriend.profilePictureId, isLoadingProfPic: true });
-                    this.props.getPicture(this.props.currentFriend.profilePictureId, this.props.currentFriend.userId, this.props.friendType);
+            if (this.state.activeTab === 0) {
+                if (prevProps.currentFriend.userId === null) {
+                    if (this.props.currentFriend.profilePictureId) {
+                        this.setState({ profilePicId: this.props.currentFriend.profilePictureId, isLoadingProfPic: true });
+                        this.props.getProfilePicture(this.props.currentFriend.profilePictureId, this.props.currentFriend.userId, this.props.friendType);
+                    }
+                    return;
                 }
-                return;
+
+                if (this.state.profilePicId) {
+                    if (this.state.profilePicId.indexOf(THUMBNAIL_TAIL_TAG) > -1) {
+                        // setTimeout(() => {
+                        //     this.setState(prevState => ({ profilePicId: prevState.profilePicId.replace(THUMBNAIL_TAIL_TAG, '') }), () => {
+                        //         this.props.getProfilePicture(this.state.profilePicId, this.props.currentFriend.userId, this.props.friendType);
+                        //     });
+                        // }, 300);
+                        this.setState(prevState => ({ profilePicId: prevState.profilePicId.replace(THUMBNAIL_TAIL_TAG, '') }), () => {
+                            this.props.getProfilePicture(this.state.profilePicId, this.props.currentFriend.userId, this.props.friendType);
+                        });
+                    } else {
+                        this.setState({ isLoadingProfPic: false });
+                    }
+                }
+
             }
-            if (this.state.profilePicId) {
-                if (this.state.profilePicId.indexOf(THUMBNAIL_TAIL_TAG) > -1) {
-                    // setTimeout(() => {
-                    //     this.setState(prevState => ({ profilePicId: prevState.profilePicId.replace(THUMBNAIL_TAIL_TAG, '') }), () => {
-                    //         this.props.getPicture(this.state.profilePicId, this.props.currentFriend.userId, this.props.friendType);
-                    //     });
-                    // }, 300);
-                    this.setState(prevState => ({ profilePicId: prevState.profilePicId.replace(THUMBNAIL_TAIL_TAG, '') }), () => {
-                        this.props.getPicture(this.state.profilePicId, this.props.currentFriend.userId, this.props.friendType);
-                    });
-                } else {
-                    this.setState({ isLoadingProfPic: false });
+            else if (this.state.activeTab === 1) {
+                if (prevProps.currentFriend.garage.garageId !== this.props.currentFriend.garage.garageId) {
+                    this.props.currentFriend.garage.spaceList.forEach((bikeDetail) => {
+                        if (bikeDetail.pictureIdList.length > 0) {
+                            this.props.getGaragePicture(bikeDetail.pictureIdList[0], bikeDetail.spaceId, this.props.currentFriend.userId)
+                        }
+                    })
+                    return;
                 }
             }
         }
     }
-
     onPressRide(rideId) {
         this.props.changeScreen(PageKeys.MAP);
         this.props.loadRideOnMap(rideId);
@@ -166,7 +179,7 @@ class FriendsProfile extends Component {
                                             return <BasicCard
                                                 isActive={false}
                                                 // FIXME: Change this based on pictureIdList
-                                                media={item.pictureList && item.pictureList[0] ? { uri: item.pictureList[0] } : require('../../assets/img/bike_placeholder.png')}
+                                                media={item.profilePicture ? { uri: item.profilePicture } : require('../../assets/img/bike_placeholder.png')}
                                                 mainHeading={item.name}
                                                 subHeading={`${item.make}-${item.model}, ${item.year}`}
                                                 notes={item.notes}
@@ -229,10 +242,15 @@ const mapDispatchToProps = (dispatch) => {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         getFriendsInfo: (friendIdx, friendType) => dispatch(getFriendsInfoAction({ index: friendIdx, friendType })),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
-        getPicture: (pictureId, friendId, friendType) => getPicture(pictureId, ({ picture, pictureId }) => {
+        getProfilePicture: (pictureId, friendId, friendType) => getPicture(pictureId, ({ picture, pictureId }) => {
             dispatch(updateCurrentFriendAction({ profilePicture: picture, userId: friendId }))
         }, (error) => {
             dispatch(updateCurrentFriendAction({ userId: friendId }))
+        }),
+        getGaragePicture: (pictureId, spaceId,userId) => getPicture(pictureId, ({ picture }) => {
+            dispatch(updateCurrentFriendGarageAction({ profilePicture: picture, spaceId,userId }))
+        }, (error) => {
+            dispatch(updateCurrentFriendGarageAction({spaceId,userId}))
         }),
         getGarageInfo: (friendId, friendType) => {
             dispatch(toggleLoaderAction(true));
