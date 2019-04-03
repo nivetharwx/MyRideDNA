@@ -31,7 +31,9 @@ export class Settings extends Component {
             expandedItem: null,
             measurementDistanceUnit: props.user.distanceUnit,
             locationRadiusState: props.user.locationRadius,
-            handDominanceState: props.user.handDominance
+            handDominanceState: props.user.handDominance,
+            timeIntervalInSeconds: props.user.timeIntervalInSeconds,
+            showCircle: props.user.showCircle
         };
     }
 
@@ -90,6 +92,12 @@ export class Settings extends Component {
     onChangeLoactionradius = (val) => {
         this.setState({
             locationRadiusState: val
+        })
+    }
+    
+    onChangeTimeInterval = (val) => {
+        this.setState({
+            timeIntervalInSeconds: val
         })
     }
 
@@ -158,21 +166,20 @@ export class Settings extends Component {
 
     hasSettingsChanged = () => {
         const { currentPasswd, newPasswd, confirmPasswd, locationEnable, measurementDistanceUnit,
-            locationRadiusState, handDominanceState } = this.state;
+            locationRadiusState, handDominanceState, timeIntervalInSeconds, showCircle } = this.state;
         return (currentPasswd !== '' && newPasswd !== '' && confirmPasswd !== '') || locationEnable !== this.props.user.locationEnable ||
             (locationRadiusState !== this.props.user.locationRadius) || (measurementDistanceUnit !== this.props.user.distanceUnit) ||
-            (handDominanceState !== this.props.user.handDominance);
+            (handDominanceState !== this.props.user.handDominance) || (timeIntervalInSeconds !== this.props.user.timeIntervalInSeconds) ||
+            (showCircle !== this.props.user.showCircle);
     }
 
     submitSettingsChanges = () => {
-        let canSubmit = true;
         const { currentPasswd, newPasswd, confirmPasswd, locationEnable, measurementDistanceUnit,
-            locationRadiusState, handDominanceState } = this.state;
+            locationRadiusState, handDominanceState, timeIntervalInSeconds, showCircle } = this.state;
         if (currentPasswd !== '' && newPasswd !== '' && confirmPasswd !== '') {
             if (newPasswd === confirmPasswd) {
                 this.props.updatePassword({ userId: this.props.user.userId, currentPassword: Md5.hex_md5(currentPasswd + ''), newPassword: Md5.hex_md5(newPasswd + '') });
             } else {
-                canSubmit = false;
                 Toast.show({
                     text: 'Entered passwords are not matching',
                     buttonText: 'Okay',
@@ -180,31 +187,28 @@ export class Settings extends Component {
                 });
             }
         }
-        if (locationRadiusState !== '' && !isNaN(locationRadiusState) && parseInt(locationRadiusState) > 0) {
+        // TODO: Add new keys here and validate
+        if (locationRadiusState !== '' && !isNaN(locationRadiusState) && parseInt(locationRadiusState) > 0
+            && !isNaN(timeIntervalInSeconds) && parseInt(timeIntervalInSeconds) > 0) {
             this.props.updateUserSettings({
                 userId: this.props.user.userId, distanceUnit: measurementDistanceUnit,
-                locationRadius: parseInt(locationRadiusState), handDominance: handDominanceState
+                locationRadius: parseInt(locationRadiusState), handDominance: handDominanceState,
+                timeIntervalInSeconds, showCircle, locationEnable
             })
         } else {
-            canSubmit = false;
             Toast.show({
                 text: 'fill all field correctly',
                 buttonText: 'Okay',
                 position: 'bottom'
             });
         }
-
-        if (canSubmit && (this.props.user.locationEnable !== locationEnable)) {
-            this.props.updateShareLocationState(this.props.user.userId, locationEnable);
-        }
     }
 
     render() {
         const MEASUREMENT_UNITS = [{ label: 'Kilometers', value: 'km' }, { label: 'Miles', value: 'mi' }];
-        const HAND_DOMINANCE = [{ label: 'Left', value: 'left' }, { label: 'Right', value: 'right' }];
+        const HAND_DOMINANCE = [{ label: 'Left Handed', value: 'left' }, { label: 'Right Handed', value: 'right' }];
         const { user } = this.props;
         const { locationEnable } = this.state;
-        console.log(user)
         return (
             <View style={styles.fill}>
                 <ForgotPassword isVisible={this.state.showForgotPasswordModal} onCancel={this.toggleForgotPasswordForm} onPressOutside={this.toggleForgotPasswordForm} />
@@ -229,6 +233,11 @@ export class Settings extends Component {
                                             value={!locationEnable} onChangeValue={() => this.setState(prevState => ({ locationEnable: !prevState.locationEnable }))} />
                                     </View>
                                 </Item>
+                                <Item style={styles.containerItem}>
+                                    <LabeledInput containerStyle={{ marginBottom: 0 }} inputStyle={{ borderBottomWidth: 0 }} inputValue={!this.state.timeIntervalInSeconds ? '' : this.state.timeIntervalInSeconds + ''}
+                                        placeholder='Time interval in seconds' onChange={this.onChangeTimeInterval} inputType='telephoneNumber'
+                                    />
+                                </Item>
                                 <IconicList
                                     selectedValue={this.state.measurementDistanceUnit} style={styles.distanceMeasurementUnit}
                                     placeholder='Distance measurement unit' values={MEASUREMENT_UNITS}
@@ -238,6 +247,15 @@ export class Settings extends Component {
                                     <LabeledInput containerStyle={{ marginBottom: 0 }} inputStyle={{ borderBottomWidth: 0 }} inputValue={!this.state.locationRadiusState ? '' : this.state.locationRadiusState + ''}
                                         placeholder='Location Radius' onChange={this.onChangeLoactionradius} inputType='telephoneNumber'
                                     />
+                                </Item>
+                                <Item style={styles.containerItem}>
+                                    <Text>Show visible map boundary circle</Text>
+                                    <View style={{ flex: 1 }}>
+                                        <SwitchIconButton
+                                            activeIcon={<NBIcon name='close' type='FontAwesome' style={{ color: '#fff', alignSelf: 'flex-start', paddingHorizontal: 10 }} />}
+                                            inactiveIcon={<NBIcon name='eye' type='MaterialCommunityIcons' style={{ color: '#fff', alignSelf: 'flex-end', paddingHorizontal: 12 }} />}
+                                            value={!this.state.showCircle} onChangeValue={() => this.setState(prevState => ({ showCircle: !prevState.showCircle }))} />
+                                    </View>
                                 </Item>
                                 <IconicList
                                     selectedValue={this.state.handDominanceState}
