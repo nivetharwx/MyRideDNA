@@ -8,7 +8,7 @@ import { LabeledInput } from '../../../../components/inputs';
 import { BasicButton } from '../../../../components/buttons';
 import { Thumbnail } from '../../../../components/images';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import { addBikeToGarage, editBike } from '../../../../api';
+import { addBikeToGarage, editBike, addPictures } from '../../../../api';
 import { toggleLoaderAction } from '../../../../actions';
 
 class AddBikeForm extends Component {
@@ -26,6 +26,14 @@ class AddBikeForm extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.spaceList !== this.props.spaceList) {
+            // if (this.state.bikeImages.length > 0) {
+            //     const newBike = this.props.spaceList[this.props.spaceList.length - 1];
+            //     this.props.addPictures(this.props.user.userId, newBike, this.state.bikeImages);
+            //     this.setState({ bikeImages: [] });
+            // } else {
+            //     Actions.pop();
+            // }
+            this.setState({ bikeImages: [] });
             Actions.pop();
         }
     }
@@ -44,7 +52,7 @@ class AddBikeForm extends Component {
             });
             this.setState({
                 bikeImages: imageList.reduce((arr, { mime, data }) => {
-                    arr.push({ mimeType: mime, image: data });
+                    arr.push({ mimeType: mime, picture: data });
                     return arr;
                 }, [])
             });
@@ -74,13 +82,18 @@ class AddBikeForm extends Component {
         }
         const pictureList = [...bikeImages];
         if (!bike.spaceId) {
-            this.props.addBikeToGarage(this.props.user.userId, { ...bike, pictureList });
+            this.props.addBikeToGarage(this.props.user.userId, bike, pictureList);
         } else {
-            this.props.editBike(this.props.user.userId, {
-                ...bike,
-                pictureList
-            }, bike.pictureList, this.props.bikeIndex);
+            this.props.editBike(this.props.user.userId, bike, pictureList, this.props.bikeIndex);
         }
+        // if (!bike.spaceId) {
+        //     this.props.addBikeToGarage(this.props.user.userId, bike);
+        // } else {
+        //     this.props.editBike(this.props.user.userId, bike, this.props.bikeIndex);
+        //     if (bikeImages.length > 0) {
+        //         this.props.addPictures(this.props.user.userId, bike, bikeImages);
+        //     }
+        // }
     }
 
     render() {
@@ -109,7 +122,7 @@ class AddBikeForm extends Component {
                                 {
                                     bikeImages.map((imgObj, index) => (
                                         <Thumbnail hideOverlay={true} key={index + ''} horizontal={false} containerStyle={{ height: heightPercentageToDP(12), width: widthPercentageToDP(20), marginBottom: heightPercentageToDP(1) }}
-                                            height={heightPercentageToDP(12)} width={widthPercentageToDP(20)} imagePath={{ uri: `data:${imgObj.mimeType};base64,${imgObj.image}` }} />
+                                            height={heightPercentageToDP(12)} width={widthPercentageToDP(20)} imagePath={{ uri: `data:${imgObj.mimeType};base64,${imgObj.picture}` }} />
                                     ))
                                 }
                             </View>
@@ -129,9 +142,11 @@ const mapStateToProps = (state) => {
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        addBikeToGarage: (userId, bike, index) => dispatch(addBikeToGarage(userId, bike, index)),
-        editBike: (userId, bike, oldImages, index) => dispatch(editBike(userId, bike, oldImages, index)),
-        toggleLoader: (toggleValue) => dispatch(toggleLoaderAction(toggleValue))
+        addBikeToGarage: (userId, bike, pictureList) => dispatch(addBikeToGarage(userId, bike, pictureList)),
+        editBike: (userId, bike, pictureList, index) => dispatch(editBike(userId, bike, pictureList, index)),
+        // editBike: (userId, bike, index) => dispatch(editBike(userId, bike, index)),
+        toggleLoader: (toggleValue) => dispatch(toggleLoaderAction(toggleValue)),
+        addPictures: (userId, bike, pictureList) => dispatch(addPictures(userId, bike, pictureList)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(AddBikeForm);
