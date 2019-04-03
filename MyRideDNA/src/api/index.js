@@ -1,6 +1,6 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
-    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction, deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction
+    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction, deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, updateInvitationResponseAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE } from '../constants';
 import axios from 'axios';
@@ -811,6 +811,25 @@ export const searchForFriend = (searchParam, userId, pageNumber) => {
             })
     };
 }
+export const sendInvitationOrRequest = (requestBody) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.post(FRIENDS_BASE_URL + `sendInvitationOrRequest`, requestBody, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log("sendInvitationOrRequest: ", res.data);
+                    dispatch(toggleLoaderAction(false));
+                    dispatch(updateInvitationResponseAction(res.data));
+                }
+            })
+            .catch(er => {
+                console.log(`sendInvitationOrRequest: `, er.response || er);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+                dispatch(updateInvitationResponseAction({ error: er.response.data || "Something went wrong" }));
+            })
+    };
+}
 export const sendFriendRequest = (requestBody) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
@@ -1096,41 +1115,37 @@ export const updateGarageName = (garageName, garageId) => {
             })
     };
 }
-export const addBikeToGarage = (userId, bike, index) => {
+export const addBikeToGarage = (userId, bike, pictureList) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(USER_BASE_URL + `addSpace/${userId}`, bike, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.put(USER_BASE_URL + `addSpace/${userId}`, { ...bike, pictureList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                bike.spaceId = res.data.spaceId;
+                // console.log(`addSpace success: `, res.data);
                 dispatch(toggleLoaderAction(false));
-                // DOC: Updating the bike pictureList by combining mimeType and image string
-                bike.pictureList = bike.pictureList.reduce((arr, { mimeType, image }) => {
-                    arr.push(`data:${mimeType};base64,${image}`)
-                    return arr;
-                }, []);
-                console.log(bike.pictureList);
-                return dispatch(addToBikeListAction({ index, bike }))
+                bike.pictiureIdList = res.data.pictiureIdList || [];
+                bike.pictiureList = res.data.pictiureList || [];
+                dispatch(addToBikeListAction({ bike }));
             })
             .catch(er => {
-                console.log(`addBikeToGarage: `, er.response);
+                console.log(`addSpace error: `, er.response || er);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
     };
 }
-export const editBike = (userId, bike, oldImages, index) => {
+export const editBike = (userId, bike, pictureList, index) => {
+    // export const editBike = (userId, bike, index) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(USER_BASE_URL + `updateSpace/${userId}`, bike, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.put(USER_BASE_URL + `updateSpace/${userId}`, { ...bike, pictureList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log("updateSpace success: ", res.data);
+                bike.pictureIdList = res.data.pictureIdList || [];
                 dispatch(toggleLoaderAction(false));
-                // DOC: Updating the bike details with current and old images
-                bike.pictureList = [...oldImages, ...bike.pictureList.reduce((arr, { mimeType, image }) => {
-                    arr.push(`data:${mimeType};base64,${image}`)
-                    return arr;
-                }, [])];
-                dispatch(updateBikeListAction({ index, bike }))
+                dispatch(updateBikeListAction({ index, bike }));
+                // console.log("updateSpace success: ", res.data);
+                // dispatch(toggleLoaderAction(false));
+                // dispatch(updateBikeListAction({ index, bike }))
             })
             .catch(er => {
                 console.log("updateSpace error: ", er.response || er);
@@ -1138,6 +1153,25 @@ export const editBike = (userId, bike, oldImages, index) => {
                 dispatch(toggleLoaderAction(false));
             })
     };
+}
+export const addPictures = (userId, bike, pictureList) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.put(USER_BASE_URL + `addPictures`, { userId, spaceId: bike.spaceId, pictureList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("addPictures success: ", res.data);
+                dispatch(toggleLoaderAction(false));
+                if (!bike.pictureIdList) bike.pictureIdList = [];
+                bike.pictureIdList = [...bike.pictureIdList, ...res.data.pictureIds];
+                dispatch(updateBikeListAction({ bike }));
+            })
+            .catch(er => {
+                console.log(`addPictures error: `, er.response || er);
+                dispatch(toggleLoaderAction(false));
+                dispatch(updateBikeListAction({}));
+                // TODO: Dispatch error info action
+            })
+    }
 }
 export const setBikeAsActive = (userId, bike, prevActiveIndex, newActiveIndex) => {
     return dispatch => {
