@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, View, Text, StatusBar, ImageBackground, ScrollView, FlatList, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, StatusBar, ImageBackground, ScrollView, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG, RELATIONSHIP, PageKeys } from '../../constants/index';
 import { ShifterButton, IconButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction } from '../../actions';
@@ -9,15 +9,15 @@ import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { Loader } from '../../components/loader';
 import styles from './styles';
-import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId } from '../../api';
+import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend } from '../../api';
 import { BasicCard } from '../../components/cards';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
 class FriendsProfile extends Component {
     // DOC: Icon format is for Icon component from NativeBase Library
     FRIENDS_PROFILE_ICONS = [
-        { name: 'ios-chatbubbles', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => console.log("Chat pressed") },
-        { name: 'account-remove', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => console.log("Unfriend pressed") },
+        { name: 'ios-chatbubbles', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.onPressChatIcon() },
+        { name: 'account-remove', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.onPressUnfriendIcon() },
         { name: 'location-on', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => console.log("Show location pressed") },
         // { name: 'ios-shirt', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => console.log("Vest pressed") },
     ];
@@ -82,6 +82,27 @@ class FriendsProfile extends Component {
                 }
             }
         }
+    }
+
+    onPressChatIcon = () => {
+        Actions.push(PageKeys.CHAT, { friend: this.props.currentFriend })
+    }
+
+    onPressUnfriendIcon = () => {
+            Alert.alert(
+                'Confirmation to unfriend',
+                `Do you want to unfriend ${this.props.currentFriend.name}?`,
+                [
+                    {
+                        text: 'Yes', onPress: () => {
+                            this.props.doUnfriend(this.props.user.userId, this.props.currentFriend.userId);
+                            
+                        }
+                    },
+                    { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+                ],
+                { cancelable: false }
+            );
     }
     onPressRide(rideId) {
         this.props.changeScreen(PageKeys.MAP);
@@ -247,10 +268,10 @@ const mapDispatchToProps = (dispatch) => {
         }, (error) => {
             dispatch(updateCurrentFriendAction({ userId: friendId }))
         }),
-        getGaragePicture: (pictureId, spaceId,userId) => getPicture(pictureId, ({ picture }) => {
-            dispatch(updateCurrentFriendGarageAction({ profilePicture: picture, spaceId,userId }))
+        getGaragePicture: (pictureId, spaceId, userId) => getPicture(pictureId, ({ picture }) => {
+            dispatch(updateCurrentFriendGarageAction({ profilePicture: picture, spaceId, userId }))
         }, (error) => {
-            dispatch(updateCurrentFriendGarageAction({spaceId,userId}))
+            dispatch(updateCurrentFriendGarageAction({ spaceId, userId }))
         }),
         getGarageInfo: (friendId, friendType) => {
             dispatch(toggleLoaderAction(true));
@@ -267,6 +288,7 @@ const mapDispatchToProps = (dispatch) => {
         },
         loadRideOnMap: (rideId) => dispatch(getRideByRideId(rideId)),
         changeScreen: (screenKey) => dispatch(screenChangeAction(screenKey)),
+        doUnfriend: (userId, personId) => dispatch(doUnfriend(userId, personId)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(FriendsProfile);
