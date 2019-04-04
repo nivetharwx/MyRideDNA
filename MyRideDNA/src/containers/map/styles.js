@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
         borderRadius: widthPercentageToDP(4.5),
         alignSelf: 'center',
         backgroundColor: 'transparent',
-    }
+    },
 });
 
 export default styles;

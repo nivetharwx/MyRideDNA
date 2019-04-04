@@ -19,13 +19,14 @@ import { default as turfDistance } from '@turf/distance';
 import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon } from 'native-base';
-import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN } from '../../constants';
+import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP } from '../../constants';
 import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction } from '../../actions';
 import { SearchBox } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
 import { MapControlPair, BasicButton, IconButton, ShifterButton, LinkButton } from '../../components/buttons';
 import { IconLabelPair } from '../../components/labels';
+import WaypointList from './waypoint-list';
 
 import Base64 from '../../util';
 
@@ -102,6 +103,7 @@ export class Map extends Component {
             hideRoute: false,
             optionsBarRightAnim: new Animated.Value(100),
             controlsBarLeftAnim: new Animated.Value(-100),
+            waypointListLeftAnim: new Animated.Value(-widthPercentageToDP(100)),
             currentLocation: null,
             gpsPointCollection:
             {
@@ -1033,6 +1035,7 @@ export class Map extends Component {
     createRide = () => {
         // Actions.push(PageKeys.CREATE_RIDE);
         this.hideMapControls();
+        this.hideWaypointList();
         this.setState({ showCreateRide: true });
     }
 
@@ -1288,6 +1291,28 @@ export class Map extends Component {
         ).start();
     }
 
+    showWaypointList = () => {
+        Animated.timing(
+            this.state.waypointListLeftAnim,
+            {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true
+            }
+        ).start();
+    }
+
+    hideWaypointList = () => {
+        Animated.timing(
+            this.state.waypointListLeftAnim,
+            {
+                toValue: -widthPercentageToDP(100),
+                duration: 300,
+                useNativeDriver: true
+            }
+        ).start();
+    }
+
     onPressMarker = (e) => {
         const { ride, user } = this.props;
         if (ride.isRecorded === true || ride.userId !== user.userId) return;
@@ -1351,7 +1376,7 @@ export class Map extends Component {
     }
 
     render() {
-        const { mapViewHeight, directions, markerCollection, activeMarkerIndex, gpsPointCollection, controlsBarLeftAnim, showCreateRide, currentLocation,
+        const { mapViewHeight, directions, markerCollection, activeMarkerIndex, gpsPointCollection, controlsBarLeftAnim, waypointListLeftAnim, showCreateRide, currentLocation,
             searchResults, searchQuery, isEditable, snapshot, hideRoute, optionsBarRightAnim, isUpdatingWaypoint, mapRadiusCircle } = this.state;
         const { notificationList, ride, showMenu, showLoader, user, canUndo, canRedo } = this.props;
         const MAP_VIEW_TOP_OFFSET = showCreateRide ? (CREATE_RIDE_CONTAINER_HEIGHT - WINDOW_HALF_HEIGHT) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2) : (isEditable ? 130 : 60) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2);
@@ -1517,6 +1542,11 @@ export class Map extends Component {
                         }
                         <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'zoom-in', type: 'Foundation' }} onPress={this.onPressZoomIn} />
                         <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'zoom-out', type: 'Foundation' }} onPress={this.onPressZoomOut} />
+                        {
+                            ride.rideId !== null && ride.isRecorded === false
+                                ? <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'map-marker-multiple', type: 'MaterialCommunityIcons' }} onPress={this.showWaypointList} />
+                                : null
+                        }
                         <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'target', type: 'MaterialCommunityIcons' }} onPress={this.onPressRecenterMap} />
                         {/* <IconButton style={styles.mapControlButton} iconProps={{ name: 'arrow-left-bold-circle', type: 'MaterialCommunityIcons', style: styles.whiteColor }} onPress={this.hideMapControls} />
                         <IconButton style={[styles.mapControlButton, styles.buttonGap]} iconProps={{ name: 'md-undo', type: 'Ionicons', style: styles.whiteColor }} onPress={this.onPressUndo} />
@@ -1525,6 +1555,13 @@ export class Map extends Component {
                         <IconButton style={[styles.mapControlButton, styles.buttonGap]} iconProps={{ name: 'zoom-out', type: 'Foundation', style: styles.whiteColor }} onPress={this.onPressZoomOut} />
                         <IconButton style={[styles.mapControlButton, styles.buttonGap]} iconProps={{ name: 'target', type: 'MaterialCommunityIcons', style: styles.whiteColor }} onPress={this.onPressRecenterMap} /> */}
                     </Animated.View>
+                    {
+                        ride.rideId !== null && ride.isRecorded === false
+                            ? <Animated.View style={[{ height: '100%', width: '100%', elevation: 11, position: 'absolute', zIndex: 110 }, { transform: [{ translateX: waypointListLeftAnim }] }]}>
+                                <WaypointList onPressOutside={this.hideWaypointList} onCancel={this.hideWaypointList} />
+                            </Animated.View>
+                            : null
+                    }
                     {
                         snapshot ? <Bubble onPress={() => this.setState({ snapshot: null })}>
                             <View style={{ height: 250, width: 280 }}>

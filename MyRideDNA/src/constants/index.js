@@ -58,6 +58,7 @@ export const PageKeys = {
     APP_NAVIGATION_MENU: 'appNavigation',
     RIDES: 'rides',
     MAP: 'map',
+    WAYPOINTLIST: 'waypointList',
     CREATE_RIDE: 'createRide'
 };
 
@@ -89,6 +90,7 @@ export const ICON_NAMES = {
     DESTINATION_DEFAULT: 'destinationDefault', DESTINATION_SELECTED: 'destinationSelected',
     WAYPOINT_DEFAULT: 'waypointDefault', WAYPOINT_SELECTED: 'waypointSelected'
 }
+export const RIDE_POINT = { SOURCE: 'source', DESTINATION: 'destination', WAYPOINT: 'waypoint' }
 
 const HEADER_COLOR = '#0076B5';
 const STATUS_BAR_COLOR = '#006297';

@@ -1,5 +1,6 @@
-import { UPDATE_RIDE, CLEAR_RIDE, UPDATE_WAYPOINT, LOAD_RIDE, ADD_WAYPOINT, DELETE_WAYPOINT } from "../actions/actionConstants";
+import { UPDATE_RIDE, CLEAR_RIDE, UPDATE_WAYPOINT, LOAD_RIDE, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_SOURCE_OR_DESTINATION_NAME, UPDATE_WAYPOINT_NAME } from "../actions/actionConstants";
 import { undoable } from "./Undoable";
+import { RIDE_POINT } from "../constants";
 
 const initialState = {
     ride: {
@@ -55,6 +56,50 @@ const rideInfo = (state = initialState, action) => {
                         ...state.ride.waypoints.slice(0, action.data.index),
                         action.data.waypoint,
                         ...state.ride.waypoints.slice(action.data.index + 1)
+                    ]
+                }
+            }
+        case UPDATE_SOURCE_OR_DESTINATION_NAME:
+            if (state.ride.rideId === null) return state;
+            if (action.data.identifier === RIDE_POINT.SOURCE) {
+                if (state.ride.source === null) return state;
+                return {
+                    ...state,
+                    ride: {
+                        ...state.ride,
+                        source: {
+                            ...state.ride.source,
+                            name: action.data.locationName
+                        }
+                    }
+                }
+            } else if (action.data.identifier === RIDE_POINT.DESTINATION) {
+                if (state.ride.destination === null) return state;
+                return {
+                    ...state,
+                    ride: {
+                        ...state.ride,
+                        destination: {
+                            ...state.ride.destination,
+                            name: action.data.locationName
+                        }
+                    }
+                }
+            }
+        case UPDATE_WAYPOINT_NAME:
+            if (state.ride.rideId === null) return state;
+            const waypointIdx = state.ride.waypoints.findIndex(point => point.id === action.data.waypointId);
+            if (waypointIdx === -1) return state;
+            const waypoint = state.ride.waypoints[waypointIdx];
+            waypoint.name = action.data.locationName;
+            return {
+                ...state,
+                ride: {
+                    ...state.ride,
+                    waypoints: [
+                        ...state.ride.waypoints.slice(0, waypointIdx),
+                        waypoint,
+                        ...state.ride.waypoints.slice(waypointIdx + 1)
                     ]
                 }
             }
