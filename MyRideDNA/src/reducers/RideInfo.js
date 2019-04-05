@@ -88,7 +88,7 @@ const rideInfo = (state = initialState, action) => {
             }
         case UPDATE_WAYPOINT_NAME:
             if (state.ride.rideId === null) return state;
-            const waypointIdx = state.ride.waypoints.findIndex(point => point.id === action.data.waypointId);
+            const waypointIdx = state.ride.waypoints.findIndex(point => point.lng + '' + point.lat === action.data.waypointId);
             if (waypointIdx === -1) return state;
             const waypoint = state.ride.waypoints[waypointIdx];
             waypoint.name = action.data.locationName;

@@ -19,8 +19,8 @@ import { default as turfDistance } from '@turf/distance';
 import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon } from 'native-base';
-import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction } from '../../actions';
+import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT } from '../../constants';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationNameAction, updateWaypointNameAction } from '../../actions';
 import { SearchBox } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -248,6 +248,111 @@ export class Map extends Component {
                 ? this.startTrackingLocation()
                 : this.stopTrackingLocation();
         }
+        if (prevProps.ride !== this.props.ride) {
+            const prevRide = prevProps.ride;
+            const newRide = this.props.ride;
+            if (prevRide.source !== newRide.source) {
+                if (prevRide.source === null) {
+                    console.log("source added");
+                    if (!newRide.source.name) {
+                        this.getPlaceNameByReverseGeocode([newRide.source.lng, newRide.source.lat],
+                            (locationName) => locationName && this.props.updateSourceOrDestinationName(RIDE_POINT.SOURCE, locationName),
+                            (err) => {
+                                console.log("Reverse geocoding error for source: ", err);
+                            }
+                        );
+                    }
+                }
+                else if (newRide.source === null) console.log("source removed");
+                else if (prevRide.source.lng + '' + prevRide.source.lat !==
+                    newRide.source.lng + '' + newRide.source.lat) {
+                    console.log("source changed");
+                    this.getPlaceNameByReverseGeocode([newRide.source.lng, newRide.source.lat],
+                        (locationName) => locationName && this.props.updateSourceOrDestinationName(RIDE_POINT.SOURCE, locationName),
+                        (err) => {
+                            console.log("Reverse geocoding error for source: ", err);
+                        }
+                    );
+                } else {
+                    console.log("source name changed from: ", prevRide.source.name);
+                    console.log("to: ", newRide.source.name);
+                }
+            }
+            if (prevRide.destination !== newRide.destination) {
+                if (prevRide.destination === null) {
+                    if (!newRide.destination.name) {
+                        this.getPlaceNameByReverseGeocode([newRide.destination.lng, newRide.destination.lat],
+                            (locationName) => locationName && this.props.updateSourceOrDestinationName(RIDE_POINT.DESTINATION, locationName),
+                            (err) => {
+                                console.log("Reverse geocoding error for destination: ", err);
+                            }
+                        );
+                    }
+                }
+                else if (newRide.destination === null) console.log("destination removed");
+                else if (prevRide.destination.lng + '' + prevRide.destination.lat !==
+                    newRide.destination.lng + '' + newRide.destination.lat) {
+                    console.log("destination changed");
+                    this.getPlaceNameByReverseGeocode([newRide.destination.lng, newRide.destination.lat],
+                        (locationName) => locationName && this.props.updateSourceOrDestinationName(RIDE_POINT.DESTINATION, locationName),
+                        (err) => {
+                            console.log("Reverse geocoding error for destination: ", err);
+                        }
+                    );
+                } else {
+                    console.log("destination name changed from: ", prevRide.destination.name);
+                    console.log("to: ", newRide.destination.name);
+                }
+            }
+            if (prevRide.waypoints !== newRide.waypoints) {
+                if (prevRide.waypoints.length === newRide.waypoints.length) {
+                    console.log("Inside waypoints checking - equal length");
+                    prevRide.waypoints.forEach((point, index) => {
+                        const idx = newRide.waypoints.findIndex(wpoint => point.lng + '' + point.lat === wpoint.lng + '' + wpoint.lat);
+                        if (idx === -1) {
+                            console.log("replaced waypoint from: ", point);
+                            console.log("to: ", newRide.waypoints[index]);
+                            if (!newRide.waypoints[index].name) {
+                                this.getPlaceNameByReverseGeocode([newRide.waypoints[index].lng, newRide.waypoints[index].lat],
+                                    (locationName) => locationName && this.props.updateWaypointName(newRide.waypoints[index].lng + '' + newRide.waypoints[index].lat, locationName),
+                                    (err) => {
+                                        console.log("Reverse geocoding error for replaced waypoint: ", err);
+                                    }
+                                );
+                            }
+                            return;
+                        }
+                        if (idx !== index) {
+                            console.log("reordered waypoint: ", point);
+                        }
+                    });
+                } else if (prevRide.waypoints.length > newRide.waypoints.length) {
+                    console.log("Inside waypoints checking - waypoint removed");
+                    prevRide.waypoints.some((point, index) => {
+                        const hasPoint = newRide.waypoints.some(wpoint => point.lng + '' + point.lat === wpoint.lng + '' + wpoint.lat);
+                        if (!hasPoint) {
+                            console.log("removed waypoint: ", point);
+                        }
+                    });
+                } else if (prevRide.waypoints.length < newRide.waypoints.length) {
+                    console.log("Inside waypoints checking - waypoint added");
+                    newRide.waypoints.forEach((point, index) => {
+                        const hasPoint = prevRide.waypoints.some(wpoint => point.lng + '' + point.lat === wpoint.lng + '' + wpoint.lat);
+                        if (!hasPoint) {
+                            console.log("added waypoint: ", point);
+                            if (!point.name) {
+                                this.getPlaceNameByReverseGeocode([point.lng, point.lat],
+                                    (locationName) => locationName && this.props.updateWaypointName(point.lng + '' + point.lat, locationName),
+                                    (err) => {
+                                        console.log("Reverse geocoding error for newly added waypoint: ", err);
+                                    }
+                                );
+                            }
+                        }
+                    });
+                }
+            }
+        }
     }
 
     initializeEmptyRide(updatedState) {
@@ -271,6 +376,31 @@ export class Map extends Component {
                 }
             ]
         };
+    }
+
+
+    getPlaceNameByReverseGeocode = async (location, successCallback, errorCallback) => {
+        try {
+            const { body } = await geocodingClient.reverseGeocode({
+                query: location,
+                types: ['place', 'locality', 'address']
+            }).send();
+            if (body.features) {
+                console.log("Reverse geocoding success: ", JSON.parse(JSON.stringify(body)));
+                let locationName = '';
+                body.features.some(feature => {
+                    if (feature.id.indexOf('locality.') > -1 || feature.id.indexOf('place.') > -1 || feature.id.indexOf('address.') > -1) {
+                        locationName = feature.text;
+                        return true;
+                    }
+                    return false;
+                });
+                successCallback(locationName);
+            }
+        } catch (er) {
+            console.log("Reverse geocoding error: ", er);
+            errorCallback(er);
+        }
     }
 
     toggleAppNavigation = () => this.props.showMenu ? this.props.hideAppNavMenu() : this.props.showAppNavMenu();
@@ -1747,6 +1877,8 @@ const mapDispatchToProps = (dispatch) => {
         doUndo: () => dispatch(undoRideAction()),
         doRedo: () => dispatch(redoRideAction()),
         logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
+        updateSourceOrDestinationName: (identifier, locationName) => dispatch(updateSourceOrDestinationNameAction({ identifier, locationName })),
+        updateWaypointName: (waypointId, locationName) => dispatch(updateWaypointNameAction({ waypointId, locationName })),
     }
 }
 

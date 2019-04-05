@@ -50,13 +50,13 @@ export const RoundButton = ({ title, onPress, style, titleStyle }) => (
     </TouchableOpacity>
 );
 
-export const IconButton = ({ iconProps, onPress, style, disabled, disabledColor = '#DBDBDB' }) => {
+export const IconButton = ({ iconProps, onPress, onPressOut, style, disabled, disabledColor = '#DBDBDB' }) => {
     return disabled
         ? <View style={[{ justifyContent: 'center', alignItems: 'center' }, style, { borderColor: disabledColor }]}>
             <NBIcon name={iconProps.name}
                 type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style, { color: disabledColor, borderColor: disabledColor }]} />
         </View>
-        : <TouchableOpacity style={[{ justifyContent: 'center', alignItems: 'center' }, style]} activeOpacity={0.6} onPress={onPress}>
+        : <TouchableOpacity style={[{ justifyContent: 'center', alignItems: 'center' }, style]} activeOpacity={0.6} onPress={onPress} onPressOut={onPressOut}>
             <NBIcon name={iconProps.name}
                 type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style]} />
         </TouchableOpacity>

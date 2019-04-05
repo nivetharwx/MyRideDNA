@@ -1,4 +1,4 @@
-import { UNDO, REDO, INIT_UNDO_REDO } from "../actions/actionConstants";
+import { UNDO, REDO, INIT_UNDO_REDO, UPDATE_SOURCE_OR_DESTINATION_NAME, UPDATE_WAYPOINT_NAME } from "../actions/actionConstants";
 
 export function undoable(reducer) {
     // Call the reducer with empty action to populate the initial state
@@ -41,6 +41,13 @@ export function undoable(reducer) {
                         past: [],
                         present: newPresent,
                         future: []
+                    }
+                } else if (action.type === UPDATE_SOURCE_OR_DESTINATION_NAME ||
+                    action.type === UPDATE_WAYPOINT_NAME) {
+                    return {
+                        past: [...past],
+                        present: newPresent,
+                        future: [...future]
                     }
                 }
                 return {

@@ -3,76 +3,49 @@ import { StyleSheet, FlatList, View, TouchableWithoutFeedback, TouchableOpacity,
 import { connect } from 'react-redux';
 import { BaseModal } from '../../../components/modal';
 import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, TAB_CONTAINER_HEIGHT, JS_SDK_ACCESS_TOKEN, RIDE_POINT } from '../../../constants';
-import { Icon as NBIcon, Tabs, ScrollableTab, TabHeading, Tab } from 'native-base';
+import { Icon as NBIcon, Tabs, ScrollableTab, TabHeading, Tab, ListItem, Left, Body, Right } from 'native-base';
 import { updateWaypointNameAction, updateSourceOrDestinationNameAction } from '../../../actions';
-const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
-const geocodingClient = mbxGeocoding({ accessToken: JS_SDK_ACCESS_TOKEN });
+import { IconLabelPair } from '../../../components/labels';
+import DraggableFlatList from 'react-native-draggable-flatlist';
+import { IconButton } from '../../../components/buttons';
+import { getFormattedDateFromISO } from '../../../util';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
-const BOTTOM_TAB_CONTAINER_WIDTH = widthPercentageToDP(65);
+const BOTTOM_TAB_CONTAINER_WIDTH = widthPercentageToDP(70);
 class WaypointList extends React.Component {
     tabsRef = null;
     constructor(props) {
         super(props);
+        const points = [];
+        if (props.ride.source) points.push(props.ride.source);
+        props.ride.waypoints.reduce((arr, waypoint) => {
+            arr.push(waypoint);
+            return arr;
+        }, points);
+        if (props.ride.destination) points.push(props.ride.destination);
         this.state = {
-            activeTab: 0
+            activeTab: 0,
+            points: points,
         };
     }
 
-    componentDidMount() {
-        // TODO: Have to update ride without updating undo/redo actions
-        const { ride } = this.props;
-        if (ride.source) {
-            this.getPlaceNameByReverseGeocode([ride.source.lng, ride.source.lat],
-                (locationName) => {
-                    locationName && this.props.updateSourceOrDestinationName(RIDE_POINT.SOURCE, locationName);
-                },
-                (err) => {
-                    console.log("Reverse geocoding error for source: ", err);
-                }
-            );
-        }
-        ride.waypoints.forEach(waypoint => this.getPlaceNameByReverseGeocode([waypoint.lng, waypoint.lat],
-            (locationName) => {
-                locationName && this.props.updateWaypointName(waypoint.id, locationName);
-            },
-            (err) => {
-                console.log("Reverse geocoding error for waypoint: ", err);
+    componentDidUpdate(prevProps, prevState) {
+        if (prevProps.ride !== this.props.ride) {
+            if (this.props.ride.rideId) {
+                const points = [];
+                if (this.props.ride.source) points.push(this.props.ride.source);
+                this.props.ride.waypoints.reduce((arr, waypoint) => {
+                    arr.push(waypoint);
+                    return arr;
+                }, points);
+                if (this.props.ride.destination) points.push(this.props.ride.destination);
+                this.setState({ points });
             }
-        ));
-        if (ride.destination) {
-            this.getPlaceNameByReverseGeocode([ride.destination.lng, ride.destination.lat],
-                (locationName) => {
-                    locationName && this.props.updateSourceOrDestinationName(RIDE_POINT.DESTINATION, locationName);
-                },
-                (err) => {
-                    console.log("Reverse geocoding error for destination: ", err);
-                }
-            );
         }
     }
 
-    getPlaceNameByReverseGeocode = async (location, successCallback, errorCallback) => {
-        try {
-            const { body } = await geocodingClient.reverseGeocode({
-                query: location,
-                types: ['place', 'locality', 'address']
-            }).send();
-            if (body.features) {
-                let locationName = '';
-                body.features.some(feature => {
-                    if (feature.id.indexOf('locality.') > -1 || feature.id.indexOf('place.') > -1 || feature.id.indexOf('address.') > -1) {
-                        locationName = feature.text;
-                        return true;
-                    }
-                    return false;
-                });
-                successCallback(locationName);
-            }
-        } catch (er) {
-            console.log("Reverse geocoding error: ", er);
-            errorCallback(er);
-        }
+    componentDidMount() {
+
     }
 
     onCloseModal = () => {
@@ -83,10 +56,43 @@ class WaypointList extends React.Component {
         this.setState({ activeTab: i });
     }
 
+    renderSeparator = ({ leadingItem, highlighted }) => {
+        return (<View style={{ alignItems: 'center' }}>
+            <View style={{ width: widthPercentageToDP(3), height: widthPercentageToDP(3), borderRadius: widthPercentageToDP(1.5), backgroundColor: '#ACACAC' }} />
+            <View style={{ width: widthPercentageToDP(1), height: heightPercentageToDP(2), backgroundColor: '#ACACAC' }} />
+            <View style={{ width: widthPercentageToDP(3), height: widthPercentageToDP(3), borderRadius: widthPercentageToDP(1.5), backgroundColor: '#ACACAC' }} />
+        </View>)
+    }
+
+    // renderRidePoint = ({ item, index, move, moveEnd, isActive }) => {
+    renderRidePoint = ({ item, index }) => {
+        return (
+            // <ListItem onLongPress={move} onPressOut={moveEnd}
+            //     style={{ backgroundColor: isActive ? APP_COMMON_STYLES.infoColor : '#fff' }}
+            // >
+            <ListItem avatar>
+                <Left>
+                    <View style={styles.itemNumber}>
+                        <Text style={styles.whiteFont}>{index + 1}</Text>
+                    </View>
+                </Left>
+                <Body>
+                    <Text>{item.name || 'Unknown'}</Text>
+                </Body>
+                {/* <Right>
+                    <NBIcon name='drag-handle' type='MaterialIcons' />
+                </Right> */}
+            </ListItem>
+        );
+    }
+
+    onChangeOrder = ({ data }) => this.setState({ points: data });
+
+    pointKeyExtractor = item => item.id || item.lng + '' + item.lat;
+
     render() {
         const { onPressOutside, user, ride } = this.props;
-        const { activeTab } = this.state;
-        console.log("waypoints: ", ride);
+        const { points } = this.state;
         return (
             <View style={styles.modalRoot}>
                 <View style={styles.container}>
@@ -108,6 +114,35 @@ class WaypointList extends React.Component {
 
                         </Tab>
                     </Tabs> */}
+                    {/* <DraggableFlatList
+                        style={styles.pointList}
+                        data={points}
+                        renderItem={this.renderRidePoint}
+                        keyExtractor={this.pointKeyExtractor}
+                        onMoveEnd={this.onChangeOrder}
+                    /> */}
+                    <View style={styles.bodyContent}>
+                        <View style={styles.rideInfo}>
+                            <IconLabelPair
+                                iconProps={{ name: 'navigation', type: 'MaterialCommunityIcons' }}
+                                text={ride.name}
+                            />
+                            {/* <IconLabelPair
+                                iconProps={{ name: 'ios-person', type: 'Ionicons' }}
+                                text={ride.createdBy}
+                            /> */}
+                            <IconLabelPair
+                                iconProps={{ name: 'calendar-today', type: 'MaterialCommunityIcons' }}
+                                text={getFormattedDateFromISO(ride.date)}
+                            />
+                        </View>
+                        <FlatList
+                            data={points}
+                            renderItem={this.renderRidePoint}
+                            keyExtractor={this.pointKeyExtractor}
+                        // ItemSeparatorComponent={this.renderSeparator}
+                        />
+                    </View>
                 </View>
                 <TouchableWithoutFeedback onPress={onPressOutside}>
                     <View style={{ flex: 1 }} />
@@ -145,6 +180,7 @@ const styles = StyleSheet.create({
         backgroundColor: APP_COMMON_STYLES.headerColor,
         height: APP_COMMON_STYLES.headerHeight,
         position: 'absolute',
+        zIndex: 100,
         width: '100%',
         alignItems: 'center',
         flexDirection: 'row'
@@ -181,5 +217,24 @@ const styles = StyleSheet.create({
     bottomTab: {
         height: 0,
         width: '50%',
+    },
+    bodyContent: {
+        marginTop: APP_COMMON_STYLES.headerHeight
+    },
+    itemNumber: {
+        backgroundColor: APP_COMMON_STYLES.infoColor,
+        width: widthPercentageToDP(10),
+        height: widthPercentageToDP(10),
+        borderRadius: widthPercentageToDP(5),
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    whiteFont: {
+        color: '#fff'
+    },
+    rideInfo: {
+        padding: widthPercentageToDP(2),
+        borderBottomWidth: 1,
+        borderBottomColor: '#000'
     }
 });
