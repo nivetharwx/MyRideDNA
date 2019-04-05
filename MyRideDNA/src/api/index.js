@@ -13,7 +13,7 @@ import { Actions } from 'react-native-router-flux';
 
 const CancelToken = axios.CancelToken;
 const axiosSource = CancelToken.source();
-const API_TIMEOUT = 15 * 1000; // 15 seconds
+const API_TIMEOUT = 10 * 1000; // 10 seconds
 
 /**
  * DOC: getPicture is a common API for fetching any kind of picture from server.

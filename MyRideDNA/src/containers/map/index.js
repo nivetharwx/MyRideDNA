@@ -68,7 +68,7 @@ const WINDOW_HALF_HEIGHT = (WindowDimensions.height / 2);
 const CREATE_RIDE_CONTAINER_HEIGHT = WindowDimensions.height;
 const RIDE_UPDATE_COUNT_TO_SYNC = 5;
 const DEFAULT_ZOOM_DIFFERENCE = 1;
-
+const DEFAULT_ZOOM_LEVEL = 15;
 
 export class Map extends Component {
     prevUserTrackTime = 0;
@@ -85,7 +85,7 @@ export class Map extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            mapZoomLevel: 15,
+            mapZoomLevel: DEFAULT_ZOOM_LEVEL,
             directions: null,
             markerCollection: {
                 type: 'FeatureCollection',
@@ -351,6 +351,9 @@ export class Map extends Component {
                         }
                     });
                 }
+            }
+            if (this.props.ride.rideId === null) {
+                this.onPressRecenterMap();
             }
         }
     }
@@ -982,12 +985,25 @@ export class Map extends Component {
         });
     }
 
-    onPressRecenterMap = (location, showBullseye) => {
+    onPressRecenterMap = (location) => {
+        const options = {
+            zoom: DEFAULT_ZOOM_LEVEL,
+            duration: 500,
+            mode: MapboxGL.CameraModes.Flight
+        };
+        this._mapView.setCamera(options);
         if (Array.isArray(location)) {
-            this._mapView.flyTo(location, 500);
+            // this.setState({ mapZoomLevel: DEFAULT_ZOOM_LEVEL }, () => {
+            //     this._mapView.flyTo(location, 300);
+            // });
+            options.centerCoordinate = location;
+            this._mapView.setCamera(options);
         } else if (this.state.currentLocation) {
-            console.log(this.state.currentLocation.location.join(''));
-            this._mapView.flyTo(this.state.currentLocation.location, 500);
+            // this.setState({ mapZoomLevel: DEFAULT_ZOOM_LEVEL }, () => {
+            //     this._mapView.flyTo(this.state.currentLocation.location, 500);
+            // });
+            options.centerCoordinate = this.state.currentLocation.location;
+            this._mapView.setCamera(options);
         }
     }
 
@@ -1784,7 +1800,7 @@ export class Map extends Component {
                 </View>
 
                 {
-                    mapRadiusCircle
+                    user.showCircle && mapRadiusCircle
                         ? <TouchableOpacity style={{ position: 'absolute', zIndex: 100, elevation: 10, bottom: 20, left: 20 }}>
                             <Text style={{ fontSize: 50, fontWeight: 'bold' }}>{`${this.state.diameter}`}<Text style={{ fontSize: 30 }}> {user.distanceUnit.toUpperCase()}</Text></Text>
                         </TouchableOpacity>
