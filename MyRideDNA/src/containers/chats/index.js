@@ -5,7 +5,7 @@ import styles from './styles';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { ShifterButton, IconButton } from '../../components/buttons';
 import { Thumbnail, Item, List } from 'native-base';
-import { APP_COMMON_STYLES } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP } from '../../constants';
 import { ChatBubble } from '../../components/bubble';
 
 class Chat extends Component {
@@ -25,8 +25,11 @@ class Chat extends Component {
             <View style={styles.fill}>
                 <ImageBackground style={styles.chatBackgroundImage} source={require('../../assets/img/chat-bg.jpg')}>
                     <View style={styles.chatHeader}>
-                        <Thumbnail style={styles.thumbnail} source={require('../../assets/img/friend-profile-pic.png')} />
-                        <Text style={styles.chatHeaderText}>Name of group here</Text>
+                        <Thumbnail style={styles.thumbnail} source={this.props.friend.profilePicture ? { uri: this.props.friend.profilePicture } : require('../../assets/img/friend-profile-pic.png')} />
+                        <View style={{ flex: 1, flexDirection: 'row' }}>
+                            <Text style={styles.chatHeaderName}>{this.props.friend.name}</Text>
+                            <Text style={styles.chatHeaderNickname}>{this.props.friend.nickname}</Text>
+                        </View>
                         <IconButton style={styles.headerIconRight} iconProps={{ name: 'md-more', type: 'Ionicons', style: { color: '#fff' } }} />
                     </View>
                     <View style={styles.rootContainer}>

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableHighlight } from 'react-native';
+import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableHighlight, Alert } from 'react-native';
 import { getAllFriends, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend, getAllOnlineFriends, getPicture } from '../../../api';
 import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, heightPercentageToDP, RELATIONSHIP, PageKeys } from '../../../constants';
 import { BaseModal } from '../../../components/modal';
@@ -49,7 +49,7 @@ const FLOAT_ACTIONS = [{
 },];
 
 class AllFriendsTab extends Component {
-    FRIEND_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => this.openProfile() }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: `Show\nlocation`, id: 'location', handler: () => { } }, { text: 'Chat', id: 'chat', handler: () => { } }, { text: 'Call', id: 'call', handler: () => { } }, { text: 'Garage', id: 'garage', handler: () => { } }, { text: 'Unfreind', id: 'unfriend', handler: () => this.doUnfriend() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
+    FRIEND_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => this.openProfile() }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: `Show\nlocation`, id: 'location', handler: () => { } }, { text: 'Chat', id: 'chat', handler: () => { this.openChatPage()} }, { text: 'Call', id: 'call', handler: () => { } }, { text: 'Garage', id: 'garage', handler: () => { } }, { text: 'Unfriend', id: 'unfriend', handler: () => this.doUnfriend() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     UNKNOWN_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Send\nRequest', id: 'sendRequest', handler: () => this.sendFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     SENT_REQUEST_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Cancel\nRequest', id: 'cancelRequest', handler: () => this.cancelFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     RECEIVED_REQUEST_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Accept\nRequest', id: 'acceptRequest', handler: () => { } }, { text: 'Reject\nRequest', id: 'rejectRequest', handler: () => { } }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
@@ -73,7 +73,7 @@ class AllFriendsTab extends Component {
             FLOAT_ACTIONS[actionBtnIdx] = { ...FLOAT_ACTIONS[actionBtnIdx], ...DEFAULT_FLOAT_ACTION_STYLE };
             FLOAT_ACTIONS[FLOAT_ACTIONS.length - 1] = { ...FLOAT_ACTIONS[FLOAT_ACTIONS.length - 1], ...ACTIVE_FLOAT_ACTION_STYLE };
         }
-        this.props.getAllOnlineFriends(this.props.user.userId);
+        
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -87,6 +87,7 @@ class AllFriendsTab extends Component {
                     this.props.getPicture(friend.profilePictureId, friend.userId)
                 }
             })
+            this.props.getAllOnlineFriends(this.props.user.userId);
         }
         if (this.props.refreshContent === true && prevProps.refreshContent === false) {
             this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0);
@@ -144,8 +145,31 @@ class AllFriendsTab extends Component {
         const { user } = this.props;
         const { selectedPerson } = this.state;
         person = person || selectedPerson;
-        this.props.doUnfriend(user.userId, person.userId);
-        if (this.state.isVisibleOptionsModal) this.onCancelOptionsModal();
+
+        Alert.alert(
+            'Confirmation to unfriend',
+            `Do you want to unfriend ${person.name}?`,
+            [
+                {
+                    text: 'Yes', onPress: () => {
+                        this.props.doUnfriend(user.userId, person.userId);
+                        if (this.state.isVisibleOptionsModal)
+                            this.onCancelOptionsModal();
+                    }
+                },
+                { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+            ],
+            { cancelable: false }
+        );
+    }
+
+    openChatPage = (person) => {
+        const { selectedPerson } = this.state;
+        person = person || selectedPerson;
+
+        Actions.push(PageKeys.CHAT, { friend: person})
+        if (this.state.isVisibleOptionsModal)
+        this.onCancelOptionsModal();
     }
 
     onPullRefresh = () => {
@@ -276,7 +300,6 @@ class AllFriendsTab extends Component {
     }
 
     render() {
-        console.log('allFriend : ', this.props.allFriends)
         const { isRefreshing, isVisibleOptionsModal, friendsFilter } = this.state;
         const { allFriends, searchQuery, searchFriendList, user } = this.props;
         let filteredFriends = [];

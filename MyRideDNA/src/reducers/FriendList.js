@@ -54,7 +54,23 @@ export default (state = initialState, action) => {
 
         case UNFRIEND:
             const personIndex = state.allFriends.findIndex(person => person.userId === action.data.personId);
+
             if (personIndex > -1) {
+                if(state.allFriends[personIndex].userId === state.currentFriend.userId){
+                    return {
+                        ...state,
+                        allFriends: [
+                            ...state.allFriends.slice(0, personIndex),
+                            ...state.allFriends.slice(personIndex + 1)
+                        ],
+                        currentFriend: {
+                            garage: {
+                                garageId: null
+                            },
+                            userId: null
+                        }
+                    }
+                } 
                 return {
                     ...state,
                     allFriends: [

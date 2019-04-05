@@ -22,13 +22,16 @@ const styles = StyleSheet.create({
         height: APP_COMMON_STYLES.headerHeight,
         padding: widthPercentageToDP(3)
     },
-    chatHeaderText: {
+    chatHeaderName: {
         color: '#fff',
         fontWeight: 'bold',
-        alignSelf: 'center',
         fontSize: widthPercentageToDP(4),
         marginLeft: widthPercentageToDP(2),
-        flex: 1,
+    },
+    chatHeaderNickname: { 
+        color: APP_COMMON_STYLES.infoColor, 
+        fontWeight: 'bold',
+        marginLeft: widthPercentageToDP(2) 
     },
     chatArea: {
         marginTop: APP_COMMON_STYLES.headerHeight,

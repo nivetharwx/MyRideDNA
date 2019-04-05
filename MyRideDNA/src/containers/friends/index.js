@@ -180,6 +180,7 @@ class Friends extends Component {
             )
         }
     }
+    requestKeyExtractor = (item) => item.id;
 
     render() {
         const { headerSearchMode, searchQuery, activeTab, friendsActiveTab } = this.state;
@@ -256,6 +257,7 @@ class Friends extends Component {
                                 <FlatList
                                     data={this.props.allFriendRequests}
                                     renderItem={this.renderFriendRequestList}
+                                    keyExtractor = {this.requestKeyExtractor}
                                 />
                             </View>
                         </Tab>
