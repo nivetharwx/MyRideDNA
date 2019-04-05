@@ -46,14 +46,24 @@ class MyGarageTab extends Component {
                 });
                 return;
             }
-            if (this.props.garage.spaceList.length > prevProps.garage.spaceList.length) {
+            if (this.props.garage.activeBikeIndex !== prevProps.garage.activeBikeIndex) {
+                this.spacelistRef.scrollToIndex({ index: 0, viewPosition: 0 });
+            } else if (this.props.garage.spaceList.length > prevProps.garage.spaceList.length) {
                 this.spacelistRef.scrollToEnd();
                 const newBike = this.props.garage.spaceList[this.props.garage.spaceList.length - 1];
                 if (newBike.pictureIdList.length > 0) {
                     this.props.getBikePicture(newBike.pictureIdList[0], newBike.spaceId);
                 }
-            } else if (this.props.garage.activeBikeIndex !== prevProps.garage.activeBikeIndex) {
-                this.spacelistRef.scrollToIndex({ index: 0, viewPosition: 0 });
+            } else if (this.props.garage.spaceList.length === prevProps.garage.spaceList.length) {
+                console.log('checking for update in spacelist ');
+                prevProps.garage.spaceList.forEach(item =>{
+                    const index = this.props.garage.spaceList.findIndex(val => val.spaceId === item.spaceId && val.pictureIdList !== item.pictureIdList);
+                    console.log('bike not updated: ', item);
+                    if(index>-1 && this.props.garage.spaceList[index].pictureIdList.length>0){
+                        console.log('call picture for updated bike ', this.props.garage.spaceList[index]);
+                        this.props.getBikePicture(this.props.garage.spaceList[index].pictureIdList[0], this.props.garage.spaceList[index].spaceId);
+                    }
+                })
             }
         }
     }
@@ -129,6 +139,7 @@ class MyGarageTab extends Component {
 
     render() {
         const { garage, user } = this.props;
+        console.log('garage : ', garage)
         const { headerSearchMode, searchQuery, isVisibleOptionsModal } = this.state;
         return (
             <View style={styles.fill}>

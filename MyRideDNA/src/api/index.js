@@ -1147,10 +1147,12 @@ export const addBikeToGarage = (userId, bike, pictureList) => {
         dispatch(toggleLoaderAction(true));
         axios.put(USER_BASE_URL + `addSpace/${userId}`, { ...bike, pictureList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
+                console.log('add bike to garage : ',res)
                 // console.log(`addSpace success: `, res.data);
                 dispatch(toggleLoaderAction(false));
                 bike.pictureIdList = res.data.pictureIdList || [];
                 bike.pictureList = res.data.pictureList || [];
+                bike.spaceId = res.data.spaceId;
                 dispatch(addToBikeListAction({ bike }));
             })
             .catch(er => {

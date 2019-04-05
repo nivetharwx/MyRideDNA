@@ -81,7 +81,8 @@ export default (state = initialState, action) => {
                         ...state.spaceList.slice(0, bikeIdx),
                         {
                             ...state.spaceList[bikeIdx],
-                            ...action.data.bike
+                            ...action.data.bike,
+                            pictureIdList: [...action.data.bike.pictureIdList]
                         },
                         ...state.spaceList.slice(bikeIdx + 1)
                     ]
