@@ -5,7 +5,7 @@ import { widthPercentageToDP } from '../../constants';
 const THUMBNAIL_MAX_WIDTH = widthPercentageToDP(50);
 export const Thumbnail = (props) => {
     return (
-        <TouchableWithoutFeedback onLongPress={() => typeof props.onLongPress === "function" && props.onLongPress} style={{ flex: 1 }}>
+        <TouchableWithoutFeedback onLongPress={props.onLongPress} style={{ flex: 1 }}>
             <View style={[props.horizontal ? styles.flexRow : styles.flexColumn, {
                 borderColor: props.selected ? '#EB861E' : props.active ? 'rgba(0,118,181,0.7)' : 'transparent',
                 borderWidth: props.selected ? 4 : props.active ? 4 : 2

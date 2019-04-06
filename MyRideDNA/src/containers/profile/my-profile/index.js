@@ -5,10 +5,10 @@ import { Actions } from 'react-native-router-flux';
 import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG } from '../../../constants/index';
 import { IconButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
-import { appNavMenuVisibilityAction, updateUserAction } from '../../../actions';
+import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction } from '../../../actions';
 import { Accordion } from 'native-base';
 import ImagePicker from 'react-native-image-crop-picker';
-import { logoutUser, updateProfilePicture, getPicture, getSpaceList } from '../../../api';
+import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive } from '../../../api';
 import { Loader } from '../../../components/loader';
 
 const hasIOSAbove10 = parseInt(Platform.Version) > 10;
@@ -27,7 +27,8 @@ class MyProfileTab extends Component {
             activeTab: -1,
             bikes: [10, 20, 30, 40, 50],
             isLoadingProfPic: false,
-            profilePicId: props.user.profilePictureId || ''
+            profilePicId: props.user.profilePictureId || '',
+            pictureLoader: {}
         };
     }
 
@@ -57,10 +58,35 @@ class MyProfileTab extends Component {
                 }
             }
         }
+        if (prevProps.shortSpaceList !== this.props.shortSpaceList) {
+            this.props.shortSpaceList.forEach((bike, index) => {
+                if (!bike.profilePicture && bike.pictureIdList.length > 0) {
+                    if (!this.state.pictureLoader[bike.spaceId]) {
+                        this.setState(prevState => {
+                            const updatedPictureLoader = { ...prevState.pictureLoader };
+                            updatedPictureLoader[bike.spaceId] = true;
+                            return { pictureLoader: updatedPictureLoader }
+                        }, () => {
+                            this.props.getBikePicture(bike.pictureIdList[0], bike.spaceId)
+                        });
+                    }
+                } else {
+                    this.setState(prevState => {
+                        const updatedPictureLoader = { ...prevState.pictureLoader };
+                        updatedPictureLoader[bike.spaceId] = false;
+                        return { pictureLoader: updatedPictureLoader }
+                    });
+                }
+            })
+        }
     }
 
     onSpaceLongPress = (newSpaceIndex) => {
-        // TODO: Scroll to 0th index after setting active bike
+         if (newSpaceIndex === 0) return;
+         this.hScrollView.scrollToIndex({ index: 0, animated: true });
+        console.log('onSpaceLongPress : ',newSpaceIndex)
+        const prevActiveBikeIndex = this.props.shortSpaceList.findIndex(bike => bike.isDefault);
+        this.props.setBikeAsActive(this.props.user.userId, this.props.shortSpaceList[newSpaceIndex].spaceId, prevActiveBikeIndex, newSpaceIndex);
     }
 
     renderAccordionItem = (item) => {
@@ -92,7 +118,22 @@ class MyProfileTab extends Component {
                         horizontal={true}
                         data={this.props.shortSpaceList}
                         keyExtractor={(item, index) => item.spaceId}
-                        renderItem={({ item, index }) => <Thumbnail horizontal={false} height={heightPercentageToDP(12)} width={widthPercentageToDP(28)} active={item.isDefault} imagePath={require('../../../assets/img/harley.jpg')} title={item.name} onLongPress={item.isDefault ? null : () => this.onSpaceLongPress(index)} />}
+                        renderItem={({ item, index }) => <View>
+                            <Thumbnail
+                                horizontal={false}
+                                height={heightPercentageToDP(12)}
+                                width={widthPercentageToDP(28)}
+                                active={item.isDefault}
+                                imagePath={item.profilePicture ? { uri: item.profilePicture } : require('../../../assets/img/harley.jpg')}
+                                title={item.name}
+                                onLongPress={() => this.onSpaceLongPress(index)}
+                            />
+                            {
+                                this.state.pictureLoader[item.spaceId]
+                                    ? <Loader show={this.state.pictureLoader[item.spaceId]} />
+                                    : null
+                            }
+                        </View>}
                         ref={view => this.hScrollView = view}
                     />
                 </View>
@@ -198,6 +239,12 @@ const mapDispatchToProps = (dispatch) => {
         }),
         getSpaceList: (userId) => dispatch(getSpaceList(userId)),
         updateProfilePicture: (profilePicStr, mimeType, userId) => dispatch(updateProfilePicture(profilePicStr, mimeType, userId)),
+        getBikePicture: (pictureId, spaceId) => getPicture(pictureId, ({ picture }) => {
+            dispatch(updateShortSpaceListAction({ profilePicture: picture, spaceId }))
+        }, (error) => {
+            dispatch(updateShortSpaceListAction({ spaceId }))
+        }),
+        setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MyProfileTab);

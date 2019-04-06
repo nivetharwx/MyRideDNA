@@ -13,10 +13,12 @@ export default (state = initialState, action) => {
             const activeIndex = action.data.spaceList.findIndex(bike => bike.isDefault);
             if (activeIndex === -1 || activeIndex === 0) {
                 return {
+                    ...state,
                     ...action.data
                 }
             } else {
                 return {
+                    ...state,
                     ...action.data,
                     spaceList: [
                         action.data.spaceList[activeIndex],
@@ -34,11 +36,6 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 shortSpaceList: action.data
-            }
-        case UPDATE_SHORT_SPACE_LIST:
-            return {
-                ...state,
-                shortSpaceList: []
             }
 
         case ADD_TO_BIKE_LIST:
@@ -62,14 +59,22 @@ export default (state = initialState, action) => {
             }
         case UPDATE_ACTIVE_BIKE:
             const updatedSpaceList = [...state.spaceList];
-            updatedSpaceList[action.data.prevActiveIndex].isDefault = false;
-            updatedSpaceList[action.data.newActiveIndex].isDefault = true;
+            const updatedShortSpaceList = [...state.shortSpaceList];
+            updatedSpaceList[action.data.prevActiveIndex] = { ...state.spaceList[action.data.prevActiveIndex], isDefault: false };
+            updatedSpaceList[action.data.newActiveIndex] = { ...state.spaceList[action.data.newActiveIndex], isDefault: true };
+            updatedShortSpaceList[action.data.prevActiveIndex] = { ...state.shortSpaceList[action.data.prevActiveIndex], isDefault: false };
+            updatedShortSpaceList[action.data.newActiveIndex] = { ...state.shortSpaceList[action.data.newActiveIndex], isDefault: true };
             return {
                 ...state,
                 spaceList: [
                     updatedSpaceList[action.data.newActiveIndex],
                     ...updatedSpaceList.slice(0, action.data.newActiveIndex),
-                    ...updatedSpaceList.slice(action.data.newActiveIndex + 1)
+                    ...updatedSpaceList.slice(action.data.newActiveIndex + 1),
+                ],
+                shortSpaceList: [
+                    updatedShortSpaceList[action.data.newActiveIndex],
+                    ...updatedShortSpaceList.slice(0, action.data.newActiveIndex),
+                    ...updatedShortSpaceList.slice(action.data.newActiveIndex + 1),
                 ]
             }
         case UPDATE_BIKE_LIST:
@@ -116,6 +121,23 @@ export default (state = initialState, action) => {
             return {
                 ...initialState
             }
+
+        case UPDATE_SHORT_SPACE_LIST:
+            const index = state.shortSpaceList.findIndex((item) => item.spaceId === action.data.spaceId);
+            if (index > -1) {
+                const bike = state.shortSpaceList[index];
+                bike.profilePicture = action.data.profilePicture;
+                console.log('update shortspace list ')
+                return {
+                    ...state,
+                    shortSpaceList: [
+                        ...state.shortSpaceList.slice(0, index),
+                        bike,
+                        ...state.shortSpaceList.slice(index + 1)
+                    ]
+                }
+            }
+            return state
         default: return state
     }
 }
