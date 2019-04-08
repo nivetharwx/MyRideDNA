@@ -1088,17 +1088,17 @@ export const removeMember = (groupId, memberId) => {
 }
 export const getSpaceList = (userId) => {
     return dispatch => {
-        dispatch(toggleLoaderAction(true));
+        // dispatch(toggleLoaderAction(true));
         axios.get(USER_BASE_URL + `getSpaceList?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log("getSpaceList success: ", res.data);
-                dispatch(toggleLoaderAction(false));
-                return dispatch(replaceShortSpaceListAction(res.data))
+                // dispatch(toggleLoaderAction(false));
+                dispatch(replaceShortSpaceListAction(res.data))
             })
             .catch(er => {
                 console.log(`getSpaceList: `, er.response);
                 // TODO: Dispatch error info action
-                dispatch(toggleLoaderAction(false));
+                // dispatch(toggleLoaderAction(false));
             })
     };
 }

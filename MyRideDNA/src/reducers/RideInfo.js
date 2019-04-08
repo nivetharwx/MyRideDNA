@@ -1,4 +1,4 @@
-import { UPDATE_RIDE, CLEAR_RIDE, UPDATE_WAYPOINT, LOAD_RIDE, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_SOURCE_OR_DESTINATION_NAME, UPDATE_WAYPOINT_NAME } from "../actions/actionConstants";
+import { UPDATE_RIDE, CLEAR_RIDE, UPDATE_WAYPOINT, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_SOURCE_OR_DESTINATION_NAME, UPDATE_WAYPOINT_NAME, REORDER_SOURCE, REORDER_DESTINATION, REORDER_WAYPOINTS } from "../actions/actionConstants";
 import { undoable } from "./Undoable";
 import { RIDE_POINT } from "../constants";
 
@@ -103,6 +103,132 @@ const rideInfo = (state = initialState, action) => {
                     ]
                 }
             }
+        case REORDER_SOURCE:
+            return action.data.to === RIDE_POINT.DESTINATION
+                ? {
+                    ...state,
+                    ride: {
+                        ...state.ride,
+                        source: state.ride.waypoints[0],
+                        waypoints: [
+                            ...state.ride.waypoints.slice(1),
+                            state.ride.destination
+                        ],
+                        destination: state.ride.source
+                    }
+                } : {
+                    ...state,
+                    ride: {
+                        ...state.ride,
+                        source: state.ride.waypoints[0],
+                        waypoints: [
+                            ...state.ride.waypoints.slice(0, action.data.to),
+                            state.ride.source,
+                            ...state.ride.waypoints.slice(action.data.to + 1)
+                        ]
+                    }
+                }
+
+        case REORDER_DESTINATION:
+            const lastWponitIdx = state.ride.waypoints.length - 1;
+            console.log(`Reordering destination to ${action.data.to}`);
+            return action.data.to === RIDE_POINT.SOURCE
+                ? {
+                    ...state,
+                    ride: {
+                        ...state.ride,
+                        source: state.ride.destination,
+                        waypoints: [
+                            state.ride.source,
+                            ...state.ride.waypoints.slice(1, lastWponitIdx)
+                        ],
+                        destination: state.ride.waypoints[lastWponitIdx]
+                    }
+                } : {
+                    ...state,
+                    ride: {
+                        ...state.ride,
+                        waypoints: [
+                            ...state.ride.waypoints.slice(0, action.data.to),
+                            state.ride.destination,
+                            ...state.ride.waypoints.slice(action.data.to + 1)
+                        ],
+                        destination: state.ride.waypoints[lastWponitIdx]
+                    }
+                }
+        case REORDER_SOURCE:
+            return action.data.to === RIDE_POINT.DESTINATION
+                ? {
+                    ...state,
+                    ride: {
+                        ...state.ride,
+                        source: state.ride.waypoints[0],
+                        waypoints: [
+                            ...state.ride.waypoints.slice(1),
+                            state.ride.destination
+                        ],
+                        destination: state.ride.source
+                    }
+                } : {
+                    ...state,
+                    ride: {
+                        ...state.ride,
+                        source: state.ride.waypoints[0],
+                        waypoints: [
+                            ...state.ride.waypoints.slice(0, action.data.to),
+                            state.ride.source,
+                            ...state.ride.waypoints.slice(action.data.to + 1)
+                        ]
+                    }
+                }
+
+        case REORDER_WAYPOINTS:
+            if (action.data.to === RIDE_POINT.SOURCE) {
+                return {
+                    ...state,
+                    ride: {
+                        ...state.ride,
+                        source: state.ride.waypoints[action.data.from],
+                        waypoints: [
+                            state.ride.source,
+                            ...state.ride.waypoints.slice(0, action.data.from),
+                            ...state.ride.waypoints.slice(action.data.from + 1)
+                        ]
+                    }
+                }
+            } else if (action.data.to === RIDE_POINT.DESTINATION) {
+                return {
+                    ...state,
+                    ride: {
+                        ...state.ride,
+                        waypoints: [
+                            ...state.ride.waypoints.slice(0, action.data.from),
+                            ...state.ride.waypoints.slice(action.data.from + 1),
+                            state.ride.destination
+                        ],
+                        destination: state.ride.waypoints[action.data.from]
+                    }
+                }
+            } else {
+                const { lowerIdx, higherIdx } = action.data.from > action.data.to
+                    ? { lowerIdx: action.data.to, higherIdx: action.data.from }
+                    : { lowerIdx: action.data.from, higherIdx: action.data.to };
+                console.log(`Reordering waypoint from ${action.data.from} to ${action.data.to}`);
+                console.log('indexes: ', lowerIdx, higherIdx);
+                return {
+                    ...state,
+                    ride: {
+                        ...state.ride,
+                        waypoints: [
+                            ...state.ride.waypoints.slice(0, lowerIdx),
+                            state.ride.waypoints[higherIdx],
+                            ...state.ride.waypoints.slice(lowerIdx, higherIdx),
+                            ...state.ride.waypoints.slice(higherIdx + 1),
+                        ]
+                    }
+                }
+            }
+
         case DELETE_WAYPOINT:
             return {
                 ...state,
