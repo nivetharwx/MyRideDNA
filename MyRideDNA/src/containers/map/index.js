@@ -422,7 +422,7 @@ export class Map extends Component {
 
     async componentDidMount() {
         this.props.changeScreen(PageKeys.MAP);
-        this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
+        this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         this.props.pushNotification(this.props.user.userId);
         setTimeout(() => {
             this.props.getAllNotifications(this.props.user.userId);

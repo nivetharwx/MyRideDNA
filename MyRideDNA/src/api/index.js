@@ -135,7 +135,7 @@ export const logoutUser = (userId, accessToken) => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
                     // DOC: Updating user active | isLoggedIn with publish event
-                    publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: false, userId: userId } });
+                    publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: false, userId: userId } });
                     // TODO: Clear store
                     AsyncStorage.removeItem(USER_AUTH_TOKEN).then(() => {
                         Actions.reset(PageKeys.LOGIN);
