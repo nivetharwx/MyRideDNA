@@ -8,7 +8,7 @@ import com.marianhello.bgloc.react.BackgroundGeolocationPackage;
 import io.rumors.reactnativesettings.RNSettingsPackage;
 import com.rt2zz.reactnativecontacts.ReactNativeContacts;
 import com.mapbox.rctmgl.RCTMGLPackage;
-import com.RNFetchBlob.RNFetchBlobPackage;
+
 import com.reactnative.ivpusic.imagepicker.PickerPackage;
 import io.rumors.reactnativesettings.receivers.GpsLocationReceiver;
 import com.learnium.RNDeviceInfo.RNDeviceInfo;
@@ -38,7 +38,6 @@ public class MainApplication extends Application implements ReactApplication {
             new RNSettingsPackage(),
             new ReactNativeContacts(),
             new RCTMGLPackage(),
-            new RNFetchBlobPackage(),
             new PickerPackage(),
           new RNDeviceInfo(), 
           new RNCameraPackage(), 

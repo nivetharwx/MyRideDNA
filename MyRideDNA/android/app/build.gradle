@@ -153,7 +153,6 @@ dependencies {
     compile project(':react-native-mauron85-background-geolocation')
     compile project(':react-native-settings')
     compile project(':react-native-contacts')
-    compile project(':rn-fetch-blob')
     compile project(':react-native-image-crop-picker')
     implementation project(':react-native-settings')
     implementation fileTree(dir: "libs", include: ["*.jar"])
