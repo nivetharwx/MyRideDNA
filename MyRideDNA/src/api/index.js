@@ -1202,16 +1202,17 @@ export const addPictures = (userId, bike, pictureList) => {
             })
     }
 }
-export const setBikeAsActive = (userId, bike, prevActiveIndex, newActiveIndex) => {
+export const setBikeAsActive = (userId, spaceId, prevActiveIndex, newActiveIndex) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.put(USER_BASE_URL + `setDefaultSpace/${userId}/${bike.spaceId}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.put(USER_BASE_URL + `setDefaultSpace/${userId}/${spaceId}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
+                console.log("setDefaultSpace success: ", res.data);
                 dispatch(toggleLoaderAction(false));
-                return dispatch(updateActiveBikeAction({ prevActiveIndex, newActiveIndex, bike }))
+                return dispatch(updateActiveBikeAction({ prevActiveIndex, newActiveIndex }))
             })
             .catch(er => {
-                console.log(`setBikeAsActive: `, er.response);
+                console.log(`setDefaultSpace: `, er.response || er);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })

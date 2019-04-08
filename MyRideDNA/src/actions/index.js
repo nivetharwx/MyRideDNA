@@ -9,7 +9,8 @@ import {
     UPDATE_CURRENT_FRIEND_GARAGE,
     REORDER_WAYPOINTS,
     REORDER_SOURCE,
-    REORDER_DESTINATION
+    REORDER_DESTINATION,
+    UPDATE_SHORT_SPACE_LIST
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -162,6 +163,13 @@ export const updateGarageNameAction = (data) => (
         data: data
     }
 );
+export const updateShortSpaceListAction = (data) => (
+    {
+        type: UPDATE_SHORT_SPACE_LIST,
+        data: data
+    }
+);
+
 export const addToBikeListAction = (data) => (
     {
         type: ADD_TO_BIKE_LIST,

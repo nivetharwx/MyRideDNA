@@ -27,7 +27,6 @@ class MyGarageTab extends Component {
         if (this.props.garage.garageId === null) {
             this.props.getGarageInfo(this.props.user.userId);
         } else {
-            console.log("this.props.garage: ", this.props.garage)
             this.props.garage.spaceList.forEach(bike => {
                 if (bike.pictureIdList.length > 0) {
                     this.props.getBikePicture(bike.pictureIdList[0], bike.spaceId);
@@ -55,12 +54,9 @@ class MyGarageTab extends Component {
                     this.props.getBikePicture(newBike.pictureIdList[0], newBike.spaceId);
                 }
             } else if (this.props.garage.spaceList.length === prevProps.garage.spaceList.length) {
-                console.log('checking for update in spacelist ');
                 prevProps.garage.spaceList.forEach(item =>{
                     const index = this.props.garage.spaceList.findIndex(val => val.spaceId === item.spaceId && val.pictureIdList !== item.pictureIdList);
-                    console.log('bike not updated: ', item);
                     if(index>-1 && this.props.garage.spaceList[index].pictureIdList.length>0){
-                        console.log('call picture for updated bike ', this.props.garage.spaceList[index]);
                         this.props.getBikePicture(this.props.garage.spaceList[index].pictureIdList[0], this.props.garage.spaceList[index].spaceId);
                     }
                 })
@@ -74,7 +70,7 @@ class MyGarageTab extends Component {
         this.onCancelOptionsModal();
         const prevActiveBikeIndex = garage.spaceList.findIndex(bike => bike.isDefault);
         const newActiveBikeIndex = garage.spaceList.findIndex(bike => bike.spaceId === selectedBike.spaceId);
-        this.props.setBikeAsActive(this.props.user.userId, selectedBike, prevActiveBikeIndex, newActiveBikeIndex);
+        this.props.setBikeAsActive(this.props.user.userId, selectedBike.spaceId, prevActiveBikeIndex, newActiveBikeIndex);
     }
 
     openBikeForm = () => {
@@ -139,7 +135,6 @@ class MyGarageTab extends Component {
 
     render() {
         const { garage, user } = this.props;
-        console.log('garage : ', garage)
         const { headerSearchMode, searchQuery, isVisibleOptionsModal } = this.state;
         return (
             <View style={styles.fill}>
@@ -210,7 +205,7 @@ const mapDispatchToProps = (dispatch) => {
             })
         },
         updateGarageName: (garageName, garageId) => dispatch(updateGarageName(garageName, garageId)),
-        setBikeAsActive: (userId, bike, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, bike, prevActiveIndex, index)),
+        setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
         deleteBike: (userId, bikeId, index) => dispatch(deleteBike(userId, bikeId, index)),
         getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
             console.log("getPicture success: ", response);
