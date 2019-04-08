@@ -130,6 +130,7 @@ export class Map extends Component {
     componentWillReceiveProps(nextProps) {
         // console.log(this.props.ride === nextProps.ride); // DOC: false when something changes in ride
         const { ride, isLocationOn, currentScreen } = nextProps;
+        console.log("ride changed: ", ride);
         let updatedState = {};
 
         if (this.isLocationOn != isLocationOn) {
@@ -248,9 +249,9 @@ export class Map extends Component {
                 ? this.startTrackingLocation()
                 : this.stopTrackingLocation();
         }
-        if (prevProps.ride !== this.props.ride) {
-            const prevRide = prevProps.ride;
-            const newRide = this.props.ride;
+        const prevRide = prevProps.ride;
+        const newRide = this.props.ride;
+        if (prevRide !== newRide && (prevRide.rideId === null || (prevRide.rideId === newRide.rideId))) {
             if (prevRide.source !== newRide.source) {
                 if (prevRide.source === null) {
                     console.log("source added");
@@ -267,6 +268,7 @@ export class Map extends Component {
                 else if (prevRide.source.lng + '' + prevRide.source.lat !==
                     newRide.source.lng + '' + newRide.source.lat) {
                     console.log("source changed");
+                    this.setState(prevState => ({ rideUpdateCount: prevState.rideUpdateCount + 1 }));
                     this.getPlaceNameByReverseGeocode([newRide.source.lng, newRide.source.lat],
                         (locationName) => locationName && this.props.updateSourceOrDestinationName(RIDE_POINT.SOURCE, locationName),
                         (err) => {
@@ -293,6 +295,7 @@ export class Map extends Component {
                 else if (prevRide.destination.lng + '' + prevRide.destination.lat !==
                     newRide.destination.lng + '' + newRide.destination.lat) {
                     console.log("destination changed");
+                    this.setState(prevState => ({ rideUpdateCount: prevState.rideUpdateCount + 1 }));
                     this.getPlaceNameByReverseGeocode([newRide.destination.lng, newRide.destination.lat],
                         (locationName) => locationName && this.props.updateSourceOrDestinationName(RIDE_POINT.DESTINATION, locationName),
                         (err) => {
@@ -320,10 +323,12 @@ export class Map extends Component {
                                     }
                                 );
                             }
+                            this.setState(prevState => ({ rideUpdateCount: prevState.rideUpdateCount + 1 }));
                             return;
                         }
                         if (idx !== index) {
                             console.log("reordered waypoint: ", point);
+                            this.setState(prevState => ({ rideUpdateCount: prevState.rideUpdateCount + 1 }));
                         }
                     });
                 } else if (prevRide.waypoints.length > newRide.waypoints.length) {
@@ -422,7 +427,7 @@ export class Map extends Component {
 
     async componentDidMount() {
         this.props.changeScreen(PageKeys.MAP);
-        this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
+        this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         this.props.pushNotification(this.props.user.userId);
         setTimeout(() => {
             this.props.getAllNotifications(this.props.user.userId);
@@ -989,7 +994,7 @@ export class Map extends Component {
         const options = {
             zoom: DEFAULT_ZOOM_LEVEL,
             duration: 500,
-            mode: MapboxGL.CameraModes.Flight
+            // mode: MapboxGL.CameraModes.Flight
         };
         this._mapView.setCamera(options);
         if (Array.isArray(location)) {

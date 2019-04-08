@@ -135,7 +135,7 @@ export const logoutUser = (userId, accessToken) => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
                     // DOC: Updating user active | isLoggedIn with publish event
-                    publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: false, userId: userId } });
+                    publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: false, userId: userId } });
                     // TODO: Clear store
                     AsyncStorage.removeItem(USER_AUTH_TOKEN).then(() => {
                         Actions.reset(PageKeys.LOGIN);
@@ -1088,17 +1088,17 @@ export const removeMember = (groupId, memberId) => {
 }
 export const getSpaceList = (userId) => {
     return dispatch => {
-        dispatch(toggleLoaderAction(true));
+        // dispatch(toggleLoaderAction(true));
         axios.get(USER_BASE_URL + `getSpaceList?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log("getSpaceList success: ", res.data);
-                dispatch(toggleLoaderAction(false));
-                return dispatch(replaceShortSpaceListAction(res.data))
+                // dispatch(toggleLoaderAction(false));
+                dispatch(replaceShortSpaceListAction(res.data))
             })
             .catch(er => {
                 console.log(`getSpaceList: `, er.response);
                 // TODO: Dispatch error info action
-                dispatch(toggleLoaderAction(false));
+                // dispatch(toggleLoaderAction(false));
             })
     };
 }

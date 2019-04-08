@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { BaseModal } from '../../../components/modal';
 import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, TAB_CONTAINER_HEIGHT, JS_SDK_ACCESS_TOKEN, RIDE_POINT } from '../../../constants';
 import { Icon as NBIcon, Tabs, ScrollableTab, TabHeading, Tab, ListItem, Left, Body, Right } from 'native-base';
-import { updateWaypointNameAction, updateSourceOrDestinationNameAction } from '../../../actions';
+import { updateWaypointNameAction, updateSourceOrDestinationNameAction, reorderRideSourceAction, reorderRideDestinationAction, reorderRideWaypointsAction } from '../../../actions';
 import { IconLabelPair } from '../../../components/labels';
 import DraggableFlatList from 'react-native-draggable-flatlist';
 import { IconButton } from '../../../components/buttons';
@@ -64,29 +64,58 @@ class WaypointList extends React.Component {
         </View>)
     }
 
-    // renderRidePoint = ({ item, index, move, moveEnd, isActive }) => {
-    renderRidePoint = ({ item, index }) => {
+    renderRidePoint = ({ item, index, move, moveEnd, isActive }) => {
+        // renderRidePoint = ({ item, index }) => {
         return (
-            // <ListItem onLongPress={move} onPressOut={moveEnd}
-            //     style={{ backgroundColor: isActive ? APP_COMMON_STYLES.infoColor : '#fff' }}
-            // >
-            <ListItem avatar>
-                <Left>
+            <ListItem avatar onLongPress={move} onPressOut={moveEnd}
+                style={{ backgroundColor: isActive ? APP_COMMON_STYLES.infoColor : '#fff' }}
+            >
+                {/* <ListItem avatar> */}
+                <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
                     <View style={styles.itemNumber}>
                         <Text style={styles.whiteFont}>{index + 1}</Text>
                     </View>
                 </Left>
-                <Body>
-                    <Text>{item.name || 'Unknown'}</Text>
+                <Body style={{ height: '100%' }}>
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                        <Text>{item.name || 'Unknown'}</Text>
+                    </View>
                 </Body>
-                {/* <Right>
+                <Right>
                     <NBIcon name='drag-handle' type='MaterialIcons' />
-                </Right> */}
+                </Right>
             </ListItem>
         );
     }
 
-    onChangeOrder = ({ data }) => this.setState({ points: data });
+    onChangeOrder = ({ from, to, data }) => {
+        if (from === to) return;
+        const { ride } = this.props;
+        const { points } = this.state;
+        const lastIndex = points.length - 1;
+        if (from === 0) {
+            if (ride.destination && to === lastIndex) {
+                this.props.reorderRideSource(RIDE_POINT.DESTINATION);
+            } else {
+                this.props.reorderRideSource(to - 1);
+            }
+        } else if (ride.destination && from === lastIndex) {
+            if (to === 0) {
+                this.props.reorderRideDestination(RIDE_POINT.SOURCE);
+            } else {
+                this.props.reorderRideDestination(to - 1);
+            }
+        } else {
+            if (to === 0) {
+                this.props.reorderRideWaypoints(from - 1, RIDE_POINT.SOURCE);
+            } else if (ride.destination && to === lastIndex) {
+                this.props.reorderRideWaypoints(from - 1, RIDE_POINT.DESTINATION);
+            } else {
+                this.props.reorderRideWaypoints(from - 1, to - 1);
+            }
+        }
+        // this.setState({ points: data });
+    }
 
     pointKeyExtractor = item => item.id || item.lng + '' + item.lat;
 
@@ -114,13 +143,6 @@ class WaypointList extends React.Component {
 
                         </Tab>
                     </Tabs> */}
-                    {/* <DraggableFlatList
-                        style={styles.pointList}
-                        data={points}
-                        renderItem={this.renderRidePoint}
-                        keyExtractor={this.pointKeyExtractor}
-                        onMoveEnd={this.onChangeOrder}
-                    /> */}
                     <View style={styles.bodyContent}>
                         <View style={styles.rideInfo}>
                             <IconLabelPair
@@ -136,11 +158,17 @@ class WaypointList extends React.Component {
                                 text={getFormattedDateFromISO(ride.date)}
                             />
                         </View>
-                        <FlatList
+                        {/* <FlatList
                             data={points}
                             renderItem={this.renderRidePoint}
                             keyExtractor={this.pointKeyExtractor}
                         // ItemSeparatorComponent={this.renderSeparator}
+                        /> */}
+                        <DraggableFlatList
+                            data={points}
+                            renderItem={this.renderRidePoint}
+                            keyExtractor={this.pointKeyExtractor}
+                            onMoveEnd={this.onChangeOrder}
                         />
                     </View>
                 </View>
@@ -161,6 +189,9 @@ const mapDipatchToProps = (dispatch) => {
     return {
         updateSourceOrDestinationName: (identifier, locationName) => dispatch(updateSourceOrDestinationNameAction({ identifier, locationName })),
         updateWaypointName: (waypointId, locationName) => dispatch(updateWaypointNameAction({ waypointId, locationName })),
+        reorderRideSource: (to) => dispatch(reorderRideSourceAction({ to })),
+        reorderRideDestination: (to) => dispatch(reorderRideDestinationAction({ to })),
+        reorderRideWaypoints: (from, to) => dispatch(reorderRideWaypointsAction({ from, to })),
     };
 }
 export default connect(mapStateToProps, mapDipatchToProps)(WaypointList);
@@ -219,6 +250,7 @@ const styles = StyleSheet.create({
         width: '50%',
     },
     bodyContent: {
+        flex: 1,
         marginTop: APP_COMMON_STYLES.headerHeight
     },
     itemNumber: {
