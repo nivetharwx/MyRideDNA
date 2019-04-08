@@ -10,7 +10,8 @@ import {
     REORDER_WAYPOINTS,
     REORDER_SOURCE,
     REORDER_DESTINATION,
-    UPDATE_SHORT_SPACE_LIST
+    UPDATE_SHORT_SPACE_LIST,
+    RESETING_STATE_ON_LOGOUT
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -476,5 +477,10 @@ export const reorderRideWaypointsAction = (data) => (
     {
         type: REORDER_WAYPOINTS,
         data: data
+    }
+);
+export const resetingStateOnLogout = () => (
+    {
+        type: RESETING_STATE_ON_LOGOUT,
     }
 );

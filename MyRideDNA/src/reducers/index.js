@@ -14,4 +14,14 @@ import CommunitySearchList from './CommunitySearchList';
 import NotificationList from './NotificationList';
 import FriendRequest from './FriendRequest';
 
-export default combineReducers({ UserAuth, TabVisibility, RideInfo, RideList, GPSState, PageState, FriendList, GarageInfo, PageOverTab, FriendGroupList, PassengerList, CommunitySearchList, NotificationList, FriendRequest });
+const rootReducer = (state, action) => {
+    if (action.type === 'RESETING_STATE_ON_LOGOUT') {
+      state = undefined
+    }
+  
+    return appReducer(state, action)
+  }
+// export default  combineReducers({ UserAuth, TabVisibility, RideInfo, RideList, GPSState, PageState, FriendList, GarageInfo, PageOverTab, FriendGroupList, PassengerList, CommunitySearchList, NotificationList, FriendRequest });
+ const appReducer = combineReducers({ UserAuth, TabVisibility, RideInfo, RideList, GPSState, PageState, FriendList, GarageInfo, PageOverTab, FriendGroupList, PassengerList, CommunitySearchList, NotificationList, FriendRequest });
+
+ export default rootReducer;
