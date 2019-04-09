@@ -11,7 +11,9 @@ import {
     REORDER_SOURCE,
     REORDER_DESTINATION,
     UPDATE_SHORT_SPACE_LIST,
-    RESETING_STATE_ON_LOGOUT
+    RESETING_STATE_ON_LOGOUT,
+    UPDATE_FRIENDS_LOCATION,
+    REPLACE_FRIENDS_LOCATION
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -204,6 +206,18 @@ export const updateBikePictureListAction = (data) => (
 export const updateFriendListAction = (data) => (
     {
         type: UPDATE_FRIEND_LIST,
+        data: data
+    }
+);
+export const updateFriendsLocationAction = (data) => (
+    {
+        type: UPDATE_FRIENDS_LOCATION,
+        data: data
+    }
+);
+export const replaceFriendsLocationAction = (data) => (
+    {
+        type: REPLACE_FRIENDS_LOCATION,
         data: data
     }
 );

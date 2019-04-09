@@ -9,7 +9,7 @@ import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { Loader } from '../../components/loader';
 import styles from './styles';
-import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend } from '../../api';
+import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend, getFriendsLocationList } from '../../api';
 import { BasicCard } from '../../components/cards';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
@@ -18,7 +18,6 @@ class FriendsProfile extends Component {
     FRIENDS_PROFILE_ICONS = [
         { name: 'ios-chatbubbles', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.onPressChatIcon() },
         { name: 'account-remove', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.onPressUnfriendIcon() },
-        { name: 'location-on', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => console.log("Show location pressed") },
         // { name: 'ios-shirt', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => console.log("Vest pressed") },
     ];
     tabsRef = null;
@@ -41,6 +40,14 @@ class FriendsProfile extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        if (prevProps.friendsLocation !== this.props.friendsLocation) {
+            console.log("prevProps.friendsLocation: ", prevProps.friendsLocation);
+            console.log("this.props.friendsLocation: ", this.props.friendsLocation);
+            const trackingFriendsLength = Object.keys(this.props.friendsLocation).length;
+            if (trackingFriendsLength > 0) {
+                console.log("Showing friend on map: ", this.props.friendsLocation);
+            }
+        }
         if (prevProps.currentFriend !== this.props.currentFriend) {
             if (this.props.currentFriend.userId === null) {
                 Actions.pop();
@@ -48,6 +55,9 @@ class FriendsProfile extends Component {
             }
             if (this.state.activeTab === 0) {
                 if (prevProps.currentFriend.userId === null) {
+                    if (this.props.currentFriend.locationEnable) {
+                        this.FRIENDS_PROFILE_ICONS.push({ name: 'location-on', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.showFriendsLocation() });
+                    }
                     if (this.props.currentFriend.profilePictureId) {
                         this.setState({ profilePicId: this.props.currentFriend.profilePictureId, isLoadingProfPic: true });
                         this.props.getProfilePicture(this.props.currentFriend.profilePictureId, this.props.currentFriend.userId, this.props.friendType);
@@ -69,7 +79,6 @@ class FriendsProfile extends Component {
                         this.setState({ isLoadingProfPic: false });
                     }
                 }
-
             }
             else if (this.state.activeTab === 1) {
                 if (prevProps.currentFriend.garage.garageId !== this.props.currentFriend.garage.garageId) {
@@ -84,25 +93,29 @@ class FriendsProfile extends Component {
         }
     }
 
+    showFriendsLocation = () => {
+        this.props.getFriendsLocationList(this.props.user.userId, [this.props.currentFriend.userId]);
+    }
+
     onPressChatIcon = () => {
         Actions.push(PageKeys.CHAT, { friend: this.props.currentFriend })
     }
 
     onPressUnfriendIcon = () => {
-            Alert.alert(
-                'Confirmation to unfriend',
-                `Do you want to unfriend ${this.props.currentFriend.name}?`,
-                [
-                    {
-                        text: 'Yes', onPress: () => {
-                            this.props.doUnfriend(this.props.user.userId, this.props.currentFriend.userId);
-                            
-                        }
-                    },
-                    { text: 'Cancel', onPress: () => { }, style: 'cancel' },
-                ],
-                { cancelable: false }
-            );
+        Alert.alert(
+            'Confirmation to unfriend',
+            `Do you want to unfriend ${this.props.currentFriend.name}?`,
+            [
+                {
+                    text: 'Yes', onPress: () => {
+                        this.props.doUnfriend(this.props.user.userId, this.props.currentFriend.userId);
+
+                    }
+                },
+                { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+            ],
+            { cancelable: false }
+        );
     }
     onPressRide(rideId) {
         this.props.changeScreen(PageKeys.MAP);
@@ -255,8 +268,8 @@ class FriendsProfile extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { showMenu } = state.TabVisibility;
-    const { currentFriend } = state.FriendList;
-    return { user, showMenu, currentFriend };
+    const { currentFriend, friendsLocation } = state.FriendList;
+    return { user, showMenu, currentFriend, friendsLocation };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -289,6 +302,7 @@ const mapDispatchToProps = (dispatch) => {
         loadRideOnMap: (rideId) => dispatch(getRideByRideId(rideId)),
         changeScreen: (screenKey) => dispatch(screenChangeAction(screenKey)),
         doUnfriend: (userId, personId) => dispatch(doUnfriend(userId, personId)),
+        getFriendsLocationList: (userId, friendsIdList) => dispatch(getFriendsLocationList(userId, friendsIdList)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(FriendsProfile);

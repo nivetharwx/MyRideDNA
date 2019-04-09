@@ -1,4 +1,4 @@
-import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE } from "../actions/actionConstants";
+import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION } from "../actions/actionConstants";
 import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP } from "../constants";
 
 const initialState = {
@@ -11,7 +11,8 @@ const initialState = {
             garageId: null
         },
         userId: null
-    }
+    },
+    friendsLocation: {}
 };
 
 export default (state = initialState, action) => {
@@ -39,6 +40,30 @@ export default (state = initialState, action) => {
                 }
             }
 
+        case REPLACE_FRIENDS_LOCATION:
+            return {
+                ...state,
+                friendsLocation: action.data.reduce((obj, locInfo) => {
+                    obj[locInfo.userId] = locInfo;
+                }, {})
+            }
+
+        case UPDATE_FRIENDS_LOCATION:
+            return {
+                ...state,
+                friendsLocation: action.data.friendsIdList.reduce((obj, locInfo) => {
+                    obj[locInfo.userId] = locInfo;
+                }, state.friendsLocation)
+            }
+
+        case HIDE_FRIENDS_LOCATION:
+            return {
+                ...state,
+                friendsLocation: action.data.reduce((obj, friendId) => {
+                    obj[friendId] = null;
+                }, state.friendsLocation)
+            }
+
         case GET_FRIEND_INFO:
             const friend = state.allFriends[action.data.index];
             if (!friend.profilePictureId) {
@@ -56,7 +81,7 @@ export default (state = initialState, action) => {
             const personIndex = state.allFriends.findIndex(person => person.userId === action.data.personId);
 
             if (personIndex > -1) {
-                if(state.allFriends[personIndex].userId === state.currentFriend.userId){
+                if (state.allFriends[personIndex].userId === state.currentFriend.userId) {
                     return {
                         ...state,
                         allFriends: [
@@ -70,7 +95,7 @@ export default (state = initialState, action) => {
                             userId: null
                         }
                     }
-                } 
+                }
                 return {
                     ...state,
                     allFriends: [
@@ -92,7 +117,7 @@ export default (state = initialState, action) => {
             };
 
         case UPDATE_CURRENT_FRIEND_GARAGE:
-            if ((state.currentFriend.userId === null)||(action.data.userId !== state.currentFriend.userId)) return state;
+            if ((state.currentFriend.userId === null) || (action.data.userId !== state.currentFriend.userId)) return state;
             let idx = state.currentFriend.garage.spaceList.findIndex((garageSpaceList) => garageSpaceList.spaceId === action.data.spaceId)
             if (idx > -1) {
                 const bike = state.currentFriend.garage.spaceList[idx];

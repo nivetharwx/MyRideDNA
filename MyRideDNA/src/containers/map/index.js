@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import {
     SafeAreaView, View, TouchableOpacity, Alert,
     Keyboard, Image, BackHandler, Animated,
-    DeviceEventEmitter, Text, AsyncStorage, StatusBar
+    DeviceEventEmitter, Text, AsyncStorage, StatusBar,
+    AppState
 } from 'react-native';
 import { connect } from 'react-redux';
 
@@ -432,45 +433,46 @@ export class Map extends Component {
         setTimeout(() => {
             this.props.getAllNotifications(this.props.user.userId);
         }, 100);
-        BackgroundGeolocation.on('location', (location) => {
-            // TODO: Has to change default timeIntervalInSeconds from the backend (60 seconds)
-            if (location.time - this.prevUserTrackTime > 60000) {
-                this.prevUserTrackTime = location.time;
-                this.props.updateLocation(this.props.user.userId, { lat: location.latitude, lng: location.longitude });
+        AppState.addEventListener('change', this.handleAppStateChange);
+        // BackgroundGeolocation.on('location', (location) => {
+        //     // TODO: Has to change default timeIntervalInSeconds from the backend (60 seconds)
+        //     if (location.time - this.prevUserTrackTime > 60000) {
+        //         this.prevUserTrackTime = location.time;
+        //         this.props.updateLocation(this.props.user.userId, { lat: location.latitude, lng: location.longitude });
 
-                // TODO: Need to understand about the task
-                // BackgroundGeolocation.startTask(taskKey => {
-                //     BackgroundGeolocation.endTask(taskKey);
-                // });
-            }
-        });
-        BackgroundGeolocation.on('stationary', (stationaryLocation) => {
-            console.log("Got stationary location: ", stationaryLocation);
-        });
-        BackgroundGeolocation.on('error', (error) => {
-            console.log('[ERROR] BackgroundGeolocation error: ', error);
-        });
-        BackgroundGeolocation.on('start', () => {
-            console.log('[INFO] BackgroundGeolocation service has been started');
-        });
-        BackgroundGeolocation.on('stop', () => {
-            console.log('[INFO] BackgroundGeolocation service has been stopped');
-        });
-        BackgroundGeolocation.on('background', () => {
-            this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
-        });
+        //         // TODO: Need to understand about the task
+        //         // BackgroundGeolocation.startTask(taskKey => {
+        //         //     BackgroundGeolocation.endTask(taskKey);
+        //         // });
+        //     }
+        // });
+        // BackgroundGeolocation.on('stationary', (stationaryLocation) => {
+        //     console.log("Got stationary location: ", stationaryLocation);
+        // });
+        // BackgroundGeolocation.on('error', (error) => {
+        //     console.log('[ERROR] BackgroundGeolocation error: ', error);
+        // });
+        // BackgroundGeolocation.on('start', () => {
+        //     console.log('[INFO] BackgroundGeolocation service has been started');
+        // });
+        // BackgroundGeolocation.on('stop', () => {
+        //     console.log('[INFO] BackgroundGeolocation service has been stopped');
+        // });
+        // BackgroundGeolocation.on('background', () => {
+        //     this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
+        // });
 
-        BackgroundGeolocation.on('foreground', () => {
-            this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
-        });
-        BackgroundGeolocation.checkStatus(status => {
-            // console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
-            // console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
-            // console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
-            if (!status.isRunning && this.props.user.locationEnable) {
-                this.startTrackingLocation();
-            }
-        });
+        // BackgroundGeolocation.on('foreground', () => {
+        //     this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
+        // });
+        // BackgroundGeolocation.checkStatus(status => {
+        //     // console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
+        //     // console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
+        //     // console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
+        //     if (!status.isRunning && this.props.user.locationEnable) {
+        //         this.startTrackingLocation();
+        //     }
+        // });
 
         //DOC: Listen for device location settings change
         // DeviceEventEmitter.addListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent);
@@ -478,9 +480,33 @@ export class Map extends Component {
         BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPress);
     }
 
-    startTrackingLocation = () => BackgroundGeolocation.start()
+    handleAppStateChange = (nextAppState) => {
+        if (nextAppState === 'active') {
+            this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { userId: this.props.user.userId } });
+        } else {
+            this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { userId: this.props.user.userId } });
+        }
+    }
 
-    stopTrackingLocation = () => BackgroundGeolocation.stop();
+    startTrackingLocation = () => {
+        this.trackLocationInterval = setInterval(() => {
+            Geolocation.getCurrentPosition(
+                ({ coords }) => {
+                    this.props.updateLocation(this.props.user.userId, { lat: coords.latitude, lng: coords.longitude, lastUpdatedTime: new Date().toISOString() });
+                },
+                (error) => {
+                    console.log(error.code, error.message);
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+            );
+        }, this.props.user.timeIntervalInSeconds);
+        // BackgroundGeolocation.start()
+    }
+
+    stopTrackingLocation = () => {
+        clearInterval(this.trackLocationInterval);
+        // BackgroundGeolocation.stop();
+    }
 
     handleGPSProviderEvent = (e) => {
         // FIXME: Remove listener as it is listen twice :(
@@ -517,6 +543,7 @@ export class Map extends Component {
         //     { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 });
         let trackpointTick = 0;
         let updatedgpsPointCollection = {};
+        this.stopTrackingLocation();
         this.watchID = setInterval(() => {
             Geolocation.getCurrentPosition(
                 ({ coords }) => {
@@ -1032,36 +1059,6 @@ export class Map extends Component {
         this._mapView.setCamera(options);
     }
 
-    // onPressZoomIn = () => {
-    //     this.setState((prevState) => ({ mapZoomLevel: prevState.mapZoomLevel + 1 }),
-    //         async () => {
-    //             const zoom = await this._mapView.getZoom();
-    //             const center = await this._mapView.getCenter();
-    //             IS_ANDROID
-    //                 ? this._mapView.zoomTo(this.state.mapZoomLevel, 100)
-    //                 : this._mapView.setCamera({
-    //                     centerCoordinate: center,
-    //                     zoom: this.state.mapZoomLevel + 1,
-    //                     mode: MapboxGL.CameraModes.Flight,
-    //                 });
-    //         });
-    // }
-
-    // onPressZoomOut = () => {
-    //     this.setState((prevState) => ({ mapZoomLevel: prevState.mapZoomLevel - 1 }),
-    //         async () => {
-    //             const zoom = await this._mapView.getZoom();
-    //             const center = await this._mapView.getCenter();
-    //             IS_ANDROID
-    //                 ? this._mapView.zoomTo(this.state.mapZoomLevel, 100)
-    //                 : this._mapView.setCamera({
-    //                     centerCoordinate: center,
-    //                     zoom: this.state.mapZoomLevel - 1,
-    //                     mode: MapboxGL.CameraModes.Flight,
-    //                 });
-    //         });
-    // }
-
     onPressUndo = () => {
         if (!this.props.canUndo) return;
         this.setState(prevState => ({ rideUpdateCount: prevState.rideUpdateCount + 1 }), () => {
@@ -1300,7 +1297,7 @@ export class Map extends Component {
     componentWillUnmount() {
         console.log("Map unmounted");
         this.stopTrackingLocation();
-        BackgroundGeolocation.removeAllListeners();
+        // BackgroundGeolocation.removeAllListeners();
         // DeviceEventEmitter.removeListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent);
         // this.watchID != null && Geolocation.clearWatch(this.watchID);
         this.watchID != null && clearInterval(this.watchID);
@@ -1845,7 +1842,7 @@ const mapDispatchToProps = (dispatch) => {
         updateRide: (data) => dispatch(updateRide(data)),
         publishEvent: (eventBody) => publishEvent(eventBody),
         pushNotification: (userId) => pushNotification(userId),
-        updateLocation: (userId, location) => updateLocation(userId, location),
+        updateLocation: (userId, locationInfo) => updateLocation(userId, locationInfo),
         getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
         deleteNotifications: (notificationIds) => dispatch(deleteNotifications(notificationIds)),

@@ -1,7 +1,7 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
     replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
-    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetingStateOnLogout
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetingStateOnLogout, updateFriendsLocationAction, replaceFriendsLocationAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE } from '../constants';
 import axios from 'axios';
@@ -116,8 +116,8 @@ export const publishEvent = (eventBody) => {
             console.log("publishEvent error: ", er.response || er);
         })
 }
-export const updateLocation = (userId, location) => {
-    axios.put(GRAPH_BASE_URL + `updateLocation?userId=${userId}`, location, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+export const updateLocation = (userId, locationInfo) => {
+    axios.put(GRAPH_BASE_URL + `updateLocation?userId=${userId}`, locationInfo, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
             if (res.status === 200) {
                 console.log("updateLocation success: ", res.data || res);
@@ -135,13 +135,13 @@ export const logoutUser = (userId, accessToken) => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
                     // DOC: Updating user active | isLoggedIn with publish event
-                  
+
                     publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: false, userId: userId } });
                     // TODO: Clear store
                     AsyncStorage.removeItem(USER_AUTH_TOKEN).then(() => {
                         Actions.reset(PageKeys.LOGIN);
                     });
-                    setTimeout(()=>{dispatch(resetingStateOnLogout())},1000) 
+                    setTimeout(() => { dispatch(resetingStateOnLogout()) }, 1000)
                 }
             })
             .catch(er => {
@@ -946,6 +946,22 @@ export const doUnfriend = (senderId, personId) => {
             })
     };
 }
+export const getFriendsLocationList = (userId, friendsIdList) => {
+    return dispatch => {
+        axios.put(GRAPH_BASE_URL + `getFriendsLocationList`, { userId, friendsIdList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log('getFriendsLocationList sucess : ', res);
+                    dispatch(replaceFriendsLocationAction(res.data));
+                }
+            })
+            .catch(er => {
+                console.log(`getFriendLocationList: `, er.response || er);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
 export const getFriendGroups = (userId) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
@@ -1149,7 +1165,7 @@ export const addBikeToGarage = (userId, bike, pictureList) => {
         dispatch(toggleLoaderAction(true));
         axios.put(USER_BASE_URL + `addSpace/${userId}`, { ...bike, pictureList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                console.log('add bike to garage : ',res)
+                console.log('add bike to garage : ', res)
                 // console.log(`addSpace success: `, res.data);
                 dispatch(toggleLoaderAction(false));
                 bike.pictureIdList = res.data.pictureIdList || [];
