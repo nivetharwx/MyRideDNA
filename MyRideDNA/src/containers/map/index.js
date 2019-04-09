@@ -433,6 +433,7 @@ export class Map extends Component {
         setTimeout(() => {
             this.props.getAllNotifications(this.props.user.userId);
         }, 100);
+        if (this.props.user.locationEnable) this.startTrackingLocation();
         AppState.addEventListener('change', this.handleAppStateChange);
         // BackgroundGeolocation.on('location', (location) => {
         //     // TODO: Has to change default timeIntervalInSeconds from the backend (60 seconds)
@@ -489,6 +490,15 @@ export class Map extends Component {
     }
 
     startTrackingLocation = () => {
+        Geolocation.getCurrentPosition(
+            ({ coords }) => {
+                this.props.updateLocation(this.props.user.userId, { lat: coords.latitude, lng: coords.longitude, lastUpdatedTime: new Date().toISOString() });
+            },
+            (error) => {
+                console.log(error.code, error.message);
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        );
         this.trackLocationInterval = setInterval(() => {
             Geolocation.getCurrentPosition(
                 ({ coords }) => {
@@ -499,7 +509,7 @@ export class Map extends Component {
                 },
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
             );
-        }, this.props.user.timeIntervalInSeconds);
+        }, this.props.user.timeIntervalInSeconds * 1000);
         // BackgroundGeolocation.start()
     }
 
