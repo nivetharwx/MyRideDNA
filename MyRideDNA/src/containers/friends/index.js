@@ -244,7 +244,7 @@ class Friends extends Component {
                                     this.props.allFriendRequests.length > 0 ?
                                         <View style={{
                                             position: 'absolute', minWidth: widthPercentageToDP(6), height: widthPercentageToDP(5), borderRadius: widthPercentageToDP(2),
-                                            backgroundColor: 'red', top: 1, left: 15, borderWidth: 2.5, borderColor: '#fff', justifyContent: 'center', alignItems: 'center', padding: 7
+                                            backgroundColor: 'red', top: 1, left: 15, borderWidth: 2.5, borderColor: '#fff', justifyContent: 'center', alignItems: 'center', padding: widthPercentageToDP(0.25)
                                         }}>
                                             <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: widthPercentageToDP(3) }}>{this.props.allFriendRequests.length > 99 ? '99+' : this.props.allFriendRequests.length}</Text>
                                         </View>
