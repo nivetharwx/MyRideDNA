@@ -675,10 +675,10 @@ export class Map extends Component {
         if (Actions.state.index != 0) {
             if (Actions.currentScene === PageKeys.FRIENDS_PROFILE) {
                 this.props.resetCurrentFriend();
-                this.props.changeScreen(Actions.currentScene);
+                // this.props.changeScreen(Actions.currentScene);
             } else if (Actions.currentScene === PageKeys.GROUP) {
                 this.props.resetCurrentGroup();
-                this.props.changeScreen(Actions.currentScene);
+                // this.props.changeScreen(Actions.currentScene);
             } else {
                 Actions.pop();
                 this.props.changeScreen({ name: Actions.currentScene });

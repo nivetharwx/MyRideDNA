@@ -155,7 +155,7 @@ class GroupListTab extends Component {
 
     renderGroup = ({ item, index }) => {
         return (
-            <ListItem style={{ marginTop: 20 }} avatar onLongPress={() => this.showOptionsModal(index)} onLongPress={() => this.openGroupInfo(index)}>
+            <ListItem style={{ marginTop: 20 }} avatar onLongPress={() => this.showOptionsModal(index)} onPress={() => this.openGroupInfo(index)}>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
                     {
                         item.groupProfilePictureThumbnail
