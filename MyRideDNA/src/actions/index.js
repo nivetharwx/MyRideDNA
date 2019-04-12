@@ -13,7 +13,9 @@ import {
     UPDATE_SHORT_SPACE_LIST,
     RESETING_STATE_ON_LOGOUT,
     UPDATE_FRIENDS_LOCATION,
-    REPLACE_FRIENDS_LOCATION
+    REPLACE_FRIENDS_LOCATION,
+    HIDE_FRIENDS_LOCATION,
+    ADD_FRIENDS_LOCATION
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -209,9 +211,15 @@ export const updateFriendListAction = (data) => (
         data: data
     }
 );
-export const updateFriendsLocationAction = (data) => (
+export const addFriendsLocationAction = (data) => (
     {
-        type: UPDATE_FRIENDS_LOCATION,
+        type: ADD_FRIENDS_LOCATION,
+        data: data
+    }
+);
+export const hideFriendsLocationAction = (data) => (
+    {
+        type: HIDE_FRIENDS_LOCATION,
         data: data
     }
 );

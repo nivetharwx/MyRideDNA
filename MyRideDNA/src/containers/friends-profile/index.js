@@ -40,12 +40,9 @@ class FriendsProfile extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.friendsLocation !== this.props.friendsLocation) {
-            console.log("prevProps.friendsLocation: ", prevProps.friendsLocation);
-            console.log("this.props.friendsLocation: ", this.props.friendsLocation);
-            const trackingFriendsLength = Object.keys(this.props.friendsLocation).length;
-            if (trackingFriendsLength > 0) {
-                console.log("Showing friend on map: ", this.props.friendsLocation);
+        if (prevProps.friendsLocationList !== this.props.friendsLocationList) {
+            if (this.props.friendsLocationList) {
+                this.props.changeScreen({ name: PageKeys.MAP });
             }
         }
         if (prevProps.currentFriend !== this.props.currentFriend) {
@@ -56,7 +53,9 @@ class FriendsProfile extends Component {
             if (this.state.activeTab === 0) {
                 if (prevProps.currentFriend.userId === null) {
                     if (this.props.currentFriend.locationEnable) {
-                        this.FRIENDS_PROFILE_ICONS.push({ name: 'location-on', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.showFriendsLocation() });
+                        if (this.FRIENDS_PROFILE_ICONS.findIndex(icon => icon.name === 'location-on') === -1) {
+                            this.FRIENDS_PROFILE_ICONS.push({ name: 'location-on', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.showFriendsLocation() });
+                        }
                     }
                     if (this.props.currentFriend.profilePictureId) {
                         this.setState({ profilePicId: this.props.currentFriend.profilePictureId, isLoadingProfPic: true });
@@ -98,7 +97,7 @@ class FriendsProfile extends Component {
     }
 
     onPressChatIcon = () => {
-        Actions.push(PageKeys.CHAT, { friend: this.props.currentFriend })
+        Actions.push(PageKeys.CHAT, { friend: this.props.currentFriend });
     }
 
     onPressUnfriendIcon = () => {
@@ -118,7 +117,7 @@ class FriendsProfile extends Component {
         );
     }
     onPressRide(rideId) {
-        this.props.changeScreen(PageKeys.MAP);
+        this.props.changeScreen({ name: PageKeys.MAP });
         this.props.loadRideOnMap(rideId);
     }
     rideKeyExtractor = (item) => item.rideId;
@@ -143,21 +142,18 @@ class FriendsProfile extends Component {
 
 
     renderAccordionItem = (item) => {
-        if (item.title === 'Options') {
-            return (
-                <View style={styles.rowContent}>
-                    {
-                        item.content.map(props => <IconButton key={props.name} iconProps={props} onPress={props.onPress} />)
-                    }
-                </View>
-            );
-        }
+        return (
+            <View style={styles.rowContent}>
+                {
+                    item.content.map(props => <IconButton key={props.name} iconProps={props} onPress={props.onPress} />)
+                }
+            </View>
+        );
     }
 
     render() {
         const { user, currentFriend } = this.props;
         const { activeTab, isLoadingProfPic } = this.state;
-        currentFriend && console.log("Friend's garage: ", currentFriend.garage);
         return currentFriend === null
             ? <View style={styles.fill} />
             : <View style={styles.fill}>
@@ -194,7 +190,7 @@ class FriendsProfile extends Component {
                                     </View>
                                 </ImageBackground>
                                 <ScrollView styles={styles.scrollBottom} contentContainerStyle={styles.scrollBottomContent}>
-                                    <Accordion dataArray={[{ title: 'Options', content: this.FRIENDS_PROFILE_ICONS }]}
+                                    <Accordion expanded={0} dataArray={[{ title: 'Actions', content: this.FRIENDS_PROFILE_ICONS }]}
                                         renderContent={this.renderAccordionItem} headerStyle={styles.accordionHeader} />
                                 </ScrollView>
                             </View>
@@ -268,8 +264,8 @@ class FriendsProfile extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { showMenu } = state.TabVisibility;
-    const { currentFriend, friendsLocation } = state.FriendList;
-    return { user, showMenu, currentFriend, friendsLocation };
+    const { currentFriend, friendsLocationList } = state.FriendList;
+    return { user, showMenu, currentFriend, friendsLocationList };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
