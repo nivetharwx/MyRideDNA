@@ -150,7 +150,7 @@ export class CreateRide extends Component {
             };
             this.props.onSubmitForm(rideDetails);
             // Actions.pop();
-            this.props.cancelPopup();
+            this.props.cancelPopup([startRideFrom.lng, startRideFrom.lat]);
         } else {
             this.setState({ searchQuery: 'Current location' });
             if (this.props.currentLocation === null) {
@@ -167,7 +167,7 @@ export class CreateRide extends Component {
                             }
                         };
                         this.props.onSubmitForm(rideDetails);
-                        this.props.cancelPopup();
+                        this.props.cancelPopup([startRideFrom.lng, startRideFrom.lat]);
                     },
                     (error) => {
                         // TODO: Handle no starting point
@@ -205,7 +205,7 @@ export class CreateRide extends Component {
                             </View>
                             <Item style={{ borderBottomWidth: 0, marginLeft: widthPercentageToDP(4), marginRight: widthPercentageToDP(4) }}>
                                 {/* <NBIcon name='map-pin' type='FontAwesome' style={[styles.formFieldIcon, { paddingHorizontal: widthPercentageToDP(2) }]} /> */}
-                                <Text style={{color: '#8C8C8C'}}>Start ride from: </Text>
+                                <Text style={{ color: '#8C8C8C' }}>Start ride from: </Text>
                                 <SearchBox value={searchQuery} hideIcon={true} onTextChange={this.onSearchPlace} onPressClear={() => this.setState({ searchQuery: '' })} />
                             </Item>
                         </View>

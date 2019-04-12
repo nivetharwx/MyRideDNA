@@ -1660,7 +1660,7 @@ export class Map extends Component {
                             ? <CreateRide containerHeight={CREATE_RIDE_CONTAINER_HEIGHT} onSubmitForm={this.props.submitNewRide}
                                 user={this.props.user} ride={this.props.ride}
                                 currentLocation={currentLocation} onChangeStartRideFrom={this.onPressRecenterMap}
-                                cancelPopup={() => this.setState({ showCreateRide: false }, () => this.onPressRecenterMap())} />
+                                cancelPopup={(centerLocation) => this.setState({ showCreateRide: false }, () => this.onPressRecenterMap(centerLocation))} />
                             : null
                     }
                     <MapboxGL.MapView
