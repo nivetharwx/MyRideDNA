@@ -8,7 +8,7 @@ import { List, ListItem, Left, Thumbnail, Body, Right } from 'native-base';
 import { ShifterButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { connect } from 'react-redux';
-import { logoutUser } from '../../api';
+import { logoutUser, getAllNotifications } from '../../api';
 
 class Notifications extends Component {
     constructor(props) {

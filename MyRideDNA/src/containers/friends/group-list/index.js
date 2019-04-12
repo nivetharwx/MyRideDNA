@@ -46,6 +46,9 @@ class GroupListTab extends Component {
                  **/
             }
         }
+        if (this.props.refreshContent === true && prevProps.refreshContent === false) {
+            this.props.getFriendGroups(this.props.user.userId);
+        }
     }
 
     addKeyboardListeners() {

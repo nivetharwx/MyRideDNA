@@ -305,6 +305,7 @@ class ContactsSection extends PureComponent {
                                     {
                                         searchResults && searchResults.length > 0
                                             ? <FlatList
+                                                keyboardShouldPersistTaps='handled'
                                                 style={{ marginTop: widthPercentageToDP(4) }}
                                                 contentContainerStyle={{ paddingBottom: searchResults.length > 0 ? heightPercentageToDP(8) : 0 }}
                                                 data={searchResults}
@@ -346,6 +347,7 @@ class ContactsSection extends PureComponent {
                             </TabHeading>}>
                             <View style={styles.tabContent}>
                                 <FlatList
+                                    keyboardShouldPersistTaps='handled'
                                     data={deviceContacts}
                                     renderItem={this.renderDeviceContact}
                                     keyExtractor={this.contactKeyExtractor}

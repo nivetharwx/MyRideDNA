@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableHighlight, Alert } from 'react-native';
-import { getAllFriends, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend, getAllOnlineFriends, getPicture } from '../../../api';
+import { getAllFriends, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend, getAllOnlineFriends, getPicture, getFriendsLocationList } from '../../../api';
 import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, heightPercentageToDP, RELATIONSHIP, PageKeys } from '../../../constants';
 import { BaseModal } from '../../../components/modal';
 import { LinkButton } from '../../../components/buttons';
@@ -49,7 +49,7 @@ const FLOAT_ACTIONS = [{
 },];
 
 class AllFriendsTab extends Component {
-    FRIEND_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => this.openProfile() }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: `Show\nlocation`, id: 'location', handler: () => { } }, { text: 'Chat', id: 'chat', handler: () => { this.openChatPage() } }, { text: 'Call', id: 'call', handler: () => { } }, { text: 'Garage', id: 'garage', handler: () => { } }, { text: 'Unfriend', id: 'unfriend', handler: () => this.doUnfriend() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
+    FRIEND_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => this.openProfile() }, { text: 'Rides', id: 'rides', handler: () => this.openProfile(undefined, undefined, 2) }, { text: 'Chat', id: 'chat', handler: () => { this.openChatPage() } }, { text: 'Call', id: 'call', handler: () => { } }, { text: 'Garage', id: 'garage', handler: () => this.openProfile(undefined, undefined, 1) }, { text: 'Unfriend', id: 'unfriend', handler: () => this.doUnfriend() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     UNKNOWN_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Send\nRequest', id: 'sendRequest', handler: () => this.sendFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     SENT_REQUEST_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Cancel\nRequest', id: 'cancelRequest', handler: () => this.cancelFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     RECEIVED_REQUEST_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Accept\nRequest', id: 'acceptRequest', handler: () => { } }, { text: 'Reject\nRequest', id: 'rejectRequest', handler: () => { } }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
@@ -76,6 +76,13 @@ class AllFriendsTab extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        if (prevProps.friendsLocationList !== this.props.friendsLocationList) {
+            if (this.props.friendsLocationList && prevState.isVisibleOptionsModal === true) {
+                this.setState({ isVisibleOptionsModal: false }, () => {
+                    this.props.changeScreen({ name: PageKeys.MAP });
+                })
+            }
+        }
         if (prevProps.allFriends !== this.props.allFriends) {
             // this.setState(prevState => ({ refreshList: !prevState.refreshList }));
             if (prevState.isRefreshing === true) {
@@ -184,26 +191,47 @@ class AllFriendsTab extends Component {
 
     onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false, selectedPerson: null })
 
+    showFriendsLocation = () => {
+        this.props.getFriendsLocationList(this.props.user.userId, [this.state.selectedPerson.userId]);
+    }
+
     renderMenuOptions = () => {
         if (this.state.selectedPerson === null) return;
         let options = null;
-        switch (this.state.selectedPerson.relationship) {
-            case RELATIONSHIP.FRIEND:
-                options = this.FRIEND_OPTIONS;
-                break;
-            case RELATIONSHIP.RECIEVED_REQUEST:
-                options = this.RECEIVED_REQUEST_OPTIONS;
-                break;
-            case RELATIONSHIP.SENT_REQUEST:
-                options = this.SENT_REQUEST_OPTIONS;
-                break;
-            case RELATIONSHIP.UNKNOWN:
-                options = this.UNKNOWN_OPTIONS;
-                break;
-            default:
-                options = this.FRIEND_OPTIONS;
-                break;
+        if (this.state.selectedPerson.isOnline && this.state.selectedPerson.locationEnable) {
+            options = [
+                ...this.FRIEND_OPTIONS.slice(0, 3),
+                { text: `Show\nlocation`, id: 'location', handler: () => this.showFriendsLocation() },
+                ...this.FRIEND_OPTIONS.slice(3),
+            ]
+        } else {
+            options = this.FRIEND_OPTIONS;
         }
+        // switch (this.state.selectedPerson.relationship) {
+        //     case RELATIONSHIP.FRIEND:
+        //         if (this.state.selectedPerson.isOnline && this.state.selectedPerson.locationEnable) {
+        //             options = [
+        //                 ...this.FRIEND_OPTIONS.slice(0, 3),
+        //                 { text: `Show\nlocation`, id: 'location', handler: () => this.showFriendsLocation() },
+        //                 ...this.FRIEND_OPTIONS.slice(3),
+        //             ]
+        //         } else {
+        //             options = this.FRIEND_OPTIONS;
+        //         }
+        //         break;
+        //     case RELATIONSHIP.RECIEVED_REQUEST:
+        //         options = this.RECEIVED_REQUEST_OPTIONS;
+        //         break;
+        //     case RELATIONSHIP.SENT_REQUEST:
+        //         options = this.SENT_REQUEST_OPTIONS;
+        //         break;
+        //     case RELATIONSHIP.UNKNOWN:
+        //         options = this.UNKNOWN_OPTIONS;
+        //         break;
+        //     default:
+        //         options = this.FRIEND_OPTIONS;
+        //         break;
+        // }
         return (
             options.map(option => (
                 <LinkButton
@@ -240,7 +268,7 @@ class AllFriendsTab extends Component {
         }
     }
 
-    openProfile = (index, friendType) => {
+    openProfile = (index, friendType, activeTab) => {
         // if (this.props.searchFriendList.length > 0) {
         //     const person = this.props.searchFriendList[index];
         //     this.searchResImageRef[index].measure((x, y, width, height, pageX, pageY) => {
@@ -262,7 +290,7 @@ class AllFriendsTab extends Component {
         if (this.state.isVisibleOptionsModal) {
             this.setState({ isVisibleOptionsModal: false })
         }
-        Actions.push(PageKeys.FRIENDS_PROFILE, { friendIdx: index, friendType: FRIEND_TYPE.ALL_FRIENDS });
+        Actions.push(PageKeys.FRIENDS_PROFILE, { friendIdx: index, friendType: FRIEND_TYPE.ALL_FRIENDS, activeTab: activeTab });
     }
 
     filterOnlineFriends() {
@@ -352,7 +380,7 @@ class AllFriendsTab extends Component {
                             />
                 }
                 <FloatingAction
-                floatingIcon={<NBIcon name='menu' type='MaterialIcons' style={{color:'#fff'}} />}
+                    floatingIcon={<NBIcon name='menu' type='MaterialIcons' style={{ color: '#fff' }} />}
                     actions={FLOAT_ACTIONS}
                     color={APP_COMMON_STYLES.headerColor}
                     position={user.handDominance === 'left' ? 'right' : 'left'}
@@ -365,8 +393,8 @@ class AllFriendsTab extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { allFriends, paginationNum, searchFriendList } = state.FriendList;
-    return { user, allFriends, paginationNum, searchFriendList };
+    const { allFriends, paginationNum, searchFriendList, friendsLocationList } = state.FriendList;
+    return { user, allFriends, paginationNum, searchFriendList, friendsLocationList };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -385,6 +413,7 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(updateFriendInListAction({ userId: friendId }))
         }),
         changeScreen: (screenProps) => dispatch(screenChangeAction(screenProps)),
+        getFriendsLocationList: (userId, friendsIdList) => dispatch(getFriendsLocationList(userId, friendsIdList)),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(AllFriendsTab);

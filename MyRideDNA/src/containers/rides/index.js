@@ -292,7 +292,7 @@ export class Rides extends Component {
                                                         onPress={() => this.onPressRide(item.rideId)}
                                                         onLongPress={() => this.showOptionsModal(RIDE_TYPE.BUILD_RIDE, index)}
                                                     >
-                                                        <Text>{`${item.name}, ${getFormattedDateFromISO(new Date(item.date).toString().substr(4, 12), '.')}`}</Text>
+                                                        <Text>{`${item.name}, ${getFormattedDateFromISO(new Date(item.date).toISOString(), '.')}`}</Text>
                                                     </TouchableOpacity>
                                                 </Left>
                                             </ListItem>}

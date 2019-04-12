@@ -24,18 +24,17 @@ class FriendsProfile extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            activeTab: 0,
+            activeTab: props.activeTab || 0,
             isLoadingProfPic: false,
             profilePicId: null
         };
     }
 
     componentDidMount() {
-        // setTimeout(() => {
-        //     this.tabsRef.props.goToPage(0);
-        //     this.setState({ activeTab: 0 });
-        // }, 50);
-
+        setTimeout(() => {
+            this.tabsRef.props.goToPage(this.state.activeTab);
+            this.setState({ activeTab: this.state.activeTab });
+        }, 50);
         this.props.getFriendsInfo(this.props.friendIdx, this.props.friendType);
     }
 
@@ -56,6 +55,7 @@ class FriendsProfile extends Component {
                         if (this.FRIENDS_PROFILE_ICONS.findIndex(icon => icon.name === 'location-on') === -1) {
                             this.FRIENDS_PROFILE_ICONS.push({ name: 'location-on', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.showFriendsLocation() });
                         }
+                        console.log("Actions: ", this.FRIENDS_PROFILE_ICONS);
                     }
                     if (this.props.currentFriend.profilePictureId) {
                         this.setState({ profilePicId: this.props.currentFriend.profilePictureId, isLoadingProfPic: true });
