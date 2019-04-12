@@ -5,7 +5,8 @@ import {
     ScrollView,
     Keyboard,
     TextInput,
-    Text
+    Text,
+    KeyboardAvoidingView
 } from 'react-native';
 import { connect } from 'react-redux';
 
@@ -22,9 +23,10 @@ import Geolocation from 'react-native-geolocation-service';
 import { SwitchIconButton, LinkButton } from '../../components/buttons';
 import { IconLabelPair } from '../../components/labels';
 
-import { Icon as NBIcon, Item } from 'native-base';
-import { WindowDimensions, JS_SDK_ACCESS_TOKEN, IS_ANDROID, widthPercentageToDP, heightPercentageToDP } from '../../constants';
+import { Icon as NBIcon, Item, Toast } from 'native-base';
+import { WindowDimensions, JS_SDK_ACCESS_TOKEN, IS_ANDROID, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES } from '../../constants';
 import { SearchResults } from '../../components/pages';
+
 
 const ANDROID_HEADER_HEIGHT = 50;
 const IOS_HEADER_HEIGHT = 90;
@@ -101,6 +103,10 @@ export class CreateRide extends Component {
     }
 
     onSearchPlace = async (placeQuery) => {
+        if (placeQuery === '') {
+            this.setState({ searchQuery: placeQuery });
+            return;
+        }
         if (placeQuery === 'Current location' || (this.state.startRideFrom && this.state.startRideFrom.name === placeQuery)) return;
         this.setState({ searchQuery: placeQuery });
         if (placeQuery.length < 2) return;
@@ -126,8 +132,8 @@ export class CreateRide extends Component {
 
     onPressSearchResultsClose = () => {
         Keyboard.dismiss();
-        if (this.state.startRideFrom === null || this.state.startRideFrom.name !== this.state.searchQuery) {
-            this.setState({ placeSearchList: [], searchQuery: '' });
+        if (this.state.searchQuery === '' || this.state.startRideFrom === null || this.state.startRideFrom.name !== this.state.searchQuery) {
+            this.setState({ placeSearchList: [], searchQuery: 'Current location' });
         } else {
             this.setState({ placeSearchList: [] });
         }
@@ -135,7 +141,13 @@ export class CreateRide extends Component {
 
     onSubmitForm = () => {
         const { ride, startRideFrom } = this.state;
-        if (ride.name === null || ride.name.trim().length === 0) return;
+        if (ride.name === null || ride.name.trim().length === 0) {
+            Toast.show({
+                text: 'Enter Ride Name',
+                buttonText: 'Okay'
+            });
+            return
+        };
         let rideDetails = {
             name: ride.name,
             privacyMode: ride.privacyMode,
@@ -186,6 +198,11 @@ export class CreateRide extends Component {
                 <View style={{ height: (WindowDimensions.height / 2) }}>
                     <BasicHeader headerHeight={HEADER_HEIGHT} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
                         title='Create Ride' />
+                    {
+                        placeSearchList.length > 0 ?
+                            <SearchResults style={{ top: 0, marginTop: 0, height: heightPercentageToDP(35) }} data={placeSearchList} onPressClose={this.onPressSearchResultsClose} onSelectItem={this.onSelectPlace} />
+                            : null
+                    }
                     <ScrollView style={{ backgroundColor: 'white', flex: 1, paddingTop: HEADER_HEIGHT }} contentContainerStyle={{ flex: 1 }}>
                         <View style={{ maxHeight: FORM_AREA_HEIGHT, flex: 1, justifyContent: 'space-around' }}>
                             <Item style={{ marginLeft: widthPercentageToDP(4), marginRight: widthPercentageToDP(4), paddingTop: heightPercentageToDP(4) }}>
@@ -205,7 +222,7 @@ export class CreateRide extends Component {
                             </View>
                             <Item style={{ borderBottomWidth: 0, marginLeft: widthPercentageToDP(4), marginRight: widthPercentageToDP(4) }}>
                                 {/* <NBIcon name='map-pin' type='FontAwesome' style={[styles.formFieldIcon, { paddingHorizontal: widthPercentageToDP(2) }]} /> */}
-                                <Text style={{color: '#8C8C8C'}}>Start ride from: </Text>
+                                <Text style={{ color: '#8C8C8C' }}>Start ride from: </Text>
                                 <SearchBox value={searchQuery} hideIcon={true} onTextChange={this.onSearchPlace} onPressClear={() => this.setState({ searchQuery: '' })} />
                             </Item>
                         </View>
@@ -215,11 +232,11 @@ export class CreateRide extends Component {
                     <LinkButton title='SUBMIT' onPress={this.onSubmitForm} titleStyle={{ fontSize: 18, color: '#fff' }} />
                     <LinkButton title='CANCEL' onPress={this.onPressBackButton} titleStyle={{ fontSize: 18, color: '#fff' }} />
                 </View>
-                {
+                {/* {
                     placeSearchList.length > 0 ?
                         <SearchResults style={{ marginTop: ((WindowDimensions.height / 2) - HEADER_HEIGHT) }} data={placeSearchList} onPressClose={this.onPressSearchResultsClose} onSelectItem={this.onSelectPlace} />
                         : null
-                }
+                } */}
             </View>
         );
     }

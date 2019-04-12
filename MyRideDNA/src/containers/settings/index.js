@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, StatusBar, Text, ScrollView, AsyncStorage, TouchableOpacity, TextInput, KeyboardAvoidingView } from 'react-native';
+import { View, StatusBar, Text, ScrollView, AsyncStorage, TouchableOpacity, TextInput, KeyboardAvoidingView,Alert } from 'react-native';
 import { connect } from 'react-redux';
 import styles from './styles';
 import { APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN } from '../../constants';
@@ -128,6 +128,14 @@ export class Settings extends Component {
         }
     }
 
+    passwordFormat = () =>{
+        if(this.state.newPasswd.length < 5){
+            Alert.alert('Error', 'Password should be greater than 5 character');
+        } else if(this.state.newPasswd.search(/\d/) == -1){
+            Alert.alert('Error', 'Password should contain one number');
+        }   
+    }
+
     showAppNavMenu = () => this.props.showAppNavMenu();
 
     onPressLogout = async () => {
@@ -151,7 +159,7 @@ export class Settings extends Component {
                         <IconButton onPress={this.toggleCurPasswdVisibility} style={{ backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: hideCurPasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
                     </Item>
                     <Item style={styles.passwdFormField}>
-                        <TextInput secureTextEntry={hideNewPasswd} style={styles.fill} value={newPasswd} ref={elRef => this.fieldRefs[1] = elRef} onFocus={this.onFocusNewPasswordField} returnKeyType='next' onChangeText={this.onChangeNewPasswordField} placeholder='New Password' onSubmitEditing={() => this.fieldRefs[2].focus()} blurOnSubmit={false} />
+                        <TextInput onBlur={this.passwordFormat} secureTextEntry={hideNewPasswd} style={styles.fill} value={newPasswd} ref={elRef => this.fieldRefs[1] = elRef} onFocus={this.onFocusNewPasswordField} returnKeyType='next' onChangeText={this.onChangeNewPasswordField} placeholder='New Password' onSubmitEditing={() => this.fieldRefs[2].focus()} blurOnSubmit={false} />
                         <IconButton onPress={this.toggleNewPasswdVisibility} style={{ backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: hideNewPasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
                     </Item>
                     <Item style={styles.passwdFormField}>

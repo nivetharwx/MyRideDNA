@@ -4,13 +4,14 @@ import { connect } from 'react-redux';
 import styles, { CREATE_GROUP_WIDTH } from './styles';
 import { BasicHeader } from '../../../components/headers';
 import { Actions } from 'react-native-router-flux';
-import { getGroupInfoAction, resetCurrentGroupAction } from '../../../actions';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID } from '../../../constants';
+import { getGroupInfoAction, resetCurrentGroupAction, updateMemberAction } from '../../../actions';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, WindowDimensions } from '../../../constants';
 import { IconButton, LinkButton } from '../../../components/buttons';
-import { addMembers, getAllGroupMembers, dismissMemberAsAdmin, makeMemberAsAdmin, removeMember } from '../../../api';
+import { addMembers, getAllGroupMembers, dismissMemberAsAdmin, makeMemberAsAdmin, removeMember, getPicture } from '../../../api';
 import { ThumbnailCard } from '../../../components/cards';
 import { BaseModal } from '../../../components/modal';
 import { Icon as NBIcon, ListItem, Left, Thumbnail, Body, Right, CheckBox } from 'native-base';
+import { LabeledInput } from '../../../components/inputs';
 
 class Group extends Component {
     floatSecAnim = new Animated.Value(CREATE_GROUP_WIDTH / 2);
@@ -26,7 +27,10 @@ class Group extends Component {
             kbdBtmOffset: this.defaultBtmOffset,
             isVisibleOptionsModal: false,
             isVisibleSearchModal: false,
-            selectedMember: null
+            selectedMember: null,
+            isVisibleAddMemberModal: false,
+            addMemberToGroup: '',
+            searchName: '',
         };
     }
 
@@ -36,8 +40,9 @@ class Group extends Component {
         Keyboard.addListener('keyboardDidHide', this.adjustLayoutOnKeyboardVisibility);
     }
 
-    adjustLayoutOnKeyboardVisibility = ({ endCoordinates }) => {
-        this.setState(prevState => ({ kbdBtmOffset: prevState.kbdBtmOffset === this.defaultBtmOffset ? endCoordinates.height : this.defaultBtmOffset }));
+    adjustLayoutOnKeyboardVisibility = (e) => {
+        if (!e) return;
+        this.setState(prevState => ({ kbdBtmOffset: prevState.kbdBtmOffset === this.defaultBtmOffset ? e.endCoordinates.height : this.defaultBtmOffset }));
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -48,11 +53,18 @@ class Group extends Component {
             } else if (prevProps.currentGroup === null) {
                 this.props.getAllGroupMembers(this.props.currentGroup.groupId, this.props.user.userId);
             } else if (this.props.currentGroup.groupMembers.length !== prevProps.currentGroup.groupMembers.length) {
+                this.props.currentGroup.groupMembers.forEach(picture => {
+                    if (!picture.profilePicture && picture.profilePictureId) {
+                        this.props.getPicture(picture.profilePictureId, picture.memberId)
+                    }
+                })
                 setTimeout(() => {
                     this.filteredFriends = this.props.allFriends.filter(friend => this.props.currentGroup.groupMembers.findIndex(member => member.memberId === friend.userId) === -1);
                 }, 0);
             }
         }
+
+
     }
 
     componentWillUnmount() {
@@ -116,19 +128,22 @@ class Group extends Component {
     }
 
     searchForFriend = (value) => {
-        value = value.trim();
-        this.setState(prevState => ({ searchFriendList: this.filteredFriends.filter(friend => friend.name.toLowerCase().includes(value.toLowerCase())) }));
+        this.setState({ searchName: value }, () => {
+            value = value.trim();
+            this.setState(prevState => ({ searchFriendList: this.filteredFriends.filter(friend => friend.name.toLowerCase().includes(value.toLowerCase())) }));
+        });
     }
 
     addFriendsToGroup = () => {
-        this.closeSearchFriendSection(() => {
-            this.props.addMembers(this.props.currentGroup.groupId, {
-                joinedDate: new Date().toISOString(),
-                joinedBy: this.props.user.userId,
-                groupMembers: this.state.selectedFriendList
-            });
-            this.setState({ searchFriendList: [], selectedFriendList: [] });
+        // this.closeSearchFriendSection(() => {
+
+        // });
+        this.props.addMembers(this.props.currentGroup.groupId, {
+            joinedDate: new Date().toISOString(),
+            joinedBy: this.props.user.userId,
+            groupMembers: this.state.selectedFriendList
         });
+        this.setState({ searchFriendList: [], selectedFriendList: [], isVisibleSearchModal: false });
     }
 
     onCancelOptionsModal = () => {
@@ -252,9 +267,15 @@ class Group extends Component {
         );
     }
 
+
+    onPressAddMember = () => {
+        this.setState({ isVisibleSearchModal: true });
+
+    }
     render() {
-        const { kbdBtmOffset, isActiveSearch, selectedMember, selectedFriendList, searchFriendList, isVisibleOptionsModal, isVisibleSearchModal } = this.state;
+        const { kbdBtmOffset, isActiveSearch, selectedMember, selectedFriendList, searchFriendList, isVisibleOptionsModal, isVisibleSearchModal, searchName } = this.state;
         const { user, currentGroup } = this.props;
+        console.log('currentGroup : ', currentGroup);
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '45deg']
@@ -266,7 +287,25 @@ class Group extends Component {
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={styles.fill}>
-                    <BasicHeader title={<Text>{currentGroup.groupName + `\n`}<Text style={{ fontSize: 14 }}>Members: {currentGroup.groupMembers.length ? currentGroup.groupMembers.length : ''}</Text></Text>} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
+                    <BasicHeader
+                        searchbarMode={isVisibleSearchModal}
+                        searchValue={searchName}
+                        onChangeSearchValue={this.searchForFriend} onCancelSearchMode={() => this.setState({ searchName: '', isVisibleSearchModal: false })}
+                        onClearSearchValue={() => this.setState({ searchName: '' })}
+                        title={<Text>{currentGroup.groupName + `\n`}<Text style={{ fontSize: 14 }}>Members: {currentGroup.groupMembers.length ? currentGroup.groupMembers.length : ''}</Text></Text>}
+                        leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
+                        rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.onPressAddMember }}
+                    />
+                    {/* <BaseModal alignCenter={true} isVisible={this.state.isVisibleAddMemberModal} onCancel={this.onCancelAddMemberForm} onPressOutside={this.onCancelAddMemberForm}>
+                        <View style={{ backgroundColor: '#fff', width: WindowDimensions.width *0.8, height: WindowDimensions.height*0.8, padding: 20, elevation: 3 }}>
+                            <LabeledInput placeholder='Search name' onChange={(val) => this.setState({ addMemberToGroup: val })}
+                                onSubmit={this.onSubmitGroupForm} />
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                                <LinkButton  title='Submit' onPress={this.onSubmitGroupForm} />
+                                <LinkButton title='Cancel' onPress={this.onCancelAddMemberForm} />
+                            </View>
+                        </View>
+                    </BaseModal> */}
                     <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
                         <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
                             {
@@ -281,11 +320,22 @@ class Group extends Component {
                             ? <View style={styles.searchMemberModal}>
                                 <View style={{ flex: 1 }}>
                                     {
-                                        <IconButton iconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: 'white', alignSelf: user.handDominance === 'left' ? 'flex-start' : 'flex-end' } }} onPress={this.onCancelSearchModal} />
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                            <IconButton iconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: 'white' } }} onPress={this.onCancelSearchModal} />
+                                            <IconButton onPress={this.addFriendsToGroup} iconProps={{
+                                                name: 'check', type: 'Entypo', style: {
+                                                    fontSize: widthPercentageToDP(8),
+                                                    color: 'white',
+                                                    alignSelf: 'flex-start',
+                                                }
+                                            }} />
+
+                                        </View>
                                     }
                                     {
                                         searchFriendList.length > 0
                                             ? <FlatList
+                                                keyboardShouldPersistTaps="handled"
                                                 style={{ marginTop: widthPercentageToDP(4) }}
                                                 contentContainerStyle={{ paddingBottom: searchFriendList.length > 0 ? heightPercentageToDP(8) + kbdBtmOffset : 0 }}
                                                 data={searchFriendList}
@@ -300,6 +350,7 @@ class Group extends Component {
                             : null
                     }
                     <FlatList
+                        keyboardShouldPersistTaps="handled"
                         contentContainerStyle={[styles.memberList, { paddingBottom: currentGroup.groupMembers.length > 0 ? heightPercentageToDP(8) : 0 }]}
                         data={currentGroup.groupMembers}
                         numColumns={2}
@@ -311,7 +362,7 @@ class Group extends Component {
                         />)}
                     />
 
-                    <Animated.View style={[styles.floatSecContainer, { bottom: kbdBtmOffset, width: this.floatSecAnim }]}>
+                    {/* <Animated.View style={[styles.floatSecContainer, { bottom: kbdBtmOffset, width: this.floatSecAnim }]}>
                         <Animated.View style={[styles.floatContnetAlign, { backgroundColor: isActiveSearch ? '#fff' : 'transparent', borderWidth: this.borderWidthAnim }]}>
                             {
                                 selectedFriendList.length === 0
@@ -325,7 +376,7 @@ class Group extends Component {
                             <TextInput pointerEvents='box-only' ref={elRef => this.addMemberInputRef = elRef} style={{ flex: 1, marginLeft: 3 }}
                                 onSubmitEditing={({ nativeEvent }) => this.searchForFriend(nativeEvent.text)} onChangeText={this.searchForFriend} />
                         </Animated.View>
-                    </Animated.View>
+                    </Animated.View> */}
                 </View>
             </View>
     }
@@ -345,6 +396,11 @@ const mapDispatchToProps = (dispatch) => {
         makeMemberAsAdmin: (groupId, memberId) => dispatch(makeMemberAsAdmin(groupId, memberId)),
         dismissMemberAsAdmin: (groupId, memberId) => dispatch(dismissMemberAsAdmin(groupId, memberId)),
         removeMember: (groupId, memberId) => dispatch(removeMember(groupId, memberId)),
+        getPicture: (pictureId, memberId) => getPicture(pictureId, ({ picture, pictureId }) => {
+            dispatch(updateMemberAction({ updates: { profilePicture: picture }, memberId: memberId }))
+        }, (error) => {
+            dispatch(updateMemberAction({ updates: {}, memberId: memberId }))
+        }),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(Group);

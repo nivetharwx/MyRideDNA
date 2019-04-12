@@ -2,15 +2,17 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, StatusBar, Animated, ImageBackground, AsyncStorage, TouchableWithoutFeedback, Text, View, FlatList, TouchableOpacity } from 'react-native';
 import { BasicHeader } from '../../components/headers';
-import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon } from 'native-base';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, USER_AUTH_TOKEN } from '../../constants';
+import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon,Toast } from 'native-base';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, USER_AUTH_TOKEN, WindowDimensions } from '../../constants';
 import styles from './styles';
 import AllFriendsTab from './all-friends';
 import GroupListTab from './group-list';
 import { appNavMenuVisibilityAction } from '../../actions';
-import { ShifterButton, IconButton } from '../../components/buttons';
+import { ShifterButton, IconButton, LinkButton } from '../../components/buttons';
 import { IconLabelPair } from '../../components/labels';
-import { logoutUser, getAllFriendRequests, getPicture, cancelFriendRequest, approveFriendRequest, rejectFriendRequest } from '../../api';
+import { logoutUser, getAllFriendRequests, getPicture, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, createFriendGroup } from '../../api';
+import { BaseModal } from '../../components/modal';
+import { LabeledInput } from '../../components/inputs';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
 class Friends extends Component {
@@ -32,7 +34,9 @@ class Friends extends Component {
             searchQuery: '',
             activeTab: -1,
             groupTabPressed: false,
-            friendsActiveTab: 0
+            friendsActiveTab: 0,
+            isVisibleGroupModal:false,
+            newGroupName:'',
         };
     }
 
@@ -182,9 +186,35 @@ class Friends extends Component {
     }
     requestKeyExtractor = (item) => item.id;
 
+    onCancelGroupForm = () => {
+        this.setState({ isVisibleGroupModal: false, newGroupName: ''});
+    }
+
+    onSubmitGroupForm = () =>{
+        const { newGroupName } = this.state;
+        if (newGroupName.trim().length === 0) {
+            Toast.show({
+                text: 'Please provide a group name',
+                buttonText: 'Okay'
+            });
+        } else {
+            this.isAddingGroup = true;
+            this.props.createFriendGroup({
+                groupName: newGroupName,
+                createdBy: this.props.user.userId,
+                createdDate: new Date().toISOString(),
+            });
+            this.setState({
+                isVisibleGroupModal:false
+            })
+        }
+    }
+
+    onPressCreateGroup =() => {
+        this.setState({ isVisibleGroupModal:true})
+       }
     render() {
         const { headerSearchMode, searchQuery, activeTab, friendsActiveTab } = this.state;
-
         const activeImageStyle = {
             width: this.dimensions.x,
             height: this.dimensions.y,
@@ -219,10 +249,31 @@ class Friends extends Component {
                         </View>
                 }
                 <View style={{ flex: 1 }}>
-                    <BasicHeader title='Friends' searchIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
+                    {
+                        this.state.activeTab ===1
+                        ?
+                        <BasicHeader  title='Friends' searchIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
+                        searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false, searchQuery: '' })}
+                        onClearSearchValue={() => this.setState({ searchQuery: '' })}
+                        leftIconProps ={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.onPressCreateGroup }}
+                        rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
+                        : 
+                        <BasicHeader  title='Friends' searchIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
                         searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false, searchQuery: '' })}
                         onClearSearchValue={() => this.setState({ searchQuery: '' })}
                         rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
+                            
+                    }
+                   <BaseModal alignCenter={true} isVisible={this.state.isVisibleGroupModal} onCancel={this.onCancelGroupForm} onPressOutside={this.onCancelGroupForm}>
+                        <View style={{ backgroundColor: '#fff', width: WindowDimensions.width * 0.6, padding: 20, elevation: 3 }}>
+                            <LabeledInput placeholder='Enter group name here' onChange={(val) => this.setState({ newGroupName: val })}
+                                onSubmit={this.onSubmitGroupForm} />
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                                <LinkButton  title='Submit' onPress={this.onSubmitGroupForm} />
+                                <LinkButton title='Cancel' onPress={this.onCancelGroupForm} />
+                            </View>
+                        </View>
+                    </BaseModal>
 
                     <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                         <Tab
@@ -333,6 +384,7 @@ const mapDispatchToProps = (dispatch) => {
         approvedRequest: (userId, personId, actionDate, requestId) => dispatch(approveFriendRequest(userId, personId, actionDate, requestId)),
         rejectRequest: (userId, personId,requestId) => dispatch(rejectFriendRequest(userId, personId, requestId)),
         getPicture: (userId, accessToken) => dispatch(getPicture(userId)),
+        createFriendGroup: (newGroupInfo) => dispatch(createFriendGroup(newGroupInfo)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Friends);

@@ -56,7 +56,7 @@ export class BasicHeader extends React.Component {
 
     render() {
         const { leftIconProps, title, rightIconProps, onCancelSearchMode,
-            searchValue, onChangeSearchValue, hasEditableTitle, style, searchIconProps } = this.props;
+            searchValue, onChangeSearchValue, hasEditableTitle, style, searchIconProps} = this.props;
         const { searchbarAnim, searchbarMode, titleEditingMode } = this.state;
 
         const searchCancelAnim = searchbarAnim.interpolate({
@@ -149,7 +149,7 @@ export class BasicHeader extends React.Component {
                                 this.props.onClearSearchValue
                                     ? <Animated.View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center', opacity: searchClearAnim }}>
                                         <IconButton onPress={this.props.onClearSearchValue} iconProps={{
-                                            name: 'close', type: 'MaterialCommunityIcons', style: {
+                                            name: 'close-circle', type: 'MaterialCommunityIcons', style: {
                                                 fontSize: 25,
                                                 color: 'white'
                                             }

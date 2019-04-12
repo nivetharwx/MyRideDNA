@@ -353,6 +353,7 @@ class AllFriendsTab extends Component {
                             />
                 }
                 <FloatingAction
+                floatingIcon={<NBIcon name='menu' type='MaterialIcons' style={{color:'#fff'}} />}
                     actions={FLOAT_ACTIONS}
                     color={APP_COMMON_STYLES.headerColor}
                     position={user.handDominance === 'left' ? 'right' : 'left'}

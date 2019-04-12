@@ -3,34 +3,6 @@ import { StyleSheet, SafeAreaView, View, ScrollView, FlatList, TouchableOpacity,
 import { Icon as NBIcon, List, ListItem, Left, Body } from 'native-base';
 import { WindowDimensions, APP_COMMON_STYLES, heightPercentageToDP, widthPercentageToDP } from '../../constants';
 
-export const SearchResults = ({ data, onPressClose, onSelectItem, style }) => (
-    <View style={[styles.searchResultsContainer, style]}>
-        <TouchableOpacity style={styles.closeIcon} onPress={onPressClose}>
-            <NBIcon name='close' style={{ color: '#fff' }} />
-        </TouchableOpacity>
-        <View style={styles.searchResults}>
-            <FlatList
-                style={{ marginTop: widthPercentageToDP(4) }}
-                contentContainerStyle={{ paddingBottom: data.length > 0 ? heightPercentageToDP(8) : 0 }}
-                data={data}
-                keyExtractor={item => item.id}
-                renderItem={({ item }) => {
-                    return (
-                        <ListItem button avatar style={{ marginTop: 10, height: heightPercentageToDP(8) }} onPress={() => onSelectItem(item)}>
-                            <Left style={styles.leftContainer}>
-                                <NBIcon style={styles.leftIcon} name='location-on' type='MaterialIcons' />
-                            </Left>
-                            <Body style={{ height: '100%' }}>
-                                <Text style={styles.primaryText}>{item.place_name}</Text>
-                                <Text style={styles.secondaryText}>{item.properties.category || ''}</Text>
-                            </Body>
-                        </ListItem>
-                    );
-                }}
-            />
-        </View>
-    </View>
-);
 
 const styles = StyleSheet.create({
     searchResults: {
@@ -71,3 +43,36 @@ const styles = StyleSheet.create({
         marginRight: 10
     }
 });
+const CATEGORY_ICONS = {
+    default: { name: 'location-on', type: 'MaterialIcons', style: styles.leftIcon },
+
+};
+export const SearchResults = ({ data, onPressClose, onSelectItem, style }) => (
+    <View style={[styles.searchResultsContainer, style]}>
+        <TouchableOpacity style={styles.closeIcon} onPress={onPressClose}>
+            <NBIcon name='close' style={{ color: '#fff' }} />
+        </TouchableOpacity>
+        <View style={styles.searchResults}>
+            <FlatList
+                keyboardShouldPersistTaps={'handled'}
+                style={{ marginTop: widthPercentageToDP(4) }}
+                contentContainerStyle={{ paddingBottom: data.length > 0 ? heightPercentageToDP(8) : 0 }}
+                data={data}
+                keyExtractor={item => item.id}
+                renderItem={({ item }) => {
+                    return (
+                        <ListItem button avatar style={{ marginTop: 10, height: heightPercentageToDP(8) }} onPress={() => onSelectItem(item)}>
+                            <Left style={styles.leftContainer}>
+                                <NBIcon {...CATEGORY_ICONS.default} />
+                            </Left>
+                            <Body style={{ height: '100%' }}>
+                                <Text style={styles.primaryText}>{item.place_name}</Text>
+                                {/* <Text style={styles.secondaryText}>{item.properties.category || ''}</Text> */}
+                            </Body>
+                        </ListItem>
+                    );
+                }}
+            />
+        </View>
+    </View>
+);

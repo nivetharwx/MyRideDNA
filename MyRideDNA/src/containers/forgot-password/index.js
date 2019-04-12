@@ -1,16 +1,16 @@
 import React from 'react';
-import { StyleSheet, View, Alert, TouchableHighlight, Text } from 'react-native';
+import { StyleSheet, View, Alert, TouchableHighlight, Text, TextInput } from 'react-native';
 import { connect } from 'react-redux';
 import { LabeledInput } from '../../components/inputs';
 import { toggleNetworkStatusAction } from '../../actions';
 import { isValidEmailFormat } from '../../util';
 import Spinner from 'react-native-loading-spinner-overlay';
-import { LinkButton } from '../../components/buttons';
+import { LinkButton, IconButton } from '../../components/buttons';
 import axios from 'axios';
-import { USER_BASE_URL, WindowDimensions, APP_COMMON_STYLES } from '../../constants';
+import { USER_BASE_URL, WindowDimensions, APP_COMMON_STYLES, widthPercentageToDP } from '../../constants';
 import { BaseModal } from '../../components/modal';
 import Md5 from 'react-native-md5';
-import { Toast } from 'native-base';
+import { Toast, Item } from 'native-base';
 
 class ForgotPassword extends React.Component {
     initialState = {
@@ -20,6 +20,8 @@ class ForgotPassword extends React.Component {
         confirmPassword: '',
         otp: '',
         showLoader: false,
+        isVisiblePassword: false,
+        isVisibleConfirmPassword: false,
     };
     cPasswdRef = null;
     constructor(props) {
@@ -27,6 +29,14 @@ class ForgotPassword extends React.Component {
         this.state = {
             ...this.initialState
         };
+    }
+
+
+    togglePasswordVisibility = () => {
+        this.setState(prevState => ({ isVisiblePassword: !prevState.isVisiblePassword }));
+    }
+    toggleConfirmPasswordVisibility = () => {
+        this.setState(prevState => ({ isVisibleConfirmPassword: !prevState.isVisibleConfirmPassword }));
     }
 
     onChangeEmail = (email) => {
@@ -115,6 +125,13 @@ class ForgotPassword extends React.Component {
     onSubmitEditingPassword = () => {
         this.cPasswdRef.focus();
     }
+    passwordFormat = () =>{
+        if(this.state.password.length < 5){
+            Alert.alert('Error', 'Password should be greater than 5 character');
+        } else if(this.state.password.search(/\d/) == -1){
+            Alert.alert('Error', 'Password should contain one number');
+        }   
+    }
 
     onSubmitEmail = (email) => {
         if (!this.props.hasNetwork) {
@@ -171,8 +188,17 @@ class ForgotPassword extends React.Component {
             case 3:
                 return (
                     <View style={styles.form}>
-                        <LabeledInput inputType='password' returnKeyType='next' placeholder='Enter new password' onChange={this.onPasswordsChange} onSubmit={this.onSubmitEditingPassword} hideKeyboardOnSubmit={false} />
-                        <LabeledInput inputType='password' placeholder='Confirm password' onChange={this.onConfrimPassworddChange} inputRef={this.getCPasswdRef} />
+                        {/* <LabeledInput inputType='password' returnKeyType='next' secureTextEntry={this.state.isVisiblePassword} placeholder='Enter new password' onChange={this.onPasswordsChange} onSubmit={this.onSubmitEditingPassword} hideKeyboardOnSubmit={false} />
+                     */}
+                        <Item >
+                            <TextInput onBlur={this.passwordFormat} style={{ flex: 1 }} secureTextEntry={!this.state.isVisiblePassword} textContentType='password' keyboardType='default' placeholder='Enter new Password' onChangeText={this.onPasswordsChange} onSubmit={this.onSubmitEditingPassword} hideKeyboardOnSubmit={false} />
+                            <IconButton onPress={this.togglePasswordVisibility} style={{backgroundColor: '#0083CA', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: this.state.isVisiblePassword ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
+                        </Item>
+                        {/* <LabeledInput inputType='password' placeholder='Confirm password' onChange={this.onConfrimPassworddChange} inputRef={this.getCPasswdRef} /> */}
+                        <Item>
+                            <TextInput style={{ flex: 1 }} secureTextEntry={!this.state.isVisibleConfirmPassword} textContentType='password' keyboardType='default' placeholder='Confirm password' onChangeText={this.onConfrimPassworddChange} inputRef={this.getCPasswdRef} />
+                            <IconButton onPress={this.toggleConfirmPasswordVisibility} style={{ backgroundColor: '#0083CA', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4), marginRight: widthPercentageToDP(0) }} iconProps={{ name: this.state.isVisibleConfirmPassword ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
+                        </Item >
                         <View style={styles.buttonContainer}>
                             <LinkButton title='Cancel' onPress={this.onCloseModal} />
                             <LinkButton title='Submit' onPress={this.onPressSubmitButton} />
@@ -183,6 +209,7 @@ class ForgotPassword extends React.Component {
     }
 
     render() {
+        console.log('password visibility : ', this.state.isVisiblePassword)
         const { formStep, showLoader } = this.state;
         const { isVisible, onCancel, onPressOutside } = this.props;
         return (

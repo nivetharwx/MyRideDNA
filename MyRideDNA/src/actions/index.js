@@ -13,7 +13,8 @@ import {
     UPDATE_SHORT_SPACE_LIST,
     RESETING_STATE_ON_LOGOUT,
     UPDATE_FRIENDS_LOCATION,
-    REPLACE_FRIENDS_LOCATION
+    REPLACE_FRIENDS_LOCATION,
+    UPDATE_GROUP_FRIEND_ACTION
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (

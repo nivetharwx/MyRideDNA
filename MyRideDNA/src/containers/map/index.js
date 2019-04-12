@@ -21,7 +21,7 @@ import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon } from 'native-base';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationNameAction, updateWaypointNameAction } from '../../actions';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationNameAction, updateWaypointNameAction, resetCurrentGroupAction } from '../../actions';
 import { SearchBox } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -625,6 +625,9 @@ export class Map extends Component {
         if (Actions.state.index != 0) {
             if (Actions.currentScene === PageKeys.FRIENDS_PROFILE) {
                 this.props.resetCurrentFriend();
+                this.props.changeScreen(Actions.currentScene);
+            } else if (Actions.currentScene === PageKeys.GROUP) {
+                this.props.resetCurrentGroup();
                 this.props.changeScreen(Actions.currentScene);
             } else {
                 Actions.pop();
@@ -1902,6 +1905,7 @@ const mapDispatchToProps = (dispatch) => {
         completeRecordRide: (endTime, trackpoints, distance, ride, userId) => dispatch(completeRecordRide(endTime, trackpoints, distance, ride, userId)),
         getRideByRideId: (rideId) => dispatch(getRideByRideId(rideId)),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
+        resetCurrentGroup: () => dispatch(resetCurrentGroupAction()),
         doUndo: () => dispatch(undoRideAction()),
         doRedo: () => dispatch(redoRideAction()),
         logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),

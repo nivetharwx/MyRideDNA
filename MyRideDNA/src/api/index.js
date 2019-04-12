@@ -280,6 +280,7 @@ export const getAllBuildRides = (userId) => {
         axios.get(RIDE_BASE_URL + `getAllBuildRides?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    console.log('getAllBuildRides sucess : ',res)
                     dispatch(toggleLoaderAction(false));
                     dispatch(replaceRideListAction({ rideType: RIDE_TYPE.BUILD_RIDE, rideList: res.data }));
                 }
@@ -1020,13 +1021,13 @@ export const getAllGroupMembers = (groupId, userId) => {
         axios.get(FRIENDS_BASE_URL + `getAllGroupMembers?groupId=${groupId}&memberId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log(res.data);
+                    console.log('getAllGroupMembers sucess: ',res.data);
                     dispatch(toggleLoaderAction(false));
                     return dispatch(resetMembersFromCurrentGroupAction(res.data))
                 }
             })
             .catch(er => {
-                console.log(`addMembers: `, er.response ? er.response : er);
+                console.log(`getAllGroupMembers error: `, er.response ? er.response : er);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -1038,13 +1039,13 @@ export const addMembers = (groupId, memberDetails) => {
         axios.put(FRIENDS_BASE_URL + `addMembers?groupId=${groupId}`, memberDetails, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log(res.data);
+                    console.log('addMembers sucess: ',res.data);
                     dispatch(toggleLoaderAction(false));
                     return dispatch(addMembersToCurrentGroupAction(res.data))
                 }
             })
             .catch(er => {
-                console.log(`addMembers: `, er.response ? er.response : er);
+                console.log(`addMembers error: `, er.response ? er.response : er);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })

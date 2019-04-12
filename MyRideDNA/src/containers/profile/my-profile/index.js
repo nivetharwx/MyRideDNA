@@ -5,10 +5,10 @@ import { Actions } from 'react-native-router-flux';
 import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG } from '../../../constants/index';
 import { IconButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
-import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction } from '../../../actions';
+import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction } from '../../../actions';
 import { Accordion } from 'native-base';
 import ImagePicker from 'react-native-image-crop-picker';
-import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive } from '../../../api';
+import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo } from '../../../api';
 import { Loader } from '../../../components/loader';
 
 const hasIOSAbove10 = parseInt(Platform.Version) > 10;
@@ -37,7 +37,11 @@ class MyProfileTab extends Component {
     }
 
     componentDidMount() {
-        this.props.getSpaceList(this.props.user.userId);
+        // this.props.getSpaceList(this.props.user.userId);
+        if (this.props.garage.garageId === null) {
+            this.props.getGarageInfo(this.props.user.userId);
+        }
+
         if (this.props.user.profilePictureId && !this.props.user.profilePicture) {
             this.setState({ isLoadingProfPic: true });
             this.props.getUserProfilePicture(this.state.profilePicId);
@@ -58,9 +62,30 @@ class MyProfileTab extends Component {
                 }
             }
         }
-        if (prevProps.shortSpaceList !== this.props.shortSpaceList) {
-            this.props.shortSpaceList.forEach((bike, index) => {
-                if (!bike.profilePicture && bike.pictureIdList.length > 0) {
+        // if (prevProps.shortSpaceList !== this.props.shortSpaceList) {
+        //     this.props.shortSpaceList.forEach((bike, index) => {
+        //         if (!bike.profilePicture && bike.pictureIdList.length > 0) {
+        //             if (!this.state.pictureLoader[bike.spaceId]) {
+        //                 this.setState(prevState => {
+        //                     const updatedPictureLoader = { ...prevState.pictureLoader };
+        //                     updatedPictureLoader[bike.spaceId] = true;
+        //                     return { pictureLoader: updatedPictureLoader }
+        //                 }, () => {
+        //                     this.props.getBikePicture(bike.pictureIdList[0], bike.spaceId)
+        //                 });
+        //             }
+        //         } else {
+        //             this.setState(prevState => {
+        //                 const updatedPictureLoader = { ...prevState.pictureLoader };
+        //                 updatedPictureLoader[bike.spaceId] = false;
+        //                 return { pictureLoader: updatedPictureLoader }
+        //             });
+        //         }
+        //     })
+        // }
+        if (prevProps.garage.spaceList !== this.props.garage.spaceList) {
+            this.props.garage.spaceList.forEach((bike, index) => {
+                if (!bike.pictureList && bike.pictureIdList.length > 0) {
                     if (!this.state.pictureLoader[bike.spaceId]) {
                         this.setState(prevState => {
                             const updatedPictureLoader = { ...prevState.pictureLoader };
@@ -81,12 +106,19 @@ class MyProfileTab extends Component {
         }
     }
 
+    // onSpaceLongPress = (newSpaceIndex) => {
+    //      if (newSpaceIndex === 0) return;
+    //      this.hScrollView.scrollToIndex({ index: 0, animated: true });
+    //     console.log('onSpaceLongPress : ',newSpaceIndex)
+    //     const prevActiveBikeIndex = this.props.shortSpaceList.findIndex(bike => bike.isDefault);
+    //     this.props.setBikeAsActive(this.props.user.userId, this.props.shortSpaceList[newSpaceIndex].spaceId, prevActiveBikeIndex, newSpaceIndex);
+    // }
     onSpaceLongPress = (newSpaceIndex) => {
          if (newSpaceIndex === 0) return;
          this.hScrollView.scrollToIndex({ index: 0, animated: true });
         console.log('onSpaceLongPress : ',newSpaceIndex)
-        const prevActiveBikeIndex = this.props.shortSpaceList.findIndex(bike => bike.isDefault);
-        this.props.setBikeAsActive(this.props.user.userId, this.props.shortSpaceList[newSpaceIndex].spaceId, prevActiveBikeIndex, newSpaceIndex);
+        const prevActiveBikeIndex = this.props.garage.spaceList.findIndex(bike => bike.isDefault);
+        this.props.setBikeAsActive(this.props.user.userId, this.props.garage.spaceList[newSpaceIndex].spaceId, prevActiveBikeIndex, newSpaceIndex);
     }
 
     renderAccordionItem = (item) => {
@@ -116,7 +148,7 @@ class MyProfileTab extends Component {
                     </ScrollView> */}
                     <FlatList
                         horizontal={true}
-                        data={this.props.shortSpaceList}
+                        data={this.props.garage.spaceList}
                         keyExtractor={(item, index) => item.spaceId}
                         renderItem={({ item, index }) => <View>
                             <Thumbnail
@@ -124,7 +156,7 @@ class MyProfileTab extends Component {
                                 height={heightPercentageToDP(12)}
                                 width={widthPercentageToDP(28)}
                                 active={item.isDefault}
-                                imagePath={item.profilePicture ? { uri: item.profilePicture } : require('../../../assets/img/harley.jpg')}
+                                imagePath={item.pictureList ? { uri: item.pictureList[0] } : require('../../../assets/img/harley.jpg')}
                                 title={item.name}
                                 onLongPress={() => this.onSpaceLongPress(index)}
                             />
@@ -180,7 +212,8 @@ class MyProfileTab extends Component {
     }
 
     render() {
-        const { user, shortSpaceList } = this.props;
+        // const { user, shortSpaceList } = this.props;
+        const { user } = this.props;
         const { isLoadingProfPic } = this.state;
         return (
             <View style={styles.fill}>
@@ -225,8 +258,10 @@ class MyProfileTab extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { shortSpaceList } = state.GarageInfo;
-    return { user, shortSpaceList };
+    // const { shortSpaceList } = state.GarageInfo;
+    const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
+    // return { user, shortSpaceList };
+    return { user,garage };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -239,12 +274,26 @@ const mapDispatchToProps = (dispatch) => {
         }),
         getSpaceList: (userId) => dispatch(getSpaceList(userId)),
         updateProfilePicture: (profilePicStr, mimeType, userId) => dispatch(updateProfilePicture(profilePicStr, mimeType, userId)),
-        getBikePicture: (pictureId, spaceId) => getPicture(pictureId, ({ picture }) => {
-            dispatch(updateShortSpaceListAction({ profilePicture: picture, spaceId }))
-        }, (error) => {
-            dispatch(updateShortSpaceListAction({ spaceId }))
-        }),
+        // getBikePicture: (pictureId, spaceId) => getPicture(pictureId, ({ picture }) => {
+        //     dispatch(updateShortSpaceListAction({ profilePicture: picture, spaceId }))
+        // }, (error) => {
+        //     dispatch(updateShortSpaceListAction({ spaceId }))
+        // }),
+        getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
+            dispatch(updateBikePictureListAction({ spaceId, ...response }))
+        }, (error) => console.log("getPicture error: ", error)),
+
         setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
+        getGarageInfo: (userId) => {
+            dispatch(toggleLoaderAction(true));
+            getGarageInfo(userId, (garage) => {
+                dispatch(toggleLoaderAction(false));
+                dispatch(replaceGarageInfoAction(garage));
+            }, (error) => {
+                dispatch(toggleLoaderAction(false));
+                console.log(`getGarage error: `, error);
+            })
+        },
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MyProfileTab);

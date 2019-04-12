@@ -86,6 +86,14 @@ class Signup extends Component {
         }
     }
 
+    passwordFormat = () =>{
+        if(this.state.user.password.length < 5){
+            Alert.alert('Error', 'Password should be greater than 5 character');
+        } else if(this.state.user.password.search(/\d/) == -1){
+            Alert.alert('Error', 'Password should contain one number');
+        }   
+    }
+
     onPasswordsChange = (passwd) => {
         this.setState(prevState => ({ user: { ...prevState.user, password: passwd } }));
     }
@@ -163,7 +171,7 @@ class Signup extends Component {
                             onChange={this.onGenderChange} />
                         <LabeledInput onBlur={this.validateEmail} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onEmailChange} placeholder='Email' inputType='emailAddress' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
                         <Item style={{ marginLeft: widthPercentageToDP(4) }}>
-                            <TextInput secureTextEntry={hidePasswd} style={{ flex: 1 }} value={user.password} ref={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChangeText={this.onPasswordsChange} placeholder='New Password' onSubmitEditing={() => this.fieldRefs[3].focus()} blurOnSubmit={false} />
+                            <TextInput onBlur={this.passwordFormat} secureTextEntry={hidePasswd} style={{ flex: 1 }} value={user.password} ref={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChangeText={this.onPasswordsChange} placeholder='New Password' onSubmitEditing={() => this.fieldRefs[3].focus()} blurOnSubmit={false} />
                             <IconButton onPress={this.togglePasswordVisibility} style={{ backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: hidePasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
                         </Item>
                         <Item style={{ marginLeft: widthPercentageToDP(4) }}>

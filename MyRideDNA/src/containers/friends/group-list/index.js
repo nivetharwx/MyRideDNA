@@ -88,7 +88,7 @@ class GroupListTab extends Component {
                 duration: 300
             })
         ]).start(() => {
-            this.addKeyboardListeners();
+            // this.addKeyboardListeners();
             this.setState({ newGroupName: '' });
             this.createGrpInputRef.focus();
         });
@@ -155,7 +155,7 @@ class GroupListTab extends Component {
 
     renderGroup = ({ item, index }) => {
         return (
-            <ListItem style={{ marginTop: 20 }} avatar onLongPress={() => this.showOptionsModal(index)} onPress={() => this.openGroupInfo(index)}>
+            <ListItem style={{ marginTop: 20 }} avatar onLongPress={() => this.showOptionsModal(index)} onLongPress={() => this.openGroupInfo(index)}>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
                     {
                         item.groupProfilePictureThumbnail
@@ -272,7 +272,7 @@ class GroupListTab extends Component {
                         />
                         : <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
                 }
-                <Animated.View style={[styles.createGrpContainer, { bottom: this.state.kbdBtmOffset, width: this.createSecAnim }]}>
+                {/* <Animated.View style={[styles.createGrpContainer, { bottom: this.state.kbdBtmOffset, width: this.createSecAnim }]}>
                     <Animated.View style={[styles.createGrpActionSec, { backgroundColor: newGroupName === null ? 'transparent' : '#fff', borderWidth: this.borderWidthAnim }]}>
                         {
                             !newGroupName || newGroupName.trim().length === 0
@@ -285,7 +285,7 @@ class GroupListTab extends Component {
                         }
                         <TextInput ref={elRef => this.createGrpInputRef = elRef} style={{ flex: 1, marginLeft: 3 }} onChangeText={this.onEnterGroupName} onSubmitEditing={this.createGroup} />
                     </Animated.View>
-                </Animated.View>
+                </Animated.View> */}
             </View>
         )
     }
