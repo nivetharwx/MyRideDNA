@@ -140,7 +140,7 @@ export class CreateRide extends Component {
     }
 
     onSubmitForm = () => {
-        const { ride, startRideFrom } = this.state;
+        const { ride, startRideFrom, searchQuery } = this.state;
         if (ride.name === null || ride.name.trim().length === 0) {
             Toast.show({
                 text: 'Enter Ride Name',
@@ -155,7 +155,7 @@ export class CreateRide extends Component {
             date: new Date().toISOString(),
             isRecorded: false
         };
-        if (startRideFrom !== null) {
+        if (startRideFrom !== null && searchQuery !== '') {
             rideDetails = {
                 ...rideDetails,
                 source: startRideFrom
@@ -187,6 +187,17 @@ export class CreateRide extends Component {
                     },
                     { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
                 );
+            } else {
+                rideDetails = {
+                    ...rideDetails,
+                    source: {
+                        name: this.props.currentLocation.name,
+                        lat: this.props.currentLocation.location[1],
+                        lng: this.props.currentLocation.location[0]
+                    }
+                }
+                this.props.onSubmitForm(rideDetails);
+                this.props.cancelPopup(this.props.currentLocation.location);
             }
         }
     }
@@ -223,7 +234,7 @@ export class CreateRide extends Component {
                             <Item style={{ borderBottomWidth: 0, marginLeft: widthPercentageToDP(4), marginRight: widthPercentageToDP(4) }}>
                                 {/* <NBIcon name='map-pin' type='FontAwesome' style={[styles.formFieldIcon, { paddingHorizontal: widthPercentageToDP(2) }]} /> */}
                                 <Text style={{ color: '#8C8C8C' }}>Start ride from: </Text>
-                                <SearchBox value={searchQuery} hideIcon={true} onTextChange={this.onSearchPlace} onPressClear={() => this.setState({ searchQuery: '' })} />
+                                <SearchBox value={searchQuery} hideIcon={true} onTextChange={this.onSearchPlace} onPressClear={() => this.setState({ searchQuery: '', })} />
                             </Item>
                         </View>
                     </ScrollView>
