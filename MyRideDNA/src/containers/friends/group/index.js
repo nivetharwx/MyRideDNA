@@ -322,13 +322,19 @@ class Group extends Component {
                                     {
                                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                                             <IconButton iconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: 'white' } }} onPress={this.onCancelSearchModal} />
-                                            <IconButton onPress={this.addFriendsToGroup} iconProps={{
-                                                name: 'check', type: 'Entypo', style: {
-                                                    fontSize: widthPercentageToDP(8),
-                                                    color: 'white',
-                                                    alignSelf: 'flex-start',
-                                                }
-                                            }} />
+                                            {
+                                                selectedFriendList.length > 0
+                                                    ?
+                                                    <IconButton onPress={this.addFriendsToGroup} iconProps={{
+                                                        name: 'check', type: 'Entypo', style: {
+                                                            fontSize: widthPercentageToDP(8),
+                                                            color: 'white',
+                                                            alignSelf: 'flex-start',
+                                                        }
+                                                    }} />
+                                                    : null
+
+                                            }
 
                                         </View>
                                     }
