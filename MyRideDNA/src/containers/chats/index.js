@@ -26,7 +26,7 @@ class Chat extends Component {
                 <ImageBackground style={styles.chatBackgroundImage} source={require('../../assets/img/chat-bg.jpg')}>
                     <View style={styles.chatHeader}>
                         <Thumbnail style={styles.thumbnail} source={this.props.friend.profilePicture ? { uri: this.props.friend.profilePicture } : require('../../assets/img/friend-profile-pic.png')} />
-                        <View style={{ flex: 1, flexDirection: 'row' }}>
+                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                             <Text style={styles.chatHeaderName}>{this.props.friend.name}</Text>
                             <Text style={styles.chatHeaderNickname}>{this.props.friend.nickname}</Text>
                         </View>
@@ -132,7 +132,7 @@ class Chat extends Component {
                     </View>
                     <Item style={styles.msgInputBoxContainer}>
                         <IconButton style={styles.footerLeftIcon} iconProps={{ name: 'md-attach', type: 'Ionicons' }} />
-                        <TextInput placeholder='Type a message' style={{ flex: 1 }} onFocus={this.onFocusTextInput} onBlur={this.onBlurTextInput} />
+                        <TextInput placeholder='Type a message' style={{ flex: 1, marginRight: widthPercentageToDP(1) }} onFocus={this.onFocusTextInput} onBlur={this.onBlurTextInput} />
                         <IconButton iconProps={{ name: 'md-send', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} />
                     </Item>
                     <ShifterButton onPress={this.showAppNavigation} containerStyles={styles.shifterContainer} />

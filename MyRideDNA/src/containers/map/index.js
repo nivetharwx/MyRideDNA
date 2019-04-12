@@ -21,7 +21,7 @@ import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon } from 'native-base';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationNameAction, updateWaypointNameAction, resetCurrentGroupAction } from '../../actions';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationNameAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction } from '../../actions';
 import { SearchBox } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -39,6 +39,7 @@ import DEFAULT_SOURCE_ICON from '../../assets/img/source-pin-red.png';
 import SELECTED_SOURCE_ICON from '../../assets/img/source-pin-green.png';
 import DEFAULT_DESTINATION_ICON from '../../assets/img/destination-pin-red.png';
 import SELECTED_DESTINATION_ICON from '../../assets/img/destination-pin-green.png';
+import FRIENDS_LOCATION_ICON from '../../assets/img/friends-location.png';
 
 import { updateRide, addWaypoint, addSource, createRecordRide, pauseRecordRide, updateWaypoint, updateSource, updateDestination, makeWaypointAsDestination, makeDestinationAsWaypoint, makeSourceAsWaypoint, makeWaypointAsSource, continueRecordRide, addTrackpoints, completeRecordRide, deleteWaypoint, deleteDestination, deleteSource, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser, updateLocation } from '../../api';
 
@@ -83,6 +84,7 @@ export class Map extends Component {
     mapCircleTimeout = null;
     bottomLeftDefaultPoint = null;
     fetchDirOnUndoRedo = true;
+    notificationInterval = null;
     constructor(props) {
         super(props);
         this.state = {
@@ -125,13 +127,17 @@ export class Map extends Component {
             calloutOffsets: [],
             showCreateRide: false,
             rideUpdateCount: 0,
+            friendsLocationCollection: {
+                type: 'FeatureCollection',
+                features: []
+            },
+            friendsImage: {}
         };
     }
 
     componentWillReceiveProps(nextProps) {
         // console.log(this.props.ride === nextProps.ride); // DOC: false when something changes in ride
         const { ride, isLocationOn, currentScreen } = nextProps;
-        console.log("ride changed: ", ride);
         let updatedState = {};
 
         if (this.isLocationOn != isLocationOn) {
@@ -229,10 +235,23 @@ export class Map extends Component {
                 }
             }
         }
-        if (this.props.currentScreen !== currentScreen && currentScreen !== Actions.currentScene) {
-            currentScreen !== this.rootScreen
-                ? Actions.push(currentScreen, {})
-                : Actions.popTo(currentScreen, {})
+        if (this.props.currentScreen !== currentScreen && currentScreen.name !== Actions.currentScene) {
+            if (currentScreen.name !== this.rootScreen) {
+                if (this.props.currentScreen.name !== this.rootScreen) {
+                    if (this.props.currentScreen.name === currentScreen.name) {
+                        Actions.popTo(currentScreen.name, {});
+                    } else {
+                        Actions.replace(currentScreen.name, currentScreen.params);
+                    }
+                } else {
+                    Actions.push(currentScreen.name, currentScreen.params);
+                }
+            } else {
+                Actions.popTo(currentScreen.name, {})
+            }
+            // currentScreen.name !== this.rootScreen
+            //     ? Actions.push(currentScreen.name, currentScreen.params)
+            //     : Actions.popTo(currentScreen.name, {})
         }
         if (Object.keys(updatedState).length > 0) {
             this.setState(updatedState, () => {
@@ -249,6 +268,36 @@ export class Map extends Component {
             this.props.user.locationEnable
                 ? this.startTrackingLocation()
                 : this.stopTrackingLocation();
+        }
+        if (prevProps.friendsLocationList !== this.props.friendsLocationList) {
+            if (this.props.friendsLocationList === null) {
+                this.setState({
+                    friendsLocationCollection: {
+                        type: 'FeatureCollection',
+                        features: []
+                    }
+                });
+                return;
+            }
+            // let friendsImage = {};
+            const features = this.props.friendsLocationList.map(locInfo => {
+                // locInfo.profilePicture
+                //     ? friendsImage[locInfo.userId] = { uri: 'http://104.43.254.82:5051/getPictureById/5ca43ade33db83341960ee1b_thumb.jpeg' }
+                //     // ? friendsImage[locInfo.userId] = { uri: locInfo.profilePicture }
+                //     : friendsImage[locInfo.userId] = DEFAULT_WAYPOINT_ICON;
+                // friendsImage[locInfo.userId + ''] = { uri:  };
+                return this.createFriendsLocationMarker(locInfo);
+            });
+            this.setState({
+                friendsLocationCollection: {
+                    ...prevState.friendsLocationCollection,
+                    features: features
+                },
+                // friendsImage: friendsImage
+            }, () => {
+                const newFriendLocation = this.props.friendsLocationList[this.props.friendsLocationList.length - 1];
+                this.onPressRecenterMap([newFriendLocation.lng, newFriendLocation.lat]);
+            });
         }
         const prevRide = prevProps.ride;
         const newRide = this.props.ride;
@@ -423,57 +472,58 @@ export class Map extends Component {
                 replaceRide(ride.rideId, { source: ride.source, destination: ride.destination, waypoints: ride.waypoints });
             }
         }
-        this.props.changeScreen(screenKey);
+        this.props.changeScreen({ name: screenKey });
     }
 
     async componentDidMount() {
-        this.props.changeScreen(PageKeys.MAP);
         this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         this.props.pushNotification(this.props.user.userId);
-        setTimeout(() => {
+        this.props.getAllNotifications(this.props.user.userId);
+        this.notificationInterval = setInterval(() => {
             this.props.getAllNotifications(this.props.user.userId);
-        }, 100);
+        }, 60 * 1000);
         if (this.props.user.locationEnable) this.startTrackingLocation();
-        AppState.addEventListener('change', this.handleAppStateChange);
-        // BackgroundGeolocation.on('location', (location) => {
-        //     // TODO: Has to change default timeIntervalInSeconds from the backend (60 seconds)
-        //     if (location.time - this.prevUserTrackTime > 60000) {
-        //         this.prevUserTrackTime = location.time;
-        //         this.props.updateLocation(this.props.user.userId, { lat: location.latitude, lng: location.longitude });
+        // AppState.addEventListener('change', this.handleAppStateChange);
+        BackgroundGeolocation.on('location', (location) => {
+            // TODO: Has to change default timeIntervalInSeconds from the backend (60 seconds)
+            console.log("checking time gap: ", location.time - this.prevUserTrackTime, this.props.user.timeIntervalInSeconds * 1000);
+            if (location.time - this.prevUserTrackTime > (this.props.user.timeIntervalInSeconds * 1000)) {
+                this.prevUserTrackTime = location.time;
+                this.props.updateLocation(this.props.user.userId, { lat: location.latitude, lng: location.longitude });
 
-        //         // TODO: Need to understand about the task
-        //         // BackgroundGeolocation.startTask(taskKey => {
-        //         //     BackgroundGeolocation.endTask(taskKey);
-        //         // });
-        //     }
-        // });
-        // BackgroundGeolocation.on('stationary', (stationaryLocation) => {
-        //     console.log("Got stationary location: ", stationaryLocation);
-        // });
-        // BackgroundGeolocation.on('error', (error) => {
-        //     console.log('[ERROR] BackgroundGeolocation error: ', error);
-        // });
-        // BackgroundGeolocation.on('start', () => {
-        //     console.log('[INFO] BackgroundGeolocation service has been started');
-        // });
-        // BackgroundGeolocation.on('stop', () => {
-        //     console.log('[INFO] BackgroundGeolocation service has been stopped');
-        // });
-        // BackgroundGeolocation.on('background', () => {
-        //     this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
-        // });
+                // TODO: Need to understand about the task
+                // BackgroundGeolocation.startTask(taskKey => {
+                //     BackgroundGeolocation.endTask(taskKey);
+                // });
+            }
+        });
+        BackgroundGeolocation.on('stationary', (stationaryLocation) => {
+            console.log("Got stationary location: ", stationaryLocation);
+        });
+        BackgroundGeolocation.on('error', (error) => {
+            console.log('[ERROR] BackgroundGeolocation error: ', error);
+        });
+        BackgroundGeolocation.on('start', () => {
+            console.log('[INFO] BackgroundGeolocation service has been started');
+        });
+        BackgroundGeolocation.on('stop', () => {
+            console.log('[INFO] BackgroundGeolocation service has been stopped');
+        });
+        BackgroundGeolocation.on('background', () => {
+            // this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
+        });
 
-        // BackgroundGeolocation.on('foreground', () => {
-        //     this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
-        // });
-        // BackgroundGeolocation.checkStatus(status => {
-        //     // console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
-        //     // console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
-        //     // console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
-        //     if (!status.isRunning && this.props.user.locationEnable) {
-        //         this.startTrackingLocation();
-        //     }
-        // });
+        BackgroundGeolocation.on('foreground', () => {
+            // this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
+        });
+        BackgroundGeolocation.checkStatus(status => {
+            // console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
+            // console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
+            // console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
+            if (!status.isRunning && this.props.user.locationEnable) {
+                this.startTrackingLocation();
+            }
+        });
 
         //DOC: Listen for device location settings change
         // DeviceEventEmitter.addListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent);
@@ -490,32 +540,32 @@ export class Map extends Component {
     }
 
     startTrackingLocation = () => {
-        Geolocation.getCurrentPosition(
-            ({ coords }) => {
-                this.props.updateLocation(this.props.user.userId, { lat: coords.latitude, lng: coords.longitude, lastUpdatedTime: new Date().toISOString() });
-            },
-            (error) => {
-                console.log(error.code, error.message);
-            },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-        );
-        this.trackLocationInterval = setInterval(() => {
-            Geolocation.getCurrentPosition(
-                ({ coords }) => {
-                    this.props.updateLocation(this.props.user.userId, { lat: coords.latitude, lng: coords.longitude, lastUpdatedTime: new Date().toISOString() });
-                },
-                (error) => {
-                    console.log(error.code, error.message);
-                },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-            );
-        }, this.props.user.timeIntervalInSeconds * 1000);
-        // BackgroundGeolocation.start()
+        // Geolocation.getCurrentPosition(
+        //     ({ coords }) => {
+        //         this.props.updateLocation(this.props.user.userId, { lat: coords.latitude, lng: coords.longitude, lastUpdatedTime: new Date().toISOString() });
+        //     },
+        //     (error) => {
+        //         console.log(error.code, error.message);
+        //     },
+        //     { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        // );
+        // this.trackLocationInterval = setInterval(() => {
+        //     Geolocation.getCurrentPosition(
+        //         ({ coords }) => {
+        //             this.props.updateLocation(this.props.user.userId, { lat: coords.latitude, lng: coords.longitude, lastUpdatedTime: new Date().toISOString() });
+        //         },
+        //         (error) => {
+        //             console.log(error.code, error.message);
+        //         },
+        //         { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        //     );
+        // }, this.props.user.timeIntervalInSeconds * 1000);
+        BackgroundGeolocation.start()
     }
 
     stopTrackingLocation = () => {
-        clearInterval(this.trackLocationInterval);
-        // BackgroundGeolocation.stop();
+        // clearInterval(this.trackLocationInterval);
+        BackgroundGeolocation.stop();
     }
 
     handleGPSProviderEvent = (e) => {
@@ -631,7 +681,7 @@ export class Map extends Component {
                 this.props.changeScreen(Actions.currentScene);
             } else {
                 Actions.pop();
-                this.props.changeScreen(Actions.currentScene);
+                this.props.changeScreen({ name: Actions.currentScene });
             }
             return true;
         } else {
@@ -1246,7 +1296,6 @@ export class Map extends Component {
     }
 
     onPressPauseRide = () => {
-        console.log("PauseRide called");
         const { ride } = this.props;
         this.watchID != null && clearInterval(this.watchID);
         const { gpsPointCollection } = this.state;
@@ -1310,10 +1359,11 @@ export class Map extends Component {
     componentWillUnmount() {
         console.log("Map unmounted");
         this.stopTrackingLocation();
-        // BackgroundGeolocation.removeAllListeners();
+        BackgroundGeolocation.removeAllListeners();
         // DeviceEventEmitter.removeListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent);
         // this.watchID != null && Geolocation.clearWatch(this.watchID);
         this.watchID != null && clearInterval(this.watchID);
+        this.notificationInterval != null && clearInterval(this.notificationInterval);
         BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPress);
     }
 
@@ -1536,6 +1586,21 @@ export class Map extends Component {
         this.props.logoutUser(this.props.user.userId, accessToken);
     }
 
+    createFriendsLocationMarker = (locInfo) => {
+        return {
+            type: 'Feature',
+            id: locInfo.userId,
+            geometry: {
+                type: 'Point',
+                coordinates: [locInfo.lng, locInfo.lat],
+            },
+            properties: {
+                // icon: locInfo.userId + ''
+                name: locInfo.name
+            },
+        };
+    }
+
     render() {
         const { mapViewHeight, directions, markerCollection, activeMarkerIndex, gpsPointCollection, controlsBarLeftAnim, waypointListLeftAnim, showCreateRide, currentLocation,
             searchResults, searchQuery, isEditable, snapshot, hideRoute, optionsBarRightAnim, isUpdatingWaypoint, mapRadiusCircle } = this.state;
@@ -1560,6 +1625,11 @@ export class Map extends Component {
                                                 <View style={{ flexDirection: 'row' }}>
                                                     <LinkButton style={{ paddingVertical: 20 }} title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
                                                     <LinkButton style={{ paddingVertical: 20 }} title='RECORD RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
+                                                    {
+                                                        this.props.friendsLocationList
+                                                            ? <LinkButton style={{ paddingVertical: 20 }} title='HIDE FRIENDS' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.props.hideFriendsLocation} />
+                                                            : null
+                                                    }
                                                 </View>
                                                 <IconButton iconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }}
                                                     style={styles.logoutIcon} onPress={this.onPressLogout} />
@@ -1593,7 +1663,7 @@ export class Map extends Component {
                             ? <CreateRide containerHeight={CREATE_RIDE_CONTAINER_HEIGHT} onSubmitForm={this.props.submitNewRide}
                                 user={this.props.user} ride={this.props.ride}
                                 currentLocation={currentLocation} onChangeStartRideFrom={this.onPressRecenterMap}
-                                cancelPopup={() => this.setState({ showCreateRide: false }, () => this.onPressRecenterMap())} />
+                                cancelPopup={(centerLocation) => this.setState({ showCreateRide: false }, () => this.onPressRecenterMap(centerLocation))} />
                             : null
                     }
                     <MapboxGL.MapView
@@ -1625,6 +1695,17 @@ export class Map extends Component {
                             directions ?
                                 <MapboxGL.ShapeSource id='ridePathLayer' shape={directions.geometry}>
                                     <MapboxGL.LineLayer id='ridePath' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
+                                </MapboxGL.ShapeSource>
+                                : null
+                        }
+                        {
+                            this.state.friendsLocationCollection.features.length > 0
+                                ? <MapboxGL.ShapeSource
+                                    id='friends'
+                                    shape={this.state.friendsLocationCollection}
+                                    // images={this.state.friendsImage}
+                                    onPress={({ nativeEvent }) => console.log("onPressFriendsLocationMarker: ", nativeEvent)}>
+                                    <MapboxGL.SymbolLayer id="friendLocationIcon" style={[MapboxStyles.friendsName, MapboxStyles.friendsIcon]} />
                                 </MapboxGL.ShapeSource>
                                 : null
                         }
@@ -1841,7 +1922,8 @@ const mapStateToProps = (state) => {
     const { isLocationOn } = state.GPSState;
     const { showLoader } = state.PageState;
     const { notificationList } = state.NotificationList;
-    return { ride, isLocationOn, user, showMenu, currentScreen, showLoader, canUndo, canRedo, notificationList };
+    const { friendsLocationList } = state.FriendList;
+    return { ride, isLocationOn, user, showMenu, friendsLocationList, currentScreen, showLoader, canUndo, canRedo, notificationList };
 }
 
 const mapDispatchToProps = (dispatch) => {
@@ -1911,6 +1993,7 @@ const mapDispatchToProps = (dispatch) => {
         logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
         updateSourceOrDestinationName: (identifier, locationName) => dispatch(updateSourceOrDestinationNameAction({ identifier, locationName })),
         updateWaypointName: (waypointId, locationName) => dispatch(updateWaypointNameAction({ waypointId, locationName })),
+        hideFriendsLocation: () => dispatch(hideFriendsLocationAction()),
     }
 }
 
@@ -1955,5 +2038,19 @@ const MapboxStyles = MapboxGL.StyleSheet.create({
         lineWidth: 5,
         lineOpacity: 0.84,
         // lineDasharray: [2, 2],
+    },
+    friendsName: {
+        textField: '{name}',
+        textMaxWidth: 50,
+        textColor: '#fff',
+        textAnchor: 'center',
+        textHaloColor: 'rgba(235, 134, 30, 0.9)',
+        textHaloWidth: 2,
+        textOffset: IS_ANDROID ? [0, -3.4] : [0, -3]
+    },
+    friendsIcon: {
+        iconImage: FRIENDS_LOCATION_ICON,
+        iconSize: IS_ANDROID ? 0.17 : 0.25,
+        iconAnchor: 'bottom',
     }
 });

@@ -1,4 +1,4 @@
-import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION } from "../actions/actionConstants";
+import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION, ADD_FRIENDS_LOCATION } from "../actions/actionConstants";
 import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP } from "../constants";
 
 const initialState = {
@@ -12,7 +12,7 @@ const initialState = {
         },
         userId: null
     },
-    friendsLocation: {}
+    friendsLocationList: null
 };
 
 export default (state = initialState, action) => {
@@ -43,25 +43,42 @@ export default (state = initialState, action) => {
         case REPLACE_FRIENDS_LOCATION:
             return {
                 ...state,
-                friendsLocation: action.data.reduce((obj, locInfo) => {
-                    obj[locInfo.userId] = locInfo;
-                }, {})
+                friendsLocationList: action.data.map(locInfo => {
+                    locInfo.isVisible = true;
+                    // const friend = state.allFriends.find(frnd => frnd.userId === locInfo.userId);
+                    // if (friend) locInfo.profilePicture = friend.profilePicture;
+                    return locInfo;
+                })
             }
 
-        case UPDATE_FRIENDS_LOCATION:
+        case ADD_FRIENDS_LOCATION:
+            const updatedLocList = state.friendsLocationList ? [...state.friendsLocationList] : [];
             return {
                 ...state,
-                friendsLocation: action.data.friendsIdList.reduce((obj, locInfo) => {
-                    obj[locInfo.userId] = locInfo;
-                }, state.friendsLocation)
+                friendsLocationList: action.data.reduce((list, locInfo) => {
+                    locInfo.isVisible = true;
+                    // const friend = state.allFriends.find(frnd => frnd.userId === locInfo.userId);
+                    // if (friend) locInfo.profilePicture = friend.profilePicture;
+                    list.push(locInfo);
+                    return list;
+                }, updatedLocList)
             }
 
         case HIDE_FRIENDS_LOCATION:
+            const updatedList = [...state.friendsLocationList];
+            if (!action.data) {
+                return {
+                    ...state,
+                    friendsLocationList: null
+                }
+            }
+            action.data.forEach(locInfo => {
+                const idx = updatedList.findIndex(info => info.userId === locInfo.userId);
+                updatedList[idx] = { ...updatedList[idx], isVisible: false };
+            });
             return {
                 ...state,
-                friendsLocation: action.data.reduce((obj, friendId) => {
-                    obj[friendId] = null;
-                }, state.friendsLocation)
+                friendsLocationList: action.data.length === updatedList.length ? null : updatedList
             }
 
         case GET_FRIEND_INFO:
@@ -158,28 +175,26 @@ export default (state = initialState, action) => {
             };
 
         case UPDATE_ONLINE_STATUS:
-            const { allFriends } = state;
+            const updatedFriendsList = [...state.allFriends];
             action.data.friendList.forEach(friend => {
-                const idx = allFriends.findIndex(frnd => frnd.userId === friend.userId);
+                const idx = updatedFriendsList.findIndex(frnd => frnd.userId === friend.userId);
                 if (idx > -1) {
-                    allFriends[idx].isOnline = true;
+                    updatedFriendsList[idx] = { ...updatedFriendsList[idx], isOnline: true };
                 }
             });
             return {
                 ...state,
-                allFriends: allFriends
+                allFriends: updatedFriendsList
             };
 
         case UPDATE_FRIEND_IN_LIST:
             let index = state.allFriends.findIndex((friend) => { return friend.userId === action.data.userId })
             if (index > -1) {
-                const friend = state.allFriends[index];
-                friend.profilePicture = action.data.profilePicture;
                 return {
                     ...state,
                     allFriends: [
                         ...state.allFriends.slice(0, index),
-                        friend,
+                        { ...state.allFriends[index], profilePicture: action.data.profilePicture },
                         ...state.allFriends.slice(index + 1)
                     ]
                 }

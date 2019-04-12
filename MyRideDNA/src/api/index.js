@@ -1,7 +1,7 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
     replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
-    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetingStateOnLogout, updateFriendsLocationAction, replaceFriendsLocationAction
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetingStateOnLogout, addFriendsLocationAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE } from '../constants';
 import axios from 'axios';
@@ -772,6 +772,8 @@ export const getAllFriends = (friendType, userId, pageNumber) => {
                 if (res.status === 200) {
                     console.log('getFriendList success :', res.data)
                     dispatch(toggleLoaderAction(false));
+                    // DOC: Calling for getting online friends
+                    dispatch(getAllOnlineFriends(userId));
                     if (pageNumber === 0) {
                         dispatch(replaceFriendListAction({ friendType, friendList: res.data }))
                     } else {
@@ -780,9 +782,9 @@ export const getAllFriends = (friendType, userId, pageNumber) => {
                 }
             })
             .catch(er => {
-                console.log(`getAllFriends: `, er.response);
+                console.log(`getAllFriends: `, er.response || er);
                 // TODO: Dispatch error info action
-                pageNumber > 0 && dispatch(toggleLoaderAction(false));
+                dispatch(toggleLoaderAction(false));
             })
     };
 }
@@ -953,7 +955,7 @@ export const getFriendsLocationList = (userId, friendsIdList) => {
             .then(res => {
                 if (res.status === 200) {
                     console.log('getFriendsLocationList sucess : ', res);
-                    dispatch(replaceFriendsLocationAction(res.data));
+                    res.data.length > 0 && dispatch(addFriendsLocationAction(res.data));
                 }
             })
             .catch(er => {
