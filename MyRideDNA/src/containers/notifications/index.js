@@ -15,6 +15,10 @@ class Notifications extends Component {
         super(props);
     }
 
+    componentDidMount() {
+        this.props.getAllNotifications(this.props.user.userId);
+    }
+
     toggleAppNavigation = () => this.props.showAppNavMenu();
 
     componentWillUnmount() {
@@ -87,6 +91,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
+        getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Notifications);

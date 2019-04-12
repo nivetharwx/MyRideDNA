@@ -3,7 +3,10 @@ import { PageKeys } from "../constants";
 
 const initialState = {
     showMenu: false,
-    currentScreen: PageKeys.MAP
+    currentScreen: {
+        name: PageKeys.MAP,
+        params: {}
+    }
 };
 
 export default (state = initialState, action) => {

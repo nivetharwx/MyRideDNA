@@ -38,6 +38,7 @@ class MyProfileTab extends Component {
 
     componentDidMount() {
         this.props.getSpaceList(this.props.user.userId);
+        console.log(this.props.user);
         if (this.props.user.profilePictureId && !this.props.user.profilePicture) {
             this.setState({ isLoadingProfPic: true });
             this.props.getUserProfilePicture(this.state.profilePicId);

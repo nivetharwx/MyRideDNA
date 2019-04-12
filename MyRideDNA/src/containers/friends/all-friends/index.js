@@ -6,7 +6,7 @@ import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, 
 import { BaseModal } from '../../../components/modal';
 import { LinkButton } from '../../../components/buttons';
 import { ThumbnailCard } from '../../../components/cards';
-import { openFriendProfileAction, updateFriendInListAction } from '../../../actions';
+import { openFriendProfileAction, updateFriendInListAction, screenChangeAction } from '../../../actions';
 import { FloatingAction } from 'react-native-floating-action';
 import { Icon as NBIcon, Thumbnail } from 'native-base';
 import { Actions } from 'react-native-router-flux';
@@ -49,7 +49,7 @@ const FLOAT_ACTIONS = [{
 },];
 
 class AllFriendsTab extends Component {
-    FRIEND_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => this.openProfile() }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: `Show\nlocation`, id: 'location', handler: () => { } }, { text: 'Chat', id: 'chat', handler: () => { this.openChatPage()} }, { text: 'Call', id: 'call', handler: () => { } }, { text: 'Garage', id: 'garage', handler: () => { } }, { text: 'Unfriend', id: 'unfriend', handler: () => this.doUnfriend() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
+    FRIEND_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => this.openProfile() }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: `Show\nlocation`, id: 'location', handler: () => { } }, { text: 'Chat', id: 'chat', handler: () => { this.openChatPage() } }, { text: 'Call', id: 'call', handler: () => { } }, { text: 'Garage', id: 'garage', handler: () => { } }, { text: 'Unfriend', id: 'unfriend', handler: () => this.doUnfriend() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     UNKNOWN_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Send\nRequest', id: 'sendRequest', handler: () => this.sendFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     SENT_REQUEST_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Cancel\nRequest', id: 'cancelRequest', handler: () => this.cancelFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     RECEIVED_REQUEST_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Accept\nRequest', id: 'acceptRequest', handler: () => { } }, { text: 'Reject\nRequest', id: 'rejectRequest', handler: () => { } }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
@@ -73,7 +73,6 @@ class AllFriendsTab extends Component {
             FLOAT_ACTIONS[actionBtnIdx] = { ...FLOAT_ACTIONS[actionBtnIdx], ...DEFAULT_FLOAT_ACTION_STYLE };
             FLOAT_ACTIONS[FLOAT_ACTIONS.length - 1] = { ...FLOAT_ACTIONS[FLOAT_ACTIONS.length - 1], ...ACTIVE_FLOAT_ACTION_STYLE };
         }
-        
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -87,7 +86,7 @@ class AllFriendsTab extends Component {
                     this.props.getPicture(friend.profilePictureId, friend.userId)
                 }
             })
-            this.props.getAllOnlineFriends(this.props.user.userId);
+            // this.props.getAllOnlineFriends(this.props.user.userId);
         }
         if (this.props.refreshContent === true && prevProps.refreshContent === false) {
             this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0);
@@ -167,9 +166,9 @@ class AllFriendsTab extends Component {
         const { selectedPerson } = this.state;
         person = person || selectedPerson;
 
-        Actions.push(PageKeys.CHAT, { friend: person})
+        Actions.push(PageKeys.CHAT, { friend: person })
         if (this.state.isVisibleOptionsModal)
-        this.onCancelOptionsModal();
+            this.onCancelOptionsModal();
     }
 
     onPullRefresh = () => {
@@ -384,6 +383,7 @@ const mapDispatchToProps = (dispatch) => {
         }, (error) => {
             dispatch(updateFriendInListAction({ userId: friendId }))
         }),
+        changeScreen: (screenProps) => dispatch(screenChangeAction(screenProps)),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(AllFriendsTab);
