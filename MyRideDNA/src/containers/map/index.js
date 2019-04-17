@@ -21,7 +21,7 @@ import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon } from 'native-base';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationNameAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction } from '../../actions';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationNameAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout } from '../../actions';
 import { SearchBox } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -48,6 +48,7 @@ import MenuModal from '../../components/modal';
 import { BasicHeader } from '../../components/headers';
 import { CreateRide } from '../create-ride';
 import BackgroundGeolocation from 'react-native-mauron85-background-geolocation';
+import axios from 'axios';
 
 MapboxGL.setAccessToken(MAP_ACCESS_TOKEN);
 // DOC: JS mapbox library to make direction api calls
@@ -173,8 +174,10 @@ export class Map extends Component {
                     }
 
                     if (ride.waypoints.length > 0) {
+                        let idx = 1;
                         updatedState.markerCollection.features = ride.waypoints.reduce((arr, loc) => {
-                            arr.push(this.createMarkerFeature([loc.lng, loc.lat], ICON_NAMES.WAYPOINT_DEFAULT));
+                            arr.push(this.createMarkerFeature([loc.lng, loc.lat], ICON_NAMES.WAYPOINT_DEFAULT, idx));
+                            idx++;
                             return arr;
                         }, [...updatedState.markerCollection.features]);
                     }
@@ -216,8 +219,10 @@ export class Map extends Component {
                     }
 
                     if (ride.waypoints.length > 0) {
+                        let idx = 1;
                         updatedState.markerCollection.features = ride.waypoints.reduce((arr, loc) => {
-                            arr.push(this.createMarkerFeature([loc.lng, loc.lat], ICON_NAMES.WAYPOINT_DEFAULT));
+                            arr.push(this.createMarkerFeature([loc.lng, loc.lat], ICON_NAMES.WAYPOINT_DEFAULT, idx));
+                            idx++;
                             return arr;
                         }, updatedState.markerCollection.features);
                     }
@@ -258,6 +263,19 @@ export class Map extends Component {
                 // DOC: Fetch route for build ride if waypoints are more than one
                 if (!ride.isRecorded && updatedState.markerCollection && updatedState.markerCollection.features.length > 1) {
                     this.fetchDirections();
+                }
+                if (ride.isRecorded) {
+                    let coordinates = [];
+                    if (ride.source) {
+                        coordinates.push([ride.source.lng, ride.source.lat]);
+                    }
+                    coordinates.push(...this.state.gpsPointCollection.features[0].geometry.coordinates);
+                    if (ride.destination) {
+                        coordinates.push([ride.destination.lng, ride.destination.lat]);
+                    }
+                    // DOC: Update the mapbounds to include the recorded ride path
+                    const newBounds = turfBBox({ coordinates, type: 'LineString' });
+                    this._mapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 20, 1000);
                 }
             });
         }
@@ -301,7 +319,7 @@ export class Map extends Component {
         }
         const prevRide = prevProps.ride;
         const newRide = this.props.ride;
-        if (prevRide !== newRide && (prevRide.rideId === null || (prevRide.rideId === newRide.rideId))) {
+        if (prevRide !== newRide && newRide.isRecorded === false && (prevRide.rideId === null || (prevRide.rideId === newRide.rideId))) {
             if (prevRide.source !== newRide.source) {
                 if (prevRide.source === null) {
                     console.log("source added");
@@ -642,33 +660,27 @@ export class Map extends Component {
     }
 
     async getCoordsOnRoad(gpsPoints, gpsPointTimestamps, callback) {
-        try {
-            const response = await mapMatchingClient
-                .getMatch({
-                    points: gpsPoints.reduce((arr, coord) => {
-                        arr.push({ coordinates: coord });
-                        return arr
-                    }, []),
-                    // timestamps: gpsPointTimestamps,  // TODO: Failed the param timestamps in mapbox api
-                    tidy: true,
-                    geometries: 'geojson',
-                })
-                .send();
-            const { matchings } = response.body;
-            if (matchings.length === 0) {
-                console.log("No matching coords found");
-                callback(response.body, [], 0);
-                return;
-            }
-            // TODO: Return distance and duration from matching object (here matchings[0])
-            const trackpoints = matchings[0].geometry.coordinates.reduce((arr, coord, index) => {
-                arr.push(coord[1], coord[0], gpsPointTimestamps[index]);
-                return arr;
-            }, []);
-            callback(response.body, trackpoints, matchings[0].distance);
-        } catch (er) {
-            console.log(er);
-        }
+        let locPathParam = gpsPoints.reduce((param, coord) => param + coord.join(',') + ';', "");
+        locPathParam = locPathParam.slice(0, locPathParam.length - 1);
+        axios.get(`https://api.mapbox.com/matching/v5/mapbox/driving/${locPathParam}?tidy=true&geometries=geojson&access_token=${JS_SDK_ACCESS_TOKEN}`)
+            .then(res => {
+                const { matchings } = res.data;
+                // const { matchings } = { "matchings": [{ "confidence": 0.9857242020570576, "geometry": { "coordinates": [[-117.172834, 32.712036], [-117.172907, 32.712246], [-117.17292, 32.71244], [-117.172922, 32.71256]], "type": "LineString" }, "legs": [{ "summary": "", "weight": 2.3, "duration": 2.3, "steps": [], "distance": 24.4 }, { "summary": "", "weight": 2.1, "duration": 2.1, "steps": [], "distance": 21.7 }, { "summary": "", "weight": 1.3, "duration": 1.3, "steps": [], "distance": 13.3 }], "weight_name": "routability", "weight": 5.7, "duration": 5.7, "distance": 59.39999999999999 }], "tracepoints": [{ "alternatives_count": 0, "waypoint_index": 0, "matchings_index": 0, "distance": 1.3853542029671861, "name": "North Harbor Drive", "location": [-117.172834, 32.712036] }, { "alternatives_count": 0, "waypoint_index": 1, "matchings_index": 0, "distance": 2.569666519692723, "name": "North Harbor Drive", "location": [-117.172907, 32.712246] }, { "alternatives_count": 0, "waypoint_index": 2, "matchings_index": 0, "distance": 0.9374409048322664, "name": "North Harbor Drive", "location": [-117.17292, 32.71244] }, { "alternatives_count": 9, "waypoint_index": 3, "matchings_index": 0, "distance": 0.18748818070001655, "name": "North Harbor Drive", "location": [-117.172922, 32.71256] }], "code": "Ok" };
+                if (matchings.length === 0) {
+                    console.log("No matching coords found");
+                    callback(res.data, [], 0);
+                    return;
+                }
+                // TODO: Return distance and duration from matching object (here matchings[0])
+                const trackpoints = matchings[0].geometry.coordinates.reduce((arr, coord, index) => {
+                    arr.push(coord[1], coord[0], gpsPointTimestamps[index]);
+                    return arr;
+                }, []);
+                callback(res.data, trackpoints, matchings[0].distance);
+            })
+            .catch(er => {
+                console.log("matching error: ", er);
+            });
     }
 
     onBackButtonPress = () => {
@@ -788,7 +800,7 @@ export class Map extends Component {
 
     toggleReplaceOption = () => this.setState({ isUpdatingWaypoint: !this.state.isUpdatingWaypoint });
 
-    createMarkerFeature = (coords, iconName) => {
+    createMarkerFeature = (coords, iconName, title = '') => {
         return {
             type: 'Feature',
             id: coords.join(''),
@@ -798,6 +810,7 @@ export class Map extends Component {
             },
             properties: {
                 icon: iconName || ICON_NAMES.WAYPOINT_DEFAULT,
+                title: 29
             },
         };
     }
@@ -973,7 +986,12 @@ export class Map extends Component {
         } else if (isDestinationSelected && this.state.isUpdatingWaypoint) {
             markerIcon = ICON_NAMES.DESTINATION_DEFAULT;
         }
-        const newMarker = this.createMarkerFeature(mapCenter, markerIcon);
+        let newMarker = null;
+        if (markerIcon === ICON_NAMES.WAYPOINT_DEFAULT) {
+            newMarker = this.createMarkerFeature(mapCenter, markerIcon, this.props.ride.waypoints.length + 1);
+        } else {
+            newMarker = this.createMarkerFeature(mapCenter, markerIcon);
+        }
 
         if (this.state.isUpdatingWaypoint) { //DOC: nextWaypointIndex will be the activeMarkerIndex of the array
             nextWaypointIndex = this.state.activeMarkerIndex;
@@ -1196,7 +1214,12 @@ export class Map extends Component {
         } else if (isDestinationSelected && this.state.isUpdatingWaypoint) {
             markerIcon = ICON_NAMES.DESTINATION_DEFAULT;
         }
-        const newMarker = this.createMarkerFeature(place.geometry.coordinates, markerIcon);
+        let newMarker = null;
+        if (markerIcon === ICON_NAMES.WAYPOINT_DEFAULT) {
+            newMarker = this.createMarkerFeature(place.geometry.coordinates, markerIcon, this.props.ride.waypoints.length + 1);
+        } else {
+            newMarker = this.createMarkerFeature(place.geometry.coordinates, markerIcon);
+        }
 
         if (this.state.isUpdatingWaypoint) { //DOC: nextWaypointIndex will be the activeMarkerIndex of the array
             nextWaypointIndex = activeMarkerIndex;
@@ -1276,8 +1299,8 @@ export class Map extends Component {
             Geolocation.getCurrentPosition(
                 ({ coords }) => {
                     rideDetails.source = {
-                        lat: currentLocation.location[1],
-                        lng: currentLocation.location[0],
+                        lat: coords.latitude,
+                        lng: coords.longitude,
                         date: dateTime
                     };
 
@@ -1317,7 +1340,6 @@ export class Map extends Component {
     }
 
     onPressStopRide = () => {
-        console.log("StopRide called");
         const { ride } = this.props;
         this.watchID != null && clearInterval(this.watchID);
         const { gpsPointCollection } = this.state;
@@ -1352,7 +1374,7 @@ export class Map extends Component {
             const { ride } = this.props;
             replaceRide(ride.rideId, { source: ride.source, destination: ride.destination, waypoints: ride.waypoints });
         }
-        if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar();
+        if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
         this.props.clearRideFromMap();
     }
 
@@ -1365,6 +1387,7 @@ export class Map extends Component {
         this.watchID != null && clearInterval(this.watchID);
         this.notificationInterval != null && clearInterval(this.notificationInterval);
         BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPress);
+        this.props.resetStoreToDefault();
     }
 
     renderMapControlsForRide() {
@@ -1429,9 +1452,9 @@ export class Map extends Component {
         return [...arr.slice(0, index), data, ...arr.slice(index + 1)]
     }
 
-    onCloseOptionsBar = () => {
+    onCloseOptionsBar = (cancelMarkerUpdate) => {
         const { markerCollection, activeMarkerIndex } = this.state;
-        if (activeMarkerIndex === -1) {
+        if (activeMarkerIndex === -1 || cancelMarkerUpdate) {
             Animated.timing(
                 this.state.optionsBarRightAnim,
                 {
@@ -1719,7 +1742,7 @@ export class Map extends Component {
                         {
                             gpsPointCollection.features[0].geometry.coordinates.length >= 2 ?
                                 <MapboxGL.ShapeSource id='recordRidePathLayer' shape={gpsPointCollection}>
-                                    <MapboxGL.LineLayer id='recordRidePath' style={[{ lineColor: 'red', lineWidth: 1, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
+                                    <MapboxGL.LineLayer id='recordRidePath' style={[{ lineColor: 'red', lineWidth: 3, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
                                 </MapboxGL.ShapeSource>
                                 : null
                         }
@@ -1737,7 +1760,7 @@ export class Map extends Component {
                                     shape={markerCollection}
                                     images={shapeSourceImages}
                                     onPress={this.onPressMarker}>
-                                    <MapboxGL.SymbolLayer id="exampleIconName" style={MapboxStyles.icon} />
+                                    <MapboxGL.SymbolLayer id="exampleIconName" style={[MapboxStyles.icon, MapboxStyles.markerTitle]} />
                                 </MapboxGL.ShapeSource>
                                 : null
                         }
@@ -1994,6 +2017,7 @@ const mapDispatchToProps = (dispatch) => {
         updateSourceOrDestinationName: (identifier, locationName) => dispatch(updateSourceOrDestinationNameAction({ identifier, locationName })),
         updateWaypointName: (waypointId, locationName) => dispatch(updateWaypointNameAction({ waypointId, locationName })),
         hideFriendsLocation: () => dispatch(hideFriendsLocationAction()),
+        resetStoreToDefault: () => dispatch(resetStateOnLogout())
     }
 }
 
@@ -2052,5 +2076,15 @@ const MapboxStyles = MapboxGL.StyleSheet.create({
         iconImage: FRIENDS_LOCATION_ICON,
         iconSize: IS_ANDROID ? 0.17 : 0.25,
         iconAnchor: 'bottom',
+    },
+    markerTitle: {
+        textField: '{title}',
+        textMaxWidth: 10,
+        textColor: '#fff',
+        textAnchor: 'center',
+        textHaloWidth: 2,
+        // textSize: IS_ANDROID ? 16 : 10,
+        textOffset: IS_ANDROID ? [0, -1.5] : [0, -2.3],
+        textHaloColor: 'rgba(235, 134, 30, 0.9)',
     }
 });

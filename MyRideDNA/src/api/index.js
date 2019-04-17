@@ -1,7 +1,7 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
     replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
-    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetingStateOnLogout, addFriendsLocationAction
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE } from '../constants';
 import axios from 'axios';
@@ -141,7 +141,7 @@ export const logoutUser = (userId, accessToken) => {
                     AsyncStorage.removeItem(USER_AUTH_TOKEN).then(() => {
                         Actions.reset(PageKeys.LOGIN);
                     });
-                    setTimeout(() => { dispatch(resetingStateOnLogout()) }, 1000)
+                    setTimeout(() => { dispatch(resetStateOnLogout()) }, 1000)
                 }
             })
             .catch(er => {
@@ -280,7 +280,6 @@ export const getAllBuildRides = (userId) => {
         axios.get(RIDE_BASE_URL + `getAllBuildRides?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log('getAllBuildRides sucess : ',res)
                     dispatch(toggleLoaderAction(false));
                     dispatch(replaceRideListAction({ rideType: RIDE_TYPE.BUILD_RIDE, rideList: res.data }));
                 }
@@ -458,7 +457,7 @@ export const addTrackpoints = (trackpoints, distance, ride, userId) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log("addTrackpoints error: ", er || er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -476,7 +475,7 @@ export const pauseRecordRide = (pauseTime, trackpoints, distance, ride, userId) 
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log("pauseRecordRide error: ", er || er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -494,7 +493,7 @@ export const completeRecordRide = (endTime, trackpoints, distance, ride, userId)
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log("completeRecordRide error: ", er || er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -511,7 +510,7 @@ export const continueRecordRide = (resumeTime, ride, userId) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log("resumeRecordRide error: ", er || er.response);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -754,7 +753,7 @@ export const getRideByRideId = (rideId) => {
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
-                    return dispatch(updateRideAction({ ...res.data }));
+                    dispatch(updateRideAction({ ...res.data }));
                 }
             })
             .catch(er => {
@@ -951,9 +950,11 @@ export const doUnfriend = (senderId, personId) => {
 }
 export const getFriendsLocationList = (userId, friendsIdList) => {
     return dispatch => {
+        dispatch(toggleLoaderAction(true));
         axios.put(GRAPH_BASE_URL + `getFriendsLocationList`, { userId, friendsIdList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    dispatch(toggleLoaderAction(false));
                     console.log('getFriendsLocationList sucess : ', res);
                     res.data.length > 0 && dispatch(addFriendsLocationAction(res.data));
                 }
@@ -1023,7 +1024,7 @@ export const getAllGroupMembers = (groupId, userId) => {
         axios.get(FRIENDS_BASE_URL + `getAllGroupMembers?groupId=${groupId}&memberId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log('getAllGroupMembers sucess: ',res.data);
+                    console.log('getAllGroupMembers sucess: ', res.data);
                     dispatch(toggleLoaderAction(false));
                     return dispatch(resetMembersFromCurrentGroupAction(res.data))
                 }
@@ -1041,7 +1042,7 @@ export const addMembers = (groupId, memberDetails) => {
         axios.put(FRIENDS_BASE_URL + `addMembers?groupId=${groupId}`, memberDetails, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log('addMembers sucess: ',res.data);
+                    console.log('addMembers sucess: ', res.data);
                     dispatch(toggleLoaderAction(false));
                     return dispatch(addMembersToCurrentGroupAction(res.data))
                 }

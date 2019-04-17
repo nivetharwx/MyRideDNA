@@ -501,7 +501,7 @@ export const reorderRideWaypointsAction = (data) => (
         data: data
     }
 );
-export const resetingStateOnLogout = () => (
+export const resetStateOnLogout = () => (
     {
         type: RESETING_STATE_ON_LOGOUT,
     }

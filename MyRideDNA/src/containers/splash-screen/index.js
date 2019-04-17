@@ -23,7 +23,6 @@ class SplashScreen extends React.Component {
         const connectionInfo = await NetInfo.getConnectionInfo();
         if (connectionInfo.type === 'none') {
             Alert.alert('Network Error', 'Failed to connect to internet');
-           
         } else {
             this.handleFirstConnectivityChange(connectionInfo)
         }
@@ -62,7 +61,7 @@ class SplashScreen extends React.Component {
                         Actions.reset(PageKeys.LOGIN);
                     })
             }
-            else{
+            else {
                 Actions.reset(PageKeys.LOGIN);
             }
         }

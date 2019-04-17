@@ -5,6 +5,7 @@
 	};
 	objectVersion = 46;
 	objects = {
+
 /* Begin PBXBuildFile section */
 		0068BD2B5BB14CDC9A0DB5AF /* libimageCropPicker.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 264BCBC2926F4F1786447140 /* libimageCropPicker.a */; };
 		00C302E51ABCBA2D00DB3ED1 /* libRCTActionSheet.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 00C302AC1ABCB8CE00DB3ED1 /* libRCTActionSheet.a */; };
@@ -794,7 +795,6 @@
 				6BB2E64997EE48D68F037728 /* libRNDeviceInfo.a */,
 				8D94E6BA1CE64E3A915EF7B3 /* libRNSettings.a */,
 				264BCBC2926F4F1786447140 /* libimageCropPicker.a */,
-				08CF47422D7149DFA7DD9EA9 /* libRNFetchBlob.a */,
 				8912D1BD134248A7BC4170DC /* libRNDeviceInfo-tvOS.a */,
 				2F88526D4D154C709AD0BBC4 /* libRCTContacts.a */,
 				5BAF1453989D49038B4D3224 /* libRCTBackgroundGeolocation.a */,
@@ -1695,9 +1695,7 @@
 				INFOPLIST_FILE = MyRideDNATests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lc++",
@@ -1731,9 +1729,7 @@
 				INFOPLIST_FILE = MyRideDNATests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lc++",
@@ -1850,9 +1846,7 @@
 				);
 				INFOPLIST_FILE = "MyRideDNA-tvOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lc++",
@@ -1894,9 +1888,7 @@
 				);
 				INFOPLIST_FILE = "MyRideDNA-tvOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lc++",
@@ -1937,9 +1929,7 @@
 				);
 				INFOPLIST_FILE = "MyRideDNA-tvOSTests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lc++",
@@ -1980,9 +1970,7 @@
 				);
 				INFOPLIST_FILE = "MyRideDNA-tvOSTests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lc++",
