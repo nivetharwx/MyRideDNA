@@ -3,14 +3,14 @@ import { connect } from 'react-redux';
 import { StyleSheet, StatusBar, Animated, ImageBackground, AsyncStorage, TouchableWithoutFeedback, Text, View, FlatList, TouchableOpacity } from 'react-native';
 import { BasicHeader } from '../../components/headers';
 import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon, Toast } from 'native-base';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, USER_AUTH_TOKEN, WindowDimensions } from '../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, USER_AUTH_TOKEN, WindowDimensions, FRIEND_TYPE } from '../../constants';
 import styles from './styles';
 import AllFriendsTab from './all-friends';
 import GroupListTab from './group-list';
-import { appNavMenuVisibilityAction } from '../../actions';
+import { appNavMenuVisibilityAction, updateFriendInListAction, resetCurrentFriendAction } from '../../actions';
 import { ShifterButton, IconButton, LinkButton } from '../../components/buttons';
 import { IconLabelPair } from '../../components/labels';
-import { logoutUser, getAllFriendRequests, getPicture, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, createFriendGroup } from '../../api';
+import { logoutUser, getAllFriendRequests, getPicture, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, createFriendGroup, getAllFriends } from '../../api';
 import { BaseModal } from '../../components/modal';
 import { LabeledInput } from '../../components/inputs';
 import { getFormattedDateFromISO } from '../../util';
@@ -24,13 +24,10 @@ class Friends extends Component {
     position = new Animated.ValueXY();
     dimensions = new Animated.ValueXY();
     animation = new Animated.Value(0);
-    randomData = [{
-        name: 'ayush',
-        id: 1
-    }, { name: 'asdasd', id: 2 }]
     constructor(props) {
         super(props);
         this.state = {
+            isRefreshing: false,
             headerSearchMode: false,
             searchQuery: '',
             activeTab: -1,
@@ -46,6 +43,8 @@ class Friends extends Component {
             this.tabsRef.props.goToPage(0)
         }, 0);
         this.getAllFriendRequestFunction()
+        this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0);
+        this.props.resetCurrentFriend();
     }
 
 
@@ -57,6 +56,25 @@ class Friends extends Component {
                 this.openProfile();
             }
         }
+
+
+        if (prevProps.allFriends !== this.props.allFriends) {
+            this.props.allFriends.forEach((friend) => {
+                if (!friend.profilePicture && friend.profilePictureId) {
+                    this.props.getPicture(friend.profilePictureId, friend.userId)
+                }
+            })
+        }
+
+        if (prevProps.allFriendRequests !== this.props.allFriendRequests) {
+            if (prevState.isRefreshing === true) {
+                this.setState({ isRefreshing: false });
+            }
+        }
+    }
+    onPullRefresh = () => {
+        this.setState({ isRefreshing: true });
+        this.getAllFriendRequestFunction()
     }
 
     getAllFriendRequestFunction = () => {
@@ -71,6 +89,9 @@ class Friends extends Component {
                 this.getAllFriendRequestFunction()
             }
         });
+        if (from === 2 && i === 0) {
+            this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0);
+        }
     }
 
     onChangeFriendsTab = ({ from, i }) => {
@@ -160,7 +181,15 @@ class Friends extends Component {
                         <NBIcon active name="person" type='MaterialIcons' style={{ width: widthPercentageToDP(6), color: '#fff' }} />
                     </Left>
                     <Body >
-                        <Text>{`${item.name} (${item.nickname})`}</Text>
+                        {/* <Text>{`${item.name} (${item.nickname})`}</Text> */}
+                        <View style={{ flexDirection: 'row' }}>
+                            <Text>{`${item.name}`}</Text>
+                            {item.nickname ?
+                                <Text>{` (${item.nickname})`}</Text>
+                                : null
+                            }
+                            <IconButton iconProps={{ name: 'call-made', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.headerColor, fontSize: 20 } }} />
+                        </View>
                         <Text>{getFormattedDateFromISO(item.actionDate, '/')}</Text>
                     </Body>
                     <Right>
@@ -176,8 +205,17 @@ class Friends extends Component {
                         <NBIcon active name="person" type='MaterialIcons' style={{ width: widthPercentageToDP(6), color: '#fff' }} />
                     </Left>
                     <Body >
-                        <Text>{item.senderName}</Text>
-                        <Text>({item.senderNickname})</Text>
+                        <View style={{ flexDirection: 'row' }}>
+                            <Text>{`${item.senderName}`}</Text>
+                            {item.senderNickname ?
+                                <Text>{` (${item.senderNickname})`}</Text>
+                                : null
+                            }
+                            <IconButton iconProps={{ name: 'call-received', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.headerColor, fontSize: 20 } }} />
+                        </View>
+                        <Text>{getFormattedDateFromISO(item.actionDate, '/')}</Text>
+                        {/* <Text>{item.senderName}</Text>
+                        <Text>({item.senderNickname})</Text> */}
                     </Body>
                     <Right style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-around' }}>
                         <IconButton iconProps={{ name: 'user-check', type: 'Feather', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={() => this.approvingFriendRequest(item)} />
@@ -217,7 +255,9 @@ class Friends extends Component {
         this.setState({ isVisibleGroupModal: true })
     }
     render() {
-        const { headerSearchMode, searchQuery, activeTab, friendsActiveTab } = this.state;
+        console.log('currentFriend : ', this.props.currentFriend)
+        console.log('user : ', this.props.user)
+        const { headerSearchMode, searchQuery, activeTab, friendsActiveTab, isRefreshing } = this.state;
         const activeImageStyle = {
             width: this.dimensions.x,
             height: this.dimensions.y,
@@ -295,12 +335,12 @@ class Friends extends Component {
                             heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3', borderColor: '#fff' }}>
                                 <IconLabelPair containerStyle={styles.tabContentCont} text={`Requests`} textStyle={{ color: activeTab === 2 ? '#fff' : '#6B7663' }} iconProps={{ name: 'people', type: 'MaterialIcons', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }} />
                                 {
-                                    this.props.allFriendRequests.length > 0 ?
+                                    this.props.allFriendRequests.filter(req => req.requestType === "receivedRequest").length > 0 ?
                                         <View style={{
                                             position: 'absolute', minWidth: widthPercentageToDP(6), height: widthPercentageToDP(5), borderRadius: widthPercentageToDP(2),
                                             backgroundColor: 'red', top: 1, left: 15, borderWidth: 2.5, borderColor: '#fff', justifyContent: 'center', alignItems: 'center', padding: widthPercentageToDP(0.25)
                                         }}>
-                                            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: widthPercentageToDP(3) }}>{this.props.allFriendRequests.length > 99 ? '99+' : this.props.allFriendRequests.length}</Text>
+                                            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: widthPercentageToDP(3) }}>{this.props.allFriendRequests.length > 99 ? '99+' : this.props.allFriendRequests.filter(req => req.requestType === "receivedRequest").length}</Text>
                                         </View>
                                         : null
                                 }
@@ -310,6 +350,8 @@ class Friends extends Component {
                             <View style={{ backgroundColor: '#fff', flex: 1 }}>
                                 <FlatList
                                     data={this.props.allFriendRequests}
+                                    refreshing={isRefreshing}
+                                    onRefresh={this.onPullRefresh}
                                     renderItem={this.renderFriendRequestList}
                                     keyExtractor={this.requestKeyExtractor}
                                 />
@@ -332,12 +374,14 @@ class Friends extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
+    const { allFriends, paginationNum, currentFriend } = state.FriendList;
     const { personInfo, oldPosition } = state.PageOverTab;
     const { allFriendRequests } = state.FriendRequest;
-    return { user, personInfo, oldPosition, allFriendRequests };
+    return { user, personInfo, oldPosition, allFriendRequests, allFriends, paginationNum, currentFriend };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
+        getAllFriends: (friendType, userId, pageNumber) => dispatch(getAllFriends(friendType, userId, pageNumber)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
         getAllRequest: (userId, accessToken) => dispatch(getAllFriendRequests(userId)),
@@ -346,6 +390,12 @@ const mapDispatchToProps = (dispatch) => {
         rejectRequest: (userId, personId, requestId) => dispatch(rejectFriendRequest(userId, personId, requestId)),
         getPicture: (userId, accessToken) => dispatch(getPicture(userId)),
         createFriendGroup: (newGroupInfo) => dispatch(createFriendGroup(newGroupInfo)),
+        getPicture: (pictureId, friendId) => getPicture(pictureId, ({ picture, pictureId }) => {
+            dispatch(updateFriendInListAction({ profilePicture: picture, userId: friendId }))
+        }, (error) => {
+            dispatch(updateFriendInListAction({ userId: friendId }))
+        }),
+        resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Friends);

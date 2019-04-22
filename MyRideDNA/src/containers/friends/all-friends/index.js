@@ -88,16 +88,16 @@ class AllFriendsTab extends Component {
             if (prevState.isRefreshing === true) {
                 this.setState({ isRefreshing: false });
             }
-            this.props.allFriends.forEach((friend) => {
-                if (!friend.profilePicture && friend.profilePictureId) {
-                    this.props.getPicture(friend.profilePictureId, friend.userId)
-                }
-            })
+            // this.props.allFriends.forEach((friend) => {
+            //     if (!friend.profilePicture && friend.profilePictureId) {
+            //         this.props.getPicture(friend.profilePictureId, friend.userId)
+            //     }
+            // })
             // this.props.getAllOnlineFriends(this.props.user.userId);
         }
-        if (this.props.refreshContent === true && prevProps.refreshContent === false) {
-            this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0);
-        }
+        // if (this.props.refreshContent === true && prevProps.refreshContent === false) {
+        //     this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0);
+        // }
         // if (prevProps.searchQuery !== this.props.searchQuery && this.props.searchQuery.slice(-1) !== '') {
         //     Keyboard.dismiss();
         //     this.props.searchForFriend(this.props.searchQuery, this.props.user.userId, 0);

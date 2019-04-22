@@ -93,7 +93,7 @@ export const ThumbnailCard = ({ item, thumbnailPlaceholder, onPress, onLongPress
                     width: widthPercentageToDP(30), height: widthPercentageToDP(30),
                     borderRadius: widthPercentageToDP(15), borderWidth: 6, borderColor: '#231F20', overflow: 'hidden'
                 }]} ref={elRef => thumbnailRef ? thumbnailRef(elRef) : null}>
-                    <Image source={item.profilePicture ? { uri: item.profilePicture } : thumbnailPlaceholder}
+                    <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null:thumbnailPlaceholder}
                         style={{ width: null, height: null, flex: 1 }} />
                 </View>
                 {
