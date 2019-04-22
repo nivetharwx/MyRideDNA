@@ -69,7 +69,13 @@ export default (state = initialState, action) => {
             if (!action.data) {
                 return {
                     ...state,
-                    friendsLocationList: null
+                    friendsLocationList: null,
+                    currentFriend: {
+                        garage: {
+                            garageId: null
+                        },
+                        userId: null
+                    }
                 }
             }
             action.data.forEach(locInfo => {

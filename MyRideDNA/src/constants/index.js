@@ -21,6 +21,7 @@ const APP_HEADER_HEIGHT = IS_ANDROID ? heightPercentageToDP(8.5) : heightPercent
 export const DEVICE_LOCATION_STATE = { ON: 'on', OFF: 'off' };
 
 export const THUMBNAIL_TAIL_TAG = '_thumb';
+export const MEDIUM_TAIL_TAG = '_medium';
 
 const BASE_URL = 'http://104.43.254.82';
 const GRAPH_URL = 'http://40.113.216.90';

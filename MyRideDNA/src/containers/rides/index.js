@@ -62,6 +62,7 @@ export class Rides extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            isRefreshing: false,
             activeTab: 0,
             searchQuery: '',
             headerSearchMode: false,
@@ -115,7 +116,15 @@ export class Rides extends Component {
             }
         } else if (prevProps.sharedRides !== this.props.sharedRides) {
             this.onCancelRenameForm();
+            if (prevState.isRefreshing === true) {
+                this.setState({ isRefreshing: false });
+            }
         }
+    }
+
+    onPullRefresh = () => {
+        this.setState({ isRefreshing: true });
+        this.props.getAllPublicRides(this.props.user.userId);
     }
 
     showDeleteSuccessMessage() {
@@ -243,7 +252,7 @@ export class Rides extends Component {
     }
 
     render() {
-        const { activeTab, searchQuery, headerSearchMode, isVisibleRenameModal, isVisibleOptionsModal } = this.state;
+        const { activeTab, searchQuery, headerSearchMode, isVisibleRenameModal, isVisibleOptionsModal,isRefreshing } = this.state;
         const { buildRides, recordedRides, sharedRides, user } = this.props;
         return (
             <View style={{ flex: 1 }}>
@@ -346,6 +355,8 @@ export class Rides extends Component {
                                     sharedRides.length > 0 ?
                                         <FlatList
                                             data={sharedRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
+                                            refreshing={isRefreshing}
+                                            onRefresh={this.onPullRefresh}
                                             renderItem={({ item, index }) => <ListItem style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
                                                 <Left style={{ flex: 1 }}>
                                                     <TouchableOpacity style={{ flex: 1 }}

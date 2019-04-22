@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, View, Text, StatusBar, ImageBackground, ScrollView, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG, RELATIONSHIP, PageKeys } from '../../constants/index';
+import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG, RELATIONSHIP, PageKeys, MEDIUM_TAIL_TAG } from '../../constants/index';
 import { ShifterButton, IconButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction } from '../../actions';
 import { Tabs, Tab, ScrollableTab, TabHeading, Accordion, ListItem, Left } from 'native-base';
@@ -36,6 +36,7 @@ class FriendsProfile extends Component {
             this.setState({ activeTab: this.state.activeTab });
         }, 50);
         this.props.getFriendsInfo(this.props.friendIdx, this.props.friendType);
+        
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -71,7 +72,7 @@ class FriendsProfile extends Component {
                         //         this.props.getProfilePicture(this.state.profilePicId, this.props.currentFriend.userId, this.props.friendType);
                         //     });
                         // }, 300);
-                        this.setState(prevState => ({ profilePicId: prevState.profilePicId.replace(THUMBNAIL_TAIL_TAG, '') }), () => {
+                        this.setState(prevState => ({ profilePicId: prevState.profilePicId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG) }), () => {
                             this.props.getProfilePicture(this.state.profilePicId, this.props.currentFriend.userId, this.props.friendType);
                         });
                     } else {
@@ -132,7 +133,9 @@ class FriendsProfile extends Component {
         this.setState({ activeTab: i }, () => {
             if (this.state.activeTab === 1) {
                 // GARAGE Tab
-                this.props.getGarageInfo(this.props.currentFriend.userId, this.props.friendType);
+                if (this.props.currentFriend.garage.garageId === null) {
+                    this.props.getGarageInfo(this.props.currentFriend.userId, this.props.friendType);
+                }
             }
             else if (this.state.activeTab === 2) {
                 this.props.getFirendsRideInfo(this.props.currentFriend.userId, RELATIONSHIP.FRIEND)
@@ -154,6 +157,7 @@ class FriendsProfile extends Component {
     render() {
         const { user, currentFriend } = this.props;
         const { activeTab, isLoadingProfPic } = this.state;
+        console.log('currentFriend : ',currentFriend)
         return currentFriend === null
             ? <View style={styles.fill} />
             : <View style={styles.fill}>
