@@ -56,7 +56,6 @@ class FriendsProfile extends Component {
                         if (this.FRIENDS_PROFILE_ICONS.findIndex(icon => icon.name === 'location-on') === -1) {
                             this.FRIENDS_PROFILE_ICONS.push({ name: 'location-on', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.showFriendsLocation() });
                         }
-                        console.log("Actions: ", this.FRIENDS_PROFILE_ICONS);
                     }
                     if (this.props.currentFriend.profilePictureId) {
                         this.setState({ profilePicId: this.props.currentFriend.profilePictureId, isLoadingProfPic: true });
@@ -157,7 +156,6 @@ class FriendsProfile extends Component {
     render() {
         const { user, currentFriend } = this.props;
         const { activeTab, isLoadingProfPic } = this.state;
-        console.log('currentFriend : ',currentFriend)
         return currentFriend === null
             ? <View style={styles.fill} />
             : <View style={styles.fill}>

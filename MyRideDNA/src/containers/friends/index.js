@@ -255,8 +255,6 @@ class Friends extends Component {
         this.setState({ isVisibleGroupModal: true })
     }
     render() {
-        console.log('currentFriend : ', this.props.currentFriend)
-        console.log('user : ', this.props.user)
         const { headerSearchMode, searchQuery, activeTab, friendsActiveTab, isRefreshing } = this.state;
         const activeImageStyle = {
             width: this.dimensions.x,

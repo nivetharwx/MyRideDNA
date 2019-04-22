@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView, AsyncStorage } from 'react-native';
 import { Actions } from 'react-native-router-flux';
-import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG } from '../../../constants/index';
+import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../../constants/index';
 import { IconButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
 import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction } from '../../../actions';
@@ -21,13 +21,13 @@ class MyProfileTab extends Component {
         edit: { name: 'account-edit', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(8) }, onPress: () => Actions.push(PageKeys.EDIT_PROFILE_FORM) },
     };
     hScrollView = null;
+    profilePicture = null;
     constructor(props) {
         super(props);
         this.state = {
             activeTab: -1,
             bikes: [10, 20, 30, 40, 50],
             isLoadingProfPic: false,
-            profilePicId: props.user.profilePictureId || '',
             pictureLoader: {}
         };
     }
@@ -36,53 +36,44 @@ class MyProfileTab extends Component {
         StatusBar.setBarStyle('light-content');
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         // this.props.getSpaceList(this.props.user.userId);
         if (this.props.garage.garageId === null) {
             this.props.getGarageInfo(this.props.user.userId);
         }
-
-        if (this.props.user.profilePictureId && !this.props.user.profilePicture) {
-            this.setState({ isLoadingProfPic: true });
-            this.props.getUserProfilePicture(this.state.profilePicId);
+        if (!this.props.user.profilePicture) {
+            this.profilePicture = await AsyncStorage.getItem('profilePicture');
+            if (this.profilePicture) {
+                this.profilePicture = JSON.parse(this.profilePicture);
+                if (Object.keys(this.profilePicture)[0] === this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)) {
+                    this.props.updateUser({ profilePicture: this.profilePicture[this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)] });
+                    return;
+                }
+            }
+            if (this.props.user.profilePictureId) {
+                this.setState({ isLoadingProfPic: true });
+                this.props.getUserProfilePicture(this.props.user.profilePictureId);
+            }
         }
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        if (prevProps.user !== this.props.user) {
-            if (!prevProps.user.profilePicture || prevProps.user.profilePictureId !== this.state.profilePicId) {
-                if (this.state.profilePicId.indexOf(THUMBNAIL_TAIL_TAG) > -1) {
-                    setTimeout(() => {
-                        this.setState(prevState => ({ profilePicId: prevState.profilePicId.replace(THUMBNAIL_TAIL_TAG, '') }), () => {
-                            this.props.getUserProfilePicture(this.state.profilePicId)
-                        });
-                    }, 300);
-                } else {
-                    this.setState({ isLoadingProfPic: false });
+    async componentDidUpdate(prevProps, prevState) {
+        if (prevProps.user.profilePictureId !== this.props.user.profilePictureId || !this.props.user.profilePicture) {
+            if (this.profilePicture) {
+                if (Object.keys(this.profilePicture)[0] === this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)) {
+                    this.props.updateUser({ profilePicture: this.profilePicture[this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)] });
+                    return;
                 }
             }
+            this.props.getUserProfilePicture(this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
+        } else if (prevState.isLoadingProfPic) {
+            if (this.props.user.profilePicture) {
+                this.profilePicture = {};
+                this.profilePicture[this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)] = this.props.user.profilePicture;
+                AsyncStorage.setItem('profilePicture', JSON.stringify(this.profilePicture));
+            }
+            this.setState({ isLoadingProfPic: false });
         }
-        // if (prevProps.shortSpaceList !== this.props.shortSpaceList) {
-        //     this.props.shortSpaceList.forEach((bike, index) => {
-        //         if (!bike.profilePicture && bike.pictureIdList.length > 0) {
-        //             if (!this.state.pictureLoader[bike.spaceId]) {
-        //                 this.setState(prevState => {
-        //                     const updatedPictureLoader = { ...prevState.pictureLoader };
-        //                     updatedPictureLoader[bike.spaceId] = true;
-        //                     return { pictureLoader: updatedPictureLoader }
-        //                 }, () => {
-        //                     this.props.getBikePicture(bike.pictureIdList[0], bike.spaceId)
-        //                 });
-        //             }
-        //         } else {
-        //             this.setState(prevState => {
-        //                 const updatedPictureLoader = { ...prevState.pictureLoader };
-        //                 updatedPictureLoader[bike.spaceId] = false;
-        //                 return { pictureLoader: updatedPictureLoader }
-        //             });
-        //         }
-        //     })
-        // }
         if (prevProps.garage.spaceList !== this.props.garage.spaceList) {
             this.props.garage.spaceList.forEach((bike, index) => {
                 if (!bike.pictureList && bike.pictureIdList.length > 0) {
@@ -114,9 +105,9 @@ class MyProfileTab extends Component {
     //     this.props.setBikeAsActive(this.props.user.userId, this.props.shortSpaceList[newSpaceIndex].spaceId, prevActiveBikeIndex, newSpaceIndex);
     // }
     onSpaceLongPress = (newSpaceIndex) => {
-         if (newSpaceIndex === 0) return;
-         this.hScrollView.scrollToIndex({ index: 0, animated: true });
-        console.log('onSpaceLongPress : ',newSpaceIndex)
+        if (newSpaceIndex === 0) return;
+        this.hScrollView.scrollToIndex({ index: 0, animated: true });
+        console.log('onSpaceLongPress : ', newSpaceIndex)
         const prevActiveBikeIndex = this.props.garage.spaceList.findIndex(bike => bike.isDefault);
         this.props.setBikeAsActive(this.props.user.userId, this.props.garage.spaceList[newSpaceIndex].spaceId, prevActiveBikeIndex, newSpaceIndex);
     }
@@ -212,7 +203,6 @@ class MyProfileTab extends Component {
     }
 
     render() {
-        // const { user, shortSpaceList } = this.props;
         const { user } = this.props;
         const { isLoadingProfPic } = this.state;
         return (
@@ -261,14 +251,17 @@ const mapStateToProps = (state) => {
     // const { shortSpaceList } = state.GarageInfo;
     const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
     // return { user, shortSpaceList };
-    return { user,garage };
+    return { user, garage };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
+        updateUser: (updates) => dispatch(updateUserAction(updates)),
         getUserProfilePicture: (pictureId) => getPicture(pictureId, ({ picture }) => {
-            dispatch(updateUserAction({ profilePicture: picture }))
+            pictureId.indexOf(THUMBNAIL_TAIL_TAG) > -1
+                ? dispatch(updateUserAction({ thumbnailProfilePicture: picture }))
+                : dispatch(updateUserAction({ profilePicture: picture }))
         }, (error) => {
             dispatch(updateUserAction({}))
         }),

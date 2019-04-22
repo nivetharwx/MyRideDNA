@@ -1141,7 +1141,6 @@ export const getGarageInfo = (userId, successCallback, errorCallback) => {
     // };
     axios.get(USER_BASE_URL + `getGarage/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
-            console.log("getGarage success: ", res.data);
             successCallback(res.data);
         })
         .catch(er => {

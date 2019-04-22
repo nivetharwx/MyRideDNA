@@ -241,22 +241,17 @@ export class Map extends Component {
             }
         }
         if (this.props.currentScreen !== currentScreen && currentScreen.name !== Actions.currentScene) {
-            if (currentScreen.name !== this.rootScreen) {
-                if (this.props.currentScreen.name !== this.rootScreen) {
-                    if (this.props.currentScreen.name === currentScreen.name) {
-                        Actions.popTo(currentScreen.name, {});
-                    } else {
-                        Actions.replace(currentScreen.name, currentScreen.params);
-                    }
+            if (Actions.prevState.routes.length > 1) {
+                if (Actions.prevState.routes.findIndex(route => route.routeName === currentScreen.name) > -1) {
+                    Actions.popTo(currentScreen.name, {})
                 } else {
-                    Actions.push(currentScreen.name, currentScreen.params);
+                    Actions.replace(currentScreen.name, currentScreen.params);
                 }
             } else {
-                Actions.popTo(currentScreen.name, {})
+                currentScreen.name !== this.rootScreen
+                    ? Actions.push(currentScreen.name, currentScreen.params)
+                    : Actions.popTo(currentScreen.name, {})
             }
-            // currentScreen.name !== this.rootScreen
-            //     ? Actions.push(currentScreen.name, currentScreen.params)
-            //     : Actions.popTo(currentScreen.name, {})
         }
         if (Object.keys(updatedState).length > 0) {
             this.setState(updatedState, () => {
