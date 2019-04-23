@@ -179,13 +179,11 @@ export const registerUser = (user) => {
     };
 }
 export const updateUserInfo = (userData) => {
-    console.log("updateUserInfo with ", userData);
     return dispatch => {
         dispatch(toggleLoaderAction(true));
         axios.put(USER_BASE_URL + 'updateUserDetails', userData, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log("updateUserInfo: ", res.data);
                     dispatch(toggleLoaderAction(false));
                     dispatch(updateUserAction(userData));
                 }

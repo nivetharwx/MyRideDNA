@@ -805,7 +805,7 @@ export class Map extends Component {
             },
             properties: {
                 icon: iconName || ICON_NAMES.WAYPOINT_DEFAULT,
-                title: 29
+                title: title
             },
         };
     }
