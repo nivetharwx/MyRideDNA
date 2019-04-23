@@ -1,5 +1,7 @@
-import { WindowDimensions, widthPercentageToDP } from "../../constants";
+import { WindowDimensions, widthPercentageToDP, IS_ANDROID, heightPercentageToDP } from "../../constants";
 
+
+const THUMBNAIL_SIZE = IS_ANDROID ? heightPercentageToDP(6.5) : heightPercentageToDP(8);
 const styles = {
     fill: {
         flex: 1
@@ -19,6 +21,12 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'center',
         width: widthPercentageToDP(33.3),
+    },
+    thumbnail: {
+        height: THUMBNAIL_SIZE,
+        width: THUMBNAIL_SIZE,
+        borderRadius: THUMBNAIL_SIZE / 2,
+        alignSelf: 'center'
     }
 };
 

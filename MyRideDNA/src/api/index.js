@@ -865,7 +865,7 @@ export const cancelFriendRequest = (senderId, personId, requestId) => {
                 if (res.status === 200) {
                     console.log('cancelFriendRequest sucess : ', res)
                     dispatch(toggleLoaderAction(false));
-                    dispatch(updateFriendRequestListAction(requestId))
+                    dispatch(updateFriendRequestListAction({id:requestId}))
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
                 }
             })
@@ -882,7 +882,7 @@ export const getAllFriendRequests = (userId) => {
         axios.get(FRIENDS_BASE_URL + `getAllRequests?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log(res)
+                    console.log('getAllRequests : ',res)
                     dispatch(replaceFriendRequestListAction(res.data))
                 }
             })
@@ -899,7 +899,7 @@ export const approveFriendRequest = (senderId, personId, actionDate, requestId) 
                 if (res.status === 200) {
                     console.log('approveFriendRequest sucess: ', res)
                     dispatch(toggleLoaderAction(false));
-                    dispatch(updateFriendRequestListAction(requestId))
+                    dispatch(updateFriendRequestListAction({id:requestId}))
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.FRIEND }));
                 }
             })
@@ -918,7 +918,7 @@ export const rejectFriendRequest = (senderId, personId, requestId) => {
                 if (res.status === 200) {
 
                     console.log('rejectFriendRequest success: ', res)
-                    dispatch(updateFriendRequestListAction(requestId))
+                    dispatch(updateFriendRequestListAction({id:requestId}))
                     dispatch(toggleLoaderAction(false));
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
                 }
