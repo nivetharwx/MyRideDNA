@@ -44,7 +44,6 @@ class Friends extends Component {
         }, 0);
         this.getAllFriendRequestFunction()
         this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0);
-        this.props.resetCurrentFriend();
     }
 
 

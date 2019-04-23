@@ -6,7 +6,7 @@ import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, 
 import { BaseModal } from '../../../components/modal';
 import { LinkButton } from '../../../components/buttons';
 import { ThumbnailCard } from '../../../components/cards';
-import { openFriendProfileAction, updateFriendInListAction, screenChangeAction } from '../../../actions';
+import { openFriendProfileAction, updateFriendInListAction, screenChangeAction, resetCurrentFriendAction } from '../../../actions';
 import { FloatingAction } from 'react-native-floating-action';
 import { Icon as NBIcon, Thumbnail } from 'native-base';
 import { Actions } from 'react-native-router-flux';
@@ -269,6 +269,7 @@ class AllFriendsTab extends Component {
     }
 
     openProfile = (index, friendType, activeTab) => {
+        this.props.resetCurrentFriend();
         // if (this.props.searchFriendList.length > 0) {
         //     const person = this.props.searchFriendList[index];
         //     this.searchResImageRef[index].measure((x, y, width, height, pageX, pageY) => {
@@ -414,6 +415,7 @@ const mapDispatchToProps = (dispatch) => {
         }),
         changeScreen: (screenProps) => dispatch(screenChangeAction(screenProps)),
         getFriendsLocationList: (userId, friendsIdList) => dispatch(getFriendsLocationList(userId, friendsIdList)),
+        resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(AllFriendsTab);

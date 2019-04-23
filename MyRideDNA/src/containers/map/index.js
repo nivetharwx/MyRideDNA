@@ -2069,7 +2069,7 @@ const MapboxStyles = MapboxGL.StyleSheet.create({
     },
     friendsIcon: {
         iconImage: FRIENDS_LOCATION_ICON,
-        iconSize: IS_ANDROID ? 0.17 : 0.25,
+        // iconSize: IS_ANDROID ? 1 : 0.25,
         iconAnchor: 'bottom',
     },
     markerTitle: {
