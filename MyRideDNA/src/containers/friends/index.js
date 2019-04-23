@@ -2,12 +2,12 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, StatusBar, Animated, ImageBackground, AsyncStorage, TouchableWithoutFeedback, Text, View, FlatList, TouchableOpacity } from 'react-native';
 import { BasicHeader } from '../../components/headers';
-import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon, Toast } from 'native-base';
+import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon, Toast,Thumbnail } from 'native-base';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, USER_AUTH_TOKEN, WindowDimensions, FRIEND_TYPE } from '../../constants';
 import styles from './styles';
 import AllFriendsTab from './all-friends';
 import GroupListTab from './group-list';
-import { appNavMenuVisibilityAction, updateFriendInListAction, resetCurrentFriendAction } from '../../actions';
+import { appNavMenuVisibilityAction, updateFriendInListAction, resetCurrentFriendAction, updateFriendRequestListAction } from '../../actions';
 import { ShifterButton, IconButton, LinkButton } from '../../components/buttons';
 import { IconLabelPair } from '../../components/labels';
 import { logoutUser, getAllFriendRequests, getPicture, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, createFriendGroup, getAllFriends } from '../../api';
@@ -70,6 +70,11 @@ class Friends extends Component {
             if (prevState.isRefreshing === true) {
                 this.setState({ isRefreshing: false });
             }
+            this.props.allFriendRequests.forEach((friendRequestPic)=>{
+                if(!friendRequestPic.profilePicture && friendRequestPic.profilePictureId){
+                    this.props.getFriendRequestPic(friendRequestPic.profilePictureId,friendRequestPic.id)
+                }
+            })
         }
     }
     onPullRefresh = () => {
@@ -136,10 +141,10 @@ class Friends extends Component {
     }
 
     approvingFriendRequest = (item) => {
-        this.props.approvedRequest(this.props.user.userId, item.senderId, new Date().toISOString(), item.id);
+        this.props.approvedRequest(this.props.user.userId, item.userId, new Date().toISOString(), item.id);
     }
     rejectingFriendRequest = (item) => {
-        this.props.rejectRequest(this.props.user.userId, item.senderId, item.id);
+        this.props.rejectRequest(this.props.user.userId, item.userId, item.id);
     }
     closeProfile = () => {
         Animated.parallel([
@@ -178,7 +183,7 @@ class Friends extends Component {
             return (
                 <ListItem avatar style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
                     <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
-                        <NBIcon active name="person" type='MaterialIcons' style={{ width: widthPercentageToDP(6), color: '#fff' }} />
+                    <Thumbnail style={styles.thumbnail} source={item.profilePicture ? {uri:item.profilePicture} : item.profilePictureId ? null:require('../../assets/img/friend-profile-pic.png')} />
                     </Left>
                     <Body >
                         {/* <Text>{`${item.name} (${item.nickname})`}</Text> */}
@@ -188,12 +193,12 @@ class Friends extends Component {
                                 <Text>{` (${item.nickname})`}</Text>
                                 : null
                             }
-                            <IconButton iconProps={{ name: 'call-made', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.headerColor, fontSize: 20 } }} />
+                            <IconButton iconProps={{ name: 'call-made', type: 'MaterialCommunityIcons', style: { color: '#81BB41', fontSize: 13 } }} />
                         </View>
                         <Text>{getFormattedDateFromISO(item.actionDate, '/')}</Text>
                     </Body>
                     <Right>
-                        <IconButton iconProps={{ name: 'close', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={() => this.cancelingFriendRequest(item)} />
+                        <IconButton iconProps={{ name: 'close', type: 'MaterialIcons', style: { fontSize:25,color:'#6B7663' } }} onPress={() => this.cancelingFriendRequest(item)} />
                     </Right>
                 </ListItem>
             )
@@ -201,25 +206,25 @@ class Friends extends Component {
         else {
             return (
                 <ListItem avatar style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
-                    <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
-                        <NBIcon active name="person" type='MaterialIcons' style={{ width: widthPercentageToDP(6), color: '#fff' }} />
+                    <Left>
+                    <Thumbnail style={styles.thumbnail} source={item.profilePicture ? {uri:item.profilePicture} : item.profilePictureId ? null:require('../../assets/img/friend-profile-pic.png')} />
                     </Left>
                     <Body >
                         <View style={{ flexDirection: 'row' }}>
-                            <Text>{`${item.senderName}`}</Text>
-                            {item.senderNickname ?
-                                <Text>{` (${item.senderNickname})`}</Text>
+                            <Text>{`${item.name}`}</Text>
+                            {item.nickname ?
+                                <Text>{` (${item.nickname})`}</Text>
                                 : null
                             }
-                            <IconButton iconProps={{ name: 'call-received', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.headerColor, fontSize: 20 } }} />
+                            <IconButton iconProps={{ name: 'call-received', type: 'MaterialCommunityIcons', style: { color: '#81BB41', fontSize: 13 } }} />
                         </View>
                         <Text>{getFormattedDateFromISO(item.actionDate, '/')}</Text>
                         {/* <Text>{item.senderName}</Text>
                         <Text>({item.senderNickname})</Text> */}
                     </Body>
-                    <Right style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-around' }}>
-                        <IconButton iconProps={{ name: 'user-check', type: 'Feather', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={() => this.approvingFriendRequest(item)} />
-                        <IconButton iconProps={{ name: 'user-x', type: 'Feather', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={() => this.rejectingFriendRequest(item)} />
+                    <Right style={{ flexDirection: 'row'}}>
+                        <IconButton iconProps={{name: 'add-user', type: 'Entypo', style: {fontSize:25,color:'#6B7663' } }} onPress={() => this.approvingFriendRequest(item)} />
+                        <IconButton iconProps={{name: 'remove-user', type: 'Entypo', style: {fontSize:25,marginLeft:widthPercentageToDP(4),color:'#6B7663' } }} onPress={() => this.rejectingFriendRequest(item)} />
                     </Right>
                 </ListItem>
             )
@@ -255,15 +260,14 @@ class Friends extends Component {
         this.setState({ isVisibleGroupModal: true })
     }
     render() {
-        console.log('currentFriend : ', this.props.currentFriend)
-        console.log('user : ', this.props.user)
+        console.log('allFriendRequests : ', this.props.allFriendRequests)
         const { headerSearchMode, searchQuery, activeTab, friendsActiveTab, isRefreshing } = this.state;
         const activeImageStyle = {
             width: this.dimensions.x,
             height: this.dimensions.y,
             left: this.position.x,
             top: this.position.y
-        };
+        };  
         const animatedContentY = this.animation.interpolate({
             inputRange: [0, 1],
             outputRange: [-150, 0]
@@ -394,6 +398,11 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(updateFriendInListAction({ profilePicture: picture, userId: friendId }))
         }, (error) => {
             dispatch(updateFriendInListAction({ userId: friendId }))
+        }),
+        getFriendRequestPic: (pictureId, id) => getPicture(pictureId, ({ picture, pictureId }) => {
+            dispatch(updateFriendRequestListAction({ profilePicture: picture, id: id }))
+        }, (error) => {
+            dispatch(updateFriendRequestListAction({ id: id }))
         }),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
     };
