@@ -26,6 +26,7 @@ class WaypointList extends React.Component {
         this.state = {
             activeTab: 0,
             points: points,
+            isDraggable: !props.ride.isRecorded && props.ride.userId === props.user.userId
         };
     }
 
@@ -65,12 +66,9 @@ class WaypointList extends React.Component {
     }
 
     renderRidePoint = ({ item, index, move, moveEnd, isActive }) => {
-        // renderRidePoint = ({ item, index }) => {
-        return (
-            <ListItem avatar onLongPress={move} onPressOut={moveEnd}
-                style={{ backgroundColor: isActive ? APP_COMMON_STYLES.infoColor : '#fff' }}
-            >
-                {/* <ListItem avatar> */}
+        return this.state.isDraggable
+            ? <ListItem avatar onLongPress={move} onPressOut={moveEnd}
+                style={{ backgroundColor: isActive ? APP_COMMON_STYLES.infoColor : '#fff' }}>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
                     <View style={styles.itemNumber}>
                         <Text style={styles.whiteFont}>{index + 1}</Text>
@@ -85,7 +83,18 @@ class WaypointList extends React.Component {
                     <NBIcon name='drag-handle' type='MaterialIcons' />
                 </Right>
             </ListItem>
-        );
+            : <ListItem avatar>
+                <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
+                    <View style={styles.itemNumber}>
+                        <Text style={styles.whiteFont}>{index + 1}</Text>
+                    </View>
+                </Left >
+                <Body style={{ height: '100%' }}>
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                        <Text>{item.name || 'Unknown'}</Text>
+                    </View>
+                </Body>
+            </ListItem >
     }
 
     onChangeOrder = ({ from, to, data }) => {
@@ -121,7 +130,7 @@ class WaypointList extends React.Component {
 
     render() {
         const { onPressOutside, user, ride } = this.props;
-        const { points } = this.state;
+        const { points, isDraggable } = this.state;
         return (
             <View style={styles.modalRoot}>
                 <View style={styles.container}>
@@ -158,18 +167,21 @@ class WaypointList extends React.Component {
                                 text={getFormattedDateFromISO(ride.date)}
                             />
                         </View>
-                        {/* <FlatList
-                            data={points}
-                            renderItem={this.renderRidePoint}
-                            keyExtractor={this.pointKeyExtractor}
-                        // ItemSeparatorComponent={this.renderSeparator}
-                        /> */}
-                        <DraggableFlatList
-                            data={points}
-                            renderItem={this.renderRidePoint}
-                            keyExtractor={this.pointKeyExtractor}
-                            onMoveEnd={this.onChangeOrder}
-                        />
+                        {
+                            isDraggable
+                                ? <DraggableFlatList
+                                    data={points}
+                                    renderItem={this.renderRidePoint}
+                                    keyExtractor={this.pointKeyExtractor}
+                                    onMoveEnd={this.onChangeOrder}
+                                />
+                                : <FlatList
+                                    data={points}
+                                    renderItem={this.renderRidePoint}
+                                    keyExtractor={this.pointKeyExtractor}
+                                // ItemSeparatorComponent={this.renderSeparator}
+                                />
+                        }
                     </View>
                 </View>
                 <TouchableWithoutFeedback onPress={onPressOutside}>

@@ -36,7 +36,7 @@ class FriendsProfile extends Component {
             this.setState({ activeTab: this.state.activeTab });
         }, 50);
         this.props.getFriendsInfo(this.props.friendIdx, this.props.friendType);
-        
+
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -83,7 +83,7 @@ class FriendsProfile extends Component {
                 if (prevProps.currentFriend.garage.garageId !== this.props.currentFriend.garage.garageId) {
                     this.props.currentFriend.garage.spaceList.forEach((bikeDetail) => {
                         if (bikeDetail.pictureIdList.length > 0) {
-                            this.props.getGaragePicture(bikeDetail.pictureIdList[0], bikeDetail.spaceId, this.props.currentFriend.userId)
+                            this.props.getGaragePicture(bikeDetail.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), bikeDetail.spaceId, this.props.currentFriend.userId)
                         }
                     })
                     return;

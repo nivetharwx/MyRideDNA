@@ -28,6 +28,7 @@ import CreateRide from '../containers/create-ride';
 import AddBikeForm from '../containers/profile/my-garage/add-edit-bike-form';
 import EditProfileForm from '../containers/profile/my-profile/edit-profile-form';
 import Settings from '../containers/settings';
+import Offers from '../containers/offers';
 
 export default class Navigation extends Component {
     render() {
@@ -57,6 +58,7 @@ export default class Navigation extends Component {
                             <Scene key={PageKeys.CONTACTS_SECTION} component={ContactsSection} hideNavBar></Scene>
                             <Scene key={PageKeys.FRIENDS_PROFILE} component={FriendsProfile} hideNavBar></Scene>
                             <Scene key={PageKeys.CHAT} component={Chat} hideNavBar></Scene>
+                            <Scene key={PageKeys.OFFERS} component={Offers} hideNavBar></Scene>
                         </Scene>
                     </Router>
                 </Root>

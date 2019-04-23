@@ -83,7 +83,7 @@ class MyProfileTab extends Component {
                             updatedPictureLoader[bike.spaceId] = true;
                             return { pictureLoader: updatedPictureLoader }
                         }, () => {
-                            this.props.getBikePicture(bike.pictureIdList[0], bike.spaceId)
+                            this.props.getBikePicture(bike.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), bike.spaceId)
                         });
                     }
                 } else {

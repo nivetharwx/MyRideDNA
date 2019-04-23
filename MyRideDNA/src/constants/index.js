@@ -60,7 +60,8 @@ export const PageKeys = {
     RIDES: 'rides',
     MAP: 'map',
     WAYPOINTLIST: 'waypointList',
-    CREATE_RIDE: 'createRide'
+    CREATE_RIDE: 'createRide',
+    OFFERS: 'offers',
 };
 
 export const MAP_ACCESS_TOKEN = 'pk.eyJ1IjoibWFkaGF2YW4tcmVhY3RpdmV3b3JrcyIsImEiOiJjam9qbXJybzQwNmE4M3BvODY4dXhhdGUyIn0.oPQRig3knqF_oYXrRSca7w';
