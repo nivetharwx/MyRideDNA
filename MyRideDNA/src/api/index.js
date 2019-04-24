@@ -26,7 +26,6 @@ export const getPicture = (pictureId, successCallback, errorCallback) => {
     axios.get(USER_BASE_URL + `getPicture/${pictureId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
             if (res.status === 200) {
-                console.log('get picture : ', res)
                 if (res.data.picture === '') {
                     errorCallback(res.data);
                 } else {
@@ -767,7 +766,6 @@ export const getAllFriends = (friendType, userId, pageNumber) => {
         axios.get(FRIENDS_BASE_URL + `getFriendList?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log('getFriendList success :', res.data)
                     dispatch(toggleLoaderAction(false));
                     // DOC: Calling for getting online friends
                     dispatch(getAllOnlineFriends(userId));
@@ -790,7 +788,6 @@ export const getAllOnlineFriends = (userId) => {
         axios.get(GRAPH_BASE_URL + `getOnlineFriends?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log(`getOnlineFriends success: `, res.data);
                     dispatch(updateOnlineStatusAction({ friendList: res.data }))
                 }
             })
@@ -805,7 +802,6 @@ export const searchForFriend = (searchParam, userId, pageNumber) => {
         axios.get(FRIENDS_BASE_URL + `searchFriend?searchParam=${searchParam}&userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log("searchFriend success: ", res.data);
                     // dispatch(toggleLoaderAction(false));
                     return dispatch(replaceSearchFriendListAction(res.data));
                 }
@@ -880,7 +876,6 @@ export const getAllFriendRequests = (userId) => {
         axios.get(FRIENDS_BASE_URL + `getAllRequests?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log('getAllRequests : ',res)
                     dispatch(replaceFriendRequestListAction(res.data))
                 }
             })

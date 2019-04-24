@@ -94,7 +94,13 @@ export default (state = initialState, action) => {
             }
             return {
                 ...state,
-                currentFriend: friend
+                currentFriend: {
+                    garage: {
+                        garageId: null
+                    },
+                    userId: null,
+                    ...friend
+                }
             };
 
         case UNFRIEND:
@@ -164,9 +170,7 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 currentFriend: {
-                    garage: {
-                        garageId: null
-                    },
+                    ...state.currentFriend,
                     userId: null
                 }
             }

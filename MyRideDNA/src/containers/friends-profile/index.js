@@ -31,10 +31,12 @@ class FriendsProfile extends Component {
     }
 
     componentDidMount() {
-        setTimeout(() => {
-            this.tabsRef.props.goToPage(this.state.activeTab);
-            this.setState({ activeTab: this.state.activeTab });
-        }, 50);
+        if (this.state.activeTab !== 0) {
+            setTimeout(() => {
+                this.tabsRef.props.goToPage(this.state.activeTab);
+                this.setState({ activeTab: this.state.activeTab });
+            }, 50);
+        }
         this.props.getFriendsInfo(this.props.friendIdx, this.props.friendType);
 
     }
@@ -46,14 +48,15 @@ class FriendsProfile extends Component {
             }
         }
         if (prevProps.currentFriend !== this.props.currentFriend) {
-            // if (this.props.currentFriend.userId === null) {
-            //     Actions.pop();
-            //     return;
-            // }
+            if (this.props.currentFriend.userId === null) {
+                Actions.pop();
+                return;
+            }
             if (this.state.activeTab === 0) {
                 if (prevProps.currentFriend.userId === null) {
-                    if (this.props.currentFriend.locationEnable) {
+                    if (this.props.currentFriend.locationEnable && this.props.currentFriend.isOnline) {
                         if (this.FRIENDS_PROFILE_ICONS.findIndex(icon => icon.name === 'location-on') === -1) {
+                            console.log("pushing location icon");
                             this.FRIENDS_PROFILE_ICONS.push({ name: 'location-on', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.showFriendsLocation() });
                         }
                     }
@@ -122,8 +125,7 @@ class FriendsProfile extends Component {
     }
     rideKeyExtractor = (item) => item.rideId;
     onPressBackButton = () => {
-        Actions.pop();
-        setTimeout(() => this.props.resetCurrentFriend(), 50);
+        this.props.resetCurrentFriend();
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
