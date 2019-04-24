@@ -94,10 +94,7 @@ export default (state = initialState, action) => {
             }
             return {
                 ...state,
-                currentFriend: {
-                    ...state.currentFriend,
-                    ...friend
-                }
+                currentFriend: friend
             };
 
         case UNFRIEND:

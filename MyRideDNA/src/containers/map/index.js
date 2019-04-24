@@ -255,10 +255,6 @@ export class Map extends Component {
         }
         if (Object.keys(updatedState).length > 0) {
             this.setState(updatedState, () => {
-                // DOC: Fetch route for build ride if waypoints are more than one
-                if (!ride.isRecorded && updatedState.markerCollection && updatedState.markerCollection.features.length > 1) {
-                    this.fetchDirections();
-                }
                 if (ride.isRecorded) {
                     let coordinates = [];
                     if (ride.source) {
@@ -268,9 +264,16 @@ export class Map extends Component {
                     if (ride.destination) {
                         coordinates.push([ride.destination.lng, ride.destination.lat]);
                     }
-                    // DOC: Update the mapbounds to include the recorded ride path
-                    const newBounds = turfBBox({ coordinates, type: 'LineString' });
-                    this._mapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 20, 1000);
+                    if (coordinates.length > 1) {
+                        // DOC: Update the mapbounds to include the recorded ride path
+                        const newBounds = turfBBox({ coordinates, type: 'LineString' });
+                        this._mapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 20, 1000);
+                    } else {
+                        this._mapView.flyTo(coordinates[0], 500);
+                    }
+                } else if (updatedState.markerCollection && updatedState.markerCollection.features.length > 1) {
+                    // DOC: Fetch route for build ride if waypoints are more than one
+                    this.fetchDirections();
                 }
             });
         }
@@ -498,8 +501,6 @@ export class Map extends Component {
         if (this.props.user.locationEnable) this.startTrackingLocation();
         // AppState.addEventListener('change', this.handleAppStateChange);
         BackgroundGeolocation.on('location', (location) => {
-            // TODO: Has to change default timeIntervalInSeconds from the backend (60 seconds)
-            console.log("checking time gap: ", location.time - this.prevUserTrackTime, this.props.user.timeIntervalInSeconds * 1000);
             if (location.time - this.prevUserTrackTime > (this.props.user.timeIntervalInSeconds * 1000)) {
                 this.prevUserTrackTime = location.time;
                 this.props.updateLocation(this.props.user.userId, { lat: location.latitude, lng: location.longitude });
@@ -1099,7 +1100,7 @@ export class Map extends Component {
             duration: 500,
             // mode: MapboxGL.CameraModes.Flight
         };
-        this._mapView.setCamera(options);
+        // this._mapView.setCamera(options);
         if (Array.isArray(location)) {
             // this.setState({ mapZoomLevel: DEFAULT_ZOOM_LEVEL }, () => {
             //     this._mapView.flyTo(location, 300);
@@ -1382,6 +1383,7 @@ export class Map extends Component {
         this.watchID != null && clearInterval(this.watchID);
         this.notificationInterval != null && clearInterval(this.notificationInterval);
         BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPress);
+        this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: false, userId: this.props.user.userId } });
         this.props.resetStoreToDefault();
     }
 
@@ -1661,11 +1663,11 @@ export class Map extends Component {
                     {
                         !showCreateRide && ride.rideId
                             ? <View style={styles.mapSubHeader}>
-                                <View style={{ width: '30%', backgroundColor: '#EB861E', borderWidth: 4, borderColor: '#fff', elevation: 10, shadowOffset: { width: 5, height: 5 }, shadowColor: "grey", shadowOpacity: 0.5, shadowRadius: 10 }}>
-                                    <IconLabelPair iconProps={{ name: 'road-variant', type: 'MaterialCommunityIcons' }} text={this.getDistanceAsFormattedString(directions ? directions.distance : null, user.distanceUnit)}
-                                        textStyle={{ color: '#fff' }} />
-                                    <IconLabelPair iconProps={{ name: 'access-time', type: 'MaterialIcons' }} text={this.getTimeAsFormattedString(directions ? directions.duration : null)}
-                                        textStyle={{ color: '#fff' }} />
+                                <View style={{ width: '30%', justifyContent: 'space-around', backgroundColor: '#EB861E', borderWidth: 4, borderColor: '#fff', elevation: 10, shadowOffset: { width: 5, height: 5 }, shadowColor: "grey", shadowOpacity: 0.5, shadowRadius: 10 }}>
+                                    <IconLabelPair iconProps={{ name: 'road-variant', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(5) } }} text={this.getDistanceAsFormattedString(directions ? directions.distance : null, user.distanceUnit)}
+                                        textStyle={{ color: '#fff', fontSize: widthPercentageToDP(3.5) }} />
+                                    <IconLabelPair iconProps={{ name: 'access-time', type: 'MaterialIcons', style: { fontSize: widthPercentageToDP(5) } }} text={this.getTimeAsFormattedString(directions ? directions.duration : null)}
+                                        textStyle={{ color: '#fff', fontSize: widthPercentageToDP(3.5) }} />
                                 </View>
                                 {
                                     isEditable

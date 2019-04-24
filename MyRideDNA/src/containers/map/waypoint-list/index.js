@@ -71,7 +71,20 @@ class WaypointList extends React.Component {
                 style={{ backgroundColor: isActive ? APP_COMMON_STYLES.infoColor : '#fff' }}>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
                     <View style={styles.itemNumber}>
-                        <Text style={styles.whiteFont}>{index + 1}</Text>
+                        {/* <Text style={styles.whiteFont}>{
+                            index === 0
+                                ? 'S'
+                                : index === this.state.points.length - 1 && this.props.ride.destination
+                                    ? 'D'
+                                    : index
+                        }</Text> */}
+                        {
+                            index === 0
+                                ? <NBIcon name='map-pin' type='FontAwesome' style={styles.whiteFont} />
+                                : index === this.state.points.length - 1 && this.props.ride.destination
+                                    ? <NBIcon name='flag-variant' type='MaterialCommunityIcons' style={styles.whiteFont} />
+                                    : <Text style={styles.whiteFont}>{index}</Text>
+                        }
                     </View>
                 </Left>
                 <Body style={{ height: '100%' }}>
@@ -86,7 +99,13 @@ class WaypointList extends React.Component {
             : <ListItem avatar>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
                     <View style={styles.itemNumber}>
-                        <Text style={styles.whiteFont}>{index + 1}</Text>
+                        {
+                            index === 0
+                                ? <NBIcon name='map-pin' type='FontAwesome' style={styles.whiteFont} />
+                                : index === this.state.points.length - 1 && this.props.ride.destination
+                                    ? <NBIcon name='flag-variant' type='MaterialCommunityIcons' style={styles.whiteFont} />
+                                    : <Text style={styles.whiteFont}>{index}</Text>
+                        }
                     </View>
                 </Left >
                 <Body style={{ height: '100%' }}>

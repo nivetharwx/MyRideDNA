@@ -46,10 +46,10 @@ class FriendsProfile extends Component {
             }
         }
         if (prevProps.currentFriend !== this.props.currentFriend) {
-            if (this.props.currentFriend.userId === null) {
-                Actions.pop();
-                return;
-            }
+            // if (this.props.currentFriend.userId === null) {
+            //     Actions.pop();
+            //     return;
+            // }
             if (this.state.activeTab === 0) {
                 if (prevProps.currentFriend.userId === null) {
                     if (this.props.currentFriend.locationEnable) {
@@ -122,8 +122,8 @@ class FriendsProfile extends Component {
     }
     rideKeyExtractor = (item) => item.rideId;
     onPressBackButton = () => {
-        // setTimeout(() => this.props.resetCurrentFriend(), 100);
-        this.props.resetCurrentFriend();
+        Actions.pop();
+        setTimeout(() => this.props.resetCurrentFriend(), 50);
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
