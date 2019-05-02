@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "72747364788",
+    "firebase_url": "https://myridedna.firebaseio.com",
+    "project_id": "myridedna",
+    "storage_bucket": "myridedna.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:72747364788:android:068e8b431f710039",
+        "android_client_info": {
+          "package_name": "com.myridedna"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "72747364788-p8h0ho7ng0qcgi88kbpt9mje8aipcjtg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.myridedna",
+            "certificate_hash": "f9c0417287de77cccf55d1536cbd2dd9ce1ad30a"
+          }
+        },
+        {
+          "client_id": "72747364788-llavih65vml24e11hsttntmatgps275q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBkp_YbQW279SOyokFvzdyecOerdywid_k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "72747364788-llavih65vml24e11hsttntmatgps275q.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
