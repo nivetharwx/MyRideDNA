@@ -150,6 +150,9 @@ android {
 }
 
 dependencies {
+    compile project(':react-native-fcm')
+    implementation 'com.google.firebase:firebase-core'
+    implementation 'com.google.firebase:firebase-messaging'
     compile project(':react-native-mauron85-background-geolocation')
     compile project(':react-native-settings')
     compile project(':react-native-contacts')
@@ -177,3 +180,4 @@ task copyDownloadableDepsToLibs(type: Copy) {
     from configurations.compile
     into 'libs'
 }
+apply plugin: 'com.google.gms.google-services'

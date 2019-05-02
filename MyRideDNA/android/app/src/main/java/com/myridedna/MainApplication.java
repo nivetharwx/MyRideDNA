@@ -4,6 +4,7 @@ import android.app.Application;
 
 import android.content.IntentFilter;
 import com.facebook.react.ReactApplication;
+import com.evollu.react.fcm.FIRMessagingPackage;
 import com.marianhello.bgloc.react.BackgroundGeolocationPackage;
 import io.rumors.reactnativesettings.RNSettingsPackage;
 import com.rt2zz.reactnativecontacts.ReactNativeContacts;
@@ -34,6 +35,7 @@ public class MainApplication extends Application implements ReactApplication {
     @Override
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(new MainReactPackage(),
+            new FIRMessagingPackage(),
             new BackgroundGeolocationPackage(),
             new RNSettingsPackage(),
             new ReactNativeContacts(),
