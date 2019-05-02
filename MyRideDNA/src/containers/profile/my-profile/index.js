@@ -5,7 +5,7 @@ import { Actions } from 'react-native-router-flux';
 import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../../constants/index';
 import { IconButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
-import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction } from '../../../actions';
+import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction } from '../../../actions';
 import { Accordion } from 'native-base';
 import ImagePicker from 'react-native-image-crop-picker';
 import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo } from '../../../api';
@@ -28,7 +28,7 @@ class MyProfileTab extends Component {
             activeTab: -1,
             bikes: [10, 20, 30, 40, 50],
             isLoadingProfPic: false,
-            pictureLoader: {}
+            pictureLoader: {},
         };
     }
 
@@ -114,6 +114,7 @@ class MyProfileTab extends Component {
 
     renderAccordionItem = (item) => {
         if (item.title === 'Change profile') {
+            this.props.updateMyProfileLastOptions(0)
             return (
                 <View style={styles.rowContent}>
                     {
@@ -122,6 +123,7 @@ class MyProfileTab extends Component {
                 </View>
             );
         } else {
+            this.props.updateMyProfileLastOptions(1)
             return (
                 <View style={styles.rowContent}>
                     {/* <ScrollView
@@ -237,7 +239,7 @@ class MyProfileTab extends Component {
                     </View>
                 </ImageBackground>
                 <ScrollView styles={styles.scrollBottom} contentContainerStyle={styles.scrollBottomContent}>
-                    <Accordion expanded={0} dataArray={[{ title: 'Change profile', content: [this.PROFILE_ICONS.gallery, this.PROFILE_ICONS.camera, this.PROFILE_ICONS.passengers, this.PROFILE_ICONS.edit] },
+                    <Accordion expanded={this.props.profileLastOptions} dataArray={[{ title: 'Change profile', content: [this.PROFILE_ICONS.gallery, this.PROFILE_ICONS.camera, this.PROFILE_ICONS.passengers, this.PROFILE_ICONS.edit] },
                     { title: 'Change bike', content: [] }]}
                         renderContent={this.renderAccordionItem} headerStyle={styles.accordionHeader} />
                 </ScrollView>
@@ -248,10 +250,11 @@ class MyProfileTab extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
+    const { profileLastOptions } = state.PageState;
     // const { shortSpaceList } = state.GarageInfo;
     const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
     // return { user, shortSpaceList };
-    return { user, garage };
+    return { user, garage,profileLastOptions };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -287,6 +290,7 @@ const mapDispatchToProps = (dispatch) => {
                 console.log(`getGarage error: `, error);
             })
         },
+        updateMyProfileLastOptions : (expanded) => dispatch(updateMyProfileLastOptionsAction({expanded}))
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MyProfileTab);
