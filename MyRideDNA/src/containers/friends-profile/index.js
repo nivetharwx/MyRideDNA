@@ -15,18 +15,20 @@ import { BasicCard } from '../../components/cards';
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
 class FriendsProfile extends Component {
     // DOC: Icon format is for Icon component from NativeBase Library
-    FRIENDS_PROFILE_ICONS = [
-        { name: 'ios-chatbubbles', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.onPressChatIcon() },
-        { name: 'account-remove', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.onPressUnfriendIcon() },
-        // { name: 'ios-shirt', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => console.log("Vest pressed") },
-    ];
+    // FRIENDS_PROFILE_ICONS = 
     tabsRef = null;
     constructor(props) {
         super(props);
         this.state = {
             activeTab: props.activeTab || 0,
             isLoadingProfPic: false,
-            profilePicId: null
+            profilePicId: null,
+            friendsProfileIcons: [
+                { name: 'ios-chatbubbles', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.onPressChatIcon() },
+                { name: 'account-remove', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.onPressUnfriendIcon() },
+                // { name: 'ios-shirt', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => console.log("Vest pressed") },
+            ]
+
         };
     }
 
@@ -55,9 +57,11 @@ class FriendsProfile extends Component {
             if (this.state.activeTab === 0) {
                 if (prevProps.currentFriend.userId === null) {
                     if (this.props.currentFriend.locationEnable && this.props.currentFriend.isOnline) {
-                        if (this.FRIENDS_PROFILE_ICONS.findIndex(icon => icon.name === 'location-on') === -1) {
+                        if (this.state.friendsProfileIcons.findIndex(icon => icon.name === 'location-on') === -1) {
                             console.log("pushing location icon");
-                            this.FRIENDS_PROFILE_ICONS.push({ name: 'location-on', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.showFriendsLocation() });
+                            this.setState(prevState => ({
+                                friendsProfileIcons: [...prevState.friendsProfileIcons, { name: 'location-on', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.showFriendsLocation() }]
+                            }));
                         }
                     }
                     if (this.props.currentFriend.profilePictureId) {
@@ -146,6 +150,7 @@ class FriendsProfile extends Component {
 
 
     renderAccordionItem = (item) => {
+        console.log('item:', item)
         return (
             <View style={styles.rowContent}>
                 {
@@ -157,7 +162,7 @@ class FriendsProfile extends Component {
 
     render() {
         const { user, currentFriend } = this.props;
-        const { activeTab, isLoadingProfPic } = this.state;
+        const { activeTab, isLoadingProfPic, friendsProfileIcons } = this.state;
         return currentFriend === null
             ? <View style={styles.fill} />
             : <View style={styles.fill}>
@@ -194,7 +199,7 @@ class FriendsProfile extends Component {
                                     </View>
                                 </ImageBackground>
                                 <ScrollView styles={styles.scrollBottom} contentContainerStyle={styles.scrollBottomContent}>
-                                    <Accordion expanded={0} dataArray={[{ title: 'Actions', content: this.FRIENDS_PROFILE_ICONS }]}
+                                    <Accordion expanded={0} dataArray={[{ title: 'Actions', content: friendsProfileIcons }]}
                                         renderContent={this.renderAccordionItem} headerStyle={styles.accordionHeader} />
                                 </ScrollView>
                             </View>
