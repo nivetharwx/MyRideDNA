@@ -88,7 +88,8 @@ class Profile extends Component {
     onPressLogout = async () => {
         // TODO: Store accesstoken initially while login and use it here,
         const accessToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
-        this.props.logoutUser(this.props.user.userId, accessToken);
+        const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
+        this.props.logoutUser(this.props.user.userId, accessToken, deviceToken);
     }
 
     render() {
@@ -152,7 +153,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
+        logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Profile);

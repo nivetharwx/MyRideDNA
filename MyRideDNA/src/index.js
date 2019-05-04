@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
+import { AsyncStorage } from 'react-native';
 import Navigation from './navigation';
 import FCM, { NotificationActionType, FCMEvent } from "react-native-fcm";
-import { IS_ANDROID } from './constants';
+import { IS_ANDROID, DEVICE_TOKEN } from './constants';
 
 
 // this shall be called regardless of app state: running, background or not running. Won't be called when app is killed by user in iOS
@@ -26,6 +27,9 @@ FCM.on(FCMEvent.Notification, (notif) => {
 FCM.on(FCMEvent.RefreshToken, (token) => {
     console.log(token)
     // fcm token may not be available on first load, catch it here
+    if (token) {
+        AsyncStorage.setItem(DEVICE_TOKEN, token);
+    }
 });
 export default class App extends Component {
 
@@ -60,7 +64,9 @@ export default class App extends Component {
 
         FCM.getFCMToken().then(token => {
             console.log("TOKEN (getFCMToken)", token);
-            this.setState({ token: token || "" });
+            if (token) {
+                AsyncStorage.setItem(DEVICE_TOKEN, token);
+            }
         });
 
         if (!IS_ANDROID) {

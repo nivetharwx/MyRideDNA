@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, StatusBar, Text, ScrollView, AsyncStorage, TouchableOpacity, TextInput, KeyboardAvoidingView,Alert } from 'react-native';
+import { View, StatusBar, Text, ScrollView, AsyncStorage, TouchableOpacity, TextInput, KeyboardAvoidingView, Alert } from 'react-native';
 import { connect } from 'react-redux';
 import styles from './styles';
 import { APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN } from '../../constants';
@@ -94,7 +94,7 @@ export class Settings extends Component {
             locationRadiusState: val
         })
     }
-    
+
     onChangeTimeInterval = (val) => {
         this.setState({
             timeIntervalInSeconds: val
@@ -128,19 +128,18 @@ export class Settings extends Component {
         }
     }
 
-    passwordFormat = () =>{
-        if(this.state.newPasswd.length < 5){
+    passwordFormat = () => {
+        if (this.state.newPasswd.length < 5) {
             Alert.alert('Error', 'Password should be greater than 5 character');
-        } else if(this.state.newPasswd.search(/\d/) == -1){
+        } else if (this.state.newPasswd.search(/\d/) == -1) {
             Alert.alert('Error', 'Password should contain one number');
-        }   
+        }
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
 
     onPressLogout = async () => {
-        const accessToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
-        this.props.logoutUser(this.props.user.userId, accessToken);
+        this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
 
     toggleForgotPasswordForm = () => {
@@ -298,8 +297,8 @@ export class Settings extends Component {
 }
 
 const mapStateToProps = (state) => {
-    const { user, updatePasswordError, updatePasswordSuccess } = state.UserAuth;
-    return { user, updatePasswordError, updatePasswordSuccess };
+    const { user, userAuthToken, deviceToken, updatePasswordError, updatePasswordSuccess } = state.UserAuth;
+    return { user, userAuthToken, deviceToken, updatePasswordError, updatePasswordSuccess };
 }
 
 const mapDispatchToProps = (dispatch) => {
@@ -308,7 +307,7 @@ const mapDispatchToProps = (dispatch) => {
         updateUserSettings: (userSettings) => dispatch(updateUserSettings(userSettings)),
         updatePassword: (passwordInfo) => dispatch(updatePassword(passwordInfo)),
         updateShareLocationState: (userId, shareLocState) => dispatch(updateShareLocationState(userId, shareLocState)),
-        logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
+        logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         resetUpdatePasswordError: () => dispatch(resetPasswordErrorAction()),
     }
 }

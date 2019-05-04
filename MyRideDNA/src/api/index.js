@@ -3,7 +3,7 @@ import {
     replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
     deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction
 } from '../actions';
-import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE } from '../constants';
+import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN } from '../constants';
 import axios from 'axios';
 
 import { AsyncStorage } from 'react-native';
@@ -126,10 +126,10 @@ export const updateLocation = (userId, locationInfo) => {
             console.log("updateLocation error: ", er.response || er);
         })
 }
-export const logoutUser = (userId, accessToken) => {
+export const logoutUser = (userId, accessToken, deviceToken) => {
     return dispatch => {
         dispatch(toggleLoaderAction(true));
-        axios.post(USER_BASE_URL + `logoutUser`, { userId, accessToken }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.post(USER_BASE_URL + `logoutUser`, { userId, accessToken, registrationToken: deviceToken }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
@@ -137,8 +137,10 @@ export const logoutUser = (userId, accessToken) => {
 
                     publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: false, userId: userId } });
                     // TODO: Clear store
-                    AsyncStorage.removeItem(USER_AUTH_TOKEN).then(() => {
-                        Actions.reset(PageKeys.LOGIN);
+                    AsyncStorage.removeItem(DEVICE_TOKEN).then(() => {
+                        AsyncStorage.removeItem(USER_AUTH_TOKEN).then(() => {
+                            Actions.reset(PageKeys.LOGIN);
+                        });
                     });
                     setTimeout(() => { dispatch(resetStateOnLogout()) }, 1000)
                 }
@@ -859,7 +861,7 @@ export const cancelFriendRequest = (senderId, personId, requestId) => {
                 if (res.status === 200) {
                     console.log('cancelFriendRequest sucess : ', res)
                     dispatch(toggleLoaderAction(false));
-                    dispatch(updateFriendRequestListAction({id:requestId}))
+                    dispatch(updateFriendRequestListAction({ id: requestId }))
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
                 }
             })
@@ -892,7 +894,7 @@ export const approveFriendRequest = (senderId, personId, actionDate, requestId) 
                 if (res.status === 200) {
                     console.log('approveFriendRequest sucess: ', res)
                     dispatch(toggleLoaderAction(false));
-                    dispatch(updateFriendRequestListAction({id:requestId}))
+                    dispatch(updateFriendRequestListAction({ id: requestId }))
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.FRIEND }));
                 }
             })
@@ -911,7 +913,7 @@ export const rejectFriendRequest = (senderId, personId, requestId) => {
                 if (res.status === 200) {
 
                     console.log('rejectFriendRequest success: ', res)
-                    dispatch(updateFriendRequestListAction({id:requestId}))
+                    dispatch(updateFriendRequestListAction({ id: requestId }))
                     dispatch(toggleLoaderAction(false));
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
                 }

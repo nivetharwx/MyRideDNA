@@ -5,9 +5,9 @@ import {
 } from 'react-native';
 import { connect } from 'react-redux';
 import { Actions } from 'react-native-router-flux';
-import { USER_AUTH_TOKEN, PageKeys, WindowDimensions, USER_BASE_URL } from '../../constants';
+import { USER_AUTH_TOKEN, PageKeys, WindowDimensions, USER_BASE_URL, DEVICE_TOKEN } from '../../constants';
 import { Icon as NBIcon } from 'native-base';
-import { storeUserAction } from '../../actions';
+import { storeUserAction, updateTokenAction } from '../../actions';
 import axios from 'axios';
 
 class SplashScreen extends React.Component {
@@ -49,7 +49,10 @@ class SplashScreen extends React.Component {
     handleFirstConnectivityChange = async (connectionInfo) => {
         if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
             var userAuthToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
+            var deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
             if (userAuthToken) {
+                this.props.updateToken({ userAuthToken, deviceToken });
+                console.log("updateToken called: ", { userAuthToken, deviceToken });
                 axios.post(USER_BASE_URL + 'loginUserUsingAccessToken', { accessToken: userAuthToken, date: new Date().toISOString() }, { timeout: 15000 })
                     .then(res => {
                         if (res.status === 200) {
@@ -122,6 +125,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        updateToken: (token) => dispatch(updateTokenAction(token)),
         storeUser: (userInfo) => dispatch(storeUserAction(userInfo)),
     };
 }

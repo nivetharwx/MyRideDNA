@@ -247,12 +247,11 @@ export class Rides extends Component {
     }
 
     onPressLogout = async () => {
-        const accessToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
-        this.props.logoutUser(this.props.user.userId, accessToken);
+        this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
 
     render() {
-        const { activeTab, searchQuery, headerSearchMode, isVisibleRenameModal, isVisibleOptionsModal,isRefreshing } = this.state;
+        const { activeTab, searchQuery, headerSearchMode, isVisibleRenameModal, isVisibleOptionsModal, isRefreshing } = this.state;
         const { buildRides, recordedRides, sharedRides, user } = this.props;
         return (
             <View style={{ flex: 1 }}>
@@ -393,10 +392,10 @@ export class Rides extends Component {
 
 const mapStateToProps = (state) => {
     const { showMenu } = state.TabVisibility;
-    const { user } = state.UserAuth;
+    const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { buildRides, recordedRides, sharedRides } = state.RideList;
     const { ride } = state.RideInfo.present;
-    return { showMenu, user, buildRides, recordedRides, sharedRides, ride };
+    return { showMenu, user, userAuthToken, deviceToken, buildRides, recordedRides, sharedRides, ride };
 }
 
 const mapDispatchToProps = (dispatch) => {
@@ -412,7 +411,7 @@ const mapDispatchToProps = (dispatch) => {
         renameRide: (ride, rideType, userId, index) => dispatch(renameRide(ride, rideType, userId, index)),
         changeScreen: (screenKey) => dispatch(screenChangeAction(screenKey)),
         clearRideFromMap: () => dispatch(clearRideAction()),
-        logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
+        logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
     }
 }
 

@@ -1641,8 +1641,7 @@ export class Map extends Component {
     }
 
     onPressLogout = async () => {
-        const accessToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
-        this.props.logoutUser(this.props.user.userId, accessToken);
+        this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
 
     createFriendsLocationMarker = (locInfo) => {
@@ -1978,12 +1977,12 @@ const mapStateToProps = (state) => {
     const { ride } = state.RideInfo.present;
     const canUndo = state.RideInfo.past.length > 0;
     const canRedo = state.RideInfo.future.length > 0;
-    const { user } = state.UserAuth;
+    const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { isLocationOn } = state.GPSState;
     const { showLoader } = state.PageState;
     const { notificationList } = state.NotificationList;
     const { friendsLocationList } = state.FriendList;
-    return { ride, isLocationOn, user, showMenu, friendsLocationList, currentScreen, showLoader, canUndo, canRedo, notificationList };
+    return { ride, isLocationOn, user, userAuthToken, deviceToken, showMenu, friendsLocationList, currentScreen, showLoader, canUndo, canRedo, notificationList };
 }
 
 const mapDispatchToProps = (dispatch) => {
@@ -2050,7 +2049,7 @@ const mapDispatchToProps = (dispatch) => {
         resetCurrentGroup: () => dispatch(resetCurrentGroupAction()),
         doUndo: () => dispatch(undoRideAction()),
         doRedo: () => dispatch(redoRideAction()),
-        logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
+        logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         updateSourceOrDestinationName: (identifier, locationName) => dispatch(updateSourceOrDestinationNameAction({ identifier, locationName })),
         updateWaypointName: (waypointId, locationName) => dispatch(updateWaypointNameAction({ waypointId, locationName })),
         hideFriendsLocation: () => dispatch(hideFriendsLocationAction()),

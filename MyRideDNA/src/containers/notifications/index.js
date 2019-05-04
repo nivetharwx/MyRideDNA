@@ -3,7 +3,7 @@ import { SafeAreaView, View, Text, Platform, Image, ScrollView, AsyncStorage, St
 import { Actions } from 'react-native-router-flux';
 
 import { BasicHeader } from '../../components/headers';
-import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, USER_AUTH_TOKEN } from '../../constants';
+import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP } from '../../constants';
 import { List, ListItem, Left, Thumbnail, Body, Right } from 'native-base';
 import { ShifterButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, updateNotificationAction } from '../../actions';
@@ -14,8 +14,8 @@ import { getFormattedDateFromISO } from '../../util';
 class Notifications extends Component {
     constructor(props) {
         super(props);
-        this.state={
-            notifPicture :{}
+        this.state = {
+            notifPicture: {}
         }
     }
 
@@ -28,16 +28,16 @@ class Notifications extends Component {
         if (prevProps.notificationList !== this.props.notificationList) {
             this.props.notificationList.forEach((notificationPic) => {
                 if (!notificationPic.profilePicture && notificationPic.profilPictureId) {
-                    if(!this.state.notifPicture[notificationPic.profilPictureId])
-                    this.setState(prevState => {
-                        const updatedPictureLoader = { ...prevState.notifPicture };
-                        updatedPictureLoader[notificationPic.profilPictureId] = true;
-                        return { notifPicture: updatedPictureLoader }
-                    }, () => {
-                        this.props.getNotificationPic(notificationPic.profilPictureId, notificationPic.id)
-                    });
-                    
-                }else {
+                    if (!this.state.notifPicture[notificationPic.profilPictureId])
+                        this.setState(prevState => {
+                            const updatedPictureLoader = { ...prevState.notifPicture };
+                            updatedPictureLoader[notificationPic.profilPictureId] = true;
+                            return { notifPicture: updatedPictureLoader }
+                        }, () => {
+                            this.props.getNotificationPic(notificationPic.profilPictureId, notificationPic.id)
+                        });
+
+                } else {
                     this.setState(prevState => {
                         const updatedPictureLoader = { ...prevState.notifPicture };
                         updatedPictureLoader[notificationPic.profilPictureId] = false;
@@ -83,8 +83,7 @@ class Notifications extends Component {
     }
 
     onPressLogout = async () => {
-        const accessToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
-        this.props.logoutUser(this.props.user.userId, accessToken);
+        this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
 
     render() {
@@ -113,14 +112,14 @@ class Notifications extends Component {
     }
 }
 const mapStateToProps = (state) => {
-    const { user } = state.UserAuth;
+    const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { notificationList } = state.NotificationList;
-    return { user, notificationList };
+    return { user, userAuthToken, deviceToken, notificationList };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
+        logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
         getNotificationPic: (pictureId, id) => getPicture(pictureId, ({ picture, pictureId }) => {
             dispatch(updateNotificationAction({ profilePicture: picture, id: id }))

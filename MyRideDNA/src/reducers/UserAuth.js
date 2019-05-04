@@ -1,4 +1,4 @@
-import { LOGIN_RESPONSE, CURRENT_USER, UPDATE_USER, UPDATE_EMAIL_STATUS, UPDATE_SIGNUP_RESULT, UPDATE_PASSWORD_SUCCESS, UPDATE_PASSWORD_ERROR, RESET_PASSWORD_ERROR } from "../actions/actionConstants";
+import { LOGIN_RESPONSE, CURRENT_USER, UPDATE_USER, UPDATE_EMAIL_STATUS, UPDATE_SIGNUP_RESULT, UPDATE_PASSWORD_SUCCESS, UPDATE_PASSWORD_ERROR, RESET_PASSWORD_ERROR, UPDATE_TOKEN } from "../actions/actionConstants";
 
 const initialState = {
     // loginResponse: null
@@ -6,7 +6,9 @@ const initialState = {
     emailStatus: { isExists: false },
     signupResult: '',
     updatePasswordError: '',
-    updatePasswordSuccess: ''
+    updatePasswordSuccess: '',
+    deviceToken: null,
+    userAuthToken: null
 };
 
 export default (state = initialState, action) => {
@@ -20,6 +22,11 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 signupResult: action.data
+            }
+        case UPDATE_TOKEN:
+            return {
+                ...state,
+                ...action.data
             }
         case CURRENT_USER:
             action.data.locationEnable = action.data.locationEnable || false;

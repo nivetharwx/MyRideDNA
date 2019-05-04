@@ -199,9 +199,7 @@ class MyProfileTab extends Component {
     }
 
     onPressLogout = async () => {
-        // TODO: Store accesstoken initially while login and use it here,
-        const accessToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
-        this.props.logoutUser(this.props.user.userId, accessToken);
+        this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
 
     render() {
@@ -249,17 +247,17 @@ class MyProfileTab extends Component {
 }
 
 const mapStateToProps = (state) => {
-    const { user } = state.UserAuth;
+    const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { profileLastOptions } = state.PageState;
     // const { shortSpaceList } = state.GarageInfo;
     const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
     // return { user, shortSpaceList };
-    return { user, garage,profileLastOptions };
+    return { user, userAuthToken, deviceToken, garage, profileLastOptions };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
+        logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         updateUser: (updates) => dispatch(updateUserAction(updates)),
         getUserProfilePicture: (pictureId) => getPicture(pictureId, ({ picture }) => {
             pictureId.indexOf(THUMBNAIL_TAIL_TAG) > -1
@@ -292,7 +290,7 @@ const mapDispatchToProps = (dispatch) => {
                 console.log(`getGarage error: `, error);
             })
         },
-        updateMyProfileLastOptions : (expanded) => dispatch(updateMyProfileLastOptionsAction({expanded}))
+        updateMyProfileLastOptions: (expanded) => dispatch(updateMyProfileLastOptionsAction({ expanded }))
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MyProfileTab);

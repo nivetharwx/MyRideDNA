@@ -9,8 +9,8 @@ import DeviceInfo from 'react-native-device-info'; // DOC: Check https://www.npm
 import Md5 from 'react-native-md5'; // DOC: Check https://www.npmjs.com/package/react-native-md5
 
 import { LoginScreen } from './login';
-import { PageKeys, USER_AUTH_TOKEN, USER_BASE_URL } from '../../constants';
-import { storeUserAction, toggleNetworkStatusAction } from '../../actions';
+import { PageKeys, USER_AUTH_TOKEN, USER_BASE_URL, DEVICE_TOKEN } from '../../constants';
+import { storeUserAction, toggleNetworkStatusAction, updateTokenAction } from '../../actions';
 import ForgotPassword from '../forgot-password';
 import { Loader } from '../../components/loader'
 
@@ -23,16 +23,19 @@ class Login extends Component {
             spinner: false,
             isVisiblePassword: false,
             showForgotPasswordModal: false,
+            deviceToken: null
         };
     }
 
-    componentWillMount() {
+    async componentWillMount() {
         NetInfo.getConnectionInfo().then((connectionInfo) => { });
 
         NetInfo.addEventListener(
             'connectionChange',
             this.handleFirstConnectivityChange
         );
+        const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
+        this.setState({ deviceToken });
     }
 
     componentDidUpdate(prevProps) {
@@ -78,8 +81,18 @@ class Login extends Component {
             this.showNetworkError();
             return;
         }
-        const { username, password } = this.state;
+        if (this.state.deviceToken === null) {
+            const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
+            this.setState({ deviceToken }, () => this.doLogin());
+        } else {
+            this.doLogin();
+        }
+    }
+
+    doLogin = () => {
+        const { username, password, deviceToken } = this.state;
         const userData = {};
+        userData.registrationToken = deviceToken;
         userData.deviceId = DeviceInfo.getUniqueID();
         userData.date = new Date().toISOString();
         userData.email = username;//'madhavan.v@reactiveworks.in'; // FIXME: Remove static value
@@ -90,6 +103,8 @@ class Login extends Component {
             .then(res => {
                 if (res.status === 200) {
                     AsyncStorage.setItem(USER_AUTH_TOKEN, res.data.accessToken);
+                    this.props.updateToken({ userAuthToken: res.data.accessToken, deviceToken });
+                    console.log("updateToken called: ", { userAuthToken: res.data.accessToken, deviceToken });
                     this.props.storeUser(res.data.user);
                     this.setState({ spinner: !this.state.spinner });
                     Actions.reset(PageKeys.MAP);
@@ -152,6 +167,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        updateToken: (token) => dispatch(updateTokenAction(token)),
         storeUser: (userInfo) => dispatch(storeUserAction(userInfo)),
         toggleNetworkStatus: (status) => dispatch(toggleNetworkStatusAction(status)),
     }

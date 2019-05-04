@@ -3,7 +3,7 @@ import { View, Text, AsyncStorage, StyleSheet, StatusBar } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 
 import { BasicHeader } from '../../components/headers';
-import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, USER_AUTH_TOKEN } from '../../constants';
+import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP } from '../../constants';
 import { ShifterButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { connect } from 'react-redux';
@@ -24,8 +24,7 @@ class Offers extends Component {
     }
 
     onPressLogout = async () => {
-        const accessToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
-        this.props.logoutUser(this.props.user.userId, accessToken);
+        this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
 
     render() {
@@ -48,13 +47,13 @@ class Offers extends Component {
     }
 }
 const mapStateToProps = (state) => {
-    const { user } = state.UserAuth;
-    return { user };
+    const { user, userAuthToken, deviceToken } = state.UserAuth;
+    return { user, userAuthToken, deviceToken };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
+        logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Offers);
