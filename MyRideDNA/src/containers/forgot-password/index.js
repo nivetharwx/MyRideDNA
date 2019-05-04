@@ -23,6 +23,7 @@ class ForgotPassword extends React.Component {
         showLoader: false,
         isVisiblePassword: false,
         isVisibleConfirmPassword: false,
+        isVisibleOTP:false,
     };
     cPasswdRef = null;
     constructor(props) {
@@ -67,6 +68,7 @@ class ForgotPassword extends React.Component {
 
     onPressSubmitButton = () => {
         if (this.state.formStep === 1) {
+            this.setState({isVisibleOTP:true})
             this.onSubmitEmail(this.state.email);
         } else if (this.state.formStep === 2) {
             this.onSubmitOTP(this.state.otp);
@@ -146,10 +148,10 @@ class ForgotPassword extends React.Component {
             this.setState({ showLoader: true });
             axios.get(USER_BASE_URL + `sendOTPToMail/${email}`, undefined, { timeout: 15 * 1000 })
                 .then(res => {
-                    Toast.show({
-                        text: 'We have sent an OTP to your email',
-                        buttonText: 'Okay'
-                    });
+                    // Toast.show({
+                    //     text: 'We have sent an OTP to your email',
+                    //     buttonText: 'Okay'
+                    // });
                     this.setState({ showLoader: false, formStep: 2 });
                 })
                 .catch(error => {
@@ -182,6 +184,12 @@ class ForgotPassword extends React.Component {
                 return (
                     <View style={styles.form}>
                         <LabeledInput placeholder='Enter the OTP here' onChange={this.onChangeOTP} onSubmit={this.onSubmitOTP} />
+                        {
+                            this.state.isVisibleOTP
+                            ?
+                            <Text style={{color:'red',fontSize:13}}>OTP has been sent to your registerd email id</Text>
+                            :null
+                        }
                         <View style={styles.buttonContainer}>
                             <LinkButton title='Cancel' onPress={this.onCloseModal} />
                             <LinkButton title='Resend OTP' onPress={() => this.onSubmitEmail(this.state.email)} />

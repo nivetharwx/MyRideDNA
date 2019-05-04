@@ -15,7 +15,8 @@ import {
     UPDATE_FRIENDS_LOCATION,
     REPLACE_FRIENDS_LOCATION,
     HIDE_FRIENDS_LOCATION,
-    ADD_FRIENDS_LOCATION
+    ADD_FRIENDS_LOCATION,
+    UPDATE_MYPROFILE_LAST_OPTION
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -57,6 +58,12 @@ export const updateEmailStatusAction = (data) => (
 export const updateUserAction = (data) => (
     {
         type: UPDATE_USER,
+        data: data
+    }
+);
+export const updateMyProfileLastOptionsAction = (data) => (
+    {
+        type: UPDATE_MYPROFILE_LAST_OPTION,
         data: data
     }
 );

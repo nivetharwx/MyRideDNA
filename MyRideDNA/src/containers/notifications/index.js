@@ -6,17 +6,46 @@ import { BasicHeader } from '../../components/headers';
 import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, USER_AUTH_TOKEN } from '../../constants';
 import { List, ListItem, Left, Thumbnail, Body, Right } from 'native-base';
 import { ShifterButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction } from '../../actions';
+import { appNavMenuVisibilityAction, updateNotificationAction } from '../../actions';
 import { connect } from 'react-redux';
-import { logoutUser, getAllNotifications } from '../../api';
+import { logoutUser, getAllNotifications, getPicture } from '../../api';
+import { getFormattedDateFromISO } from '../../util';
 
 class Notifications extends Component {
     constructor(props) {
         super(props);
+        this.state={
+            notifPicture :{}
+        }
     }
 
     componentDidMount() {
         this.props.getAllNotifications(this.props.user.userId);
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+
+        if (prevProps.notificationList !== this.props.notificationList) {
+            this.props.notificationList.forEach((notificationPic) => {
+                if (!notificationPic.profilePicture && notificationPic.profilPictureId) {
+                    if(!this.state.notifPicture[notificationPic.profilPictureId])
+                    this.setState(prevState => {
+                        const updatedPictureLoader = { ...prevState.notifPicture };
+                        updatedPictureLoader[notificationPic.profilPictureId] = true;
+                        return { notifPicture: updatedPictureLoader }
+                    }, () => {
+                        this.props.getNotificationPic(notificationPic.profilPictureId, notificationPic.id)
+                    });
+                    
+                }else {
+                    this.setState(prevState => {
+                        const updatedPictureLoader = { ...prevState.notifPicture };
+                        updatedPictureLoader[notificationPic.profilPictureId] = false;
+                        return { notifPicture: updatedPictureLoader }
+                    });
+                }
+            })
+        }
     }
 
     toggleAppNavigation = () => this.props.showAppNavMenu();
@@ -38,7 +67,7 @@ class Notifications extends Component {
                 style={[styles.listItem, { backgroundColor: '#fff' }]}
                 onPress={() => console.log("Pressed: ", item.message)}>
                 <Left style={[styles.noBorderTB, styles.avatarContainer]}>
-                    <Thumbnail source={require('../../assets/img/friend-profile-pic.png')} />
+                    <Thumbnail source={item.profilePicture ? { uri: item.profilePicture } : require('../../assets/img/friend-profile-pic.png')} />
                 </Left>
                 <Body style={[styles.noBorderTB, styles.itemBody]}>
                     {/* {
@@ -47,6 +76,7 @@ class Notifications extends Component {
                             : <Text style={styles.name}>{item.fromUserName + ' '}<Text style={styles.message}>{item.message}</Text></Text>
                     } */}
                     <Text style={styles.name}>{item.fromUserName + ' '}<Text style={styles.message}>{item.message}</Text></Text>
+                    <Text>{getFormattedDateFromISO(item.date, '/')}</Text>
                 </Body>
             </ListItem>
         );
@@ -92,6 +122,11 @@ const mapDispatchToProps = (dispatch) => {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         logoutUser: (userId, accessToken) => dispatch(logoutUser(userId, accessToken)),
         getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
+        getNotificationPic: (pictureId, id) => getPicture(pictureId, ({ picture, pictureId }) => {
+            dispatch(updateNotificationAction({ profilePicture: picture, id: id }))
+        }, (error) => {
+            dispatch(updateNotificationAction({ id: id }))
+        }),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Notifications);
