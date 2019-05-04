@@ -137,10 +137,10 @@ export const logoutUser = (userId, accessToken, deviceToken) => {
 
                     publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: false, userId: userId } });
                     // TODO: Clear store
-                    AsyncStorage.removeItem(DEVICE_TOKEN).then(() => {
-                        AsyncStorage.removeItem(USER_AUTH_TOKEN).then(() => {
-                            Actions.reset(PageKeys.LOGIN);
-                        });
+                    // AsyncStorage.removeItem(DEVICE_TOKEN).then(() => {
+                    // });
+                    AsyncStorage.removeItem(USER_AUTH_TOKEN).then(() => {
+                        Actions.reset(PageKeys.LOGIN);
                     });
                     setTimeout(() => { dispatch(resetStateOnLogout()) }, 1000)
                 }
@@ -765,12 +765,13 @@ export const getRideByRideId = (rideId) => {
 export const getAllFriends = (friendType, userId, pageNumber) => {
     return dispatch => {
         pageNumber > 0 && dispatch(toggleLoaderAction(true));
-        axios.get(FRIENDS_BASE_URL + `getFriendList?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        // axios.get(FRIENDS_BASE_URL + `getFriendList?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.get(GRAPH_BASE_URL + `getFriendList?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
                     // DOC: Calling for getting online friends
-                    dispatch(getAllOnlineFriends(userId));
+                    // dispatch(getAllOnlineFriends(userId));
                     if (pageNumber === 0) {
                         dispatch(replaceFriendListAction({ friendType, friendList: res.data }))
                     } else {
