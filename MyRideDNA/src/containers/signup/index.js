@@ -15,7 +15,7 @@ import Spinner from 'react-native-loading-spinner-overlay';
 import { validateEmailOnServer, registerUser } from '../../api';
 import Md5 from 'react-native-md5';
 import { toggleNetworkStatusAction } from '../../actions';
-// import Snackbar from 'react-native-snackbar';
+import { Loader } from '../../components/loader';
 
 const ANDROID_HEADER_HEIGHT = 50;
 const IOS_HEADER_HEIGHT = 90;
@@ -86,12 +86,12 @@ class Signup extends Component {
         }
     }
 
-    passwordFormat = () =>{
-        if(this.state.user.password.length < 5){
+    passwordFormat = () => {
+        if (this.state.user.password.length < 5) {
             Alert.alert('Error', 'Password should be greater than 5 character');
-        } else if(this.state.user.password.search(/\d/) == -1){
+        } else if (this.state.user.password.search(/\d/) == -1) {
             Alert.alert('Error', 'Password should contain one number');
-        }   
+        }
     }
 
     onPasswordsChange = (passwd) => {
@@ -158,11 +158,12 @@ class Signup extends Component {
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={{ flex: 1, backgroundColor: 'white' }}>
-                    <Spinner
+                    {/* <Spinner
                         visible={showLoader}
                         textContent={'Loading...'}
                         textStyle={{ color: '#fff' }}
-                    />
+                    /> */}
+                    <Loader isVisible={showLoader} onCancel={() => this.setState({ showLoader: false })} />
                     <BasicHeader title='Signup' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} searchbarMode={false} />
                     <ScrollView style={{ backgroundColor: 'white', marginTop: HEADER_HEIGHT }} contentContainerStyle={{ paddingTop: 20, justifyContent: 'space-between' }}>
                         <LabeledInput inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />

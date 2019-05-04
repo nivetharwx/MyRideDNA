@@ -9,7 +9,7 @@ import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListActio
 import { Accordion } from 'native-base';
 import ImagePicker from 'react-native-image-crop-picker';
 import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo } from '../../../api';
-import { Loader } from '../../../components/loader';
+import { ImageLoader } from '../../../components/loader';
 
 const hasIOSAbove10 = parseInt(Platform.Version) > 10;
 class MyProfileTab extends Component {
@@ -153,7 +153,7 @@ class MyProfileTab extends Component {
                             />
                             {
                                 this.state.pictureLoader[item.spaceId]
-                                    ? <Loader show={this.state.pictureLoader[item.spaceId]} />
+                                    ? <ImageLoader show={this.state.pictureLoader[item.spaceId]} />
                                     : null
                             }
                         </View>}
@@ -217,7 +217,7 @@ class MyProfileTab extends Component {
                         <ImageBackground source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}>
                             {
                                 isLoadingProfPic
-                                    ? <Loader show={isLoadingProfPic} />
+                                    ? <ImageLoader show={isLoadingProfPic} />
                                     : null
                             }
                         </ImageBackground>
@@ -279,9 +279,11 @@ const mapDispatchToProps = (dispatch) => {
         setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
         getGarageInfo: (userId) => {
             dispatch(toggleLoaderAction(true));
+            console.log("loader enabled");
             getGarageInfo(userId, (garage) => {
-                dispatch(toggleLoaderAction(false));
-                dispatch(replaceGarageInfoAction(garage));
+                dispatch(replaceGarageInfoAction(garage))
+                setTimeout(() => dispatch(toggleLoaderAction(false)), 100);
+                console.log("loader disabled");
             }, (error) => {
                 dispatch(toggleLoaderAction(false));
                 console.log(`getGarage error: `, error);

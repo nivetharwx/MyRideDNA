@@ -7,7 +7,7 @@ import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAct
 import { Tabs, Tab, ScrollableTab, TabHeading, Accordion, ListItem, Left } from 'native-base';
 import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
-import { Loader } from '../../components/loader';
+import { ImageLoader } from '../../components/loader';
 import styles from './styles';
 import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend, getFriendsLocationList } from '../../api';
 import { BasicCard } from '../../components/cards';
@@ -187,7 +187,7 @@ class FriendsProfile extends Component {
                                         <ImageBackground source={currentFriend.profilePicture ? { uri: currentFriend.profilePicture } : require('../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}>
                                             {
                                                 isLoadingProfPic
-                                                    ? <Loader show={isLoadingProfPic} />
+                                                    ? <ImageLoader show={isLoadingProfPic} />
                                                     : null
                                             }
                                         </ImageBackground>

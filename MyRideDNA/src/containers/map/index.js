@@ -3,7 +3,7 @@ import {
     SafeAreaView, View, TouchableOpacity, Alert,
     Keyboard, Image, BackHandler, Animated,
     DeviceEventEmitter, Text, AsyncStorage, StatusBar,
-    AppState
+    AppState, ActivityIndicator
 } from 'react-native';
 import { connect } from 'react-redux';
 
@@ -21,7 +21,7 @@ import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon } from 'native-base';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationNameAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout } from '../../actions';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationNameAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction } from '../../actions';
 import { SearchBox } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -49,6 +49,8 @@ import { BasicHeader } from '../../components/headers';
 import { CreateRide } from '../create-ride';
 import BackgroundGeolocation from 'react-native-mauron85-background-geolocation';
 import axios from 'axios';
+import { BaseModal } from '../../components/modal';
+import { Loader } from '../../components/loader';
 
 MapboxGL.setAccessToken(MAP_ACCESS_TOKEN);
 // DOC: JS mapbox library to make direction api calls
@@ -132,7 +134,8 @@ export class Map extends Component {
                 type: 'FeatureCollection',
                 features: []
             },
-            friendsImage: {}
+            friendsImage: {},
+            appState: null,
         };
     }
 
@@ -492,6 +495,7 @@ export class Map extends Component {
     }
 
     async componentDidMount() {
+        let updatedgpsPointCollection = {};
         this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         this.props.pushNotification(this.props.user.userId);
         this.props.getAllNotifications(this.props.user.userId);
@@ -501,6 +505,7 @@ export class Map extends Component {
         if (this.props.user.locationEnable) this.startTrackingLocation();
         // AppState.addEventListener('change', this.handleAppStateChange);
         BackgroundGeolocation.on('location', (location) => {
+            console.log("location from BackgroundGeolocation: ", location);
             if (location.time - this.prevUserTrackTime > (this.props.user.timeIntervalInSeconds * 1000)) {
                 this.prevUserTrackTime = location.time;
                 this.props.updateLocation(this.props.user.userId, { lat: location.latitude, lng: location.longitude });
@@ -509,6 +514,30 @@ export class Map extends Component {
                 // BackgroundGeolocation.startTask(taskKey => {
                 //     BackgroundGeolocation.endTask(taskKey);
                 // });
+            }
+            if (this.state.appState === 'background' && this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
+                if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (location.longitude + '' + location.latitude)) {
+                    const { gpsPointCollection } = this.state;
+                    const feature = gpsPointCollection.features[0];
+                    let points = [...feature.geometry.coordinates, [location.longitude, location.latitude]];
+                    // trackpointTick++;
+                    updatedgpsPointCollection.gpsPointCollection = {
+                        ...gpsPointCollection,
+                        features: [{
+                            ...feature, geometry: {
+                                ...feature.geometry,
+                                coordinates: points
+                            }
+                        }]
+                    }
+                    this.gpsPointTimestamps.push(new Date().toISOString()); // TODO: Use Date.now() for sending to mapbox api, if it is supporting timestamps
+                    // trackpointTick = 0;
+                    if (this.gpsPointTimestamps.length === 100) {
+                        this.getCoordsOnRoad(points.slice(-this.gpsPointTimestamps.length), this.gpsPointTimestamps, (responseBody, trackpoints, distance) => this.props.addTrackpoints(trackpoints, distance, ride, this.props.user.userId));
+                        this.gpsPointTimestamps = [];
+                    }
+                    this.setState({ ...updatedgpsPointCollection, currentLocation: { location: [location.longitude, location.latitude], name: '' } });
+                }
             }
         });
         BackgroundGeolocation.on('stationary', (stationaryLocation) => {
@@ -524,10 +553,20 @@ export class Map extends Component {
             console.log('[INFO] BackgroundGeolocation service has been stopped');
         });
         BackgroundGeolocation.on('background', () => {
+            if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
+                clearInterval(this.watchID);
+                this.startTrackingLocation();
+            }
+            this.setState({ appState: 'background' });
             // this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         });
 
         BackgroundGeolocation.on('foreground', () => {
+            if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
+                updatedgpsPointCollection = {};
+                this.watchLocation();
+            }
+            this.setState({ appState: 'foreground' });
             // this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         });
         BackgroundGeolocation.checkStatus(status => {
@@ -1629,11 +1668,11 @@ export class Map extends Component {
         return (
             <View style={{ flex: 1 }}>
                 <MenuModal notificationCount={notificationList.length} isVisible={showMenu} onClose={this.onCloseAppNavMenu} onPressNavMenu={this.onPressAppNavMenu} alignCloseIconLeft={user.handDominance === 'left'} />
-                <Spinner
+                {/* <Spinner
                     visible={showLoader}
                     textContent={'Loading...'}
                     textStyle={{ color: '#fff' }}
-                />
+                /> */}
                 <View style={[styles.fillParent, { flexShrink: 1 }]}>
                     {
                         !showCreateRide
@@ -1928,6 +1967,7 @@ export class Map extends Component {
                         ? <ShifterButton onPress={this.toggleAppNavigation} alignLeft={user.handDominance === 'left'} />
                         : null
                 }
+                {/* <Loader isVisible={showLoader} onCancel={this.props.hideLoader} /> */}
             </View>
         );
     }
@@ -1962,7 +2002,7 @@ const mapDispatchToProps = (dispatch) => {
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
         deleteNotifications: (notificationIds) => dispatch(deleteNotifications(notificationIds)),
         deleteAllNotifications: (userId) => dispatch(deleteAllNotifications(userId)),
-
+        hideLoader: () => dispatch(toggleLoaderAction(false)),
 
         // addSource: (waypoint, ride) => dispatch(addSource(waypoint, ride)),
         addSource: (waypoint) => dispatch(updateRideAction({ source: waypoint })),

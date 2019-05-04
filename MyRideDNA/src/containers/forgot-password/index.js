@@ -11,6 +11,7 @@ import { USER_BASE_URL, WindowDimensions, APP_COMMON_STYLES, widthPercentageToDP
 import { BaseModal } from '../../components/modal';
 import Md5 from 'react-native-md5';
 import { Toast, Item } from 'native-base';
+import { Loader } from '../../components/loader';
 
 class ForgotPassword extends React.Component {
     initialState = {
@@ -212,18 +213,17 @@ class ForgotPassword extends React.Component {
     }
 
     render() {
-        console.log('password visibility : ', this.state.isVisiblePassword)
         const { formStep, showLoader } = this.state;
-        console.log('fromstep : ', this.state.formStep)
         const { isVisible, onCancel, onPressOutside } = this.props;
         return (
             <BaseModal isVisible={isVisible} alignCenter={true} onCancel={this.onCloseModal}>
                 <View style={styles.fill}>
-                    <Spinner
+                    {/* <Spinner
                         visible={showLoader}
                         textContent={'Verifying...'}
                         textStyle={{ color: '#fff' }}
-                    />
+                    /> */}
+                    <Loader isVisible={showLoader} onCancel={() => this.setState({ showLoader: false })} />
                     {
                         this.renderForm(formStep)
                     }

@@ -20,7 +20,7 @@ import { Icon as NBIcon } from 'native-base';
 import { WindowDimensions } from '../../constants';
 import { Actions } from 'react-native-router-flux';
 import { Toast } from 'native-base';
-import { Loader } from '../../components/loader';
+import { ImageLoader } from '../../components/loader';
 
 const MAXIMUM_SELECTION = 10;
 const ANDROID_HEADER_HEIGHT = 50;
@@ -171,7 +171,7 @@ export class GalleryView extends Component {
     render() {
         return (
             <SafeAreaView>
-                <Loader show={this.state.showLoader} offsetTop={50} />
+                <ImageLoader show={this.state.showLoader} offsetTop={50} />
                 <ScrollView style={{ marginTop: HEADER_HEIGHT }} onScroll={(e) => this.onScroll(e)}>
                     <View style={styles.galleryContainer}>
                         {this.state.media.map((p, i) => {

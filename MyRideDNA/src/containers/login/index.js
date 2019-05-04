@@ -12,6 +12,7 @@ import { LoginScreen } from './login';
 import { PageKeys, USER_AUTH_TOKEN, USER_BASE_URL } from '../../constants';
 import { storeUserAction, toggleNetworkStatusAction } from '../../actions';
 import ForgotPassword from '../forgot-password';
+import { Loader } from '../../components/loader'
 
 class Login extends Component {
     constructor(props) {
@@ -123,11 +124,12 @@ class Login extends Component {
                     backgroundColor="#7AC0E9"
                     barStyle="default"
                 />
-                <Spinner
+                {/* <Spinner
                     visible={this.state.spinner}
                     textContent={'Loading...'}
                     textStyle={{ color: '#fff' }}
-                />
+                /> */}
+                <Loader isVisible={this.state.spinner} onCancel={() => this.setState({ spinner: false })} />
                 <ForgotPassword isVisible={this.state.showForgotPasswordModal} onCancel={this.toggleForgotPasswordForm} onPressOutside={this.toggleForgotPasswordForm} />
                 <LoginScreen
                     onEmailChange={(value) => this.onEmailChange(value)}
