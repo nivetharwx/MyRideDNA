@@ -50,6 +50,8 @@ class SplashScreen extends React.Component {
         if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
             var userAuthToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
             var deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
+            var bgTimeTrackList = await AsyncStorage.getItem('bgTimeTrackList');
+            console.log("bgTimeTrackList: ", bgTimeTrackList);
             if (userAuthToken) {
                 this.props.updateToken({ userAuthToken, deviceToken });
                 console.log("updateToken called: ", { userAuthToken, deviceToken });

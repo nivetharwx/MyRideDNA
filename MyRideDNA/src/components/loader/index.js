@@ -6,7 +6,7 @@ import {
     Text
 } from 'react-native';
 import { BaseModal } from '../modal'
-import { widthPercentageToDP, IS_ANDROID } from '../../constants';
+import { widthPercentageToDP, IS_ANDROID, APP_COMMON_STYLES } from '../../constants';
 
 export const ImageLoader = ({ show, offsetTop }) => {
     return (
@@ -19,9 +19,9 @@ export const ImageLoader = ({ show, offsetTop }) => {
 }
 
 export const Loader = ({ isVisible, onCancel }) => {
-    return (
-        <BaseModal alignCenter={true} isVisible={isVisible} onCancel={onCancel}>
-            <View style={{ justifyContent: 'center', alignItems: 'center', width: widthPercentageToDP(20), height: widthPercentageToDP(20), elevation: 3 }}>
+    return isVisible
+        ? <View style={styles.loaderContainer}>
+            <View style={styles.loaderContent}>
                 {
                     IS_ANDROID
                         ? <ActivityIndicator size={widthPercentageToDP(20)} color='#fff' animating={isVisible} />
@@ -29,11 +29,26 @@ export const Loader = ({ isVisible, onCancel }) => {
                 }
                 <Text style={{ color: '#fff' }}>Loading...</Text>
             </View>
-        </BaseModal>
-    );
+        </View>
+        : null
 }
 
 const styles = StyleSheet.create({
+    loaderContainer: {
+        position: 'absolute',
+        zIndex: 999,
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        elevation: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    loaderContent: {
+        width: widthPercentageToDP(20),
+        height: widthPercentageToDP(20),
+        elevation: 3
+    },
     modalContent: {
         backgroundColor: 'rgba(133,133,133,0.5)',
         alignItems: 'center',

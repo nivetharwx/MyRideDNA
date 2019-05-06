@@ -495,6 +495,7 @@ export class Map extends Component {
     }
 
     async componentDidMount() {
+        let bgTimeTrackList = [];
         let updatedgpsPointCollection = {};
         this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         this.props.pushNotification(this.props.user.userId);
@@ -502,11 +503,10 @@ export class Map extends Component {
         this.notificationInterval = setInterval(() => {
             this.props.getAllNotifications(this.props.user.userId);
         }, 60 * 1000);
-        if (this.props.user.locationEnable) this.startTrackingLocation();
+        this.startTrackingLocation();
         // AppState.addEventListener('change', this.handleAppStateChange);
         BackgroundGeolocation.on('location', (location) => {
-            console.log("location from BackgroundGeolocation: ", location);
-            if (location.time - this.prevUserTrackTime > (this.props.user.timeIntervalInSeconds * 1000)) {
+            if (this.props.user.locationEnable && location.time - this.prevUserTrackTime > (this.props.user.timeIntervalInSeconds * 1000)) {
                 this.prevUserTrackTime = location.time;
                 this.props.updateLocation(this.props.user.userId, { lat: location.latitude, lng: location.longitude });
 
@@ -517,6 +517,7 @@ export class Map extends Component {
             }
             if (this.state.appState === 'background' && this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
                 if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (location.longitude + '' + location.latitude)) {
+                    bgTimeTrackList.push(Date.now());
                     const { gpsPointCollection } = this.state;
                     const feature = gpsPointCollection.features[0];
                     let points = [...feature.geometry.coordinates, [location.longitude, location.latitude]];
@@ -564,6 +565,7 @@ export class Map extends Component {
         BackgroundGeolocation.on('foreground', () => {
             if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
                 updatedgpsPointCollection = {};
+                AsyncStorage.setItem('bgTimeTrackList', JSON.stringify(bgTimeTrackList));
                 this.watchLocation();
             }
             this.setState({ appState: 'foreground' });
@@ -1966,7 +1968,7 @@ export class Map extends Component {
                         ? <ShifterButton onPress={this.toggleAppNavigation} alignLeft={user.handDominance === 'left'} />
                         : null
                 }
-                {/* <Loader isVisible={showLoader} onCancel={this.props.hideLoader} /> */}
+                <Loader isVisible={showLoader} />
             </View>
         );
     }
