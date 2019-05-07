@@ -88,6 +88,7 @@ export class Map extends Component {
     bottomLeftDefaultPoint = null;
     fetchDirOnUndoRedo = true;
     notificationInterval = null;
+    trackpointTick = 0;
     constructor(props) {
         super(props);
         this.state = {
@@ -495,17 +496,61 @@ export class Map extends Component {
     }
 
     async componentDidMount() {
-        let bgTimeTrackList = [];
+        BackgroundGeolocation.configure({
+            desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
+            stationaryRadius: 50,
+            distanceFilter: 10,
+            notificationTitle: 'Tracking location',
+            notificationText: '',
+            debug: false,
+            startOnBoot: false,
+            stopOnTerminate: true,
+            locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
+            interval: 5000,
+            fastestInterval: 1000,
+            activitiesInterval: 5000,
+            stopOnStillActivity: false,
+            // url: 'http://192.168.81.15:3000/location',
+            // httpHeaders: {
+            //     'X-FOO': 'bar'
+            // },
+            // // customize post properties
+            // postTemplate: {
+            //     lat: '@latitude',
+            //     lon: '@longitude',
+            //     foo: 'bar' // you can also add your own properties
+            // }
+        });
+
         let updatedgpsPointCollection = {};
+        this.trackpointTick = 0;
         this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         this.props.pushNotification(this.props.user.userId);
         this.props.getAllNotifications(this.props.user.userId);
         this.notificationInterval = setInterval(() => {
             this.props.getAllNotifications(this.props.user.userId);
         }, 60 * 1000);
-        this.startTrackingLocation();
         // AppState.addEventListener('change', this.handleAppStateChange);
         BackgroundGeolocation.on('location', (location) => {
+            // const { gpsPointCollection } = this.state;
+            // const feature = gpsPointCollection.features[0];
+
+            // if (feature.geometry.coordinates.length > 0 && feature.geometry.coordinates.slice(-1)[0].join('') === [location.longitude, location.latitude].join('')) return;
+
+            // this.bgTimeTrackList.push({ loc: [location.longitude, location.latitude], time: Date.now() });
+            // let points = [...feature.geometry.coordinates, [location.longitude, location.latitude]];
+            // this.updatedgpsCollection.gpsPointCollection = {
+            //     ...gpsPointCollection,
+            //     features: [{
+            //         ...feature, geometry: {
+            //             ...feature.geometry,
+            //             coordinates: points
+            //         }
+            //     }]
+            // }
+            // this.gpsPointTimestamps.push(new Date().toISOString());
+            // this.setState({ ...this.updatedgpsCollection, currentLocation: { location: [location.longitude, location.latitude], name: '' } });
+
             if (this.props.user.locationEnable && location.time - this.prevUserTrackTime > (this.props.user.timeIntervalInSeconds * 1000)) {
                 this.prevUserTrackTime = location.time;
                 this.props.updateLocation(this.props.user.userId, { lat: location.latitude, lng: location.longitude });
@@ -517,25 +562,27 @@ export class Map extends Component {
             }
             if (this.state.appState === 'background' && this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
                 if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (location.longitude + '' + location.latitude)) {
-                    bgTimeTrackList.push(Date.now());
                     const { gpsPointCollection } = this.state;
                     const feature = gpsPointCollection.features[0];
                     let points = [...feature.geometry.coordinates, [location.longitude, location.latitude]];
-                    // trackpointTick++;
-                    updatedgpsPointCollection.gpsPointCollection = {
-                        ...gpsPointCollection,
-                        features: [{
-                            ...feature, geometry: {
-                                ...feature.geometry,
-                                coordinates: points
-                            }
-                        }]
-                    }
-                    this.gpsPointTimestamps.push(new Date().toISOString()); // TODO: Use Date.now() for sending to mapbox api, if it is supporting timestamps
-                    // trackpointTick = 0;
-                    if (this.gpsPointTimestamps.length === 100) {
-                        this.getCoordsOnRoad(points.slice(-this.gpsPointTimestamps.length), this.gpsPointTimestamps, (responseBody, trackpoints, distance) => this.props.addTrackpoints(trackpoints, distance, ride, this.props.user.userId));
-                        this.gpsPointTimestamps = [];
+                    this.trackpointTick++;
+                    console.log("background trackpointTick: ", this.trackpointTick);
+                    if (this.trackpointTick === 5) {
+                        updatedgpsPointCollection.gpsPointCollection = {
+                            ...gpsPointCollection,
+                            features: [{
+                                ...feature, geometry: {
+                                    ...feature.geometry,
+                                    coordinates: points
+                                }
+                            }]
+                        }
+                        this.gpsPointTimestamps.push(new Date().toISOString()); // TODO: Use Date.now() for sending to mapbox api, if it is supporting timestamps
+                        this.trackpointTick = 0;
+                        if (this.gpsPointTimestamps.length === 100) {
+                            this.getCoordsOnRoad(points.slice(-this.gpsPointTimestamps.length), this.gpsPointTimestamps, (responseBody, trackpoints, distance) => this.props.addTrackpoints(trackpoints, distance, ride, this.props.user.userId));
+                            this.gpsPointTimestamps = [];
+                        }
                     }
                     this.setState({ ...updatedgpsPointCollection, currentLocation: { location: [location.longitude, location.latitude], name: '' } });
                 }
@@ -555,6 +602,7 @@ export class Map extends Component {
         });
         BackgroundGeolocation.on('background', () => {
             if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
+                console.log("app in background");
                 clearInterval(this.watchID);
                 this.startTrackingLocation();
             }
@@ -564,8 +612,9 @@ export class Map extends Component {
 
         BackgroundGeolocation.on('foreground', () => {
             if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
+                console.log("app in foreground");
                 updatedgpsPointCollection = {};
-                AsyncStorage.setItem('bgTimeTrackList', JSON.stringify(bgTimeTrackList));
+                if (this.trackpointTick >= 5) this.trackpointTick = 0;
                 this.watchLocation();
             }
             this.setState({ appState: 'foreground' });
@@ -656,7 +705,6 @@ export class Map extends Component {
         //     this.setState({ currentLocation: { latitude: coords.latitude, longitude: coords.longitude } })
         // }, err => console.log("watchPosition error: ", err),
         //     { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 });
-        let trackpointTick = 0;
         let updatedgpsPointCollection = {};
         this.stopTrackingLocation();
         this.watchID = setInterval(() => {
@@ -666,8 +714,9 @@ export class Map extends Component {
                         const { gpsPointCollection } = this.state;
                         const feature = gpsPointCollection.features[0];
                         let points = [...feature.geometry.coordinates, [coords.longitude, coords.latitude]];
-                        trackpointTick++;
-                        if (trackpointTick === 5) {
+                        this.trackpointTick++;
+                        console.log("foreground trackpointTick: ", this.trackpointTick);
+                        if (this.trackpointTick === 5) {
                             updatedgpsPointCollection.gpsPointCollection = {
                                 ...gpsPointCollection,
                                 features: [{
@@ -678,7 +727,7 @@ export class Map extends Component {
                                 }]
                             }
                             this.gpsPointTimestamps.push(new Date().toISOString()); // TODO: Use Date.now() for sending to mapbox api, if it is supporting timestamps
-                            trackpointTick = 0;
+                            this.trackpointTick = 0;
                             if (this.gpsPointTimestamps.length === 100) {
                                 this.getCoordsOnRoad(points.slice(-this.gpsPointTimestamps.length), this.gpsPointTimestamps, (responseBody, trackpoints, distance) => this.props.addTrackpoints(trackpoints, distance, ride, this.props.user.userId));
                                 this.gpsPointTimestamps = [];
@@ -1305,13 +1354,14 @@ export class Map extends Component {
 
     createRide = () => {
         // Actions.push(PageKeys.CREATE_RIDE);
-        this.hideMapControls();
+        this.state.controlsBarLeftAnim.__getValue() === 0 && this.hideMapControls();
         this.hideWaypointList();
         this.setState({ showCreateRide: true });
     }
 
     onPressRecordRide = () => {
-        this.hideMapControls();
+        this.state.controlsBarLeftAnim.__getValue() === 0 && this.hideMapControls();
+        this.trackpointTick = 0;
         const { currentLocation } = this.state;
         const dateTime = new Date().toISOString();
         let rideDetails = {
@@ -1329,7 +1379,6 @@ export class Map extends Component {
             };
 
             this.props.createRecordRide(rideDetails);
-
             this.watchLocation();
             return;
         } else {
@@ -1393,12 +1442,12 @@ export class Map extends Component {
     onChangeRecordRideStatus(newStatus) {
         switch (newStatus) {
             case RECORD_RIDE_STATUS.RUNNING:
+                this.trackpointTick = 0;
                 this.watchLocation();
                 break;
             case RECORD_RIDE_STATUS.PAUSED:
                 break;
             case RECORD_RIDE_STATUS.COMPLETED:
-                console.log("RECORD_RIDE_STATUS: ", this.props.ride);
                 this.gpsPointTimestamps = [];
                 // TODO: Call our API and show the result on map
                 this.props.getRideByRideId(this.props.ride.rideId);
@@ -1734,7 +1783,36 @@ export class Map extends Component {
                             52.370216
                         ]}
                         style={[styles.fillParent, { marginTop: showCreateRide ? -WINDOW_HALF_HEIGHT : 0 }]}
-                        showUserLocation={false /* onUserLocationUpdate={(e) => { console.log(e.coords) }} */}
+                        // userTrackingMode={1}
+                        // showUserLocation={true}
+                        // onUserLocationUpdate={({ coords }) => {
+                        //     const { gpsPointCollection } = this.state;
+                        //     const feature = gpsPointCollection.features[0];
+
+                        //     if (feature.geometry.coordinates.length > 0 && feature.geometry.coordinates.slice(-1)[0].join('') === [coords.longitude, coords.latitude].join('')) return;
+
+                        //     this.bgTimeTrackList.push({ loc: [coords.longitude, coords.latitude], time: Date.now() });
+                        //     let points = [...feature.geometry.coordinates, [coords.longitude, coords.latitude]];
+                        //     // trackpointTick++;
+                        //     this.updatedgpsCollection.gpsPointCollection = {
+                        //         ...gpsPointCollection,
+                        //         features: [{
+                        //             ...feature, geometry: {
+                        //                 ...feature.geometry,
+                        //                 coordinates: points
+                        //             }
+                        //         }]
+                        //     }
+                        //     this.gpsPointTimestamps.push(new Date().toISOString()); // TODO: Use Date.now() for sending to mapbox api, if it is supporting timestamps
+                        //     // trackpointTick = 0;
+                        //     // if (this.gpsPointTimestamps.length === 100) {
+                        //     //     this.getCoordsOnRoad(points.slice(-this.gpsPointTimestamps.length), this.gpsPointTimestamps, (responseBody, trackpoints, distance) => this.props.addTrackpoints(trackpoints, distance, ride, this.props.user.userId));
+                        //     //     this.gpsPointTimestamps = [];
+                        //     // }
+                        //     this.setState({ ...this.updatedgpsCollection, currentLocation: { location: [coords.longitude, coords.latitude], name: '' } });
+                        //     // if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (location.longitude + '' + location.latitude)) {
+                        //     // }
+                        // }}
                         ref={el => this._mapView = el}
                         onDidFinishLoadingMap={this.onFinishMapLoading}
                         onRegionDidChange={this.onRegionDidChange}
@@ -1778,9 +1856,9 @@ export class Map extends Component {
                         }
                         {
                             gpsPointCollection.features[0].geometry.coordinates.length >= 2 ?
-                                <MapboxGL.ShapeSource id='recordRidePathLayer' shape={gpsPointCollection}>
-                                    <MapboxGL.LineLayer id='recordRidePath' style={[{ lineColor: 'red', lineWidth: 3, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
-                                </MapboxGL.ShapeSource>
+                                <MapboxGL.Animated.ShapeSource id='recordRidePathLayer' shape={gpsPointCollection}>
+                                    <MapboxGL.Animated.LineLayer id='recordRidePath' style={[{ lineColor: 'red', lineWidth: 3, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
+                                </MapboxGL.Animated.ShapeSource>
                                 : null
                         }
                         {
