@@ -1,36 +1,38 @@
 import React, { Component } from 'react';
 import { AsyncStorage } from 'react-native';
 import Navigation from './navigation';
-import FCM, { NotificationActionType, FCMEvent } from "react-native-fcm";
-import { IS_ANDROID, DEVICE_TOKEN } from './constants';
+import FCM, { NotificationActionType, NotificationType, FCMEvent, RemoteNotificationResult, WillPresentNotificationResult } from "react-native-fcm";
+import { IS_ANDROID, DEVICE_TOKEN, PageKeys } from './constants';
+import store from './store';
+import { screenChangeAction } from './actions';
 
 
 // this shall be called regardless of app state: running, background or not running. Won't be called when app is killed by user in iOS
-FCM.on(FCMEvent.Notification, (notif) => {
+// FCM.on(FCMEvent.Notification, (notif) => {
+//     console.log("FCM.on(FCMEvent.Notification): ", notif);
+//     // there are two parts of notif. notif.notification contains the notification payload, notif.data contains data payload
+//     if (notif.local_notification) {
+//         //this is a local notification
 
-    console.log("notif: ", notif);
-    // there are two parts of notif. notif.notification contains the notification payload, notif.data contains data payload
-    if (notif.local_notification) {
-        //this is a local notification
-
-        console.log('what i got from   local notif ', notif)
-    }
+//         console.log('what i got from   local notif ', notif)
+//     }
 
 
-    if (notif.opened_from_tray) {
-        //iOS: app is open/resumed because user clicked banner
-        //Android: app is open/resumed because user clicked banner or tapped app icon
-    }
+//     if (notif.opened_from_tray) {
+//         //iOS: app is open/resumed because user clicked banner
+//         //Android: app is open/resumed because user clicked banner or tapped app icon
+//         console.log("FCM.on(FCMEvent.Notification) opened_from_tray");
+//     }
 
-});
+// });
 
-FCM.on(FCMEvent.RefreshToken, (token) => {
-    console.log(token)
-    // fcm token may not be available on first load, catch it here
-    if (token) {
-        AsyncStorage.setItem(DEVICE_TOKEN, token);
-    }
-});
+// FCM.on(FCMEvent.RefreshToken, (token) => {
+//     console.log(token)
+//     // fcm token may not be available on first load, catch it here
+//     if (token) {
+//         AsyncStorage.setItem(DEVICE_TOKEN, token);
+//     }
+// });
 export default class App extends Component {
 
     async componentDidMount() {
@@ -42,10 +44,7 @@ export default class App extends Component {
             priority: 'high'
         })
         FCM.getInitialNotification().then(notif => {
-            console.log("Notification received: ", notif);
-            if (notif) {
-                console.log("Notification details: ", notif);
-            }
+            console.log("InitialNotification received: ", notif);
         });
 
         try {
@@ -58,8 +57,25 @@ export default class App extends Component {
             console.error(e);
         }
 
-        FCM.on(FCMEvent.Notification, (notification) => {
+        this.notificationListener = FCM.on(FCMEvent.Notification, (notification) => {
             console.log("FCMEvent.Notification: ", notification);
+            // if (!IS_ANDROID) {
+            //     switch (notification._notificationType) {
+            //         case NotificationType.Remote:
+            //             notification.finish(RemoteNotificationResult.NewData) //other types available: RemoteNotificationResult.NewData, RemoteNotificationResult.ResultFailed
+            //             console.log("NotificationType.Remote: ", notification);
+            //             break;
+            //         case NotificationType.NotificationResponse:
+            //             notification.finish();
+            //             console.log("NotificationType.NotificationResponse: ", notification);
+            //             break;
+            //         case NotificationType.WillPresent:
+            //             notification.finish(WillPresentNotificationResult.All) //other types available: WillPresentNotificationResult.None
+            //             console.log("NotificationType.WillPresent: ", notification);
+            //             break;
+            //     }
+            // }
+            notification.targetScreen && this.redirectToTargetScreen(notification.targetScreen);
         });
 
         FCM.getFCMToken().then(token => {
@@ -78,6 +94,15 @@ export default class App extends Component {
         // topic example
         // FCM.subscribeToTopic('sometopic')
         // FCM.unsubscribeFromTopic('sometopic')
+    }
+
+    redirectToTargetScreen(targetScreen) {
+        if (Object.keys(PageKeys).indexOf(targetScreen) === -1) return;
+        store.dispatch(screenChangeAction({ name: PageKeys[targetScreen] }));
+    }
+
+    componentWillUnmount() {
+        this.notificationListener.remove();
     }
 
     render() {
