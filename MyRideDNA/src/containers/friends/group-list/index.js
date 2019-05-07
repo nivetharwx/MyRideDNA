@@ -22,6 +22,7 @@ class GroupListTab extends Component {
         this.defaultBtmOffset = widthPercentageToDP(props.user.handDominance === 'left' ? 20 : 8);
         this.state = {
             selectedFriendList: [],
+            isRefreshing: false,
             searchFriendList: [],
             newGroupName: null,
             kbdBtmOffset: this.defaultBtmOffset,
@@ -31,7 +32,7 @@ class GroupListTab extends Component {
     }
 
     componentDidMount() {
-        this.props.getFriendGroups(this.props.user.userId);
+        this.props.getFriendGroups(this.props.user.userId, true);
     }
 
     adjustLayoutOnKeyboardVisibility = ({ endCoordinates }) => {
@@ -40,6 +41,9 @@ class GroupListTab extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.friendGroupList !== this.props.friendGroupList) {
+            if (prevState.isRefreshing === true) {
+                this.setState({ isRefreshing: false });
+            }
             if (this.isAddingGroup) {
                 /** TODO: Open group details page with last group added
                  *  this.props.friendGroupList[this.props.friendGroupList.length - 1]
@@ -47,8 +51,12 @@ class GroupListTab extends Component {
             }
         }
         if (this.props.refreshContent === true && prevProps.refreshContent === false) {
-            this.props.getFriendGroups(this.props.user.userId);
+            this.props.getFriendGroups(this.props.user.userId, true);
         }
+    }
+    onPullRefresh = () => {
+        this.setState({ isRefreshing: true });
+        this.props.getFriendGroups(this.props.user.userId, false);
     }
 
     addKeyboardListeners() {
@@ -250,7 +258,7 @@ class GroupListTab extends Component {
     }
 
     render() {
-        const { newGroupName, isVisibleOptionsModal } = this.state;
+        const { newGroupName, isVisibleOptionsModal,isRefreshing } = this.state;
         const { friendGroupList, user } = this.props;
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
@@ -269,6 +277,8 @@ class GroupListTab extends Component {
                     friendGroupList.length > 0
                         ? <FlatList
                             data={friendGroupList}
+                            refreshing={isRefreshing}
+                            onRefresh={this.onPullRefresh}
                             keyExtractor={this.groupKeyExtractor}
                             renderItem={this.renderGroup}
                             extraData={this.state}
@@ -303,7 +313,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         createFriendGroup: (newGroupInfo) => dispatch(createFriendGroup(newGroupInfo)),
-        getFriendGroups: (userId) => dispatch(getFriendGroups(userId)),
+        getFriendGroups: (userId, toggleLoader) => dispatch(getFriendGroups(userId, toggleLoader)),
         exitFriendGroup: (groupId, memberId) => dispatch(exitFriendGroup(groupId, memberId)),
         addMembers: (groupId, memberDetails) => dispatch(addMembers(groupId, memberDetails)),
         getAllGroupMembers: (groupId, userId) => dispatch(getAllGroupMembers(groupId, userId)),

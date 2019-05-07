@@ -12,6 +12,7 @@ import { ThumbnailCard } from '../../../components/cards';
 import { BaseModal } from '../../../components/modal';
 import { Icon as NBIcon, ListItem, Left, Thumbnail, Body, Right, CheckBox } from 'native-base';
 import { LabeledInput } from '../../../components/inputs';
+import { Loader } from '../../../components/loader';
 
 class Group extends Component {
     floatSecAnim = new Animated.Value(CREATE_GROUP_WIDTH / 2);
@@ -384,6 +385,7 @@ class Group extends Component {
                         </Animated.View>
                     </Animated.View> */}
                 </View>
+                <Loader isVisible={this.props.loader} />
             </View>
     }
 }
@@ -391,7 +393,8 @@ const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { currentGroup } = state.FriendGroupList;
     const { allFriends } = state.FriendList;
-    return { user, currentGroup, allFriends };
+    const { loader } = state.PageState;
+    return { user, currentGroup, allFriends,loader };
 };
 const mapDispatchToProps = (dispatch) => {
     return {

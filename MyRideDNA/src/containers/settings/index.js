@@ -13,6 +13,7 @@ import { BaseModal } from '../../components/modal';
 import ForgotPassword from '../../containers/forgot-password';
 import Md5 from 'react-native-md5';
 import { Actions } from 'react-native-router-flux';
+import { Loader } from '../../components/loader';
 
 
 export class Settings extends Component {
@@ -33,7 +34,8 @@ export class Settings extends Component {
             locationRadiusState: props.user.locationRadius,
             handDominanceState: props.user.handDominance,
             timeIntervalInSeconds: props.user.timeIntervalInSeconds,
-            showCircle: props.user.showCircle
+            showCircle: props.user.showCircle,
+            showLoader:false
         };
     }
 
@@ -214,7 +216,7 @@ export class Settings extends Component {
     render() {
         const MEASUREMENT_UNITS = [{ label: 'Kilometers', value: 'km' }, { label: 'Miles', value: 'mi' }];
         const HAND_DOMINANCE = [{ label: 'Left Handed', value: 'left' }, { label: 'Right Handed', value: 'right' }];
-        const { user } = this.props;
+        const { user,loader } = this.props;
         const { locationEnable } = this.state;
         return (
             <View style={styles.fill}>
@@ -291,6 +293,7 @@ export class Settings extends Component {
 
                 {/* Shifter: - Brings the app navigation menu */}
                 <ShifterButton onPress={this.showAppNavMenu} alignLeft={user.handDominance === 'left'} />
+                <Loader isVisible={loader} />
             </View>
         );
     }
@@ -298,7 +301,8 @@ export class Settings extends Component {
 
 const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken, updatePasswordError, updatePasswordSuccess } = state.UserAuth;
-    return { user, userAuthToken, deviceToken, updatePasswordError, updatePasswordSuccess };
+    const { loader } = state.PageState;
+    return { user, userAuthToken, deviceToken, updatePasswordError, updatePasswordSuccess,loader };
 }
 
 const mapDispatchToProps = (dispatch) => {

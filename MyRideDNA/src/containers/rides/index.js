@@ -16,6 +16,7 @@ import { getFormattedDateFromISO } from '../../util';
 import { LabeledInput } from '../../components/inputs';
 import { IconLabelPair } from '../../components/labels';
 import { BaseModal } from '../../components/modal';
+import { Loader } from '../../components/loader';
 
 
 export class Rides extends Component {
@@ -82,7 +83,7 @@ export class Rides extends Component {
         } else if (activeTab === 1) {
             this.props.getAllRecordedRides(this.props.user.userId);
         } else {
-            this.props.getAllPublicRides();
+            this.props.getAllPublicRides(this.props.user.userId, true);
         }
     }
 
@@ -94,7 +95,7 @@ export class Rides extends Component {
             } else if (activeTab === 1) {
                 this.props.getAllRecordedRides(this.props.user.userId);
             } else {
-                this.props.getAllPublicRides(this.props.user.userId);
+                this.props.getAllPublicRides(this.props.user.userId, true);
             }
         }
 
@@ -124,7 +125,7 @@ export class Rides extends Component {
 
     onPullRefresh = () => {
         this.setState({ isRefreshing: true });
-        this.props.getAllPublicRides(this.props.user.userId);
+        this.props.getAllPublicRides(this.props.user.userId, false);
     }
 
     showDeleteSuccessMessage() {
@@ -252,7 +253,7 @@ export class Rides extends Component {
 
     render() {
         const { activeTab, searchQuery, headerSearchMode, isVisibleRenameModal, isVisibleOptionsModal, isRefreshing } = this.state;
-        const { buildRides, recordedRides, sharedRides, user } = this.props;
+        const { buildRides, recordedRides, sharedRides, user, loader } = this.props;
         return (
             <View style={{ flex: 1 }}>
                 <View style={APP_COMMON_STYLES.statusBar}>
@@ -381,6 +382,7 @@ export class Rides extends Component {
                     {/* Shifter: - Brings the app navigation menu */}
                     <ShifterButton onPress={this.showAppNavMenu} alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
+                <Loader isVisible={loader} />
             </View>
         );
     }
@@ -395,7 +397,8 @@ const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { buildRides, recordedRides, sharedRides } = state.RideList;
     const { ride } = state.RideInfo.present;
-    return { showMenu, user, userAuthToken, deviceToken, buildRides, recordedRides, sharedRides, ride };
+    const { loader } = state.PageState;
+    return { showMenu, user, userAuthToken, deviceToken, buildRides, recordedRides, sharedRides, ride,loader };
 }
 
 const mapDispatchToProps = (dispatch) => {
@@ -403,7 +406,7 @@ const mapDispatchToProps = (dispatch) => {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         getAllBuildRides: (userId) => dispatch(getAllBuildRides(userId)),
         getAllRecordedRides: (userId) => dispatch(getAllRecordedRides(userId)),
-        getAllPublicRides: (userId) => dispatch(getAllPublicRides(userId)),
+        getAllPublicRides: (userId, toggleLoader) => dispatch(getAllPublicRides(userId, toggleLoader)),
         loadRideOnMap: (rideId) => dispatch(getRideByRideId(rideId)),
         deleteRide: (rideId, index, rideType) => dispatch(deleteRide(rideId, index, rideType)),
         copyRide: (rideId, rideName, rideType, date) => dispatch(copyRide(rideId, rideName, rideType, date)),

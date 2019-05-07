@@ -14,6 +14,7 @@ import { logoutUser, getAllFriendRequests, getPicture, cancelFriendRequest, appr
 import { BaseModal } from '../../components/modal';
 import { LabeledInput } from '../../components/inputs';
 import { getFormattedDateFromISO } from '../../util';
+import { Loader } from '../../components/loader';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
 class Friends extends Component {
@@ -42,8 +43,8 @@ class Friends extends Component {
         setTimeout(() => {
             this.tabsRef.props.goToPage(0)
         }, 0);
-        this.getAllFriendRequestFunction()
-        this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0);
+        this.props.getAllRequest(this.props.user.userId,true);
+        this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
     }
 
 
@@ -78,23 +79,23 @@ class Friends extends Component {
     }
     onPullRefresh = () => {
         this.setState({ isRefreshing: true });
-        this.getAllFriendRequestFunction()
+        this.props.getAllRequest(this.props.user.userId,false);
     }
 
-    getAllFriendRequestFunction = () => {
-        this.props.getAllRequest(this.props.user.userId);
-    }
 
     toggleAppNavigation = () => this.props.showAppNavMenu();
 
     onChangeTab = ({ from, i }) => {
         this.setState({ activeTab: i, headerSearchMode: false }, () => {
             if (this.state.activeTab === 2) {
-                this.getAllFriendRequestFunction()
+                this.props.getAllRequest(this.props.user.userId,true);
             }
         });
         if (from === 2 && i === 0) {
-            this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0);
+            this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
+        }
+        if(from === 1 && i === 0){
+            this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
         }
     }
 
@@ -320,7 +321,7 @@ class Friends extends Component {
                         </View>
                     </BaseModal>
 
-                    <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
+                    <Tabs locked={false} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                         <Tab heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
                             <IconLabelPair containerStyle={styles.tabContentCont} text={`Friends`} textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} iconProps={{ name: 'people-outline', type: 'MaterialIcons', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }} />
                         </TabHeading>}>
@@ -364,6 +365,7 @@ class Friends extends Component {
                         containerStyles={{ bottom: this.state.selectedPersonImg ? IS_ANDROID ? BOTTOM_TAB_HEIGHT : BOTTOM_TAB_HEIGHT - 8 : 0 }}
                         alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
+                <Loader isVisible={this.props.loader} />
             </View>
         );
     }
@@ -374,14 +376,15 @@ const mapStateToProps = (state) => {
     const { allFriends, paginationNum, currentFriend } = state.FriendList;
     const { personInfo, oldPosition } = state.PageOverTab;
     const { allFriendRequests } = state.FriendRequest;
-    return { user, personInfo, oldPosition, allFriendRequests, allFriends, paginationNum, currentFriend, userAuthToken, deviceToken };
+    const { loader } = state.PageState;
+    return { user, personInfo, oldPosition, allFriendRequests, allFriends, paginationNum, currentFriend, userAuthToken, deviceToken, loader };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        getAllFriends: (friendType, userId, pageNumber) => dispatch(getAllFriends(friendType, userId, pageNumber)),
+        getAllFriends: (friendType, userId, pageNumber,toggleLoader) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
-        getAllRequest: (userId, accessToken) => dispatch(getAllFriendRequests(userId)),
+        getAllRequest: (userId, toggleLoader) => dispatch(getAllFriendRequests(userId, toggleLoader)),
         cancelRequest: (userId, personId, requestId) => dispatch(cancelFriendRequest(userId, personId, requestId)),
         approvedRequest: (userId, personId, actionDate, requestId) => dispatch(approveFriendRequest(userId, personId, actionDate, requestId)),
         rejectRequest: (userId, personId, requestId) => dispatch(rejectFriendRequest(userId, personId, requestId)),
