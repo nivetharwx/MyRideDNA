@@ -17,12 +17,19 @@ import {
     HIDE_FRIENDS_LOCATION,
     ADD_FRIENDS_LOCATION,
     UPDATE_MYPROFILE_LAST_OPTION,
-    UPDATE_TOKEN
+    UPDATE_TOKEN,
+    PROFILE_LOADER
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
     {
         type: TOGGLE_LOADER,
+        data: data
+    }
+);
+export const apiLoaderActions = (data) => (
+    {
+        type: PROFILE_LOADER,
         data: data
     }
 );

@@ -3,11 +3,11 @@ import { connect } from 'react-redux';
 import { StyleSheet, View, Text, StatusBar, ImageBackground, ScrollView, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG, RELATIONSHIP, PageKeys, MEDIUM_TAIL_TAG } from '../../constants/index';
 import { ShifterButton, IconButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction } from '../../actions';
+import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction, apiLoaderActions } from '../../actions';
 import { Tabs, Tab, ScrollableTab, TabHeading, Accordion, ListItem, Left } from 'native-base';
 import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
-import { ImageLoader } from '../../components/loader';
+import { ImageLoader, Loader } from '../../components/loader';
 import styles from './styles';
 import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend, getFriendsLocationList } from '../../api';
 import { BasicCard } from '../../components/cards';
@@ -266,6 +266,7 @@ class FriendsProfile extends Component {
                     <ShifterButton onPress={this.showAppNavMenu}
                         containerStyles={{ bottom: IS_ANDROID ? BOTTOM_TAB_HEIGHT : BOTTOM_TAB_HEIGHT - 8 }} size={18} alignLeft={user.handDominance === 'left'} />
                 </View>
+                <Loader isVisible={this.props.loader} />
             </View >
     }
 }
@@ -274,7 +275,8 @@ const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { showMenu } = state.TabVisibility;
     const { currentFriend, friendsLocationList } = state.FriendList;
-    return { user, showMenu, currentFriend, friendsLocationList };
+    const { loader } = state.PageState;
+    return { user, showMenu, currentFriend, friendsLocationList,loader };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -292,12 +294,15 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(updateCurrentFriendGarageAction({ spaceId, userId }))
         }),
         getGarageInfo: (friendId, friendType) => {
-            dispatch(toggleLoaderAction(true));
+            // dispatch(toggleLoaderAction(true));
+            dispatch(apiLoaderActions(true))
             getGarageInfo(friendId, (garage) => {
-                dispatch(toggleLoaderAction(false));
+                // dispatch(toggleLoaderAction(false));
+                dispatch(apiLoaderActions(false))
                 dispatch(updateCurrentFriendAction({ garage, userId: friendId }));
             }, (error) => {
-                dispatch(toggleLoaderAction(false));
+                // dispatch(toggleLoaderAction(false));
+                dispatch(apiLoaderActions(false))
                 console.log(`getGarage error: `, error);
             })
         },

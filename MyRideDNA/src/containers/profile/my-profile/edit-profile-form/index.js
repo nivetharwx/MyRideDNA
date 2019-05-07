@@ -11,6 +11,7 @@ import ImageCropPicker from 'react-native-image-crop-picker';
 import { addBikeToGarage, editBike, updateUserInfo } from '../../../../api';
 import { toggleLoaderAction } from '../../../../actions';
 import { DatePicker, Icon as NBIcon, Toast } from 'native-base';
+import { Loader } from '../../../../components/loader';
 
 class EditProfileForm extends Component {
     fieldRefs = [];
@@ -22,7 +23,8 @@ class EditProfileForm extends Component {
         this.state = {
             user: {
                 ...props.user
-            }
+            },
+            showLoader:false
         };
         if (!props.user.homeAddress) {
             this.state.user.homeAddress = { address: '', city: '', state: '', country: '', zipCode: '' };
@@ -103,16 +105,23 @@ class EditProfileForm extends Component {
     }
 
     onPressBackButton = () => Actions.pop();
-
+    hideLoader = () =>{
+        this.setState({ showLoader: false });
+    }
     onSubmit = () => {
         Keyboard.dismiss();
         this.updatingUser = true;
-        this.props.updateUser(this.state.user);
+        this.setState({showLoader:true})
+        this.props.updateUser(this.state.user,(res) => {
+            this.hideLoader()
+          }, (err) => {
+              this.hideLoader()
+          });
     }
 
     render() {
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
-        const { user } = this.state;
+        const { user,showLoader } = this.state;
         console.log('user : ', user)
         return (
             <View style={styles.fill}>
@@ -141,6 +150,7 @@ class EditProfileForm extends Component {
                     </ScrollView>
                     <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
                 </KeyboardAvoidingView>
+                <Loader isVisible={showLoader} />
             </View>
         );
     }
@@ -152,7 +162,7 @@ const mapStateToProps = (state) => {
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateUser: (userInfo) => dispatch(updateUserInfo(userInfo)),
+        updateUser: (userInfo, successCallback, errorCallback) => dispatch(updateUserInfo(userInfo, successCallback, errorCallback)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(EditProfileForm);

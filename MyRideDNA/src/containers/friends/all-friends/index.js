@@ -181,7 +181,7 @@ class AllFriendsTab extends Component {
     onPullRefresh = () => {
         this.setState({ isRefreshing: true });
         // TODO: Do API call based on searchfriend or all friends
-        this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, this.props.paginationNum)
+        this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, this.props.paginationNum, false)
     }
 
     showOptionsModal = (index) => {
@@ -399,7 +399,7 @@ const mapStateToProps = (state) => {
 };
 const mapDispatchToProps = (dispatch) => {
     return {
-        getAllFriends: (friendType, userId, pageNumber) => dispatch(getAllFriends(friendType, userId, pageNumber)),
+        getAllFriends: (friendType, userId, pageNumber,toggleLoader) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader)),
         getAllOnlineFriends: (userId) => dispatch(getAllOnlineFriends(userId)),
         searchForFriend: (searchParam, userId, pageNumber) => dispatch(searchForFriend(searchParam, userId, pageNumber)),
         sendFriendRequest: (requestBody, personId) => dispatch(sendFriendRequest(requestBody, personId)),

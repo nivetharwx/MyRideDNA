@@ -10,6 +10,7 @@ import { Thumbnail } from '../../../../components/images';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import { addBikeToGarage, editBike, addPictures } from '../../../../api';
 import { toggleLoaderAction } from '../../../../actions';
+import { Loader } from '../../../../components/loader';
 
 class AddBikeForm extends Component {
     fieldRefs = [];
@@ -17,7 +18,8 @@ class AddBikeForm extends Component {
         super(props);
         this.state = {
             bikeImages: [],
-            bike: props.bikeIndex >= 0 ? props.spaceList[props.bikeIndex] : {}
+            bike: props.bikeIndex >= 0 ? props.spaceList[props.bikeIndex] : {},
+            showLoader: false
         };
         if (typeof this.state.bike.pictureList === 'undefined') {
             this.state.bike.pictureList = [];
@@ -72,19 +74,31 @@ class AddBikeForm extends Component {
     onChangeYear = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, year: val } }));
 
     onChangeNotes = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, notes: val } }));
-
+    hideLoader = () =>{
+        this.setState({ showLoader: false });
+    }
     onSubmit = () => {
         Keyboard.dismiss();
-        const { bike, bikeImages } = this.state;
+        const { bike, bikeImages} = this.state;
         if (!bike.name || bike.name.trim().length === 0) {
             Alert.alert('Field Error', 'Please enter a bike name');
             return;
         }
         const pictureList = [...bikeImages];
         if (!bike.spaceId) {
-            this.props.addBikeToGarage(this.props.user.userId, bike, pictureList);
+            this.setState({ showLoader: true });
+            this.props.addBikeToGarage(this.props.user.userId, bike, pictureList, (res) => {
+              this.hideLoader()
+            }, (err) => {
+                this.hideLoader()
+            });
         } else {
-            this.props.editBike(this.props.user.userId, bike, pictureList, this.props.bikeIndex);
+            this.setState({ showLoader: true });
+            this.props.editBike(this.props.user.userId, bike, pictureList, this.props.bikeIndex,(res) => {
+                this.hideLoader()
+              }, (err) => {
+                  this.hideLoader()
+              });
         }
         // if (!bike.spaceId) {
         //     this.props.addBikeToGarage(this.props.user.userId, bike);
@@ -97,7 +111,7 @@ class AddBikeForm extends Component {
     }
 
     render() {
-        const { bikeImages, bike } = this.state;
+        const { bikeImages, bike, showLoader } = this.state;
         return (
             <View style={styles.fill} >
                 <View style={APP_COMMON_STYLES.statusBar}>
@@ -129,7 +143,9 @@ class AddBikeForm extends Component {
                         }
                     </ScrollView>
                     <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
+                    
                 </KeyboardAvoidingView>
+                <Loader isVisible={showLoader} />
             </View>
         );
     }
@@ -142,8 +158,8 @@ const mapStateToProps = (state) => {
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        addBikeToGarage: (userId, bike, pictureList) => dispatch(addBikeToGarage(userId, bike, pictureList)),
-        editBike: (userId, bike, pictureList, index) => dispatch(editBike(userId, bike, pictureList, index)),
+        addBikeToGarage: (userId, bike, pictureList, successCallback, errorCallback) => dispatch(addBikeToGarage(userId, bike, pictureList, successCallback, errorCallback)),
+        editBike: (userId, bike, pictureList, index, successCallback, errorCallback) => dispatch(editBike(userId, bike, pictureList, index, successCallback, errorCallback)),
         // editBike: (userId, bike, index) => dispatch(editBike(userId, bike, index)),
         toggleLoader: (toggleValue) => dispatch(toggleLoaderAction(toggleValue)),
         addPictures: (userId, bike, pictureList) => dispatch(addPictures(userId, bike, pictureList)),

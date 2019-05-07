@@ -7,6 +7,7 @@ import { appNavMenuVisibilityAction } from '../../actions';
 import { Tabs, Tab, ScrollableTab, TabHeading } from 'native-base';
 import MyProfileTab from './my-profile';
 import MyGarageTab from './my-garage';
+import { Loader } from '../../components/loader';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
 class Profile extends Component {
@@ -33,7 +34,7 @@ class Profile extends Component {
     }
 
     render() {
-        const { user } = this.props;
+        const { user,loader } = this.props;
         const { activeTab, profilePicString } = this.state;
         return (
             <View style={styles.fill}>
@@ -49,7 +50,7 @@ class Profile extends Component {
                             : null
                 }
                 <View style={{ flex: 1 }}>
-                    <Tabs locked={true} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B', height: BOTTOM_TAB_HEIGHT }} underlineStyle={{ height: 0 }} />}>
+                    <Tabs locked={false} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B', height: BOTTOM_TAB_HEIGHT }} underlineStyle={{ height: 0 }} />}>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 0 ? '#0083CA' : '#6C6C6B' }]}>
                             <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>MY PROFILE</Text>
                         </TabHeading>}>
@@ -71,6 +72,7 @@ class Profile extends Component {
                     <ShifterButton onPress={this.showAppNavMenu}
                         containerStyles={{ bottom: BOTTOM_TAB_HEIGHT }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
+                <Loader isVisible={loader} />
             </View >
         );
     }
@@ -79,7 +81,8 @@ class Profile extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { showMenu } = state.TabVisibility;
-    return { user, showMenu };
+    const { loader } = state.PageState;
+    return { user, showMenu,loader};
 };
 const mapDispatchToProps = (dispatch) => {
     return {

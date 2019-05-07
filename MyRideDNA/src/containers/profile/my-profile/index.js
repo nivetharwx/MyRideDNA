@@ -5,7 +5,7 @@ import { Actions } from 'react-native-router-flux';
 import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../../constants/index';
 import { IconButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
-import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction } from '../../../actions';
+import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions } from '../../../actions';
 import { Accordion } from 'native-base';
 import ImagePicker from 'react-native-image-crop-picker';
 import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo } from '../../../api';
@@ -279,14 +279,17 @@ const mapDispatchToProps = (dispatch) => {
 
         setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
         getGarageInfo: (userId) => {
-            dispatch(toggleLoaderAction(true));
+            // dispatch(toggleLoaderAction(true));
+            dispatch(apiLoaderActions(true));
             console.log("loader enabled");
             getGarageInfo(userId, (garage) => {
                 dispatch(replaceGarageInfoAction(garage))
-                setTimeout(() => dispatch(toggleLoaderAction(false)), 100);
+                // setTimeout(() => dispatch(toggleLoaderAction(false)), 100);
+                dispatch(apiLoaderActions(false))
                 console.log("loader disabled");
             }, (error) => {
-                dispatch(toggleLoaderAction(false));
+                // dispatch(toggleLoaderAction(false));
+                dispatch(apiLoaderActions(false));
                 console.log(`getGarage error: `, error);
             })
         },
