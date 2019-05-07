@@ -53,7 +53,6 @@ export const getAllNotifications = (userId) => {
         axios.get(NOTIFICATIONS_BASE_URL + `getAllNotifications?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log("getAllNotifications success: ", res.data || res);
                     dispatch(resetNotificationListAction(res.data));
                 }
             })
