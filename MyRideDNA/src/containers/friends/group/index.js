@@ -18,6 +18,7 @@ class Group extends Component {
     floatSecAnim = new Animated.Value(CREATE_GROUP_WIDTH / 2);
     borderWidthAnim = new Animated.Value(0);
     addMemberInputRef = null;
+    filteredFriends = null
     defaultBtmOffset = widthPercentageToDP(8);
     constructor(props) {
         super(props);

@@ -77,6 +77,7 @@ class GroupListTab extends Component {
     onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false, selectedGroup: null })
 
     openGroupInfo = (index) => {
+        this.state.isVisibleOptionsModal && this.setState({isVisibleOptionsModal:false});
         if (this.borderWidthAnim.__getValue() > 0) {
             this.closeCreateGroupSection(() => Actions.push(PageKeys.GROUP, { grpIndex: index }));
         } else {
@@ -129,7 +130,8 @@ class GroupListTab extends Component {
 
     renderMenuOptions = () => {
         if (this.state.selectedGroup === null) return;
-        const options = [{ text: 'Exit group', id: 'exitGroup', handler: () => this.showExitGroupConfirmation() }, { text: 'Clear chat', id: 'clearChat', handler: () => { } }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
+        const index=this.props.friendGroupList.findIndex(item => item.groupId === this.state.selectedGroup.groupId);
+        const options = [{ text: 'Open group', id: 'openGroup', handler: () => this.openGroupInfo(index) },{ text: 'Exit group', id: 'exitGroup', handler: () => this.showExitGroupConfirmation() }, { text: 'Clear chat', id: 'clearChat', handler: () => { } }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
         return (
             options.map(option => (
                 <LinkButton

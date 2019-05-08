@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
         zIndex: 999,
         width: '100%',
         height: '100%',
-        backgroundColor: 'rgba(0,0,0,0.8)',
+        backgroundColor: 'rgba(0,0,0,0.3)',
         elevation: 10,
         alignItems: 'center',
         justifyContent: 'center',
