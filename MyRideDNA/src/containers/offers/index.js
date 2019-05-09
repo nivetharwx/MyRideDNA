@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, AsyncStorage, StyleSheet, StatusBar } from 'react-native';
+import { View, Text, AsyncStorage, StyleSheet, StatusBar, ImageBackground } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 
 import { BasicHeader } from '../../components/headers';
@@ -37,7 +37,11 @@ class Offers extends Component {
                 <View style={{ flex: 1 }}>
                     <BasicHeader title='Offers' rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
                     <View style={styles.contentBody}>
-                        <Text style={{ fontWeight: 'bold' }}>OFFERS</Text>
+                        <View style={{ backgroundColor: 'rgba(149, 165, 166, 1)', flex: 1, }}>
+                            <ImageBackground source={require('../../assets/img/offers.png')} style={{ width: '100%', height: '100%' }} imageStyle={{ opacity: 0.2 }} ></ImageBackground>
+                            <Text style={{ position: 'absolute', width: '100%', textAlign: 'center', marginTop: heightPercentageToDP(40), fontSize: 50, color: 'rgba(rgba(46, 49, 49, 1))' }}>Coming Soon...</Text>
+
+                        </View>
                     </View>
                     {/* Shifter: - Brings the app navigation menu */}
                     <ShifterButton onPress={this.toggleAppNavigation} alignLeft={user.handDominance === 'left'} />
@@ -63,7 +67,6 @@ const styles = StyleSheet.create({
         marginTop: APP_COMMON_STYLES.headerHeight,
         backgroundColor: '#fff',
         justifyContent: 'center',
-        alignItems: 'center',
         flex: 1
     },
     name: {

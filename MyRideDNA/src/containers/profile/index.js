@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, SafeAreaView, View, Text, StatusBar, Platform } from 'react-native';
+import { StyleSheet, SafeAreaView, View, Text, StatusBar, Platform, ImageBackground } from 'react-native';
 import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP } from '../../constants/index';
 import { ShifterButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction } from '../../actions';
@@ -34,7 +34,7 @@ class Profile extends Component {
     }
 
     render() {
-        const { user,loader } = this.props;
+        const { user, loader } = this.props;
         const { activeTab, profilePicString } = this.state;
         return (
             <View style={styles.fill}>
@@ -50,7 +50,7 @@ class Profile extends Component {
                             : null
                 }
                 <View style={{ flex: 1 }}>
-                    <Tabs locked={false} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B', height: BOTTOM_TAB_HEIGHT }} underlineStyle={{ height: 0 }} />}>
+                    <Tabs locked={true} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B', height: BOTTOM_TAB_HEIGHT }} underlineStyle={{ height: 0 }} />}>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 0 ? '#0083CA' : '#6C6C6B' }]}>
                             <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>MY PROFILE</Text>
                         </TabHeading>}>
@@ -64,7 +64,13 @@ class Profile extends Component {
                         <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 2 ? '#0083CA' : '#6C6C6B' }]}>
                             <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>MY VEST</Text>
                         </TabHeading>}>
-                            <View style={{ backgroundColor: '#fff', flex: 1 }}></View>
+                        <View style={{ backgroundColor: 'rgba(149, 165, 166, 1)', flex: 1, }}>
+                                <ImageBackground source={require('../../assets/img/vest.png')} style={{ width: '100%', height: '100%' }} imageStyle={{ opacity: 0.5 }}></ImageBackground>
+                                <Text style={{ position: 'absolute', width: '100%', textAlign: 'center', marginTop: heightPercentageToDP(20), fontWeight: 'bold', fontSize: 80, color: 'rgba(rgba(46, 49, 49, 1))' }}>MY VEST</Text>
+                                <Text style={{ position: 'absolute', width: '100%', textAlign: 'center', marginTop: heightPercentageToDP(40), fontSize: 50, color: 'rgba(rgba(46, 49, 49, 1))' }}>Coming Soon...</Text>
+
+                            </View>
+
                         </Tab>
                     </Tabs>
 
@@ -82,7 +88,7 @@ const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { showMenu } = state.TabVisibility;
     const { loader } = state.PageState;
-    return { user, showMenu,loader};
+    return { user, showMenu, loader };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
