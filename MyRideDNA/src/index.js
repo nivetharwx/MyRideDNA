@@ -5,6 +5,7 @@ import FCM, { NotificationActionType, NotificationType, FCMEvent, RemoteNotifica
 import { IS_ANDROID, DEVICE_TOKEN, PageKeys } from './constants';
 import store from './store';
 import { screenChangeAction } from './actions';
+import { Actions } from 'react-native-router-flux';
 
 
 // this shall be called regardless of app state: running, background or not running. Won't be called when app is killed by user in iOS
@@ -75,7 +76,7 @@ export default class App extends Component {
             //             break;
             //     }
             // }
-            notification.targetScreen && this.redirectToTargetScreen(notification.targetScreen);
+            notification.targetScreen && this.redirectToTargetScreen(notification.targetScreen, JSON.parse(notification.body));
         });
 
         FCM.getFCMToken().then(token => {
@@ -96,9 +97,16 @@ export default class App extends Component {
         // FCM.unsubscribeFromTopic('sometopic')
     }
 
-    redirectToTargetScreen(targetScreen) {
-        if (Object.keys(PageKeys).indexOf(targetScreen) === -1) return;
-        store.dispatch(screenChangeAction({ name: PageKeys[targetScreen] }));
+    redirectToTargetScreen(targetScreen, body) {
+        if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
+            if (targetScreen === 'REQUESTS') {
+                store.getState().TabVisibility.currentScreen.name !== PageKeys.FRIENDS
+                    ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: body } }))
+                    : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: body });
+            }
+            return;
+        }
+        store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
     }
 
     componentWillUnmount() {

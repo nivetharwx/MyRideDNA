@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, View, Text, StatusBar, ImageBackground, ScrollView, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG, RELATIONSHIP, PageKeys, MEDIUM_TAIL_TAG } from '../../constants/index';
+import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG, RELATIONSHIP, PageKeys, MEDIUM_TAIL_TAG, FRIEND_TYPE } from '../../constants/index';
 import { ShifterButton, IconButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction, apiLoaderActions } from '../../actions';
 import { Tabs, Tab, ScrollableTab, TabHeading, Accordion, ListItem, Left } from 'native-base';
@@ -9,7 +9,7 @@ import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { ImageLoader, Loader } from '../../components/loader';
 import styles from './styles';
-import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend, getFriendsLocationList } from '../../api';
+import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend, getFriendsLocationList, getUserById, getAllFriends } from '../../api';
 import { BasicCard } from '../../components/cards';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
@@ -39,7 +39,11 @@ class FriendsProfile extends Component {
                 this.setState({ activeTab: this.state.activeTab });
             }, 50);
         }
-        this.props.getFriendsInfo(this.props.friendIdx, this.props.friendType);
+        if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
+            this.props.getUserById(this.props.notificationBody.fromUserId);
+        } else {
+            this.props.getFriendsInfo(this.props.friendIdx, this.props.friendType);
+        }
 
     }
 
@@ -51,6 +55,9 @@ class FriendsProfile extends Component {
         }
         if (prevProps.currentFriend !== this.props.currentFriend) {
             if (this.props.currentFriend.userId === null) {
+                if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
+                    this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
+                }
                 Actions.pop();
                 return;
             }
@@ -256,8 +263,11 @@ class FriendsProfile extends Component {
                         <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, backgroundColor: activeTab === 3 ? '#0083CA' : '#6C6C6B' }]}>
                             <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>VEST</Text>
                         </TabHeading>}>
-                            <View style={{ backgroundColor: '#fff', flex: 1 }}>
-                                <Text>VEST</Text>
+                        <View style={{ backgroundColor: 'rgba(149, 165, 166, 1)', flex: 1, }}>
+                                <ImageBackground source={require('../../assets/img/vest.png')} style={{ width: '100%', height: '100%' }} imageStyle={{ opacity: 0.5 }}></ImageBackground>
+                                <Text style={{ position: 'absolute', width: '100%', textAlign: 'center', marginTop: heightPercentageToDP(20), fontWeight: 'bold', fontSize: 80, color: 'rgba(rgba(46, 49, 49, 1))' }}> VEST</Text>
+                                <Text style={{ position: 'absolute', width: '100%', textAlign: 'center', marginTop: heightPercentageToDP(40), fontSize: 50, color: 'rgba(rgba(46, 49, 49, 1))' }}>Coming Soon...</Text>
+
                             </View>
                         </Tab>
                     </Tabs>
@@ -276,13 +286,15 @@ const mapStateToProps = (state) => {
     const { showMenu } = state.TabVisibility;
     const { currentFriend, friendsLocationList } = state.FriendList;
     const { loader } = state.PageState;
-    return { user, showMenu, currentFriend, friendsLocationList,loader };
+    return { user, showMenu, currentFriend, friendsLocationList, loader };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
+        getAllFriends: (friendType, userId, pageNumber,toggleLoader) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         getFriendsInfo: (friendIdx, friendType) => dispatch(getFriendsInfoAction({ index: friendIdx, friendType })),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
+        getUserById: (userId) => dispatch(getUserById(userId)),
         getProfilePicture: (pictureId, friendId, friendType) => getPicture(pictureId, ({ picture, pictureId }) => {
             dispatch(updateCurrentFriendAction({ profilePicture: picture, userId: friendId }))
         }, (error) => {

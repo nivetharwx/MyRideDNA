@@ -1,4 +1,4 @@
-import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION, ADD_FRIENDS_LOCATION } from "../actions/actionConstants";
+import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION, ADD_FRIENDS_LOCATION, REPLACE_FRIEND_INFO } from "../actions/actionConstants";
 import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP } from "../constants";
 
 const initialState = {
@@ -102,6 +102,17 @@ export default (state = initialState, action) => {
                     ...friend
                 }
             };
+
+        case REPLACE_FRIEND_INFO:
+        return {
+            ...state,
+            currentFriend:{
+                ...action.data,
+                garage: {
+                    garageId: null
+                },
+            }
+        }    
 
         case UNFRIEND:
             const personIndex = state.allFriends.findIndex(person => person.userId === action.data.personId);

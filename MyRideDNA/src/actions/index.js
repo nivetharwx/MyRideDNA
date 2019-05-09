@@ -18,7 +18,8 @@ import {
     ADD_FRIENDS_LOCATION,
     UPDATE_MYPROFILE_LAST_OPTION,
     UPDATE_TOKEN,
-    PROFILE_LOADER
+    PROFILE_LOADER,
+    REPLACE_FRIEND_INFO
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -320,6 +321,12 @@ export const updateFriendInListAction = (data) => (
 export const getFriendsInfoAction = (data) => (
     {
         type: GET_FRIEND_INFO,
+        data: data
+    }
+);
+export const replaceFriendInfooAction = (data) => (
+    {
+        type: REPLACE_FRIEND_INFO,
         data: data
     }
 );

@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { StatusBar, Animated, Text, View, FlatList } from 'react-native';
 import { BasicHeader } from '../../components/headers';
 import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon, Toast, Thumbnail } from 'native-base';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, USER_AUTH_TOKEN, WindowDimensions, FRIEND_TYPE } from '../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, USER_AUTH_TOKEN, WindowDimensions, FRIEND_TYPE, PageKeys } from '../../constants';
 import styles from './styles';
 import AllFriendsTab from './all-friends';
 import GroupListTab from './group-list';
@@ -15,6 +15,7 @@ import { BaseModal } from '../../components/modal';
 import { LabeledInput } from '../../components/inputs';
 import { getFormattedDateFromISO } from '../../util';
 import { Loader } from '../../components/loader';
+import { Actions } from 'react-native-router-flux';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
 class Friends extends Component {
@@ -41,14 +42,45 @@ class Friends extends Component {
 
     componentDidMount() {
         setTimeout(() => {
-            this.tabsRef.props.goToPage(0)
+            if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
+                switch (this.props.goTo) {
+                    case 'REQUESTS':
+                        this.tabsRef.props.goToPage(2);
+                        break;
+                    case 'GROUPS':
+                        this.tabsRef.props.goToPage(1);
+                        break;
+                    default:
+                        this.tabsRef.props.goToPage(0);
+                }
+            }
+            else {
+                this.tabsRef.props.goToPage(0)
+            }
         }, 0);
-        this.props.getAllRequest(this.props.user.userId,true);
+
+        this.props.getAllRequest(this.props.user.userId, true);
         this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
+
     }
 
 
     componentDidUpdate(prevProps, prevState) {
+        if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
+            if (!prevProps.notificationBody || prevProps.notificationBody.id !== this.props.notificationBody.id) {
+                switch (this.props.goTo) {
+                    case 'REQUESTS':
+                        this.state.activeTab !== 2 && this.tabsRef.props.goToPage(2);
+                        break;
+                    case 'GROUPS':
+                        this.state.activeTab !== 1 && this.tabsRef.props.goToPage(1);
+                        break;
+                    default:
+                        this.state.activeTab !== 0 && this.tabsRef.props.goToPage(0);
+                }
+            }
+        }
+
         if (prevProps.personInfo !== this.props.personInfo) {
             if (this.props.personInfo === null) {
                 this.closeProfile();
@@ -79,7 +111,7 @@ class Friends extends Component {
     }
     onPullRefresh = () => {
         this.setState({ isRefreshing: true });
-        this.props.getAllRequest(this.props.user.userId,false);
+        this.props.getAllRequest(this.props.user.userId, false);
     }
 
 
@@ -88,13 +120,14 @@ class Friends extends Component {
     onChangeTab = ({ from, i }) => {
         this.setState({ activeTab: i, headerSearchMode: false }, () => {
             if (this.state.activeTab === 2) {
-                this.props.getAllRequest(this.props.user.userId,true);
+                this.props.getAllRequest(this.props.user.userId, true);
             }
         });
+
         if (from === 2 && i === 0) {
             this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
         }
-        if(from === 1 && i === 0){
+        if (from === 1 && i === 0) {
             this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
         }
     }
@@ -330,7 +363,7 @@ class Friends extends Component {
                         <Tab heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderColor: '#fff', borderLeftWidth: 1, borderRightWidth: 1 }}>
                             <IconLabelPair containerStyle={styles.tabContentCont} text={`Groups`} textStyle={{ color: activeTab === 1 ? '#fff' : '#6B7663' }} iconProps={{ name: 'group', type: 'FontAwesome', style: { color: activeTab === 1 ? '#fff' : '#6B7663' } }} />
                         </TabHeading>}>
-                            <GroupListTab refreshContent={activeTab === 1} />
+                            <GroupListTab refreshContent={activeTab === 1} searchQuery={searchQuery}/>
                         </Tab>
                         <Tab heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3', borderColor: '#fff' }}>
                             <IconLabelPair containerStyle={styles.tabContentCont} text={`Requests`} textStyle={{ color: activeTab === 2 ? '#fff' : '#6B7663' }} iconProps={{ name: 'people', type: 'MaterialIcons', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }} />
@@ -381,7 +414,7 @@ const mapStateToProps = (state) => {
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        getAllFriends: (friendType, userId, pageNumber,toggleLoader) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader)),
+        getAllFriends: (friendType, userId, pageNumber, toggleLoader) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         getAllRequest: (userId, toggleLoader) => dispatch(getAllFriendRequests(userId, toggleLoader)),
