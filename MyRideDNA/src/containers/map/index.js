@@ -89,6 +89,7 @@ export class Map extends Component {
     fetchDirOnUndoRedo = true;
     notificationInterval = null;
     trackpointTick = 0;
+    hasModifiedRide = false;
     constructor(props) {
         super(props);
         this.state = {
@@ -137,6 +138,7 @@ export class Map extends Component {
             },
             friendsImage: {},
             appState: null,
+            showLoader: false
         };
     }
 
@@ -158,6 +160,7 @@ export class Map extends Component {
                 } else {
                     updatedState.isEditable = false;
                 }
+                this.hasModifiedRide = false;
 
                 // TODO: Loading different ride
                 if (ride.rideId) {
@@ -240,6 +243,7 @@ export class Map extends Component {
                     if (this.state.rideUpdateCount === RIDE_UPDATE_COUNT_TO_SYNC) {
                         updatedState.rideUpdateCount = 0;
                         replaceRide(ride.rideId, { source: ride.source, destination: ride.destination, waypoints: ride.waypoints });
+                        this.hasModifiedRide = true;
                     }
                 }
             }
@@ -487,9 +491,19 @@ export class Map extends Component {
 
     onPressAppNavMenu = (screenKey) => {
         if (this.state.rideUpdateCount > 0 && screenKey !== PageKeys.Map) {
-            const { ride } = this.props;
-            if (ride.rideId) {
-                replaceRide(ride.rideId, { source: ride.source, destination: ride.destination, waypoints: ride.waypoints });
+            // if (ride.rideId) {
+            //     replaceRide(ride.rideId, { source: ride.source, destination: ride.destination, waypoints: ride.waypoints });
+            //     this.hasModifiedRide = true;
+            // }
+            if (this.state.rideUpdateCount > 0 || this.hasModifiedRide) {
+                const { ride } = this.props;
+                this.setState({ showLoader: true }, () => {
+                    this.getMapSnapshot((mapSnapshot) => {
+                        replaceRide(ride.rideId, { snapshot: { mimeType: 'image/jpeg', picture: mapSnapshot }, source: ride.source, destination: ride.destination, waypoints: ride.waypoints },
+                            () => this.setState({ showLoader: false }),
+                            () => this.setState({ showLoader: false }));
+                    });
+                });
             }
         }
         this.props.changeScreen({ name: screenKey });
@@ -1259,15 +1273,36 @@ export class Map extends Component {
         this.setState((prevState) => ({ hideRoute: !prevState.hideRoute }));
     }
 
-    onPressMapCamera = () => {
-        const { directions } = this.state;
-        if (directions) {
-            const mapBounds = turfBBox(directions.geometry);
+    getMapSnapshot = (successCallback, errorCallback) => {
+        const { ride } = this.props;
+        if (ride.isRecorded) {
+            let coordinates = [];
+            if (ride.source) {
+                coordinates.push([ride.source.lng, ride.source.lat]);
+            }
+            coordinates.push(...this.state.gpsPointCollection.features[0].geometry.coordinates);
+            if (ride.destination) {
+                coordinates.push([ride.destination.lng, ride.destination.lat]);
+            }
+            if (coordinates.length > 1) {
+                // DOC: Update the mapbounds to include the recorded ride path
+                const newBounds = turfBBox({ coordinates, type: 'LineString' });
+                this._mapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 20, 0);
+            } else {
+                this._mapView.flyTo(coordinates[0], 500);
+            }
+            console.log("this._mapView.fitBounds for recorded ride");
+        } else {
+            if (!this.state.directions) return;
+            const mapBounds = turfBBox(this.state.directions.geometry);
             this._mapView.fitBounds(mapBounds.slice(0, 2), mapBounds.slice(2), 20, 0);
+            console.log("this._mapView.fitBounds for build ride");
         }
-        setTimeout(() => this._mapView.takeSnap(false).then(mapBase64 => {
-            this.setState({ snapshot: mapBase64 }, () => console.log("State updated: ", this.state));
-        }), 300);
+        setTimeout(() => this._mapView.takeSnap(false).then(mapSnapshotString => {
+            console.log("snapshot: ", mapSnapshotString);
+            // this.setState({ snapshot: mapBase64 }, () => console.log("State updated: ", this.state));
+            successCallback && successCallback(mapSnapshotString);
+        }).catch(er => console.log(er)), 500);
     }
 
     onPressClear = () => {
@@ -1456,12 +1491,21 @@ export class Map extends Component {
     }
 
     onPressCloseRide = () => {
-        if (this.state.rideUpdateCount > 0) {
+        if (this.state.rideUpdateCount > 0 || this.hasModifiedRide) {
             const { ride } = this.props;
-            replaceRide(ride.rideId, { source: ride.source, destination: ride.destination, waypoints: ride.waypoints });
+            this.setState({ showLoader: true }, () => {
+                this.getMapSnapshot((mapSnapshot) => {
+                    replaceRide(ride.rideId, { snapshot: { mimeType: 'image/jpeg', picture: mapSnapshot }, source: ride.source, destination: ride.destination, waypoints: ride.waypoints },
+                        () => this.setState({ showLoader: false }),
+                        () => this.setState({ showLoader: false }));
+                    if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
+                    this.props.clearRideFromMap();
+                });
+            });
+        } else {
+            if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
+            this.props.clearRideFromMap();
         }
-        if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
-        this.props.clearRideFromMap();
     }
 
     componentWillUnmount() {
@@ -1712,8 +1756,8 @@ export class Map extends Component {
 
     render() {
         const { mapViewHeight, directions, markerCollection, activeMarkerIndex, gpsPointCollection, controlsBarLeftAnim, waypointListLeftAnim, showCreateRide, currentLocation,
-            searchResults, searchQuery, isEditable, snapshot, hideRoute, optionsBarRightAnim, isUpdatingWaypoint, mapRadiusCircle } = this.state;
-        const { notificationList, ride, showMenu, showLoader, user, canUndo, canRedo } = this.props;
+            searchResults, searchQuery, isEditable, snapshot, hideRoute, optionsBarRightAnim, isUpdatingWaypoint, mapRadiusCircle, showLoader } = this.state;
+        const { notificationList, ride, showMenu, user, canUndo, canRedo } = this.props;
         const MAP_VIEW_TOP_OFFSET = showCreateRide ? (CREATE_RIDE_CONTAINER_HEIGHT - WINDOW_HALF_HEIGHT) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2) : (isEditable ? 130 : 60) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2);
         return (
             <View style={{ flex: 1 }}>
@@ -2059,10 +2103,10 @@ const mapStateToProps = (state) => {
     const canRedo = state.RideInfo.future.length > 0;
     const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { isLocationOn } = state.GPSState;
-    const { showLoader } = state.PageState;
+    // const { showLoader } = state.PageState;
     const { notificationList } = state.NotificationList;
     const { friendsLocationList } = state.FriendList;
-    return { ride, isLocationOn, user, userAuthToken, deviceToken, showMenu, friendsLocationList, currentScreen, showLoader, canUndo, canRedo, notificationList };
+    return { ride, isLocationOn, user, userAuthToken, deviceToken, showMenu, friendsLocationList, currentScreen, canUndo, canRedo, notificationList };
 }
 
 const mapDispatchToProps = (dispatch) => {

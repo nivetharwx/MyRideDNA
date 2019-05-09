@@ -2,16 +2,16 @@ import React, { Component } from 'react';
 import {
     SafeAreaView, Text, View, FlatList, ImageBackground,
     TouchableOpacity, Alert, StatusBar, Platform, StyleSheet,
-    AsyncStorage
+    AsyncStorage, Image
 } from 'react-native';
 import { connect } from 'react-redux';
 
-import { Tab, TabHeading, Tabs, ScrollableTab, Icon as NBIcon, ListItem, Left, Toast } from "native-base";
+import { Tab, TabHeading, Tabs, ScrollableTab, Icon as NBIcon, ListItem, Left, Toast, Card, CardItem, Thumbnail, Body, Button, Right } from "native-base";
 import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN } from '../../constants';
-import { ShifterButton, LinkButton } from '../../components/buttons';
+import { ShifterButton, LinkButton, ImageButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, screenChangeAction, clearRideAction } from '../../actions';
 import { BasicHeader } from '../../components/headers';
-import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide, logoutUser } from '../../api';
+import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide, logoutUser, getPicture } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
 import { LabeledInput } from '../../components/inputs';
 import { IconLabelPair } from '../../components/labels';
@@ -105,11 +105,18 @@ export class Rides extends Component {
                     text: 'Ride copied to your created rides',
                     buttonText: 'Okay'
                 });
+                return;
             }
             this.onCancelRenameForm();
             if (this.props.buildRides.length < prevProps.buildRides.length) {
-                this.showDeleteSuccessMessage()
+                this.showDeleteSuccessMessage();
+                return;
             }
+            // this.props.buildRides.forEach(ride => {
+            //     if (ride.snapshotId && !ride.snapshot) {
+            //         this.props.getRidePicture(ride.snapshot.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), ride.rideId);
+            //     }
+            // });
         } else if (prevProps.recordedRides !== this.props.recordedRides) {
             this.onCancelRenameForm();
             if (this.props.buildRides.length < prevProps.buildRides.length) {
@@ -251,9 +258,129 @@ export class Rides extends Component {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
 
+    getTimeAsFormattedString(estimatedTime) {
+        if (!estimatedTime) {
+            return '0 h 0 m';
+        }
+        let h = Math.floor(estimatedTime / 3600);
+        let m = Math.floor(estimatedTime % 3600 / 60);
+        let timeText = '';
+        if (h > 0) {
+            timeText += `${h} h`;
+        }
+        if (m > 0) {
+            timeText += ` ${m} m`;
+        }
+        return timeText;
+    }
+
+    getDistanceAsFormattedString(distance, distanceUnit) {
+        if (!distance) {
+            return '0 ' + distanceUnit;
+        }
+        if (distanceUnit === 'km') {
+            return (distance / 1000).toFixed(2) + ' km';
+        } else {
+            return (distance * 0.000621371192).toFixed(2) + ' mi';
+        }
+    }
+
+    renderBuildRides = ({ item, index }) => {
+        // return <ListItem style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
+        //     <Left style={{ flex: 1 }}>
+        //         <TouchableOpacity style={{ flex: 1 }}
+        //             onPress={() => this.onPressRide(item.rideId)}
+        //             onLongPress={() => this.showOptionsModal(RIDE_TYPE.BUILD_RIDE, index)}
+        //         >
+        //             <Text>{`${item.name}, ${getFormattedDateFromISO(new Date(item.date).toISOString(), '.')}`}</Text>
+        //         </TouchableOpacity>
+        //     </Left>
+        // </ListItem>
+        return <Card>
+            <CardItem bordered>
+                <Left>
+                    {/* <Thumbnail source={require('../../assets/img/profile-pic.png')} /> */}
+                    <Body>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <View>
+                                <Text style={{ fontWeight: 'bold', fontSize: widthPercentageToDP(3.8) }}>{item.name}</Text>
+                                <Text note></Text>
+                            </View>
+                            <Text style={{ color: item.privacyMode === 'private' ? '#6B7663' : APP_COMMON_STYLES.infoColor }}>{item.privacyMode.toUpperCase()}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <IconLabelPair iconProps={{ name: 'road-variant', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(5) } }} text={this.getDistanceAsFormattedString(item.totalDistance, this.props.user.distanceUnit)}
+                                textStyle={{ fontSize: widthPercentageToDP(3.5) }} />
+                            <IconLabelPair iconProps={{ name: 'access-time', type: 'MaterialIcons', style: { fontSize: widthPercentageToDP(5) } }} text={this.getTimeAsFormattedString(item.totalTime)}
+                                textStyle={{ fontSize: widthPercentageToDP(3.5) }} />
+                        </View>
+                    </Body>
+                </Left>
+            </CardItem>
+            <CardItem cardBody button onPress={() => this.onPressRide(item.rideId)} onLongPress={() => this.showOptionsModal(RIDE_TYPE.BUILD_RIDE, index)}>
+                {
+                    item.snaphot
+                        ? <Image source={{ uri: item.snaphot }} style={{ height: 200, width: null, flex: 1 }} />
+                        : <ImageBackground blurRadius={3} resizeMode='cover' source={require('../../assets/img/ride-placeholder-image.png')} style={{ height: 200, width: null, flex: 1 }} />
+                }
+            </CardItem>
+            <CardItem>
+                {
+                    item.privacyMode === 'public'
+                        ? <Left>
+                            <Button transparent>
+                                <NBIcon active name="thumbs-up" />
+                                <Text>{item.totalLikes !== 1 ? item.totalLikes + ' Likes' : '1 Like'}</Text>
+                            </Button>
+                            <Button transparent>
+                                <NBIcon active name="chatbubbles" />
+                                <Text>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</Text>
+                            </Button>
+                        </Left>
+                        : <Left></Left>
+                }
+                <Body>
+                    {/* <Button transparent>
+                        <NBIcon active name="chatbubbles" />
+                        <Text>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</Text>
+                    </Button> */}
+                </Body>
+                <Right>
+                    <Text note>{this.getDateLabel((Date.now() - new Date(item.date).getTime()) / 1000 / 60 / 60)}</Text>
+                </Right>
+            </CardItem>
+        </Card>
+    }
+
+    // var hourDiff = (Date.now() - new Date('2019-02-27T05:44:20.510Z').getTime()) / 1000 / 60 / 60;
+    getDateLabel(hourDiff) {
+        var days = parseInt(parseInt(hourDiff) / 24);
+        if (days >= 365) {
+            days = parseInt(days / 365);
+            days = days > 1 ? days + ' years ago' : days + ' year ago';
+        } else if (days >= 30) {
+            days = parseInt(days / 30);
+            days = days > 1 ? days + ' months ago' : days + ' month ago';
+        } else if (days >= 7) {
+            days = parseInt(days / 7);
+            days = days > 1 ? days + ' weeks ago' : days + ' week ago';
+        } else if (days >= 1) {
+            days = days > 1 ? days + ' days ago' : days + ' day ago';
+        } else if (hourDiff >= 1) {
+            hourDiff = parseInt(hourDiff);
+            days = hourDiff > 1 ? hourDiff + ' hours ago' : hourDiff + ' hour ago';
+        } else if (hourDiff * 60 >= 1) {
+            let mintDiff = parseInt(hourDiff * 60);
+            days = mintDiff > 1 ? mintDiff + ' minutes ago' : mintDiff + ' minute ago';
+        } else {
+            days = 'just now';
+        }
+        return days;
+    }
+
     render() {
         const { activeTab, searchQuery, headerSearchMode, isVisibleRenameModal, isVisibleOptionsModal, isRefreshing } = this.state;
-        const { buildRides, recordedRides, sharedRides, user, loader } = this.props;
+        const { buildRides, recordedRides, sharedRides, user, showLoader } = this.props;
         return (
             <View style={{ flex: 1 }}>
                 <View style={APP_COMMON_STYLES.statusBar}>
@@ -295,16 +422,7 @@ export class Rides extends Component {
                                     buildRides.length > 0 ?
                                         <FlatList
                                             data={buildRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
-                                            renderItem={({ item, index }) => <ListItem style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
-                                                <Left style={{ flex: 1 }}>
-                                                    <TouchableOpacity style={{ flex: 1 }}
-                                                        onPress={() => this.onPressRide(item.rideId)}
-                                                        onLongPress={() => this.showOptionsModal(RIDE_TYPE.BUILD_RIDE, index)}
-                                                    >
-                                                        <Text>{`${item.name}, ${getFormattedDateFromISO(new Date(item.date).toISOString(), '.')}`}</Text>
-                                                    </TouchableOpacity>
-                                                </Left>
-                                            </ListItem>}
+                                            renderItem={this.renderBuildRides}
                                             keyExtractor={this.keyExtractor}
                                         />
                                         : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
@@ -382,7 +500,7 @@ export class Rides extends Component {
                     {/* Shifter: - Brings the app navigation menu */}
                     <ShifterButton onPress={this.showAppNavMenu} alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
-                <Loader isVisible={loader} />
+                <Loader isVisible={showLoader} />
             </View>
         );
     }
@@ -397,8 +515,8 @@ const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { buildRides, recordedRides, sharedRides } = state.RideList;
     const { ride } = state.RideInfo.present;
-    const { loader } = state.PageState;
-    return { showMenu, user, userAuthToken, deviceToken, buildRides, recordedRides, sharedRides, ride,loader };
+    const { showLoader } = state.PageState;
+    return { showMenu, user, userAuthToken, deviceToken, buildRides, recordedRides, sharedRides, ride, showLoader };
 }
 
 const mapDispatchToProps = (dispatch) => {
@@ -414,6 +532,10 @@ const mapDispatchToProps = (dispatch) => {
         renameRide: (ride, rideType, userId, index) => dispatch(renameRide(ride, rideType, userId, index)),
         changeScreen: (screenKey) => dispatch(screenChangeAction(screenKey)),
         clearRideFromMap: () => dispatch(clearRideAction()),
+        getRidePicture: (pictureId, rideId) => getPicture(pictureId, (response) => {
+            console.log("getPicture success: ", response);
+            // dispatch(updateBikePictureListAction({ rideId, ...response }))
+        }, (error) => console.log("getPicture error: ", error)),
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
     }
 }

@@ -43,7 +43,7 @@ class Friends extends Component {
         setTimeout(() => {
             this.tabsRef.props.goToPage(0)
         }, 0);
-        this.props.getAllRequest(this.props.user.userId,true);
+        this.props.getAllRequest(this.props.user.userId, true);
         this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
     }
 
@@ -79,7 +79,7 @@ class Friends extends Component {
     }
     onPullRefresh = () => {
         this.setState({ isRefreshing: true });
-        this.props.getAllRequest(this.props.user.userId,false);
+        this.props.getAllRequest(this.props.user.userId, false);
     }
 
 
@@ -88,13 +88,13 @@ class Friends extends Component {
     onChangeTab = ({ from, i }) => {
         this.setState({ activeTab: i, headerSearchMode: false }, () => {
             if (this.state.activeTab === 2) {
-                this.props.getAllRequest(this.props.user.userId,true);
+                this.props.getAllRequest(this.props.user.userId, true);
             }
         });
         if (from === 2 && i === 0) {
             this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
         }
-        if(from === 1 && i === 0){
+        if (from === 1 && i === 0) {
             this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
         }
     }
@@ -365,7 +365,7 @@ class Friends extends Component {
                         containerStyles={{ bottom: this.state.selectedPersonImg ? IS_ANDROID ? BOTTOM_TAB_HEIGHT : BOTTOM_TAB_HEIGHT - 8 : 0 }}
                         alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
-                <Loader isVisible={this.props.loader} />
+                <Loader isVisible={this.props.showLoader} />
             </View>
         );
     }
@@ -376,12 +376,12 @@ const mapStateToProps = (state) => {
     const { allFriends, paginationNum, currentFriend } = state.FriendList;
     const { personInfo, oldPosition } = state.PageOverTab;
     const { allFriendRequests } = state.FriendRequest;
-    const { loader } = state.PageState;
-    return { user, personInfo, oldPosition, allFriendRequests, allFriends, paginationNum, currentFriend, userAuthToken, deviceToken, loader };
+    const { showLoader } = state.PageState;
+    return { user, personInfo, oldPosition, allFriendRequests, allFriends, paginationNum, currentFriend, userAuthToken, deviceToken, showLoader };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        getAllFriends: (friendType, userId, pageNumber,toggleLoader) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader)),
+        getAllFriends: (friendType, userId, pageNumber, toggleLoader) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         getAllRequest: (userId, toggleLoader) => dispatch(getAllFriendRequests(userId, toggleLoader)),

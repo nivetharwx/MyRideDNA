@@ -386,7 +386,7 @@ class Group extends Component {
                         </Animated.View>
                     </Animated.View> */}
                 </View>
-                <Loader isVisible={this.props.loader} />
+                <Loader isVisible={this.props.showLoader} />
             </View>
     }
 }
@@ -394,8 +394,8 @@ const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { currentGroup } = state.FriendGroupList;
     const { allFriends } = state.FriendList;
-    const { loader } = state.PageState;
-    return { user, currentGroup, allFriends,loader };
+    const { showLoader } = state.PageState;
+    return { user, currentGroup, allFriends, showLoader };
 };
 const mapDispatchToProps = (dispatch) => {
     return {

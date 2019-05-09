@@ -25,11 +25,11 @@ export default (state = initialState, action) => {
                 ...state,
                 profileLastOptions:action.data.expanded
             }  
-        case PROFILE_LOADER:
-            return{
-                ...state,
-                loader:action.data
-            }    
+        // case PROFILE_LOADER:
+        //     return{
+        //         ...state,
+        //         loader:action.data
+        //     }    
         default: return state
     }
 }

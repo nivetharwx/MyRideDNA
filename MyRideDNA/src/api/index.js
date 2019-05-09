@@ -830,15 +830,17 @@ export const deleteDestination = (ride) => {
     };
 }
 // DOC: This API call is for syncing the state of ride with the server. There will not be any dispatcher
-export const replaceRide = (rideId, ride) => {
+export const replaceRide = (rideId, ride, successCallback, errorCallback) => {
     axios.put(RIDE_BASE_URL + `replaceRide?rideId=${rideId}`, ride, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
             if (res.status === 200) {
                 console.log("Synced with server");
+                successCallback && successCallback();
             }
         })
         .catch(er => {
             console.log(er.response);
+            errorCallback && errorCallback();
             // ToDo handle timeout error seperately for map
         })
 }

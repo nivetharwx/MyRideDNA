@@ -29,7 +29,7 @@ export const toggleLoaderAction = (data) => (
 );
 export const apiLoaderActions = (data) => (
     {
-        type: PROFILE_LOADER,
+        type: TOGGLE_LOADER,
         data: data
     }
 );
