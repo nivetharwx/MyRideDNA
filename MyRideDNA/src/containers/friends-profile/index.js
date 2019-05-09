@@ -276,7 +276,7 @@ class FriendsProfile extends Component {
                     <ShifterButton onPress={this.showAppNavMenu}
                         containerStyles={{ bottom: IS_ANDROID ? BOTTOM_TAB_HEIGHT : BOTTOM_TAB_HEIGHT - 8 }} size={18} alignLeft={user.handDominance === 'left'} />
                 </View>
-                <Loader isVisible={this.props.loader} />
+                <Loader isVisible={this.props.showLoader} />
             </View >
     }
 }
@@ -285,8 +285,8 @@ const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { showMenu } = state.TabVisibility;
     const { currentFriend, friendsLocationList } = state.FriendList;
-    const { loader } = state.PageState;
-    return { user, showMenu, currentFriend, friendsLocationList, loader };
+    const { showLoader } = state.PageState;
+    return { user, showMenu, currentFriend, friendsLocationList, showLoader };
 };
 const mapDispatchToProps = (dispatch) => {
     return {

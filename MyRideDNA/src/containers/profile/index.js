@@ -34,7 +34,7 @@ class Profile extends Component {
     }
 
     render() {
-        const { user, loader } = this.props;
+        const { user, showLoader } = this.props;
         const { activeTab, profilePicString } = this.state;
         return (
             <View style={styles.fill}>
@@ -78,7 +78,7 @@ class Profile extends Component {
                     <ShifterButton onPress={this.showAppNavMenu}
                         containerStyles={{ bottom: BOTTOM_TAB_HEIGHT }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
-                <Loader isVisible={loader} />
+                <Loader isVisible={showLoader} />
             </View >
         );
     }
@@ -87,8 +87,8 @@ class Profile extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { showMenu } = state.TabVisibility;
-    const { loader } = state.PageState;
-    return { user, showMenu, loader };
+    const { showLoader } = state.PageState;
+    return { user, showMenu, showLoader };
 };
 const mapDispatchToProps = (dispatch) => {
     return {

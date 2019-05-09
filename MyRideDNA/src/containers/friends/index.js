@@ -58,7 +58,6 @@ class Friends extends Component {
                 this.tabsRef.props.goToPage(0)
             }
         }, 0);
-
         this.props.getAllRequest(this.props.user.userId, true);
         this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
 
@@ -398,7 +397,7 @@ class Friends extends Component {
                         containerStyles={{ bottom: this.state.selectedPersonImg ? IS_ANDROID ? BOTTOM_TAB_HEIGHT : BOTTOM_TAB_HEIGHT - 8 : 0 }}
                         alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
-                <Loader isVisible={this.props.loader} />
+                <Loader isVisible={this.props.showLoader} />
             </View>
         );
     }
@@ -409,8 +408,8 @@ const mapStateToProps = (state) => {
     const { allFriends, paginationNum, currentFriend } = state.FriendList;
     const { personInfo, oldPosition } = state.PageOverTab;
     const { allFriendRequests } = state.FriendRequest;
-    const { loader } = state.PageState;
-    return { user, personInfo, oldPosition, allFriendRequests, allFriends, paginationNum, currentFriend, userAuthToken, deviceToken, loader };
+    const { showLoader } = state.PageState;
+    return { user, personInfo, oldPosition, allFriendRequests, allFriends, paginationNum, currentFriend, userAuthToken, deviceToken, showLoader };
 }
 const mapDispatchToProps = (dispatch) => {
     return {

@@ -35,7 +35,7 @@ export class Settings extends Component {
             handDominanceState: props.user.handDominance,
             timeIntervalInSeconds: props.user.timeIntervalInSeconds,
             showCircle: props.user.showCircle,
-            showLoader:false
+            showLoader: false
         };
     }
 
@@ -216,7 +216,7 @@ export class Settings extends Component {
     render() {
         const MEASUREMENT_UNITS = [{ label: 'Kilometers', value: 'km' }, { label: 'Miles', value: 'mi' }];
         const HAND_DOMINANCE = [{ label: 'Left Handed', value: 'left' }, { label: 'Right Handed', value: 'right' }];
-        const { user,loader } = this.props;
+        const { user, loader } = this.props;
         const { locationEnable } = this.state;
         return (
             <View style={styles.fill}>
@@ -301,8 +301,8 @@ export class Settings extends Component {
 
 const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken, updatePasswordError, updatePasswordSuccess } = state.UserAuth;
-    const { loader } = state.PageState;
-    return { user, userAuthToken, deviceToken, updatePasswordError, updatePasswordSuccess,loader };
+    const { showLoader } = state.PageState;
+    return { user, userAuthToken, deviceToken, updatePasswordError, updatePasswordSuccess, showLoader };
 }
 
 const mapDispatchToProps = (dispatch) => {
