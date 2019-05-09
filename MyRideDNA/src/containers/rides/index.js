@@ -112,6 +112,7 @@ export class Rides extends Component {
                 this.showDeleteSuccessMessage();
                 return;
             }
+            // TODO: Testing is remaining
             // this.props.buildRides.forEach(ride => {
             //     if (ride.snapshotId && !ride.snapshot) {
             //         this.props.getRidePicture(ride.snapshot.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), ride.rideId);

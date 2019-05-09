@@ -242,7 +242,11 @@ export class Map extends Component {
                     // DOC: Calls replace ride API after each 5 updates on current ride to sync with server:
                     if (this.state.rideUpdateCount === RIDE_UPDATE_COUNT_TO_SYNC) {
                         updatedState.rideUpdateCount = 0;
-                        replaceRide(ride.rideId, { source: ride.source, destination: ride.destination, waypoints: ride.waypoints });
+                        const body = {};
+                        if (ride.source) body.source = ride.source;
+                        if (ride.destination) body.destination = ride.destination;
+                        if (ride.waypoints) body.waypoints = ride.waypoints;
+                        replaceRide(ride.rideId, body);
                         this.hasModifiedRide = true;
                     }
                 }
@@ -499,7 +503,12 @@ export class Map extends Component {
                 const { ride } = this.props;
                 this.setState({ showLoader: true }, () => {
                     this.getMapSnapshot((mapSnapshot) => {
-                        replaceRide(ride.rideId, { snapshot: { mimeType: 'image/jpeg', picture: mapSnapshot }, source: ride.source, destination: ride.destination, waypoints: ride.waypoints },
+                        const body = {};
+                        if (ride.source) body.source = ride.source;
+                        if (ride.destination) body.destination = ride.destination;
+                        if (ride.waypoints) body.waypoints = ride.waypoints;
+                        if (mapSnapshot) body.snapshot = { mimeType: 'image/jpeg', picture: mapSnapshot };
+                        replaceRide(ride.rideId, body,
                             () => this.setState({ showLoader: false }),
                             () => this.setState({ showLoader: false }));
                     });
@@ -1495,7 +1504,12 @@ export class Map extends Component {
             const { ride } = this.props;
             this.setState({ showLoader: true }, () => {
                 this.getMapSnapshot((mapSnapshot) => {
-                    replaceRide(ride.rideId, { snapshot: { mimeType: 'image/jpeg', picture: mapSnapshot }, source: ride.source, destination: ride.destination, waypoints: ride.waypoints },
+                    const body = {};
+                    if (ride.source) body.source = ride.source;
+                    if (ride.destination) body.destination = ride.destination;
+                    if (ride.waypoints) body.waypoints = ride.waypoints;
+                    if (mapSnapshot) body.snapshot = { mimeType: 'image/jpeg', picture: mapSnapshot };
+                    replaceRide(ride.rideId, body,
                         () => this.setState({ showLoader: false }),
                         () => this.setState({ showLoader: false }));
                     if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
