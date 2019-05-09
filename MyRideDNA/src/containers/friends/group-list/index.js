@@ -261,11 +261,15 @@ class GroupListTab extends Component {
 
     render() {
         const { newGroupName, isVisibleOptionsModal,isRefreshing } = this.state;
-        const { friendGroupList, user } = this.props;
+        const { friendGroupList, user, searchQuery } = this.props;
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '45deg']
         });
+        let filteredGroups = [];
+        filteredGroups = searchQuery === '' ? friendGroupList : friendGroupList.filter(group => {
+                return (group.groupName.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
+            });
         return (
             <View style={styles.fill}>
                 <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
@@ -276,16 +280,20 @@ class GroupListTab extends Component {
                     </View>
                 </BaseModal>
                 {
-                    friendGroupList.length > 0
-                        ? <FlatList
-                            data={friendGroupList}
+                    friendGroupList.length === 0
+                    ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
+                    : filteredGroups.length === 0
+                        ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage}>
+                            <Text style={{ color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6), fontWeight: 'bold', letterSpacing: 1 }}>{`No Groups found`}</Text>
+                        </ImageBackground>
+                        :<FlatList
+                            data={filteredGroups}
                             refreshing={isRefreshing}
                             onRefresh={this.onPullRefresh}
                             keyExtractor={this.groupKeyExtractor}
                             renderItem={this.renderGroup}
                             extraData={this.state}
                         />
-                        : <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
                 }
                 {/* <Animated.View style={[styles.createGrpContainer, { bottom: this.state.kbdBtmOffset, width: this.createSecAnim }]}>
                     <Animated.View style={[styles.createGrpActionSec, { backgroundColor: newGroupName === null ? 'transparent' : '#fff', borderWidth: this.borderWidthAnim }]}>
@@ -356,8 +364,10 @@ const styles = StyleSheet.create({
     backgroundImage: {
         height: null,
         width: null,
-        flex: 1
-    }
+        flex: 1,
+        alignItems: 'center',
+        paddingTop: heightPercentageToDP(5)
+    },
 });
 
 

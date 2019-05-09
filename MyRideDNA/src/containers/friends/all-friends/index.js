@@ -334,7 +334,7 @@ class AllFriendsTab extends Component {
         if (friendsFilter === FLOAT_ACTION_IDS.BTN_ALL_FRIENDS) {
             filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
-                    friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
+                  ( friend.nickname ?friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1:false))
             });
         } else if (friendsFilter === FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS) {
             const onlineFriends = allFriends.filter(friend => friend.isOnline);
@@ -386,6 +386,7 @@ class AllFriendsTab extends Component {
                     color={APP_COMMON_STYLES.headerColor}
                     position={user.handDominance === 'left' ? 'right' : 'left'}
                     onPressItem={this.onSelectFloatActionOptions}
+                    listenKeyboard={true}
                 />
             </View>
         )
