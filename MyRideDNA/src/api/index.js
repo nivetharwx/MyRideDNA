@@ -37,6 +37,21 @@ export const getPicture = (pictureId, successCallback, errorCallback) => {
             errorCallback(er.response || er);
         })
 }
+export const getPictureList = (pictureIdList, successCallback, errorCallback) => {
+    axios.put(USER_BASE_URL + `getPictureList`, { pictureIdList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        .then(res => {
+            if (res.status === 200) {
+                if (Object.keys(res.data).length === 0) {
+                    errorCallback(res.data);
+                } else {
+                    successCallback(res.data);
+                }
+            }
+        })
+        .catch(er => {
+            errorCallback(er.response || er);
+        })
+}
 export const pushNotification = (userId) => {
     axios.get(NOTIFICATIONS_BASE_URL + `pushNotification?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
@@ -296,7 +311,7 @@ export const getAllBuildRides = (userId) => {
         axios.get(RIDE_BASE_URL + `getAllBuildRides?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log('getAllBuildRides : ', res.data)
+                    console.log('getAllBuildRides : ', res.data);
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(replaceRideListAction({ rideType: RIDE_TYPE.BUILD_RIDE, rideList: res.data }));
@@ -338,6 +353,7 @@ export const getAllRecordedRides = (userId) => {
         axios.get(RIDE_BASE_URL + `getAllRecordRides?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    console.log('getAllRecordRides : ', res.data);
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(replaceRideListAction({ rideType: RIDE_TYPE.RECORD_RIDE, rideList: res.data }));
@@ -894,13 +910,13 @@ export const getAllFriends = (friendType, userId, pageNumber, toggleLoader) => {
 }
 export const getUserById = (userId) => {
     return dispatch => {
-        dispatch(apiLoaderActions(true));  
+        dispatch(apiLoaderActions(true));
         axios.get(GRAPH_BASE_URL + `getUserById?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    console.log('getUserById : ',res)
+                    console.log('getUserById : ', res)
                     dispatch(replaceFriendInfooAction(res.data));
-                    dispatch(apiLoaderActions(false));      
+                    dispatch(apiLoaderActions(false));
                 }
             })
             .catch(er => {
@@ -1014,18 +1030,18 @@ export const cancelFriendRequest = (senderId, personId, requestId) => {
 export const getAllFriendRequests = (userId, toggleLoader) => {
     return dispatch => {
         toggleLoader && dispatch(apiLoaderActions(true))
-                axios.get(FRIENDS_BASE_URL + `getAllRequests?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
-                    .then(res => {
-                        if (res.status === 200) { 
-                            dispatch(apiLoaderActions(false))
-                            dispatch(replaceFriendRequestListAction(res.data))
-                        }
-                    })
-                    .catch(err => {
-                        dispatch(apiLoaderActions(false))
-                        console.log(err)
-                    })
-            }
+        axios.get(FRIENDS_BASE_URL + `getAllRequests?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(apiLoaderActions(false))
+                    dispatch(replaceFriendRequestListAction(res.data))
+                }
+            })
+            .catch(err => {
+                dispatch(apiLoaderActions(false))
+                console.log(err)
+            })
+    }
 }
 export const approveFriendRequest = (senderId, personId, actionDate, requestId) => {
     return dispatch => {

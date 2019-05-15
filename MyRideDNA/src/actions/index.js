@@ -19,7 +19,9 @@ import {
     UPDATE_MYPROFILE_LAST_OPTION,
     UPDATE_TOKEN,
     PROFILE_LOADER,
-    REPLACE_FRIEND_INFO
+    REPLACE_FRIEND_INFO,
+    UPDATE_RIDE_SNAPSHOT,
+    UPDATE_RIDE_CREATOR_PICTURE
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -103,6 +105,18 @@ export const replaceRideListAction = (data) => (
 export const updateRideListAction = (data) => (
     {
         type: UPDATE_RIDE_LIST,
+        data: data
+    }
+);
+export const updateRidePictureInListAction = (data) => (
+    {
+        type: UPDATE_RIDE_SNAPSHOT,
+        data: data
+    }
+);
+export const updateRideCreatorPictureInListAction = (data) => (
+    {
+        type: UPDATE_RIDE_CREATOR_PICTURE,
         data: data
     }
 );

@@ -21,7 +21,9 @@ const initialState = {
         isHighway: true,
         isRecorded: false,
         status: null,
-        fromRideId: null
+        fromRideId: null,
+        totalDistance: 0,
+        totalTime: 0
     }
 };
 
