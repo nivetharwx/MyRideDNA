@@ -90,6 +90,7 @@ export class Map extends Component {
     notificationInterval = null;
     trackpointTick = 0;
     hasModifiedRide = false;
+    prevCoordsStr = '';
     constructor(props) {
         super(props);
         this.state = {
@@ -146,6 +147,7 @@ export class Map extends Component {
         // console.log(this.props.ride === nextProps.ride); // DOC: false when something changes in ride
         const { ride, isLocationOn, currentScreen } = nextProps;
         let updatedState = {};
+        let currentCoordsStr = '';
 
         if (this.isLocationOn != isLocationOn) {
             this.isLocationOn = isLocationOn;
@@ -178,12 +180,14 @@ export class Map extends Component {
                     if (ride.source) {
                         const sourceMarker = this.createMarkerFeature([ride.source.lng, ride.source.lat], ICON_NAMES.SOURCE_DEFAULT);
                         updatedState.markerCollection.features = [sourceMarker];
+                        currentCoordsStr += ride.source.lng + ride.source.lat;
                     }
 
                     if (ride.waypoints.length > 0) {
                         let idx = 1;
                         updatedState.markerCollection.features = ride.waypoints.reduce((arr, loc) => {
                             arr.push(this.createMarkerFeature([loc.lng, loc.lat], ICON_NAMES.WAYPOINT_DEFAULT, idx));
+                            currentCoordsStr += loc.lng + loc.lat;
                             idx++;
                             return arr;
                         }, [...updatedState.markerCollection.features]);
@@ -192,6 +196,7 @@ export class Map extends Component {
                     if (ride.destination) {
                         const destinationMarker = this.createMarkerFeature([ride.destination.lng, ride.destination.lat], ICON_NAMES.DESTINATION_DEFAULT);
                         updatedState.markerCollection.features = [...updatedState.markerCollection.features, destinationMarker];
+                        currentCoordsStr += ride.destination.lng + ride.destination.lat;
                     }
                 }
             } else {
@@ -223,12 +228,14 @@ export class Map extends Component {
                     if (ride.source) {
                         const sourceMarker = this.createMarkerFeature([ride.source.lng, ride.source.lat], ICON_NAMES.SOURCE_DEFAULT);
                         updatedState.markerCollection.features = [sourceMarker];
+                        currentCoordsStr += ride.source.lng + ride.source.lat;
                     }
 
                     if (ride.waypoints.length > 0) {
                         let idx = 1;
                         updatedState.markerCollection.features = ride.waypoints.reduce((arr, loc) => {
                             arr.push(this.createMarkerFeature([loc.lng, loc.lat], ICON_NAMES.WAYPOINT_DEFAULT, idx));
+                            currentCoordsStr += loc.lng + loc.lat;
                             idx++;
                             return arr;
                         }, updatedState.markerCollection.features);
@@ -237,6 +244,7 @@ export class Map extends Component {
                     if (ride.destination) {
                         const destinationMarker = this.createMarkerFeature([ride.destination.lng, ride.destination.lat], ICON_NAMES.DESTINATION_DEFAULT);
                         updatedState.markerCollection.features = [...updatedState.markerCollection.features, destinationMarker];
+                        currentCoordsStr += ride.destination.lng + ride.destination.lat;
                     }
 
                     // DOC: Calls replace ride API after each 5 updates on current ride to sync with server:
@@ -285,7 +293,10 @@ export class Map extends Component {
                     }
                 } else if (updatedState.markerCollection && updatedState.markerCollection.features.length > 1) {
                     // DOC: Fetch route for build ride if waypoints are more than one
-                    this.fetchDirections();
+                    if (this.prevCoordsStr !== currentCoordsStr && currentCoordsStr) {
+                        this.prevCoordsStr = currentCoordsStr;
+                        this.fetchDirections();
+                    }
                 } else if (updatedState.markerCollection && updatedState.markerCollection.features.length === 1) {
                     this._mapView.flyTo(updatedState.markerCollection.features[0].geometry.coordinates, 500);
                 } else if (ride.rideId === null) {
@@ -972,12 +983,12 @@ export class Map extends Component {
 
             return {
                 rideUpdateCount: prevState.rideUpdateCount + 1,
-                markerCollection: {
-                    ...prevState.markerCollection,
-                    ...{
-                        features: [...features.slice(0, index), ...features.slice(index + 1)]
-                    }
-                },
+                // markerCollection: {
+                //     ...prevState.markerCollection,
+                //     ...{
+                //         features: [...features.slice(0, index), ...features.slice(index + 1)]
+                //     }
+                // },
                 activeMarkerIndex: -1
             }
         }, () => {
@@ -991,7 +1002,6 @@ export class Map extends Component {
                 const indexOnServer = index - 1;
                 this.props.deleteWaypoint(ride, indexOnServer);
             }
-            // this.fetchDirections();
         });
     }
 
@@ -1002,21 +1012,18 @@ export class Map extends Component {
             const { features } = prevState.markerCollection;
             return {
                 rideUpdateCount: prevState.rideUpdateCount + 1,
-                markerCollection: {
-                    ...prevState.markerCollection,
-                    features: [{
-                        ...features[activeMarkerIndex],
-                        properties: { ...features[activeMarkerIndex].properties, icon: ICON_NAMES.SOURCE_DEFAULT }
-                    }, ...features.slice(activeMarkerIndex + 1)]
-                },
+                // markerCollection: {
+                //     ...prevState.markerCollection,
+                //     features: [{
+                //         ...features[activeMarkerIndex],
+                //         properties: { ...features[activeMarkerIndex].properties, icon: ICON_NAMES.SOURCE_DEFAULT }
+                //     }, ...features.slice(activeMarkerIndex + 1)]
+                // },
                 activeMarkerIndex: -1
             }
         }, () => {
             this.onCloseOptionsBar();
             this.props.makeWaypointAsSource(ride, activeMarkerIndex - 1);
-            console.log("makeWaypointAsSource called");
-            console.log(JSON.parse(JSON.stringify(this.state.markerCollection.features)));
-            // this.fetchDirections();
         });
     }
 
@@ -1027,19 +1034,18 @@ export class Map extends Component {
             const { features } = prevState.markerCollection;
             return {
                 rideUpdateCount: prevState.rideUpdateCount + 1,
-                markerCollection: {
-                    ...prevState.markerCollection,
-                    features: [{
-                        ...features[activeMarkerIndex],
-                        properties: { ...features[activeMarkerIndex].properties, icon: 'waypointDefault' }
-                    }, ...features.slice(0, activeMarkerIndex)]
-                },
+                // markerCollection: {
+                //     ...prevState.markerCollection,
+                //     features: [{
+                //         ...features[activeMarkerIndex],
+                //         properties: { ...features[activeMarkerIndex].properties, icon: 'waypointDefault' }
+                //     }, ...features.slice(0, activeMarkerIndex)]
+                // },
                 activeMarkerIndex: -1
             }
         }, () => {
             this.onCloseOptionsBar();
             this.props.makeSourceAsWaypoint(ride);
-            // this.fetchDirections();
         });
     }
 
@@ -1051,20 +1057,19 @@ export class Map extends Component {
             const { features } = prevState.markerCollection;
             return {
                 rideUpdateCount: prevState.rideUpdateCount + 1,
-                markerCollection: {
-                    ...prevState.markerCollection,
-                    features: [...features.slice(0, activeMarkerIndex),
-                    {
-                        ...features[activeMarkerIndex],
-                        properties: { ...features[activeMarkerIndex].properties, icon: ICON_NAMES.DESTINATION_DEFAULT }
-                    }]
-                },
+                // markerCollection: {
+                //     ...prevState.markerCollection,
+                //     features: [...features.slice(0, activeMarkerIndex),
+                //     {
+                //         ...features[activeMarkerIndex],
+                //         properties: { ...features[activeMarkerIndex].properties, icon: ICON_NAMES.DESTINATION_DEFAULT }
+                //     }]
+                // },
                 activeMarkerIndex: -1
             }
         }, () => {
             this.onCloseOptionsBar();
             this.props.makeWaypointAsDestination(ride, activeMarkerIndex - 1);
-            // this.fetchDirections();
         });
     }
 
@@ -1075,20 +1080,19 @@ export class Map extends Component {
             const { features } = prevState.markerCollection;
             return {
                 rideUpdateCount: prevState.rideUpdateCount + 1,
-                markerCollection: {
-                    ...prevState.markerCollection,
-                    features: [...features.slice(0, activeMarkerIndex),
-                    {
-                        ...features[activeMarkerIndex],
-                        properties: { ...features[activeMarkerIndex].properties, icon: 'waypointDefault' }
-                    }]
-                },
+                // markerCollection: {
+                //     ...prevState.markerCollection,
+                //     features: [...features.slice(0, activeMarkerIndex),
+                //     {
+                //         ...features[activeMarkerIndex],
+                //         properties: { ...features[activeMarkerIndex].properties, icon: 'waypointDefault' }
+                //     }]
+                // },
                 activeMarkerIndex: -1
             }
         }, () => {
             this.onCloseOptionsBar();
             this.props.makeDestinationAsWaypoint(ride);
-            // this.fetchDirections();
         });
     }
 
@@ -1131,24 +1135,24 @@ export class Map extends Component {
             if (prevState.activeMarkerIndex === -1) {
                 return {
                     rideUpdateCount: prevState.rideUpdateCount + 1,
-                    markerCollection: {
-                        ...prevState.markerCollection,
-                        features: [...features, marker]
-                    }
+                    // markerCollection: {
+                    //     ...prevState.markerCollection,
+                    //     features: [...features, marker]
+                    // }
                 }
             } else {
                 const prevMarker = features[prevState.activeMarkerIndex];
                 const isDestinationSelected = this.isDestination(prevMarker);
                 return {
                     rideUpdateCount: prevState.rideUpdateCount + 1,
-                    markerCollection: {
-                        ...prevState.markerCollection,
-                        features: [
-                            ...features.slice(0, prevState.activeMarkerIndex),
-                            marker,
-                            ...features.slice(prevState.activeMarkerIndex)
-                        ]
-                    },
+                    // markerCollection: {
+                    //     ...prevState.markerCollection,
+                    //     features: [
+                    //         ...features.slice(0, prevState.activeMarkerIndex),
+                    //         marker,
+                    //         ...features.slice(prevState.activeMarkerIndex)
+                    //     ]
+                    // },
                     activeMarkerIndex: isDestinationSelected ? -1 : prevState.activeMarkerIndex
                 }
             }
@@ -1165,7 +1169,6 @@ export class Map extends Component {
                 const indexOnServer = index - 1;
                 this.props.addWaypoint(waypoint, indexOnServer);
             }
-            // this.fetchDirections();
         });
     }
 
@@ -1173,27 +1176,12 @@ export class Map extends Component {
     updateWaypointAtIndex(index, marker, callback) {
         this.setState((prevState) => {
             const { features } = prevState.markerCollection;
-            const undoActions = [...prevState.undoActions];
-            const redoActions = [...prevState.redoActions];
-            if (undoActions.length === 10) undoActions.shift();
-            if (redoActions.length > 0) redoActions.splice(0);
-            undoActions.push({
-                action: 'update',
-                opppositeAction: 'update',
-                actionFunctionName: 'updateWaypointAtIndex',
-                actionParams: { p1: index, p2: marker },
-                oppositeActionFunctionName: 'updateWaypointAtIndex',
-                oppositeActionParams: { p1: index, p2: features[index] }
-            });
-
             return {
                 rideUpdateCount: prevState.rideUpdateCount + 1,
-                markerCollection: {
-                    ...prevState.markerCollection,
-                    ...{ features: [...features.slice(0, index), marker, ...features.slice(index + 1)] }
-                },
-                undoActions: undoActions,
-                redoActions: redoActions,
+                // markerCollection: {
+                //     ...prevState.markerCollection,
+                //     ...{ features: [...features.slice(0, index), marker, ...features.slice(index + 1)] }
+                // },
                 isUpdatingWaypoint: false,
                 activeMarkerIndex: -1
             }
@@ -1212,7 +1200,6 @@ export class Map extends Component {
             } else {
                 this.props.updateWaypoint(waypoint, indexOnServer);
             }
-            // this.fetchDirections();
         });
     }
 

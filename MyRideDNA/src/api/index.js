@@ -855,8 +855,8 @@ export const replaceRide = (rideId, ride, successCallback, errorCallback) => {
             }
         })
         .catch(er => {
-            console.log(er.response);
-            errorCallback && errorCallback();
+            console.log(er.response || er);
+            errorCallback && errorCallback(er.response || er);
             // ToDo handle timeout error seperately for map
         })
 }
