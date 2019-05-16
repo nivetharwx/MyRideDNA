@@ -24,8 +24,8 @@ class Notifications extends Component {
     }
 
     componentDidMount() {
-        // this.props.getAllNotifications(this.props.user.userId);
-        this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
+        this.props.getAllNotifications(this.props.user.userId);
+        // this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
         this.props.seenNotification(this.props.user.userId);
     }
 
@@ -141,30 +141,30 @@ class Notifications extends Component {
     onPressLogout = async () => {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
-    loadMoreData = () => {
-        if (this.props.isLoading === false) {
-            this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
-        }
-        console.log('loadMoreData')
+    // loadMoreData = () => {
+    //     if (this.props.isLoading === false) {
+    //         this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
+    //     }
+    //     console.log('loadMoreData')
 
-    }
+    // }
 
-    renderFooter = () => {
-        if (this.props.isLoading) {
-            return (
-                <View
-                    style={{
-                        paddingVertical: 20,
-                        borderTopWidth: 1,
-                        borderColor: "#CED0CE"
-                    }}
-                >
-                    <ActivityIndicator animating size="large" />
-                </View>
-            );
-        }
-        return null
-    }
+    // renderFooter = () => {
+    //     if (this.props.isLoading) {
+    //         return (
+    //             <View
+    //                 style={{
+    //                     paddingVertical: 20,
+    //                     borderTopWidth: 1,
+    //                     borderColor: "#CED0CE"
+    //                 }}
+    //             >
+    //                 <ActivityIndicator animating size="large" />
+    //             </View>
+    //         );
+    //     }
+    //     return null
+    // }
 
     render() {
         const { notificationList, user } = this.props;
@@ -212,7 +212,8 @@ const mapDispatchToProps = (dispatch) => {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
-        getAllNotifications: (userId, pageNumber) => dispatch(getAllNotifications(userId, pageNumber)),
+        getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
+        // getAllNotifications: (userId, pageNumber) => dispatch(getAllNotifications(userId, pageNumber)),
         seenNotification: (userId) => dispatch(seenNotification(userId)),
         getNotificationPic: (pictureId, id) => getPicture(pictureId, ({ picture, pictureId }) => {
             dispatch(updateNotificationAction({ profilePicture: picture, id: id }))
