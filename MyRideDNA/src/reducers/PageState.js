@@ -1,11 +1,12 @@
-import { TOGGLE_LOADER, TOGGLE_NETWORK_STATUS, UPDATE_MYPROFILE_LAST_OPTION, PROFILE_LOADER } from "../actions/actionConstants";
+import { TOGGLE_LOADER, TOGGLE_NETWORK_STATUS, UPDATE_MYPROFILE_LAST_OPTION, PROFILE_LOADER, UPDATE_APPSTATE } from "../actions/actionConstants";
 import { Actions } from "react-native-router-flux";
 
 const initialState = {
     showLoader: false,
     hasNetwork: true,
     profileLastOptions:0,
-    loader:false 
+    loader:false,
+    appState:'foreground', 
 };
 
 export default (state = initialState, action) => {
@@ -24,6 +25,11 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 profileLastOptions:action.data.expanded
+            }  
+        case UPDATE_APPSTATE:
+            return {
+                ...state,
+                appState:action.data.appState
             }  
         // case PROFILE_LOADER:
         //     return{

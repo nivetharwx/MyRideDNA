@@ -44,7 +44,7 @@ export default class App extends Component {
             description: 'used for example',
             priority: 'high'
         })
-        FCM.getInitialNotification().then(notif => {
+        FCM.getInitialNotification().then (notif => {
             console.log("InitialNotification received: ", notif);
         });
 
@@ -98,15 +98,19 @@ export default class App extends Component {
     }
 
     redirectToTargetScreen(targetScreen, body) {
-        if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
-            if (targetScreen === 'REQUESTS') {
-                store.getState().TabVisibility.currentScreen.name !== PageKeys.FRIENDS
-                    ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: body } }))
-                    : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: body });
+        if (store.getState().PageState.appState === 'background') {
+            if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
+                if (targetScreen === 'REQUESTS') {
+                    store.getState().TabVisibility.currentScreen.name !== PageKeys.FRIENDS
+                        ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: body } }))
+                        : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: body });
+                }else if(targetScreen === 'GROUP'){
+                    console.log('group notification')
+                }
+                return;
             }
-            return;
+            store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
         }
-        store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
     }
 
     componentWillUnmount() {
@@ -119,3 +123,4 @@ export default class App extends Component {
         )
     }
 }
+
