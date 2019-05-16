@@ -1,58 +1,60 @@
 import { RESET_NOTIFICATION_LIST, UPDATE_NOTIFICATION_IN_LIST, CLEAR_NOTIFICATION_LIST, UPDATE_NOTIFICATION_COUNT, DELETE_NOTIFICATIONS_FROM_LIST, IS_LOADING_DATA } from "../actions/actionConstants";
+import { updateShareLocationState } from "../api";
 
 const initialState = {
     notificationList: {},
     pageNumber: 0,
-    isLoading:false,
+    isLoading: false,
 };
 
 export default (state = initialState, action) => {
     switch (action.type) {
-        case RESET_NOTIFICATION_LIST:
-        return {
-            ...state,
-            notificationList: action.data
-        }
         // case RESET_NOTIFICATION_LIST:
-        //     if (!state.notificationList.notification) {
-        //         return {
-        //             ...state,
-        //             notificationList: action.data.notificationData,
-        //             pageNumber:action.data.pageNumber
-        //         }
-        //     }
-        //     else{
-        //         return {
-        //             ...state,
-        //             notificationList: {
-        //                 notification: [
-        //                     ...state.notificationList.notification,
-        //                     ...action.data.notificationData.notification
-        //                 ],
-        //                 totalUnseen:action.data.notificationData.totalUnseen
-        //             },
-        //             pageNumber:action.data.pageNumber
-        //         }
-        //     }
+        // return {
+        //     ...state,
+        //     notificationList: action.data
+        // }
+        case RESET_NOTIFICATION_LIST:
+            if (!state.notificationList.notification) {
+                return {
+                    ...state,
+                    notificationList: action.data.notificationData,
+                    pageNumber: action.data.pageNumber
+                }
+            }
+            else {
+                return {
+                    ...state,
+                    notificationList: {
+                        notification: [
+                            ...state.notificationList.notification,
+                            ...action.data.notificationData.notification
+                        ],
+                        totalUnseen: action.data.notificationData.totalUnseen
+                    },
+                    pageNumber: action.data.pageNumber
+                }
+            }
         case UPDATE_NOTIFICATION_IN_LIST:
-            const notificationIdx = state.notificationList.notification.findIndex(item => item.id === action.data.id);
-            if (notificationIdx > -1) {
-                if (action.data.profilePicture) {
-                    const notificationPic = state.notificationList.notification[notificationIdx];
-                    notificationPic.profilePicture = action.data.profilePicture;
+            const notificationIdx = state.notificationList.notification.findIndex(item => item.id === action.data.id);  
+                if (action.data.pictureObj) {
+                    let updatedNotifList = state.notificationList.notification.map(item => {
+                        if (!item.profilPictureId) return item;
+                        if (typeof action.data.pictureObj[item.profilPictureId] === 'string') {
+                            return { ...item, profilePicture: action.data.pictureObj[item.profilPictureId] }
+                        }
+                        return item;
+                    })
                     return {
                         ...state,
                         notificationList: {
                             ...state.notificationList,
-                            notification: [
-                                ...state.notificationList.notification.slice(0, notificationIdx),
-                                notificationPic,
-                                ...state.notificationList.notification.slice(notificationIdx + 1)
-                            ]
+                            notification: updatedNotifList
                         }
                     }
                 }
                 else {
+                    if (notificationIdx > -1) {
                     return {
                         ...state,
                         notificationList: {
@@ -97,7 +99,7 @@ export default (state = initialState, action) => {
         case IS_LOADING_DATA:
             return {
                 ...state,
-                isLoading:action.data
+                isLoading: action.data
             }
 
         case CLEAR_NOTIFICATION_LIST:

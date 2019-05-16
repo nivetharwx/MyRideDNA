@@ -579,8 +579,8 @@ export class Map extends Component {
         this.trackpointTick = 0;
         this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         this.props.pushNotification(this.props.user.userId);
-        // this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
-        this.props.getAllNotifications(this.props.user.userId);
+        this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
+        // this.props.getAllNotifications(this.props.user.userId);
         // this.notificationInterval = setInterval(() => {
         //     this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
         // }, 60 * 1000);
@@ -2205,8 +2205,8 @@ const mapDispatchToProps = (dispatch) => {
         publishEvent: (eventBody) => publishEvent(eventBody),
         pushNotification: (userId) => pushNotification(userId),
         updateLocation: (userId, locationInfo) => updateLocation(userId, locationInfo),
-        getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
-        // getAllNotifications: (userId, pageNumber) => dispatch(getAllNotifications(userId,pageNumber)),
+        // getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
+        getAllNotifications: (userId, pageNumber) => dispatch(getAllNotifications(userId,pageNumber)),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
         deleteNotifications: (notificationIds) => dispatch(deleteNotifications(notificationIds)),
         deleteAllNotifications: (userId) => dispatch(deleteAllNotifications(userId)),

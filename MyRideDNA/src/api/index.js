@@ -63,38 +63,38 @@ export const pushNotification = (userId) => {
             console.log("pushNotification error: ", er.response || er);
         })
 }
-export const getAllNotifications = (userId) => {
-    return dispatch => {
-        axios.get(NOTIFICATIONS_BASE_URL + `getAllNotifications?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
-            .then(res => {
-                if (res.status === 200) {
-                    console.log('getAllNotifications : ',res.data)
-                    dispatch(resetNotificationListAction(res.data));
-                }
-            })
-            .catch(er => {
-                console.log("getAllNotifications error: ", er.response || er);
-            })
-    }
-}
-// export const getAllNotifications = (userId, pageNumber) => {
-//     console.log('pageNumber redux : ', pageNumber)
-//     return dispatch => {  
-//         dispatch(isloadingDataAction(true))
-//         axios.get(NOTIFICATIONS_BASE_URL + `getNotifications?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+// export const getAllNotifications = (userId) => {
+//     return dispatch => {
+//         axios.get(NOTIFICATIONS_BASE_URL + `getAllNotifications?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
 //             .then(res => {
-//                 console.log('getNotifications : ', res.data)
-//                 if (res.status === 200 && res.data.notification.length > 0) {
-//                     dispatch(isloadingDataAction(false))
-//                     dispatch(resetNotificationListAction({ notificationData: res.data, pageNumber: pageNumber + 1 }));
+//                 if (res.status === 200) {
+//                     console.log('getAllNotifications : ',res.data)
+//                     dispatch(resetNotificationListAction(res.data));
 //                 }
 //             })
 //             .catch(er => {
-//                 dispatch(isloadingDataAction(false))
-//                 console.log("getNotifications error: ", er.response || er);
+//                 console.log("getAllNotifications error: ", er.response || er);
 //             })
 //     }
 // }
+export const getAllNotifications = (userId, pageNumber) => {
+    console.log('pageNumber redux : ', pageNumber)
+    return dispatch => {  
+        dispatch(isloadingDataAction(true))
+        axios.get(NOTIFICATIONS_BASE_URL + `getNotifications?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log('getNotifications : ', res.data)
+                if (res.status === 200 && res.data.notification.length > 0) {
+                    dispatch(isloadingDataAction(false))
+                    dispatch(resetNotificationListAction({ notificationData: res.data, pageNumber: pageNumber + 1 }));
+                }
+            })
+            .catch(er => {
+                dispatch(isloadingDataAction(false))
+                console.log("getNotifications error: ", er.response || er);
+            })
+    }
+}
 export const seenNotification = (userId) => {
     return dispatch => {
         axios.get(NOTIFICATIONS_BASE_URL + `seenNotification?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })

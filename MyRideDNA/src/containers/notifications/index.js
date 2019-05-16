@@ -8,7 +8,7 @@ import { List, ListItem, Left, Thumbnail, Body, Right } from 'native-base';
 import { ShifterButton, IconButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, updateNotificationAction, screenChangeAction, isloadingDataAction } from '../../actions';
 import { connect } from 'react-redux';
-import { logoutUser, getAllNotifications, getPicture, readNotification, seenNotification, deleteNotifications } from '../../api';
+import { logoutUser, getAllNotifications, getPicture, readNotification, seenNotification, deleteNotifications, getPictureList } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
 import store from '../../store';
 
@@ -24,33 +24,43 @@ class Notifications extends Component {
     }
 
     componentDidMount() {
-        this.props.getAllNotifications(this.props.user.userId);
-        // this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
+        // this.props.getAllNotifications(this.props.user.userId);
+        this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
         this.props.seenNotification(this.props.user.userId);
     }
 
     componentDidUpdate(prevProps, prevState) {
 
+        // if (prevProps.notificationList.notification !== this.props.notificationList.notification) {
+        //     this.props.notificationList.notification.forEach((notificationPic) => {
+        //         if (!notificationPic.profilePicture && notificationPic.profilPictureId) {
+        //             if (!this.state.notifPicture[notificationPic.profilPictureId])
+        //                 this.setState(prevState => {
+        //                     const updatedPictureLoader = { ...prevState.notifPicture };
+        //                     updatedPictureLoader[notificationPic.profilPictureId] = true;
+        //                     return { notifPicture: updatedPictureLoader }
+        //                 }, () => {
+        //                     this.props.getNotificationPic(notificationPic.profilPictureId, notificationPic.id)
+        //                 });
+
+        //         } else {
+        //             this.setState(prevState => {
+        //                 const updatedPictureLoader = { ...prevState.notifPicture };
+        //                 updatedPictureLoader[notificationPic.profilPictureId] = false;
+        //                 return { notifPicture: updatedPictureLoader }
+        //             });
+        //         }
+        //     })
+        // }
+
         if (prevProps.notificationList.notification !== this.props.notificationList.notification) {
+            const pictureIdList = []
             this.props.notificationList.notification.forEach((notificationPic) => {
                 if (!notificationPic.profilePicture && notificationPic.profilPictureId) {
-                    if (!this.state.notifPicture[notificationPic.profilPictureId])
-                        this.setState(prevState => {
-                            const updatedPictureLoader = { ...prevState.notifPicture };
-                            updatedPictureLoader[notificationPic.profilPictureId] = true;
-                            return { notifPicture: updatedPictureLoader }
-                        }, () => {
-                            this.props.getNotificationPic(notificationPic.profilPictureId, notificationPic.id)
-                        });
-
-                } else {
-                    this.setState(prevState => {
-                        const updatedPictureLoader = { ...prevState.notifPicture };
-                        updatedPictureLoader[notificationPic.profilPictureId] = false;
-                        return { notifPicture: updatedPictureLoader }
-                    });
+                    pictureIdList.push(notificationPic.profilPictureId)
                 }
             })
+            this.props.getNotificationPic(pictureIdList);
         }
     }
 
@@ -141,33 +151,34 @@ class Notifications extends Component {
     onPressLogout = async () => {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
-    // loadMoreData = () => {
-    //     if (this.props.isLoading === false) {
-    //         this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
-    //     }
-    //     console.log('loadMoreData')
+    loadMoreData = () => {
+        if (this.props.isLoading === false) {
+            this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
+        }
+        console.log('loadMoreData')
 
-    // }
+    }
 
-    // renderFooter = () => {
-    //     if (this.props.isLoading) {
-    //         return (
-    //             <View
-    //                 style={{
-    //                     paddingVertical: 20,
-    //                     borderTopWidth: 1,
-    //                     borderColor: "#CED0CE"
-    //                 }}
-    //             >
-    //                 <ActivityIndicator animating size="large" />
-    //             </View>
-    //         );
-    //     }
-    //     return null
-    // }
+    renderFooter = () => {
+        if (this.props.isLoading) {
+            return (
+                <View
+                    style={{
+                        paddingVertical: 20,
+                        borderTopWidth: 1,
+                        borderColor: "#CED0CE"
+                    }}
+                >
+                    <ActivityIndicator animating size="large" />
+                </View>
+            );
+        }
+        return null
+    }
 
     render() {
         const { notificationList, user } = this.props;
+        console.log('notificationList : ', notificationList.notification)
         return (
             <View style={{ flex: 1 }}>
                 <View style={APP_COMMON_STYLES.statusBar}>
@@ -182,13 +193,13 @@ class Notifications extends Component {
                                     data={notificationList.notification}
                                     keyExtractor={this._keyExtractor}
                                     renderItem={this._renderItem}
-                                    // ItemSeparatorComponent={() => <View style={styles.separator} />}
-                                    // ListFooterComponent={this.renderFooter}
-                                    // ItemSeparatorComponent={() => <View style={styles.separator} />}
-                                    // onEndReached={this.loadMoreData}
-                                    // onEndReachedThreshold={0.001}
-                                    // onMomentumScrollBegin={() => { this.setState({ onEndReachedCalledDuringMomentum: false }) }}
-                                    // onTouchStart={this.loadMoreData}
+                                ItemSeparatorComponent={() => <View style={styles.separator} />}
+                                ListFooterComponent={this.renderFooter}
+                                // ItemSeparatorComponent={() => <View style={styles.separator} />}
+                                // onEndReached={this.loadMoreData}
+                                // onEndReachedThreshold={0.001}
+                                // onMomentumScrollBegin={() => { this.setState({ onEndReachedCalledDuringMomentum: false }) }}
+                                onTouchStart={this.loadMoreData}
 
                                 />
                             </ScrollView>
@@ -212,13 +223,20 @@ const mapDispatchToProps = (dispatch) => {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
-        getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
-        // getAllNotifications: (userId, pageNumber) => dispatch(getAllNotifications(userId, pageNumber)),
+        // getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
+        getAllNotifications: (userId, pageNumber) => dispatch(getAllNotifications(userId, pageNumber)),
         seenNotification: (userId) => dispatch(seenNotification(userId)),
-        getNotificationPic: (pictureId, id) => getPicture(pictureId, ({ picture, pictureId }) => {
-            dispatch(updateNotificationAction({ profilePicture: picture, id: id }))
+        // getNotificationPic: (pictureId, id) => getPicture(pictureId, ({ picture, pictureId }) => {
+        //     dispatch(updateNotificationAction({ profilePicture: picture, id: id }))
+        // }, (error) => {
+        //     dispatch(updateNotificationAction({ id: id }))
+        // }),
+        getNotificationPic: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
+            console.log('getPictureList : ', pictureObj)
+            dispatch(updateNotificationAction({ pictureObj }))
         }, (error) => {
-            dispatch(updateNotificationAction({ id: id }))
+            console.log('getPicture list : ', error)
+            // dispatch(updateNotificationAction(pictureObj))
         }),
         deleteNotification: (notificationIds) => dispatch(deleteNotifications(notificationIds)),
     }
