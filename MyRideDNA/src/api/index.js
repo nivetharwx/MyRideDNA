@@ -88,6 +88,9 @@ export const getAllNotifications = (userId, pageNumber) => {
                     dispatch(isloadingDataAction(false))
                     dispatch(resetNotificationListAction({ notificationData: res.data, pageNumber: pageNumber + 1 }));
                 }
+                else if(res.data.notification.length === 0){
+                    dispatch(isloadingDataAction(false))
+                }
             })
             .catch(er => {
                 dispatch(isloadingDataAction(false))
