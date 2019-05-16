@@ -9,7 +9,7 @@ import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { ImageLoader, Loader } from '../../components/loader';
 import styles from './styles';
-import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend, getFriendsLocationList, getUserById, getAllFriends } from '../../api';
+import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend, getFriendsLocationList, getUserById, getAllFriends, readNotification } from '../../api';
 import { BasicCard } from '../../components/cards';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
@@ -41,7 +41,12 @@ class FriendsProfile extends Component {
         }
         if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
             this.props.getUserById(this.props.notificationBody.fromUserId);
-        } else {
+            this.props.readNotification(this.props.user.userId, this.props.notificationBody.id);
+        }else if(this.props.comingFrom === 'notificationPage'){
+            this.props.getUserById(this.props.notificationBody.fromUserId);
+            this.props.readNotification(this.props.user.userId, this.props.notificationBody.id);
+        } 
+        else {
             this.props.getFriendsInfo(this.props.friendIdx, this.props.friendType);
         }
 
@@ -157,7 +162,6 @@ class FriendsProfile extends Component {
 
 
     renderAccordionItem = (item) => {
-        console.log('item:', item)
         return (
             <View style={styles.rowContent}>
                 {
@@ -325,6 +329,7 @@ const mapDispatchToProps = (dispatch) => {
         changeScreen: (screenKey) => dispatch(screenChangeAction(screenKey)),
         doUnfriend: (userId, personId) => dispatch(doUnfriend(userId, personId)),
         getFriendsLocationList: (userId, friendsIdList) => dispatch(getFriendsLocationList(userId, friendsIdList)),
+        readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(FriendsProfile);

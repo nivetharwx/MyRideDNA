@@ -19,7 +19,10 @@ import {
     UPDATE_MYPROFILE_LAST_OPTION,
     UPDATE_TOKEN,
     PROFILE_LOADER,
-    REPLACE_FRIEND_INFO
+    REPLACE_FRIEND_INFO,
+    UPDATE_NOTIFICATION_COUNT,
+    UPDATE_APPSTATE,
+    IS_LOADING_DATA,
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -481,6 +484,18 @@ export const resetNotificationListAction = (data) => (
         data: data
     }
 );
+export const updateNotificationCountAction = (data) => (
+    {
+        type: UPDATE_NOTIFICATION_COUNT,
+        data: data
+    }
+);
+export const isloadingDataAction = (data) => (
+    {
+        type: IS_LOADING_DATA,
+        data: data
+    }
+);
 export const updateNotificationAction = (data) => (
     {
         type: UPDATE_NOTIFICATION_IN_LIST,
@@ -526,6 +541,12 @@ export const reorderRideDestinationAction = (data) => (
 export const reorderRideWaypointsAction = (data) => (
     {
         type: REORDER_WAYPOINTS,
+        data: data
+    }
+);
+export const updateAppStateAction = (data) => (
+    {
+        type: UPDATE_APPSTATE,
         data: data
     }
 );

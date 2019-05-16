@@ -35,7 +35,8 @@ export class Settings extends Component {
             handDominanceState: props.user.handDominance,
             timeIntervalInSeconds: props.user.timeIntervalInSeconds,
             showCircle: props.user.showCircle,
-            showLoader: false
+            showLoader: false,
+            isUpdatedSetting:false
         };
     }
 
@@ -57,6 +58,13 @@ export class Settings extends Component {
             this.fieldRefs.forEach(field => field.clear());
             this.setState({ currentPasswd: '', newPasswd: '', confirmPasswd: '' });
             this.onPressLogout();
+        }
+        if(this.state.isUpdatedSetting){
+            console.log('updated setting')
+            Toast.show({
+                text: 'Setting updated successfully'
+            });
+            this.setState({isUpdatedSetting:false})
         }
     }
 
@@ -204,6 +212,7 @@ export class Settings extends Component {
                 locationRadius: parseInt(locationRadiusState), handDominance: handDominanceState,
                 timeIntervalInSeconds, showCircle, locationEnable
             })
+            this.setState({isUpdatedSetting : true})
         } else {
             Toast.show({
                 text: 'fill all field correctly',
@@ -216,7 +225,7 @@ export class Settings extends Component {
     render() {
         const MEASUREMENT_UNITS = [{ label: 'Kilometers', value: 'km' }, { label: 'Miles', value: 'mi' }];
         const HAND_DOMINANCE = [{ label: 'Left Handed', value: 'left' }, { label: 'Right Handed', value: 'right' }];
-        const { user, loader } = this.props;
+        const { user, showLoader } = this.props;
         const { locationEnable } = this.state;
         return (
             <View style={styles.fill}>
@@ -293,7 +302,7 @@ export class Settings extends Component {
 
                 {/* Shifter: - Brings the app navigation menu */}
                 <ShifterButton onPress={this.showAppNavMenu} alignLeft={user.handDominance === 'left'} />
-                <Loader isVisible={loader} />
+                <Loader isVisible={showLoader} />
             </View>
         );
     }
