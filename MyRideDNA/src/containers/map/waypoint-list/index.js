@@ -33,16 +33,20 @@ class WaypointList extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.ride !== this.props.ride) {
             if (this.props.ride.rideId) {
-                const points = [];
-                if (this.props.ride.source) points.push(this.props.ride.source);
-                this.props.ride.waypoints.reduce((arr, waypoint) => {
-                    arr.push(waypoint);
-                    return arr;
-                }, points);
-                if (this.props.ride.destination) points.push(this.props.ride.destination);
-                this.setState({ points });
+                this.updatePoints();
             }
         }
+    }
+
+    updatePoints = () => {
+        const points = [];
+        if (this.props.ride.source) points.push({ ...this.props.ride.source });
+        this.props.ride.waypoints.reduce((arr, waypoint) => {
+            arr.push({ ...waypoint });
+            return arr;
+        }, points);
+        if (this.props.ride.destination) points.push({ ...this.props.ride.destination });
+        this.setState({ points });
     }
 
     componentDidMount() {

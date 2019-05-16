@@ -139,7 +139,8 @@ export class Map extends Component {
             friendsImage: {},
             appState: null,
             showLoader: false,
-            snapMode: false
+            snapMode: false,
+            refreshWaypointList: false
         };
     }
 
@@ -207,8 +208,6 @@ export class Map extends Component {
                         }
                     }
                 } else {
-                    // TODO: Check for changing the waypoint order
-
                     this.initializeEmptyRide(updatedState);
                     // if (this.props.ride.source === null) {
                     //     if (ride.source) {
@@ -245,6 +244,10 @@ export class Map extends Component {
                         const destinationMarker = this.createMarkerFeature([ride.destination.lng, ride.destination.lat], ICON_NAMES.DESTINATION_DEFAULT);
                         updatedState.markerCollection.features = [...updatedState.markerCollection.features, destinationMarker];
                         currentCoordsStr += ride.destination.lng + ride.destination.lat;
+                    }
+
+                    if (this.prevCoordsStr === currentCoordsStr && currentCoordsStr) {
+                        updatedState.directions = this.state.directions;
                     }
 
                     // DOC: Calls replace ride API after each 5 updates on current ride to sync with server:
@@ -495,6 +498,9 @@ export class Map extends Component {
                         return true;
                     }
                     return false;
+                });
+                this.setState(prevState => ({ refreshWaypointList: true }), () => {
+                    setTimeout(() => this.setState(prevState => ({ refreshWaypointList: false })), 50);
                 });
                 successCallback(locationName);
             }
@@ -967,6 +973,26 @@ export class Map extends Component {
         this.deleteWaypointFromIndex(this.state.activeMarkerIndex);
     }
 
+    onPressPointCommentOption = () => {
+        const { activeMarkerIndex } = this.state;
+        console.log("Commenting on point: ", this.getRidePointOnActiveIndex(activeMarkerIndex));
+    }
+
+    getRidePointOnActiveIndex(index) {
+        const { ride } = this.props;
+        const ridePoints = ride.waypoints.length + (ride.source ? 1 : 0) + (ride.destination ? 1 : 0);
+        if (ride.source && index === 0) {
+            console.log("Source");
+            return ride.source;
+        } else if (ride.destination && index === ridePoints) {
+            console.log("Destination");
+            return ride.destination;
+        } else {
+            console.log("Waypoint");
+            return ride.source ? ride.waypoints[index - 1] : ride.waypoints[index];
+        }
+    }
+
     deleteWaypointFromIndex = (index) => {
         const deletingSource = this.isSource(this.state.markerCollection.features[index]);
         let deletingDestination = false;
@@ -1024,6 +1050,9 @@ export class Map extends Component {
         }, () => {
             this.onCloseOptionsBar();
             this.props.makeWaypointAsSource(ride, activeMarkerIndex - 1);
+            this.setState(prevState => ({ refreshWaypointList: true }), () => {
+                setTimeout(() => this.setState(prevState => ({ refreshWaypointList: false })), 50);
+            });
         });
     }
 
@@ -1046,6 +1075,9 @@ export class Map extends Component {
         }, () => {
             this.onCloseOptionsBar();
             this.props.makeSourceAsWaypoint(ride);
+            this.setState(prevState => ({ refreshWaypointList: true }), () => {
+                setTimeout(() => this.setState(prevState => ({ refreshWaypointList: false })), 50);
+            });
         });
     }
 
@@ -1070,6 +1102,9 @@ export class Map extends Component {
         }, () => {
             this.onCloseOptionsBar();
             this.props.makeWaypointAsDestination(ride, activeMarkerIndex - 1);
+            this.setState(prevState => ({ refreshWaypointList: true }), () => {
+                setTimeout(() => this.setState(prevState => ({ refreshWaypointList: false })), 50);
+            });
         });
     }
 
@@ -1093,6 +1128,9 @@ export class Map extends Component {
         }, () => {
             this.onCloseOptionsBar();
             this.props.makeDestinationAsWaypoint(ride);
+            this.setState(prevState => ({ refreshWaypointList: true }), () => {
+                setTimeout(() => this.setState(prevState => ({ refreshWaypointList: false })), 50);
+            });
         });
     }
 
@@ -1823,12 +1861,21 @@ export class Map extends Component {
                     {
                         !showCreateRide && ride.rideId && !this.state.snapMode
                             ? <View style={styles.mapSubHeader}>
-                                <View style={{ width: '30%', justifyContent: 'space-around', backgroundColor: '#EB861E', borderWidth: 4, borderColor: '#fff', elevation: 10, shadowOffset: { width: 5, height: 5 }, shadowColor: "grey", shadowOpacity: 0.5, shadowRadius: 10 }}>
-                                    <IconLabelPair iconProps={{ name: 'road-variant', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(5) } }} text={this.getDistanceAsFormattedString(directions ? directions.distance : null, user.distanceUnit)}
-                                        textStyle={{ color: '#fff', fontSize: widthPercentageToDP(3.5) }} />
-                                    <IconLabelPair iconProps={{ name: 'access-time', type: 'MaterialIcons', style: { fontSize: widthPercentageToDP(5) } }} text={this.getTimeAsFormattedString(directions ? directions.duration : null)}
-                                        textStyle={{ color: '#fff', fontSize: widthPercentageToDP(3.5) }} />
-                                </View>
+                                {
+                                    ride.isRecorded
+                                        ? <View style={{ width: '30%', justifyContent: 'space-around', backgroundColor: '#EB861E', borderWidth: 4, borderColor: '#fff', elevation: 10, shadowOffset: { width: 5, height: 5 }, shadowColor: "grey", shadowOpacity: 0.5, shadowRadius: 10 }}>
+                                            <IconLabelPair iconProps={{ name: 'road-variant', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(5) } }} text={this.getDistanceAsFormattedString(ride.totalDistance, user.distanceUnit)}
+                                                textStyle={{ color: '#fff', fontSize: widthPercentageToDP(3.5) }} />
+                                            <IconLabelPair iconProps={{ name: 'access-time', type: 'MaterialIcons', style: { fontSize: widthPercentageToDP(5) } }} text={this.getTimeAsFormattedString(ride.totalTime)}
+                                                textStyle={{ color: '#fff', fontSize: widthPercentageToDP(3.5) }} />
+                                        </View>
+                                        : <View style={{ width: '30%', justifyContent: 'space-around', backgroundColor: '#EB861E', borderWidth: 4, borderColor: '#fff', elevation: 10, shadowOffset: { width: 5, height: 5 }, shadowColor: "grey", shadowOpacity: 0.5, shadowRadius: 10 }}>
+                                            <IconLabelPair iconProps={{ name: 'road-variant', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(5) } }} text={this.getDistanceAsFormattedString(directions ? directions.distance : null, user.distanceUnit)}
+                                                textStyle={{ color: '#fff', fontSize: widthPercentageToDP(3.5) }} />
+                                            <IconLabelPair iconProps={{ name: 'access-time', type: 'MaterialIcons', style: { fontSize: widthPercentageToDP(5) } }} text={this.getTimeAsFormattedString(directions ? directions.duration : null)}
+                                                textStyle={{ color: '#fff', fontSize: widthPercentageToDP(3.5) }} />
+                                        </View>
+                                }
                                 {
                                     isEditable
                                         ? <SearchBox value={searchQuery} onPressClear={this.onPressClear}
@@ -2006,7 +2053,7 @@ export class Map extends Component {
                     {
                         ride.rideId !== null && ride.isRecorded === false
                             ? <Animated.View style={[{ height: '100%', width: '100%', elevation: 11, position: 'absolute', zIndex: 110 }, { transform: [{ translateX: waypointListLeftAnim }] }]}>
-                                <WaypointList onPressOutside={this.hideWaypointList} onCancel={this.hideWaypointList} />
+                                <WaypointList refreshContent={this.state.refreshWaypointList} onPressOutside={this.hideWaypointList} onCancel={this.hideWaypointList} />
                             </Animated.View>
                             : null
                     }
@@ -2088,6 +2135,7 @@ export class Map extends Component {
                                             : null
                                     }
                                     <IconButton onPress={this.onPressDeleteOption} style={{ paddingVertical: 5 }} iconProps={{ name: 'delete', type: 'MaterialCommunityIcons' }} />
+                                    <IconButton onPress={this.onPressPointCommentOption} style={{ paddingVertical: 5 }} iconProps={{ name: 'comment-text', type: 'MaterialCommunityIcons' }} />
                                 </View>
                             </Animated.View>
                             : null
