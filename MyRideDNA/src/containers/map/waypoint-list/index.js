@@ -26,7 +26,8 @@ class WaypointList extends React.Component {
         this.state = {
             activeTab: 0,
             points: points,
-            isDraggable: !props.ride.isRecorded && props.ride.userId === props.user.userId
+            isEditable: props.isEditable,
+            activeDescriptionIdx: -1
         };
     }
 
@@ -69,9 +70,54 @@ class WaypointList extends React.Component {
         </View>)
     }
 
+    toggleDescription = (index) => {
+        if (this.state.activeDescriptionIdx === -1) {
+            this.setState(({ points }) => ({
+                points: [...points.slice(0, index + 1),
+                { isDescription: true, index: index + 1, description: points[index].description || `${points[index].name} description \n ${points[index].name} description` },
+                ...points.slice(index + 1)],
+                activeDescriptionIdx: index + 1,
+                isEditable: false
+            }));
+        } else {
+            this.setState(({ points }) => ({
+                points: [...points.slice(0, this.state.activeDescriptionIdx), ...points.slice(this.state.activeDescriptionIdx + 1)]
+            }), () => {
+                if (this.state.activeDescriptionIdx === index + 1) {
+                    this.setState(prevState => ({
+                        isEditable: this.props.isEditable,
+                        activeDescriptionIdx: -1
+                    }));
+                    return;
+                }
+                if (index > this.state.activeDescriptionIdx) {
+                    index--;
+                }
+                this.setState(({ points }) => ({
+                    points: [...points.slice(0, index + 1),
+                    { isDescription: true, index: index + 1, description: points[index].description || `${points[index].name} description \n ${points[index].name} description` },
+                    ...points.slice(index + 1)],
+                    isEditable: false,
+                    activeDescriptionIdx: index + 1
+                }));
+            });
+        }
+    }
+
     renderRidePoint = ({ item, index, move, moveEnd, isActive }) => {
-        return this.state.isDraggable
-            ? <ListItem avatar onLongPress={move} onPressOut={moveEnd}
+        let indexLabel = index;
+        if (item.isDescription) {
+            return <ListItem>
+                <Body style={{ height: '100%' }}>
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                        <Text>{item.description}</Text>
+                    </View>
+                </Body>
+            </ListItem >
+        }
+        if (this.state.activeDescriptionIdx !== -1 && index > this.state.activeDescriptionIdx) indexLabel--;
+        return this.state.isEditable
+            ? <ListItem avatar onLongPress={move} onPressOut={moveEnd} onPress={() => this.toggleDescription(index)}
                 style={{ backgroundColor: isActive ? APP_COMMON_STYLES.infoColor : '#fff' }}>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
                     <View style={styles.itemNumber}>
@@ -100,15 +146,11 @@ class WaypointList extends React.Component {
                     <NBIcon name='drag-handle' type='MaterialIcons' />
                 </Right>
             </ListItem>
-            : <ListItem avatar>
+            : <ListItem avatar onPress={() => this.toggleDescription(index)}>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
                     <View style={styles.itemNumber}>
                         {
-                            index === 0
-                                ? <NBIcon name='map-pin' type='FontAwesome' style={styles.whiteFont} />
-                                : index === this.state.points.length - 1 && this.props.ride.destination
-                                    ? <NBIcon name='flag-variant' type='MaterialCommunityIcons' style={styles.whiteFont} />
-                                    : <Text style={styles.whiteFont}>{index}</Text>
+                            this.renderItemIcon(index)
                         }
                     </View>
                 </Left >
@@ -118,6 +160,30 @@ class WaypointList extends React.Component {
                     </View>
                 </Body>
             </ListItem >
+    }
+
+    renderItemIcon = (index) => {
+        if (index === 0) {
+            return <NBIcon name='map-pin' type='FontAwesome' style={styles.whiteFont} />;
+        } else {
+            if (this.state.activeDescriptionIdx === -1) {
+                if (index === this.state.points.length - 1 && this.props.ride.destination) {
+                    return <NBIcon name='map-pin' type='FontAwesome' style={styles.whiteFont} />;
+                } else {
+                    return <Text style={styles.whiteFont}>{index}</Text>;
+                }
+            } else {
+                const length = this.state.points.length;
+                if (this.props.ride.destination && ((this.state.activeDescriptionIdx === length - 1 && index === length - 2) || (
+                    this.state.activeDescriptionIdx !== length - 1 && index === length - 1))) {
+                    return <NBIcon name='flag-variant' type='MaterialCommunityIcons' style={styles.whiteFont} />;
+                } else if (index > this.state.activeDescriptionIdx) {
+                    return <Text style={styles.whiteFont}>{index - 1}</Text>;
+                } else {
+                    return <Text style={styles.whiteFont}>{index}</Text>;
+                }
+            }
+        }
     }
 
     onChangeOrder = ({ from, to, data }) => {
@@ -153,7 +219,7 @@ class WaypointList extends React.Component {
 
     render() {
         const { onPressOutside, user, ride } = this.props;
-        const { points, isDraggable } = this.state;
+        const { points, isEditable } = this.state;
         return (
             <View style={styles.modalRoot}>
                 <View style={styles.container}>
@@ -191,7 +257,7 @@ class WaypointList extends React.Component {
                             />
                         </View>
                         {
-                            isDraggable
+                            isEditable
                                 ? <DraggableFlatList
                                     data={points}
                                     renderItem={this.renderRidePoint}

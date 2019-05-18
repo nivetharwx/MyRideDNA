@@ -15,6 +15,7 @@ import Group from '../containers/friends/group';
 import Rides from '../containers/rides';
 import Map from '../containers/map';
 import WaypointList from '../containers/map/waypoint-list';
+import CommentSection from '../containers/map/comment-scetion';
 import Chat from '../containers/chats';
 import Signup from '../containers/signup';
 import Passengers from '../containers/passengers';
@@ -50,6 +51,7 @@ export default class Navigation extends Component {
                             <Scene gesturesEnabled={false} key={PageKeys.ADD_BIKE_FORM} component={AddBikeForm} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.MAP} component={Map} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.WAYPOINTLIST} component={WaypointList} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.COMMENT_SECTION} component={CommentSection} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.CREATE_RIDE} component={CreateRide} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.GALLERY} component={GalleryView} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.PASSENGERS} component={Passengers} hideNavBar></Scene>
