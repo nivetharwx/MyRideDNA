@@ -206,6 +206,9 @@ export class Rides extends Component {
     }
 
     onPressRide(rideId) {
+        if (this.props.ride.rideId) {
+            this.props.clearRideFromMap();
+        }
         this.props.changeScreen({ name: PageKeys.MAP });
         this.props.loadRideOnMap(rideId);
     }

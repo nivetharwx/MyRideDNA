@@ -28,6 +28,7 @@ import { Actions } from 'react-native-router-flux';
 import { MapControlPair, BasicButton, IconButton, ShifterButton, LinkButton } from '../../components/buttons';
 import { IconLabelPair } from '../../components/labels';
 import WaypointList from './waypoint-list';
+import CommentSection from './comment-scetion';
 
 import Base64 from '../../util';
 
@@ -115,6 +116,7 @@ export class Map extends Component {
             optionsBarRightAnim: new Animated.Value(100),
             controlsBarLeftAnim: new Animated.Value(-100),
             waypointListLeftAnim: new Animated.Value(-widthPercentageToDP(100)),
+            commentSecAnim: new Animated.Value(-heightPercentageToDP(100)),
             currentLocation: null,
             gpsPointCollection:
             {
@@ -140,8 +142,8 @@ export class Map extends Component {
             },
             friendsImage: {},
             showLoader: false,
+            refreshWaypointList: false,
             snapMode: false,
-            refreshWaypointList: false
         };
     }
 
@@ -165,6 +167,7 @@ export class Map extends Component {
                     updatedState.isEditable = false;
                 }
                 this.hasModifiedRide = false;
+                if (ride.rideId === null) this.prevCoordsStr = '';
 
                 // TODO: Loading different ride
                 if (ride.rideId) {
@@ -990,9 +993,14 @@ export class Map extends Component {
         this.deleteWaypointFromIndex(this.state.activeMarkerIndex);
     }
 
-    onPressPointCommentOption = () => {
+    onPressPointCommentOption = (index) => {
         const { activeMarkerIndex } = this.state;
-        console.log("Commenting on point: ", this.getRidePointOnActiveIndex(activeMarkerIndex));
+        const point = typeof index === 'undefined'
+            ? this.getRidePointOnActiveIndex(activeMarkerIndex)
+            : this.getRidePointOnActiveIndex(index)
+        this.setState({ commentingPoint: point }, () => {
+            this.showCommentSection();
+        });
     }
 
     getRidePointOnActiveIndex(index) {
@@ -1760,9 +1768,31 @@ export class Map extends Component {
         ).start();
     }
 
+    showCommentSection = () => {
+        Animated.timing(
+            this.state.commentSecAnim,
+            {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true
+            }
+        ).start();
+    }
+
+    hideCommentSection = () => {
+        Animated.timing(
+            this.state.commentSecAnim,
+            {
+                toValue: -heightPercentageToDP(100),
+                duration: 300,
+                useNativeDriver: true
+            }
+        ).start(() => this.setState({ commentingPoint: null }));
+    }
+
     onPressMarker = (e) => {
         const { ride, user } = this.props;
-        if (ride.isRecorded === true || ride.userId !== user.userId) return;
+        if (ride.isRecorded === true) return;
 
         const selectedFeature = e.nativeEvent.payload;
         const selectedMarkerIndex = this.state.markerCollection.features.findIndex(marker => marker.geometry.coordinates.join('') === selectedFeature.id);
@@ -1834,6 +1864,47 @@ export class Map extends Component {
                 name: locInfo.name
             },
         };
+    }
+
+    renderRidePointOptions = () => {
+        const { isUpdatingWaypoint, markerCollection, activeMarkerIndex } = this.state;
+        return this.props.ride.userId === this.props.user.userId
+            ? <View style={{ alignItems: 'center', backgroundColor: '#fff' }}>
+                <IconButton onPress={this.onCloseOptionsBar} style={{ paddingVertical: 5, width: '100%', backgroundColor: '#fff' }}
+                    iconProps={{ name: 'window-close', type: 'MaterialCommunityIcons' }} />
+                <IconButton onPress={this.toggleReplaceOption} style={{ paddingVertical: 5, width: '100%', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }}
+                    iconProps={{ name: isUpdatingWaypoint ? 'cancel' : 'edit-location', type: 'MaterialIcons' }} />
+                {
+                    markerCollection.features.length > 1
+                        ? this.isSource(markerCollection.features[activeMarkerIndex])
+                            ? <IconButton onPress={this.makeSourceAsWaypoint}
+                                style={{ paddingVertical: 5, width: '100%', backgroundColor: '#0083CA', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }}
+                                iconProps={{ name: 'map-pin', type: 'FontAwesome', style: { color: '#fff' } }} />
+
+                            : <IconButton onPress={this.makeWaypointAsSource}
+                                style={{ paddingVertical: 5, width: '100%', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }}
+                                iconProps={{ name: 'map-pin', type: 'FontAwesome' }} />
+                        : null
+                }
+                {
+                    markerCollection.features.length > 1
+                        ? this.isDestination(markerCollection.features[activeMarkerIndex])
+                            ? <IconButton onPress={this.makeDestinationAsWaypoint}
+                                style={{ paddingVertical: 5, width: '100%', backgroundColor: '#0083CA', borderBottomColor: '#acacac', borderBottomWidth: 1 }}
+                                iconProps={{ name: 'flag-variant', type: 'MaterialCommunityIcons', style: { color: '#fff' } }} />
+                            : <IconButton onPress={this.makeWaypointAsDestination}
+                                style={{ paddingVertical: 5, width: '100%', backgroundColor: 'rgba(0,0,0,0.4)', borderBottomColor: '#acacac', borderBottomWidth: 1 }}
+                                iconProps={{ name: 'flag-variant', type: 'MaterialCommunityIcons' }} />
+                        : null
+                }
+                <IconButton onPress={this.onPressDeleteOption} style={{ paddingVertical: 5, width: '100%', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }} iconProps={{ name: 'delete', type: 'MaterialCommunityIcons' }} />
+                <IconButton onPress={() => this.onPressPointCommentOption()} style={{ paddingVertical: 5, width: '100%', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }} iconProps={{ name: 'comment-text', type: 'MaterialCommunityIcons' }} />
+            </View>
+            : <View style={{ alignItems: 'center', backgroundColor: '#fff' }}>
+                <IconButton onPress={this.onCloseOptionsBar} style={{ paddingVertical: 5, width: '100%', backgroundColor: '#fff' }}
+                    iconProps={{ name: 'window-close', type: 'MaterialCommunityIcons' }} />
+                <IconButton onPress={() => this.onPressPointCommentOption()} style={{ paddingVertical: 5 }} iconProps={{ name: 'comment-text', type: 'MaterialCommunityIcons' }} />
+            </View>
     }
 
     render() {
@@ -2071,7 +2142,22 @@ export class Map extends Component {
                     {
                         ride.rideId !== null && ride.isRecorded === false
                             ? <Animated.View style={[{ height: '100%', width: '100%', elevation: 11, position: 'absolute', zIndex: 110 }, { transform: [{ translateX: waypointListLeftAnim }] }]}>
-                                <WaypointList refreshContent={this.state.refreshWaypointList} onPressOutside={this.hideWaypointList} onCancel={this.hideWaypointList} />
+                                <WaypointList isEditable={!ride.isRecorded && ride.userId === user.userId} refreshContent={this.state.refreshWaypointList} onPressOutside={this.hideWaypointList} onCancel={this.hideWaypointList} />
+                            </Animated.View>
+                            : null
+                    }
+                    {
+                        this.state.commentingPoint
+                            ? <Animated.View style={[{ height: '100%', width: '100%', elevation: 12, position: 'absolute', zIndex: 120 }, { transform: [{ translateY: this.state.commentSecAnim }] }]}>
+                                {/* <View style={styles.modalRoot}>
+                                    <View style={styles.container}>
+                                        <IconButton onPress={() => this.setState({ commentMode: false })} style={{ backgroundColor: 'transparent', alignSelf: 'flex-end', alignItems: 'flex-end', justifyContent: 'flex-end' }}
+                                            iconProps={{ name: 'window-close', type: 'MaterialCommunityIcons' }} />
+                                        <View style={styles.bodyContent}>
+                                        </View>
+                                    </View>
+                                </View> */}
+                                <CommentSection isEditable={this.props.ride.userId === this.props.user.userId} point={this.state.commentingPoint} onClose={this.hideCommentSection} />
                             </Animated.View>
                             : null
                     }
@@ -2124,37 +2210,9 @@ export class Map extends Component {
                     {
                         activeMarkerIndex > -1
                             ? <Animated.View style={[styles.controlsContainerRight, { transform: [{ translateX: optionsBarRightAnim }] }]}>
-                                <View style={{ alignItems: 'center', backgroundColor: '#fff' }}>
-                                    <IconButton onPress={this.onCloseOptionsBar} style={{ paddingVertical: 5, width: '100%', backgroundColor: '#fff' }}
-                                        iconProps={{ name: 'window-close', type: 'MaterialCommunityIcons' }} />
-                                    <IconButton onPress={this.toggleReplaceOption} style={{ paddingVertical: 5, width: '100%', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }}
-                                        iconProps={{ name: isUpdatingWaypoint ? 'cancel' : 'edit-location', type: 'MaterialIcons' }} />
-                                    {
-                                        markerCollection.features.length > 1
-                                            ? this.isSource(markerCollection.features[activeMarkerIndex])
-                                                ? <IconButton onPress={this.makeSourceAsWaypoint}
-                                                    style={{ paddingVertical: 5, width: '100%', backgroundColor: '#0083CA', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }}
-                                                    iconProps={{ name: 'map-pin', type: 'FontAwesome', style: { color: '#fff' } }} />
-
-                                                : <IconButton onPress={this.makeWaypointAsSource}
-                                                    style={{ paddingVertical: 5, width: '100%', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }}
-                                                    iconProps={{ name: 'map-pin', type: 'FontAwesome' }} />
-                                            : null
-                                    }
-                                    {
-                                        markerCollection.features.length > 1
-                                            ? this.isDestination(markerCollection.features[activeMarkerIndex])
-                                                ? <IconButton onPress={this.makeDestinationAsWaypoint}
-                                                    style={{ paddingVertical: 5, width: '100%', backgroundColor: '#0083CA', borderBottomColor: '#acacac', borderBottomWidth: 1 }}
-                                                    iconProps={{ name: 'flag-variant', type: 'MaterialCommunityIcons', style: { color: '#fff' } }} />
-                                                : <IconButton onPress={this.makeWaypointAsDestination}
-                                                    style={{ paddingVertical: 5, width: '100%', backgroundColor: 'rgba(0,0,0,0.4)', borderBottomColor: '#acacac', borderBottomWidth: 1 }}
-                                                    iconProps={{ name: 'flag-variant', type: 'MaterialCommunityIcons' }} />
-                                            : null
-                                    }
-                                    <IconButton onPress={this.onPressDeleteOption} style={{ paddingVertical: 5 }} iconProps={{ name: 'delete', type: 'MaterialCommunityIcons' }} />
-                                    <IconButton onPress={this.onPressPointCommentOption} style={{ paddingVertical: 5 }} iconProps={{ name: 'comment-text', type: 'MaterialCommunityIcons' }} />
-                                </View>
+                                {
+                                    this.renderRidePointOptions()
+                                }
                             </Animated.View>
                             : null
                     }
@@ -2285,6 +2343,7 @@ const MapboxStyles = MapboxGL.StyleSheet.create({
         visibility: 'none'
     },
     icon: {
+        iconAllowOverlap: true, // TODO: Test against hiding marker at some zoom level
         iconImage: '{icon}',
         iconSize: 1,
         iconOffset: MapboxGL.StyleSheet.source(

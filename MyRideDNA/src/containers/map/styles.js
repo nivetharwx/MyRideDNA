@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BULLSEYE_SIZE, WindowDimensions, APP_COMMON_STYLES, widthPercentageToDP } from '../../constants';
+import { BULLSEYE_SIZE, WindowDimensions, APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP } from '../../constants';
 
 const styles = StyleSheet.create({
     fillParent: {

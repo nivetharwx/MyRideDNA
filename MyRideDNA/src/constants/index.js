@@ -63,6 +63,7 @@ export const PageKeys = {
     RIDES: 'rides',
     MAP: 'map',
     WAYPOINTLIST: 'waypointList',
+    COMMENT_SECTION: 'commentSection',
     CREATE_RIDE: 'createRide',
     OFFERS: 'offers',
 };
