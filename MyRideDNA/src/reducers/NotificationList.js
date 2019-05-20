@@ -2,7 +2,9 @@ import { RESET_NOTIFICATION_LIST, UPDATE_NOTIFICATION_IN_LIST, CLEAR_NOTIFICATIO
 import { updateShareLocationState } from "../api";
 
 const initialState = {
-    notificationList: {},
+    notificationList: {
+        notification: []
+    },
     pageNumber: 0,
     isLoading: false,
 };
@@ -15,11 +17,14 @@ export default (state = initialState, action) => {
         //     notificationList: action.data
         // }
         case RESET_NOTIFICATION_LIST:
-            if (!state.notificationList.notification) {
+            if (action.data.pageNumber === 0) {
                 return {
                     ...state,
-                    notificationList: action.data.notificationData,
-                    pageNumber: action.data.pageNumber
+                    notificationList: {
+                        notification: action.data.notification,
+                        totalUnseen: action.data.totalUnseen
+                    },
+                    pageNumber: action.data.pageNumber + 1
                 }
             }
             else {
@@ -28,33 +33,33 @@ export default (state = initialState, action) => {
                     notificationList: {
                         notification: [
                             ...state.notificationList.notification,
-                            ...action.data.notificationData.notification
+                            ...action.data.notification
                         ],
-                        totalUnseen: action.data.notificationData.totalUnseen
+                        totalUnseen: action.data.totalUnseen
                     },
-                    pageNumber: action.data.pageNumber
+                    pageNumber: action.data.pageNumber + 1
                 }
             }
         case UPDATE_NOTIFICATION_IN_LIST:
-            const notificationIdx = state.notificationList.notification.findIndex(item => item.id === action.data.id);  
-                if (action.data.pictureObj) {
-                    let updatedNotifList = state.notificationList.notification.map(item => {
-                        if (!item.profilPictureId) return item;
-                        if (typeof action.data.pictureObj[item.profilPictureId] === 'string') {
-                            return { ...item, profilePicture: action.data.pictureObj[item.profilPictureId] }
-                        }
-                        return item;
-                    })
-                    return {
-                        ...state,
-                        notificationList: {
-                            ...state.notificationList,
-                            notification: updatedNotifList
-                        }
+            const notificationIdx = state.notificationList.notification.findIndex(item => item.id === action.data.id);
+            if (action.data.pictureObj) {
+                let updatedNotifList = state.notificationList.notification.map(item => {
+                    if (!item.profilPictureId) return item;
+                    if (typeof action.data.pictureObj[item.profilPictureId] === 'string') {
+                        return { ...item, profilePicture: action.data.pictureObj[item.profilPictureId] }
+                    }
+                    return item;
+                })
+                return {
+                    ...state,
+                    notificationList: {
+                        ...state.notificationList,
+                        notification: updatedNotifList
                     }
                 }
-                else {
-                    if (notificationIdx > -1) {
+            }
+            else {
+                if (notificationIdx > -1) {
                     return {
                         ...state,
                         notificationList: {

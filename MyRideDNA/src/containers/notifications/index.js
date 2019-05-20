@@ -11,6 +11,7 @@ import { connect } from 'react-redux';
 import { logoutUser, getAllNotifications, getPicture, readNotification, seenNotification, deleteNotifications, getPictureList } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
 import store from '../../store';
+import { Loader } from '../../components/loader';
 
 
 class Notifications extends Component {
@@ -25,7 +26,7 @@ class Notifications extends Component {
 
     componentDidMount() {
         // this.props.getAllNotifications(this.props.user.userId);
-        this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
+        this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString());
         this.props.seenNotification(this.props.user.userId);
     }
 
@@ -52,15 +53,16 @@ class Notifications extends Component {
         //         }
         //     })
         // }
-
-        if (prevProps.notificationList.notification !== this.props.notificationList.notification) {
+        if (prevProps.notificationList.notification !== this.props.notificationList.notification || !this.props.notificationList.notification.profilePicture) {
             const pictureIdList = []
             this.props.notificationList.notification.forEach((notificationPic) => {
                 if (!notificationPic.profilePicture && notificationPic.profilPictureId) {
                     pictureIdList.push(notificationPic.profilPictureId)
                 }
             })
-            this.props.getNotificationPic(pictureIdList);
+            if (pictureIdList.length > 0) {
+                this.props.getNotificationPic(pictureIdList);
+            }
         }
     }
 
@@ -153,10 +155,8 @@ class Notifications extends Component {
     }
     loadMoreData = () => {
         if (this.props.isLoading === false) {
-            this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
+            this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber, this.props.notificationList.notification[this.props.notificationList.notification.length - 1].date);
         }
-        console.log('loadMoreData')
-
     }
 
     renderFooter = () => {
@@ -177,8 +177,7 @@ class Notifications extends Component {
     }
 
     render() {
-        const { notificationList, user } = this.props;
-        console.log('notificationList : ', notificationList.notification)
+        const { notificationList, user, showLoader } = this.props;
         return (
             <View style={{ flex: 1 }}>
                 <View style={APP_COMMON_STYLES.statusBar}>
@@ -186,29 +185,22 @@ class Notifications extends Component {
                 </View>
                 <View style={{ flex: 1 }}>
                     <BasicHeader title='Notifications' rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
-                    {
-                        notificationList.notification ?
-                            <ScrollView style={[styles.scrollArea, notificationList.notification.length > 0 ? { paddingBottom: heightPercentageToDP(5) } : null]}>
-                                <FlatList
-                                    data={notificationList.notification}
-                                    keyExtractor={this._keyExtractor}
-                                    renderItem={this._renderItem}
-                                ItemSeparatorComponent={() => <View style={styles.separator} />}
-                                ListFooterComponent={this.renderFooter}
-                                // ItemSeparatorComponent={() => <View style={styles.separator} />}
-                                // onEndReached={this.loadMoreData}
-                                // onEndReachedThreshold={0.001}
-                                // onMomentumScrollBegin={() => { this.setState({ onEndReachedCalledDuringMomentum: false }) }}
-                                onTouchStart={this.loadMoreData}
-
-                                />
-                            </ScrollView>
-                            :
-                            <Image source={require('../../assets/img/notifications-bg.png')} style={styles.bottomImage} />}
+                    <ScrollView style={[styles.scrollArea, notificationList.notification.length > 0 ? { paddingBottom: heightPercentageToDP(5) } : null]}>
+                        <FlatList
+                            data={notificationList.notification}
+                            keyExtractor={this._keyExtractor}
+                            renderItem={this._renderItem}
+                            ItemSeparatorComponent={() => <View style={styles.separator} />}
+                            ListFooterComponent={this.renderFooter}
+                            onTouchStart={this.loadMoreData}
+                        />
+                    </ScrollView>
+                    <Image source={require('../../assets/img/notifications-bg.png')} style={styles.bottomImage} />
 
                     {/* Shifter: - Brings the app navigation menu */}
                     <ShifterButton onPress={this.toggleAppNavigation} alignLeft={user.handDominance === 'left'} />
                 </View>
+                <Loader isVisible={showLoader} />
             </View>
         );
     }
@@ -216,7 +208,8 @@ class Notifications extends Component {
 const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { notificationList, pageNumber, isLoading } = state.NotificationList;
-    return { user, userAuthToken, deviceToken, notificationList, pageNumber, isLoading };
+    const { showLoader } = state.PageState;
+    return { user, userAuthToken, deviceToken, notificationList, pageNumber, isLoading, showLoader };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -224,7 +217,7 @@ const mapDispatchToProps = (dispatch) => {
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
         // getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
-        getAllNotifications: (userId, pageNumber) => dispatch(getAllNotifications(userId, pageNumber)),
+        getAllNotifications: (userId, pageNumber, date) => dispatch(getAllNotifications(userId, pageNumber, date)),
         seenNotification: (userId) => dispatch(seenNotification(userId)),
         // getNotificationPic: (pictureId, id) => getPicture(pictureId, ({ picture, pictureId }) => {
         //     dispatch(updateNotificationAction({ profilePicture: picture, id: id }))
@@ -232,10 +225,9 @@ const mapDispatchToProps = (dispatch) => {
         //     dispatch(updateNotificationAction({ id: id }))
         // }),
         getNotificationPic: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
-            console.log('getPictureList : ', pictureObj)
             dispatch(updateNotificationAction({ pictureObj }))
         }, (error) => {
-            console.log('getPicture list : ', error)
+            console.log('getPicture list error: ', error)
             // dispatch(updateNotificationAction(pictureObj))
         }),
         deleteNotification: (notificationIds) => dispatch(deleteNotifications(notificationIds)),
