@@ -10,7 +10,7 @@ import GroupListTab from './group-list';
 import { appNavMenuVisibilityAction, updateFriendInListAction, resetCurrentFriendAction, updateFriendRequestListAction } from '../../actions';
 import { ShifterButton, IconButton, LinkButton } from '../../components/buttons';
 import { IconLabelPair } from '../../components/labels';
-import { logoutUser, getAllFriendRequests, getPicture, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, createFriendGroup, getAllFriends, readNotification } from '../../api';
+import { logoutUser, getAllFriendRequests, getPicture, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, createFriendGroup, getAllFriends, readNotification, getPictureList } from '../../api';
 import { BaseModal } from '../../components/modal';
 import { LabeledInput } from '../../components/inputs';
 import { getFormattedDateFromISO } from '../../util';
@@ -90,23 +90,48 @@ class Friends extends Component {
         }
 
 
+        // if (prevProps.allFriends !== this.props.allFriends) {
+        //     this.props.allFriends.forEach((friend) => {
+        //         if (!friend.profilePicture && friend.profilePictureId) {
+        //             this.props.getPicture(friend.profilePictureId, friend.userId)
+        //         }
+        //     })
+        // }
         if (prevProps.allFriends !== this.props.allFriends) {
+            const pictureIdList = [];
             this.props.allFriends.forEach((friend) => {
                 if (!friend.profilePicture && friend.profilePictureId) {
-                    this.props.getPicture(friend.profilePictureId, friend.userId)
+                    pictureIdList.push(friend.profilePictureId);
                 }
             })
+            if (pictureIdList.length > 0) {
+                this.props.getPictureList(pictureIdList)
+            }
         }
 
+        // if (prevProps.allFriendRequests !== this.props.allFriendRequests) {
+        //     if (prevState.isRefreshing === true) {
+        //         this.setState({ isRefreshing: false });
+        //     }
+        //     this.props.allFriendRequests.forEach((friendRequestPic) => {
+        //         if (!friendRequestPic.profilePicture && friendRequestPic.profilePictureId) {
+        //             this.props.getFriendRequestPic(friendRequestPic.profilePictureId, friendRequestPic.id)
+        //         }
+        //     })
+        // }
         if (prevProps.allFriendRequests !== this.props.allFriendRequests) {
+            const requestIdList = [];
             if (prevState.isRefreshing === true) {
                 this.setState({ isRefreshing: false });
             }
             this.props.allFriendRequests.forEach((friendRequestPic) => {
                 if (!friendRequestPic.profilePicture && friendRequestPic.profilePictureId) {
-                    this.props.getFriendRequestPic(friendRequestPic.profilePictureId, friendRequestPic.id)
+                    requestIdList.push(friendRequestPic.profilePictureId);
                 }
             })
+            if (requestIdList.length > 0) {
+                this.props.getFriendRequestPic(requestIdList)
+            }
         }
     }
     onPullRefresh = () => {
@@ -363,7 +388,7 @@ class Friends extends Component {
                         <Tab heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderColor: '#fff', borderLeftWidth: 1, borderRightWidth: 1 }}>
                             <IconLabelPair containerStyle={styles.tabContentCont} text={`Groups`} textStyle={{ color: activeTab === 1 ? '#fff' : '#6B7663' }} iconProps={{ name: 'group', type: 'FontAwesome', style: { color: activeTab === 1 ? '#fff' : '#6B7663' } }} />
                         </TabHeading>}>
-                            <GroupListTab refreshContent={activeTab === 1} searchQuery={searchQuery}/>
+                            <GroupListTab refreshContent={activeTab === 1} searchQuery={searchQuery} />
                         </Tab>
                         <Tab heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3', borderColor: '#fff' }}>
                             <IconLabelPair containerStyle={styles.tabContentCont} text={`Requests`} textStyle={{ color: activeTab === 2 ? '#fff' : '#6B7663' }} iconProps={{ name: 'people', type: 'MaterialIcons', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }} />
@@ -421,17 +446,29 @@ const mapDispatchToProps = (dispatch) => {
         cancelRequest: (userId, personId, requestId) => dispatch(cancelFriendRequest(userId, personId, requestId)),
         approvedRequest: (userId, personId, actionDate, requestId) => dispatch(approveFriendRequest(userId, personId, actionDate, requestId)),
         rejectRequest: (userId, personId, requestId) => dispatch(rejectFriendRequest(userId, personId, requestId)),
-        getPicture: (userId, accessToken) => dispatch(getPicture(userId)),
+        // getPicture: (userId, accessToken) => dispatch(getPicture(userId)),
         createFriendGroup: (newGroupInfo) => dispatch(createFriendGroup(newGroupInfo)),
-        getPicture: (pictureId, friendId) => getPicture(pictureId, ({ picture, pictureId }) => {
-            dispatch(updateFriendInListAction({ profilePicture: picture, userId: friendId }))
+        // getPicture: (pictureId, friendId) => getPicture(pictureId, ({ picture, pictureId }) => {
+        //     dispatch(updateFriendInListAction({ profilePicture: picture, userId: friendId }))
+        // }, (error) => {
+        //     dispatch(updateFriendInListAction({ userId: friendId }))
+        // }),
+        getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
+            dispatch(updateFriendInListAction({ pictureObj }))
         }, (error) => {
-            dispatch(updateFriendInListAction({ userId: friendId }))
+            console.log('getPictureList all friend error : ', error)
+            // dispatch(updateFriendInListAction({ userId: friendId }))
         }),
-        getFriendRequestPic: (pictureId, id) => getPicture(pictureId, ({ picture, pictureId }) => {
-            dispatch(updateFriendRequestListAction({ profilePicture: picture, id: id }))
+        // getFriendRequestPic: (pictureId, id) => getPicture(pictureId, ({ picture, pictureId }) => {
+        //     dispatch(updateFriendRequestListAction({ profilePicture: picture, id: id }))
+        // }, (error) => {
+        //     dispatch(updateFriendRequestListAction({ id: id }))
+        // }),
+        getFriendRequestPic: (requestIdList) => getPictureList(requestIdList, (pictureObj) => {
+            dispatch(updateFriendRequestListAction({ pictureObj }))
         }, (error) => {
-            dispatch(updateFriendRequestListAction({ id: id }))
+            console.log('getPictureList friendRequest error :  ', error)
+            // dispatch(updateFriendRequestListAction({ id: id }))
         }),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),

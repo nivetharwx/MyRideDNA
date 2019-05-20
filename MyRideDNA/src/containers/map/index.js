@@ -545,9 +545,9 @@ export class Map extends Component {
     }
 
     async componentDidMount() {
-        FCM.getInitialNotification().then (notif => {
+        FCM.getInitialNotification().then(notif => {
             notif.targetScreen && this.redirectToTargetScreen(notif.targetScreen, JSON.parse(notif.body));
-            
+
         });
         BackgroundGeolocation.configure({
             desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
@@ -579,7 +579,7 @@ export class Map extends Component {
         this.trackpointTick = 0;
         this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         this.props.pushNotification(this.props.user.userId);
-        this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
+        this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString());
         // this.props.getAllNotifications(this.props.user.userId);
         // this.notificationInterval = setInterval(() => {
         //     this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
@@ -691,13 +691,13 @@ export class Map extends Component {
     }
 
     redirectToTargetScreen(targetScreen, body) {
-            if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
-                if (targetScreen === 'REQUESTS') {
-                    this.props.changeScreen({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: body } });
-                }
-                return;
+        if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
+            if (targetScreen === 'REQUESTS') {
+                this.props.changeScreen({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: body } });
             }
-            store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
+            return;
+        }
+        store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
     }
 
     handleAppStateChange = (nextAppState) => {
@@ -2187,10 +2187,10 @@ const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { isLocationOn } = state.GPSState;
     // const { showLoader } = state.PageState;
-    const { notificationList,pageNumber } = state.NotificationList;
+    const { notificationList, pageNumber } = state.NotificationList;
     const { friendsLocationList } = state.FriendList;
     const { appState } = state.PageState;
-    return { ride, isLocationOn, user, userAuthToken, deviceToken, showMenu, friendsLocationList, currentScreen, canUndo, canRedo, notificationList,pageNumber,appState };
+    return { ride, isLocationOn, user, userAuthToken, deviceToken, showMenu, friendsLocationList, currentScreen, canUndo, canRedo, notificationList, pageNumber, appState };
 }
 
 const mapDispatchToProps = (dispatch) => {
@@ -2206,7 +2206,7 @@ const mapDispatchToProps = (dispatch) => {
         pushNotification: (userId) => pushNotification(userId),
         updateLocation: (userId, locationInfo) => updateLocation(userId, locationInfo),
         // getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
-        getAllNotifications: (userId, pageNumber) => dispatch(getAllNotifications(userId,pageNumber)),
+        getAllNotifications: (userId, pageNumber, date) => dispatch(getAllNotifications(userId, pageNumber, date)),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
         deleteNotifications: (notificationIds) => dispatch(deleteNotifications(notificationIds)),
         deleteAllNotifications: (userId) => dispatch(deleteAllNotifications(userId)),
@@ -2262,8 +2262,9 @@ const mapDispatchToProps = (dispatch) => {
         updateSourceOrDestinationName: (identifier, locationName) => dispatch(updateSourceOrDestinationNameAction({ identifier, locationName })),
         updateWaypointName: (waypointId, locationName) => dispatch(updateWaypointNameAction({ waypointId, locationName })),
         hideFriendsLocation: () => dispatch(hideFriendsLocationAction()),
-        updateAppState: (appState) => { 
-            dispatch(updateAppStateAction({appState})) },
+        updateAppState: (appState) => {
+            dispatch(updateAppStateAction({ appState }))
+        },
         resetStoreToDefault: () => dispatch(resetStateOnLogout())
     }
 }

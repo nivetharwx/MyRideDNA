@@ -85,21 +85,39 @@ export default (state = initialState, action) => {
                 }
             }
             return state
+        // case UPDATE_MEMBER_IN_CURRENT_GROUP:
+        //     const memberIdx = state.currentGroup.groupMembers.findIndex(member => member.memberId === action.data.memberId);
+        //     if (memberIdx > -1) {
+        //         return {
+        //             ...state,
+        //             currentGroup: {
+        //                 ...state.currentGroup,
+        //                 groupMembers: [
+        //                     ...state.currentGroup.groupMembers.slice(0, memberIdx),
+        //                     { ...state.currentGroup.groupMembers[memberIdx], ...action.data.updates },
+        //                     ...state.currentGroup.groupMembers.slice(memberIdx + 1)
+        //                 ]
+        //             }
+        //         }
+        //     }
         case UPDATE_MEMBER_IN_CURRENT_GROUP:
-            const memberIdx = state.currentGroup.groupMembers.findIndex(member => member.memberId === action.data.memberId);
-            if (memberIdx > -1) {
+            if (action.data.pictureObj) {
+                let updatedGroupMemberList = state.currentGroup.groupMembers.map(item => {
+                    if (!item.profilePictureId) return item;
+                    if (typeof action.data.pictureObj[item.profilePictureId] === 'string') {
+                        return { ...item, profilePicture: action.data.pictureObj[item.profilePictureId] }
+                    }
+                    return item;
+                })
                 return {
                     ...state,
                     currentGroup: {
                         ...state.currentGroup,
-                        groupMembers: [
-                            ...state.currentGroup.groupMembers.slice(0, memberIdx),
-                            { ...state.currentGroup.groupMembers[memberIdx], ...action.data.updates },
-                            ...state.currentGroup.groupMembers.slice(memberIdx + 1)
-                        ]
+                        groupMembers: updatedGroupMemberList
                     }
                 }
             }
+
             return state
         case GET_GROUP_INFO:
             return {
