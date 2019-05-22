@@ -2,6 +2,14 @@ import { StyleSheet } from 'react-native';
 import { BULLSEYE_SIZE, WindowDimensions, APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP } from '../../constants';
 
 const styles = StyleSheet.create({
+    hiddenMapStyles: {
+        position: 'absolute',
+        zIndex: 0,
+        // height: heightPercentageToDP(100),
+        width: widthPercentageToDP(100),
+        top: heightPercentageToDP(26),
+        bottom: heightPercentageToDP(26)
+    },
     fillParent: {
         flex: 1,
     },

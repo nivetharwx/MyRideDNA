@@ -642,7 +642,7 @@ export const addSource = (waypoint, ride) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log(er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -662,7 +662,7 @@ export const addWaypoint = (waypoint, ride, index) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log(er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -682,7 +682,7 @@ export const deleteWaypoint = (ride, index) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log(er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -702,7 +702,7 @@ export const updateWaypoint = (waypoint, ride, index) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log(er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -722,7 +722,7 @@ export const updateSource = (waypoint, ride) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log(er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -742,7 +742,7 @@ export const deleteSource = (ride) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log(er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -762,7 +762,7 @@ export const updateDestination = (waypoint, ride) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log(er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -785,7 +785,7 @@ export const makeWaypointAsSource = (ride, index) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log(er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -808,7 +808,7 @@ export const makeSourceAsWaypoint = (ride) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log(er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -831,7 +831,7 @@ export const makeWaypointAsDestination = (ride, index) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log(er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -854,7 +854,7 @@ export const makeDestinationAsWaypoint = (ride) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log(er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -874,7 +874,7 @@ export const deleteDestination = (ride) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log(er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
