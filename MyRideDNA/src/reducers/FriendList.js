@@ -104,15 +104,15 @@ export default (state = initialState, action) => {
             };
 
         case REPLACE_FRIEND_INFO:
-        return {
-            ...state,
-            currentFriend:{
-                ...action.data,
-                garage: {
-                    garageId: null
-                },
+            return {
+                ...state,
+                currentFriend: {
+                    ...action.data,
+                    garage: {
+                        garageId: null
+                    },
+                }
             }
-        }    
 
         case UNFRIEND:
             const personIndex = state.allFriends.findIndex(person => person.userId === action.data.personId);
@@ -205,18 +205,33 @@ export default (state = initialState, action) => {
                 allFriends: updatedFriendsList
             };
 
+        // case UPDATE_FRIEND_IN_LIST:
+        //     let index = state.allFriends.findIndex((friend) => { return friend.userId === action.data.userId })
+        //     if (index > -1) {
+        //         return {
+        //             ...state,
+        //             allFriends: [
+        //                 ...state.allFriends.slice(0, index),
+        //                 { ...state.allFriends[index], profilePicture: action.data.profilePicture },
+        //                 ...state.allFriends.slice(index + 1)
+        //             ]
+        //         }
+        //     }
         case UPDATE_FRIEND_IN_LIST:
-            let index = state.allFriends.findIndex((friend) => { return friend.userId === action.data.userId })
-            if (index > -1) {
+            if (action.data.pictureObj) {
+                let updatedFriendList = state.allFriends.map(item => {
+                    if (!item.profilePictureId) return item;
+                    if (typeof action.data.pictureObj[item.profilePictureId] === 'string') {
+                        return { ...item, profilePicture: action.data.pictureObj[item.profilePictureId] }
+                    }
+                    return item;
+                })
                 return {
                     ...state,
-                    allFriends: [
-                        ...state.allFriends.slice(0, index),
-                        { ...state.allFriends[index], profilePicture: action.data.profilePicture },
-                        ...state.allFriends.slice(index + 1)
-                    ]
+                    allFriends: updatedFriendList
                 }
             }
+
             return state;
         // case CLEAR_FRIEND_LIST:
         //     // var friendKey = getFriendListByType(action.data.friendType);

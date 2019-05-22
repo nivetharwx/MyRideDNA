@@ -44,6 +44,7 @@ export const getPictureList = (pictureIdList, successCallback, errorCallback) =>
                 if (Object.keys(res.data).length === 0) {
                     errorCallback(res.data);
                 } else {
+
                     successCallback(res.data);
                 }
             }
@@ -77,19 +78,19 @@ export const pushNotification = (userId) => {
 //             })
 //     }
 // }
-export const getAllNotifications = (userId, pageNumber) => {
-    console.log('pageNumber redux : ', pageNumber)
-    return dispatch => {  
+export const getAllNotifications = (userId, pageNumber, date) => {
+    return dispatch => {
         dispatch(isloadingDataAction(true))
-        axios.get(NOTIFICATIONS_BASE_URL + `getNotifications?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.get(NOTIFICATIONS_BASE_URL + `getNotifications?userId=${userId}&pageNumber=${pageNumber}&date=${date}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                console.log('getNotifications : ', res.data)
+                console.log(' getNotifications : ', res.data)
                 if (res.status === 200 && res.data.notification.length > 0) {
+                    console.log(' getNotifications : ', res.data)
                     dispatch(isloadingDataAction(false))
-                    dispatch(resetNotificationListAction({ notificationData: res.data, pageNumber: pageNumber + 1 }));
+                    dispatch(resetNotificationListAction(res.data));
                 }
-                else if(res.data.notification.length === 0){
-                    dispatch(isloadingDataAction(false))
+                else if (res.data.notification.length === 0) {
+                    dispatch(w(false))
                 }
             })
             .catch(er => {
@@ -128,28 +129,34 @@ export const readNotification = (userId, notificationId) => {
 }
 export const deleteNotifications = (notificationIds) => {
     return dispatch => {
+        dispatch(apiLoaderActions(true))
         axios.put(NOTIFICATIONS_BASE_URL + `deleteNotifications`, { notificationIds: [notificationIds] }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    dispatch(apiLoaderActions(false))
                     console.log("deleteNotifications success: ", res.data || res);
                     dispatch(deleteNotificationsAction({ notificationIds }));
                 }
             })
             .catch(er => {
+                dispatch(apiLoaderActions(false))
                 console.log("deleteNotifications error: ", er.response || er);
             })
     }
 }
 export const deleteAllNotifications = (userId) => {
     return dispatch => {
+        dispatch(apiLoaderActions(true))
         axios.delete(NOTIFICATIONS_BASE_URL + `deleteAllNotifications?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    dispatch(apiLoaderActions(false))
                     console.log("deleteAllNotifications success: ", res.data || res);
                     dispatch(updateNotificationAction({ notificationId, notification: res.data }));
                 }
             })
             .catch(er => {
+                dispatch(apiLoaderActions(false))
                 console.log("deleteAllNotifications error: ", er.response || er);
             })
     }
@@ -1179,7 +1186,7 @@ export const getFriendGroups = (userId, toggleLoader) => {
                 }
             })
             .catch(er => {
-                console.log(`getFriendGroups: `, er.response);
+                console.log(`getFriendGroups error: `, er.response);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1222,7 +1229,7 @@ export const exitFriendGroup = (groupId, memberId) => {
                 }
             })
             .catch(er => {
-                console.log(`exitFriendGroup: `, er.response);
+                console.log(`exitFriendGroup error: `, er.response);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))

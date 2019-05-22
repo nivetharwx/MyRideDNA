@@ -7,7 +7,7 @@ import { Actions } from 'react-native-router-flux';
 import { getGroupInfoAction, resetCurrentGroupAction, updateMemberAction } from '../../../actions';
 import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, WindowDimensions } from '../../../constants';
 import { IconButton, LinkButton } from '../../../components/buttons';
-import { addMembers, getAllGroupMembers, dismissMemberAsAdmin, makeMemberAsAdmin, removeMember, getPicture } from '../../../api';
+import { addMembers, getAllGroupMembers, dismissMemberAsAdmin, makeMemberAsAdmin, removeMember, getPicture, getPictureList } from '../../../api';
 import { ThumbnailCard } from '../../../components/cards';
 import { BaseModal } from '../../../components/modal';
 import { Icon as NBIcon, ListItem, Left, Thumbnail, Body, Right, CheckBox } from 'native-base';
@@ -55,11 +55,20 @@ class Group extends Component {
             } else if (prevProps.currentGroup === null) {
                 this.props.getAllGroupMembers(this.props.currentGroup.groupId, this.props.user.userId);
             } else if (this.props.currentGroup.groupMembers.length !== prevProps.currentGroup.groupMembers.length) {
+                // this.props.currentGroup.groupMembers.forEach(picture => {
+                //     if (!picture.profilePicture && picture.profilePictureId) {
+                //         this.props.getPicture(picture.profilePictureId, picture.memberId)
+                //     }
+                // })
+                const groupMemberIdList = [];
                 this.props.currentGroup.groupMembers.forEach(picture => {
                     if (!picture.profilePicture && picture.profilePictureId) {
-                        this.props.getPicture(picture.profilePictureId, picture.memberId)
+                        groupMemberIdList.push(picture.profilePictureId);
                     }
                 })
+                if (groupMemberIdList.length > 0) {
+                    this.props.getGroupMemberPicture(groupMemberIdList)
+                }
                 setTimeout(() => {
                     this.filteredFriends = this.props.allFriends.filter(friend => this.props.currentGroup.groupMembers.findIndex(member => member.memberId === friend.userId) === -1);
                 }, 0);
@@ -277,7 +286,6 @@ class Group extends Component {
     render() {
         const { kbdBtmOffset, isActiveSearch, selectedMember, selectedFriendList, searchFriendList, isVisibleOptionsModal, isVisibleSearchModal, searchName } = this.state;
         const { user, currentGroup } = this.props;
-        console.log('currentGroup : ', currentGroup);
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '45deg']
@@ -406,10 +414,16 @@ const mapDispatchToProps = (dispatch) => {
         makeMemberAsAdmin: (groupId, memberId) => dispatch(makeMemberAsAdmin(groupId, memberId)),
         dismissMemberAsAdmin: (groupId, memberId) => dispatch(dismissMemberAsAdmin(groupId, memberId)),
         removeMember: (groupId, memberId) => dispatch(removeMember(groupId, memberId)),
-        getPicture: (pictureId, memberId) => getPicture(pictureId, ({ picture, pictureId }) => {
-            dispatch(updateMemberAction({ updates: { profilePicture: picture }, memberId: memberId }))
+        // getPicture: (pictureId, memberId) => getPicture(pictureId, ({ picture, pictureId }) => {
+        //     dispatch(updateMemberAction({ updates: { profilePicture: picture }, memberId: memberId }))
+        // }, (error) => {
+        //     dispatch(updateMemberAction({ updates: {}, memberId: memberId }))
+        // }),
+        getGroupMemberPicture: (groupMemberIdList) => getPictureList(groupMemberIdList, (pictureObj) => {
+            dispatch(updateMemberAction({ pictureObj }))
         }, (error) => {
-            dispatch(updateMemberAction({ updates: {}, memberId: memberId }))
+            console.log('getPictureList GroupMemberPicture error : ', error)
+            // dispatch(updateMemberAction({ updates: {}, memberId: memberId }))
         }),
     };
 };
