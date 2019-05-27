@@ -39,13 +39,14 @@ class FriendsProfile extends Component {
                 this.setState({ activeTab: this.state.activeTab });
             }, 50);
         }
-        if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
-            this.props.getUserById(this.props.notificationBody.fromUserId);
-            this.props.readNotification(this.props.user.userId, this.props.notificationBody.id);
-        } else if (this.props.comingFrom === 'notificationPage') {
+        if (this.props.comingFrom === PageKeys.NOTIFICATIONS || this.props.comingFrom === 'notificationPage') {
             this.props.getUserById(this.props.notificationBody.fromUserId);
             this.props.readNotification(this.props.user.userId, this.props.notificationBody.id);
         }
+        // else if (this.props.comingFrom === 'notificationPage') {
+        //     this.props.getUserById(this.props.notificationBody.fromUserId);
+        //     this.props.readNotification(this.props.user.userId, this.props.notificationBody.id);
+        // }
         else {
             this.props.getFriendsInfo(this.props.friendIdx, this.props.friendType);
         }
@@ -153,6 +154,7 @@ class FriendsProfile extends Component {
         this.setState({ activeTab: i }, () => {
             if (this.state.activeTab === 1) {
                 // GARAGE Tab
+
                 if (this.props.currentFriend.garage.garageId === null) {
                     this.props.getGarageInfo(this.props.currentFriend.userId, this.props.friendType);
                 }

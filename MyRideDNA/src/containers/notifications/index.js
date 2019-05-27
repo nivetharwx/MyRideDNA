@@ -20,13 +20,17 @@ class Notifications extends Component {
         this.state = {
             notifPicture: {},
             isLoadingAgain: false,
-            onEndReachedCalledDuringMomentum: true
+            onEndReachedCalledDuringMomentum: true,
+            isLoadingData: false,
+            isLoading: false
         }
     }
 
     componentDidMount() {
         // this.props.getAllNotifications(this.props.user.userId);
-        this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString());
+        this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString(), (res) => {
+        }, (err) => {
+        });
         this.props.seenNotification(this.props.user.userId);
     }
 
@@ -75,16 +79,26 @@ class Notifications extends Component {
         Actions.pop();
     }
 
+    // onPressnotification = (item) => {
+    //     console.log('item notification : ',item);
+    //     if (item.reference.targetScreen === 'FRIENDS_PROFILE') {
+    //         // Actions.push(PageKeys.FRIENDS_PROFILE, { comingFrom:'notificationTab',   id : item.fromUserId });
+    //         store.dispatch(screenChangeAction({ name: PageKeys[item.reference.targetScreen], params: { comingFrom: 'notificationPage', notificationBody: item } }));
+    //         // Actions.push(PageKeys.FRIENDS_PROFILE);
+    //     }
+    //     else if (item.targetScreen === "REQUESTS") {
+    //         store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: 'notificationPage', goTo: item.targetScreen, notificationBody: item } }));
+    //     }
+    //     this.props.readNotification(this.props.user.userId, item.id);
+    // }
     onPressnotification = (item) => {
-        if (item.targetScreen === 'FRIENDS_PROFILE') {
-            // Actions.push(PageKeys.FRIENDS_PROFILE, { comingFrom:'notificationTab',   id : item.fromUserId });
-            store.dispatch(screenChangeAction({ name: PageKeys[item.targetScreen], params: { comingFrom: 'notificationPage', notificationBody: item } }));
-            // Actions.push(PageKeys.FRIENDS_PROFILE);
+        if (Object.keys(PageKeys).indexOf(item.reference.targetScreen) === -1) {
+            if (item.reference.targetScreen === 'REQUESTS') {
+                store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: 'notificationPage', goTo: item.reference.targetScreen, notificationBody: item } }));
+            }
+            return;
         }
-        else if (item.targetScreen === "REQUESTS") {
-            store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: 'notificationPage', goTo: item.targetScreen, notificationBody: item } }));
-        }
-        this.props.readNotification(this.props.user.userId, item.id);
+        store.dispatch(screenChangeAction({ name: PageKeys[item.reference.targetScreen], params: { comingFrom: 'notificationPage', notificationBody: item } }));
     }
 
     _keyExtractor = (item, index) => item.id;
@@ -113,40 +127,21 @@ class Notifications extends Component {
             //         {/* <Text>{getFormattedDateFromISO(item.date, '/')}</Text> */}
             //     </Body>
             // </ListItem>
-            item.status === 'unread'
-                ?
-                <ListItem avatar key={item.id}
-                    // style={[styles.listItem, { backgroundColor: item.status === 'unread' ? APP_COMMON_STYLES.headerColor : '#fff' }]}
-                    style={[styles.listItem, { backgroundColor: '#daedf4' }]}
-                    onPress={() => this.onPressnotification(item)}  >
-                    <Left style={[styles.noBorderTB, styles.avatarContainer]}>
-                        <Thumbnail source={item.profilePicture ? { uri: item.profilePicture } : require('../../assets/img/friend-profile-pic.png')} />
-                    </Left>
-                    <Body style={[styles.noBorderTB, styles.itemBody]}>
-                        <Text style={[styles.name, { fontWeight: 'bold', fontSize: 17 }]}>{item.fromUserName + ' '}<Text style={styles.message}>{item.message}</Text></Text>
-                        <Text>{getFormattedDateFromISO(item.date, '/')}</Text>
-                    </Body>
-                    <Right>
-                        <IconButton iconProps={{ name: 'close', type: 'MaterialIcons', style: { fontSize: 25, color: '#6B7663' } }} onPress={() => this.deleteNotification(item, index)} />
-                    </Right>
-                </ListItem>
-                :
-                <ListItem avatar
-                    key={item.id}
-                    // style={[styles.listItem, { backgroundColor: item.status === 'unread' ? APP_COMMON_STYLES.headerColor : '#fff' }]}
-                    style={[styles.listItem, { backgroundColor: '#fff' }]}
-                    onPress={() => this.onPressnotification(item)}>
-                    <Left style={[styles.noBorderTB, styles.avatarContainer]}>
-                        <Thumbnail source={item.profilePicture ? { uri: item.profilePicture } : require('../../assets/img/friend-profile-pic.png')} />
-                    </Left>
-                    <Body style={[styles.noBorderTB, styles.itemBody,]}>
-                        <Text style={[styles.name, { fontWeight: 'bold', fontSize: 17 }]}>{item.fromUserName + ' '}<Text style={styles.message}>{item.message}</Text></Text>
-                        <Text>{getFormattedDateFromISO(item.date, '/')}</Text>
-                    </Body>
-                    <Right>
-                        <IconButton iconProps={{ name: 'close', type: 'MaterialIcons', style: { fontSize: 25, color: '#6B7663' } }} onPress={() => this.deleteNotification(item, index)} />
-                    </Right>
-                </ListItem>
+            <ListItem avatar key={item.id}
+                // style={[styles.listItem, { backgroundColor: item.status === 'unread' ? APP_COMMON_STYLES.headerColor : '#fff' }]}
+                style={[styles.listItem, item.status === 'unread' ? { backgroundColor: '#daedf4' } : { backgroundColor: '#fff' }]}
+                onPress={() => this.onPressnotification(item)}  >
+                <Left style={[styles.noBorderTB, styles.avatarContainer]}>
+                    <Thumbnail source={item.profilePicture ? { uri: item.profilePicture } : require('../../assets/img/friend-profile-pic.png')} />
+                </Left>
+                <Body style={[styles.noBorderTB, styles.itemBody]}>
+                    <Text style={[styles.name, { fontWeight: 'bold', fontSize: 17 }]}>{item.fromUserName + ' '}<Text style={styles.message}>{item.message}</Text></Text>
+                    <Text>{getFormattedDateFromISO(item.date, '/')}</Text>
+                </Body>
+                <Right>
+                    <IconButton iconProps={{ name: 'close', type: 'MaterialIcons', style: { fontSize: 25, color: '#6B7663' } }} onPress={() => this.deleteNotification(item, index)} />
+                </Right>
+            </ListItem>
         );
     }
 
@@ -154,13 +149,18 @@ class Notifications extends Component {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
     loadMoreData = () => {
-        if (this.props.isLoading === false) {
-            this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber, this.props.notificationList.notification[this.props.notificationList.notification.length - 1].date);
+        if (this.state.isLoadingData && this.state.isLoading === false) {
+            this.setState({ isLoading: true, isLoadingData: false })
+            this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber, this.props.notificationList.notification[this.props.notificationList.notification.length - 1].date, (res) => {
+                this.setState({ isLoading: false })
+            }, (err) => {
+                this.setState({ isLoading: false })
+            });
         }
     }
 
     renderFooter = () => {
-        if (this.props.isLoading) {
+        if (this.state.isLoading) {
             return (
                 <View
                     style={{
@@ -185,16 +185,19 @@ class Notifications extends Component {
                 </View>
                 <View style={{ flex: 1 }}>
                     <BasicHeader title='Notifications' rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
-                    <ScrollView style={[styles.scrollArea, notificationList.notification.length > 0 ? { paddingBottom: heightPercentageToDP(5) } : null]}>
+                    <View style={[styles.scrollArea, notificationList.notification.length > 0 ? { paddingBottom: heightPercentageToDP(5) } : null]}>
                         <FlatList
                             data={notificationList.notification}
                             keyExtractor={this._keyExtractor}
                             renderItem={this._renderItem}
-                            ItemSeparatorComponent={() => <View style={styles.separator} />}
                             ListFooterComponent={this.renderFooter}
-                            onTouchStart={this.loadMoreData}
+                            // onTouchStart={this.loadMoreData}
+                            onEndReached={this.loadMoreData}
+                            onEndReachedThreshold={0.1}
+                            onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+
                         />
-                    </ScrollView>
+                    </View>
                     <Image source={require('../../assets/img/notifications-bg.png')} style={styles.bottomImage} />
 
                     {/* Shifter: - Brings the app navigation menu */}
@@ -207,8 +210,8 @@ class Notifications extends Component {
 }
 const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
-    const { notificationList, pageNumber, isLoading } = state.NotificationList;
-    const { showLoader } = state.PageState;
+    const { notificationList, isLoading } = state.NotificationList;
+    const { showLoader, pageNumber } = state.PageState;
     return { user, userAuthToken, deviceToken, notificationList, pageNumber, isLoading, showLoader };
 }
 const mapDispatchToProps = (dispatch) => {
@@ -217,7 +220,7 @@ const mapDispatchToProps = (dispatch) => {
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
         // getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
-        getAllNotifications: (userId, pageNumber, date) => dispatch(getAllNotifications(userId, pageNumber, date)),
+        getAllNotifications: (userId, pageNumber, date, successCallback, errorCallback) => dispatch(getAllNotifications(userId, pageNumber, date, successCallback, errorCallback)),
         seenNotification: (userId) => dispatch(seenNotification(userId)),
         // getNotificationPic: (pictureId, id) => getPicture(pictureId, ({ picture, pictureId }) => {
         //     dispatch(updateNotificationAction({ profilePicture: picture, id: id }))
