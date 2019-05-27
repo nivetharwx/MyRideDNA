@@ -60,7 +60,9 @@ class Friends extends Component {
             }
         }, 0);
         this.props.getAllRequest(this.props.user.userId, true);
-        this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
+        this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
+        }, (err) => {
+        });
 
     }
 
@@ -150,10 +152,14 @@ class Friends extends Component {
         });
 
         if (from === 2 && i === 0) {
-            this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
+            this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
+            }, (err) => {
+            });
         }
         if (from === 1 && i === 0) {
-            this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
+            this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
+            }, (err) => {
+            });
         }
     }
 
@@ -439,7 +445,7 @@ const mapStateToProps = (state) => {
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        getAllFriends: (friendType, userId, pageNumber, toggleLoader) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader)),
+        getAllFriends: (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         getAllRequest: (userId, toggleLoader) => dispatch(getAllFriendRequests(userId, toggleLoader)),

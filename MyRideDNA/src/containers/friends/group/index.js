@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
-import { View, FlatList, ScrollView, StatusBar, Alert, Keyboard, Animated, TextInput, Text } from 'react-native';
+import { View, FlatList, ScrollView, StatusBar, Alert, Keyboard, Animated, TextInput, Text, ActivityIndicator } from 'react-native';
 import { connect } from 'react-redux';
 import styles, { CREATE_GROUP_WIDTH } from './styles';
 import { BasicHeader } from '../../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { getGroupInfoAction, resetCurrentGroupAction, updateMemberAction } from '../../../actions';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, WindowDimensions } from '../../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, WindowDimensions, PageKeys } from '../../../constants';
 import { IconButton, LinkButton } from '../../../components/buttons';
-import { addMembers, getAllGroupMembers, dismissMemberAsAdmin, makeMemberAsAdmin, removeMember, getPicture, getPictureList } from '../../../api';
+import { addMembers, getAllGroupMembers, dismissMemberAsAdmin, makeMemberAsAdmin, removeMember, getPicture, getPictureList, readNotification, getGroupMembers } from '../../../api';
 import { ThumbnailCard } from '../../../components/cards';
 import { BaseModal } from '../../../components/modal';
 import { Icon as NBIcon, ListItem, Left, Thumbnail, Body, Right, CheckBox } from 'native-base';
@@ -33,11 +33,25 @@ class Group extends Component {
             isVisibleAddMemberModal: false,
             addMemberToGroup: '',
             searchName: '',
+            isLoading: false,
+            isLoadingData: false,
         };
     }
 
     componentDidMount() {
-        this.props.getGroupInfo(this.props.grpIndex);
+        if (this.props.comingFrom === PageKeys.NOTIFICATIONS || this.props.comingFrom === 'notificationPage') {
+            this.props.getGroupMembers(this.props.notificationBody.reference.groupId, this.props.notificationBody.notifiedUserId, this.props.notificationBody.reference.groupName, true, 0, (res) => {
+            }, (err) => {
+            });
+            this.props.readNotification(this.props.notificationBody.notifiedUserId, this.props.notificationBody.id);
+        }
+        else {
+            // this.props.getAllGroupMembers(this.props.friendGroupList[this.props.grpIndex].groupId, this.props.user.userId, this.props.friendGroupList[this.props.grpIndex].groupName);
+            this.props.getGroupMembers(this.props.friendGroupList[this.props.grpIndex].groupId, this.props.user.userId, this.props.friendGroupList[this.props.grpIndex].groupName, true, 0, (res) => {
+            }, (err) => {
+            });
+        }
+        // this.props.getGroupInfo(this.props.grpIndex);
         Keyboard.addListener('keyboardDidShow', this.adjustLayoutOnKeyboardVisibility);
         Keyboard.addListener('keyboardDidHide', this.adjustLayoutOnKeyboardVisibility);
     }
@@ -49,30 +63,51 @@ class Group extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.currentGroup !== this.props.currentGroup) {
-            if (this.props.currentGroup === null) {
+            if (this.props.currentGroup.groupMembers.length === 0) {
                 Actions.pop();
                 return;
-            } else if (prevProps.currentGroup === null) {
-                this.props.getAllGroupMembers(this.props.currentGroup.groupId, this.props.user.userId);
-            } else if (this.props.currentGroup.groupMembers.length !== prevProps.currentGroup.groupMembers.length) {
-                // this.props.currentGroup.groupMembers.forEach(picture => {
-                //     if (!picture.profilePicture && picture.profilePictureId) {
-                //         this.props.getPicture(picture.profilePictureId, picture.memberId)
-                //     }
-                // })
-                const groupMemberIdList = [];
-                this.props.currentGroup.groupMembers.forEach(picture => {
-                    if (!picture.profilePicture && picture.profilePictureId) {
-                        groupMemberIdList.push(picture.profilePictureId);
-                    }
-                })
-                if (groupMemberIdList.length > 0) {
-                    this.props.getGroupMemberPicture(groupMemberIdList)
-                }
-                setTimeout(() => {
-                    this.filteredFriends = this.props.allFriends.filter(friend => this.props.currentGroup.groupMembers.findIndex(member => member.memberId === friend.userId) === -1);
-                }, 0);
             }
+        }
+        // else if (prevProps.currentGroup === null) {
+        //     // this.props.getAllGroupMembers(this.props.currentGroup.groupId, this.props.user.userId);
+        // } 
+        // else if (this.props.currentGroup.groupMembers.length !== prevProps.currentGroup.groupMembers.length) {
+        //     // this.props.currentGroup.groupMembers.forEach(picture => {
+        //     //     if (!picture.profilePicture && picture.profilePictureId) {
+        //     //         this.props.getPicture(picture.profilePictureId, picture.memberId)
+        //     //     }
+        //     // })
+        //     const groupMemberIdList = [];
+        //     this.props.currentGroup.groupMembers.forEach(picture => {
+        //         if (!picture.profilePicture && picture.profilePictureId) {
+        //             groupMemberIdList.push(picture.profilePictureId);
+        //         }
+        //     })
+        //     if (groupMemberIdList.length > 0) {
+        //         this.props.getGroupMemberPicture(groupMemberIdList)
+        //     }
+        //     setTimeout(() => {
+        //         this.filteredFriends = this.props.allFriends.filter(friend => this.props.currentGroup.groupMembers.findIndex(member => member.memberId === friend.userId) === -1);
+        //     }, 0);
+        // }
+        if (prevProps.currentGroup.groupMembers !== this.props.currentGroup.groupMembers) {
+            // this.props.currentGroup.groupMembers.forEach(picture => {
+            //     if (!picture.profilePicture && picture.profilePictureId) {
+            //         this.props.getPicture(picture.profilePictureId, picture.memberId)
+            //     }
+            // })
+            const groupMemberIdList = [];
+            this.props.currentGroup.groupMembers.forEach(picture => {
+                if (!picture.profilePicture && picture.profilePictureId) {
+                    groupMemberIdList.push(picture.profilePictureId);
+                }
+            })
+            if (groupMemberIdList.length > 0) {
+                this.props.getGroupMemberPicture(groupMemberIdList)
+            }
+            setTimeout(() => {
+                this.filteredFriends = this.props.allFriends.filter(friend => this.props.currentGroup.groupMembers.findIndex(member => member.memberId === friend.userId) === -1);
+            }, 0);
         }
 
 
@@ -283,9 +318,39 @@ class Group extends Component {
         this.setState({ isVisibleSearchModal: true });
 
     }
+
+    loadMoreData = () => {
+        if (this.state.isLoadingData && this.state.isLoading === false) {
+            this.setState({ isLoading: true, isLoadingData: false })
+            this.props.getGroupMembers(this.props.currentGroup.groupId, this.props.currentGroup.userId, this.props.currentGroup.groupName, false, this.props.pageNumber, (res) => {
+                this.setState({ isLoading: false })
+            }, (err) => {
+                this.setState({ isLoading: false })
+            });
+        }
+    }
+
+    renderFooter = () => {
+        if (this.state.isLoading) {
+            return (
+                <View
+                    style={{
+                        paddingVertical: 20,
+                        borderTopWidth: 1,
+                        borderColor: "#CED0CE"
+                    }}
+                >
+                    <ActivityIndicator animating size="large" />
+                </View>
+            );
+        }
+        return null
+    }
+
+
     render() {
         const { kbdBtmOffset, isActiveSearch, selectedMember, selectedFriendList, searchFriendList, isVisibleOptionsModal, isVisibleSearchModal, searchName } = this.state;
-        const { user, currentGroup } = this.props;
+        const { user, currentGroup, friendGroupList } = this.props;
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '45deg']
@@ -302,7 +367,7 @@ class Group extends Component {
                         searchValue={searchName}
                         onChangeSearchValue={this.searchForFriend} onCancelSearchMode={() => this.setState({ searchName: '', isVisibleSearchModal: false })}
                         onClearSearchValue={() => this.setState({ searchName: '' })}
-                        title={<Text>{currentGroup.groupName + `\n`}<Text style={{ fontSize: 14 }}>Members: {currentGroup.groupMembers.length ? currentGroup.groupMembers.length : ''}</Text></Text>}
+                        title={<Text>{currentGroup.groupName ? currentGroup.groupName + `\n` : '\n'}<Text style={{ fontSize: 14 }}>Members: {currentGroup.groupMembers.length ? currentGroup.groupMembers.length : ''}</Text></Text>}
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
                         rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.onPressAddMember }}
                     />
@@ -376,6 +441,11 @@ class Group extends Component {
                             item={item}
                             onLongPress={() => this.showOptionsModal(index)}
                         />)}
+                        ListFooterComponent={this.renderFooter}
+                        // onTouchStart={this.loadMoreData}
+                        onEndReached={this.loadMoreData}
+                        onEndReachedThreshold={0.1}
+                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
                     />
 
                     {/* <Animated.View style={[styles.floatSecContainer, { bottom: kbdBtmOffset, width: this.floatSecAnim }]}>
@@ -400,17 +470,19 @@ class Group extends Component {
 }
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { currentGroup } = state.FriendGroupList;
+    const { currentGroup, friendGroupList } = state.FriendGroupList;
     const { allFriends } = state.FriendList;
     const { showLoader } = state.PageState;
-    return { user, currentGroup, allFriends, showLoader };
+    const { pageNumber } = state.PageState;
+    return { user, currentGroup, allFriends, showLoader, friendGroupList, pageNumber };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
         getGroupInfo: (grpIdx) => dispatch(getGroupInfoAction(grpIdx)),
         resetCurrentGroup: () => dispatch(resetCurrentGroupAction()),
         addMembers: (groupId, memberDetails) => dispatch(addMembers(groupId, memberDetails)),
-        getAllGroupMembers: (groupId, userId) => dispatch(getAllGroupMembers(groupId, userId)),
+        // getAllGroupMembers: (groupId, userId, groupName) => dispatch(getAllGroupMembers(groupId, userId, groupName)),
+        getGroupMembers: (groupId, userId, groupName, toggleLoader, pageNumber, successCallback, errorCallback) => dispatch(getGroupMembers(groupId, userId, groupName, toggleLoader, pageNumber, successCallback, errorCallback)),
         makeMemberAsAdmin: (groupId, memberId) => dispatch(makeMemberAsAdmin(groupId, memberId)),
         dismissMemberAsAdmin: (groupId, memberId) => dispatch(dismissMemberAsAdmin(groupId, memberId)),
         removeMember: (groupId, memberId) => dispatch(removeMember(groupId, memberId)),
@@ -425,6 +497,7 @@ const mapDispatchToProps = (dispatch) => {
             console.log('getPictureList GroupMemberPicture error : ', error)
             // dispatch(updateMemberAction({ updates: {}, memberId: memberId }))
         }),
+        readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(Group);

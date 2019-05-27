@@ -1,7 +1,7 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
     replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
-    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, updateNotificationCountAction, isloadingDataAction
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, updateNotificationCountAction, isloadingDataAction, updatePageNumberAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN } from '../constants';
 import axios from 'axios';
@@ -78,23 +78,27 @@ export const pushNotification = (userId) => {
 //             })
 //     }
 // }
-export const getAllNotifications = (userId, pageNumber, date) => {
+export const getAllNotifications = (userId, pageNumber, date, successCallback, errorCallback) => {
+    console.log('pageNumber redux  : ', pageNumber);
     return dispatch => {
-        dispatch(isloadingDataAction(true))
+        // dispatch(isloadingDataAction(true));
         axios.get(NOTIFICATIONS_BASE_URL + `getNotifications?userId=${userId}&pageNumber=${pageNumber}&date=${date}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log(' getNotifications : ', res.data)
                 if (res.status === 200 && res.data.notification.length > 0) {
-                    console.log(' getNotifications : ', res.data)
-                    dispatch(isloadingDataAction(false))
+                    // dispatch(isloadingDataAction(false));
                     dispatch(resetNotificationListAction(res.data));
+                    dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    successCallback(res.data)
                 }
                 else if (res.data.notification.length === 0) {
-                    dispatch(w(false))
+                    // dispatch(isloadingDataAction(false));
+                    successCallback(false)
                 }
             })
             .catch(er => {
-                dispatch(isloadingDataAction(false))
+                // dispatch(isloadingDataAction(false));
+                errorCallback(er)
                 console.log("getNotifications error: ", er.response || er);
             })
     }
@@ -923,24 +927,32 @@ export const getRideByRideId = (rideId) => {
             })
     };
 }
-export const getAllFriends = (friendType, userId, pageNumber, toggleLoader) => {
+export const getAllFriends = (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => {
+    console.log('pageNumber getFriendList: ', pageNumber);
     return dispatch => {
         toggleLoader && dispatch(apiLoaderActions(true))
         // pageNumber > 0 && dispatch(toggleLoaderAction(true));
-        pageNumber > 0 && dispatch(apiLoaderActions(true));
+        // pageNumber > 0 && dispatch(apiLoaderActions(true));
         // axios.get(FRIENDS_BASE_URL + `getFriendList?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         axios.get(GRAPH_BASE_URL + `getFriendList?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                if (res.status === 200) {
+                console.log('getFriendList : ', res.data);
+                if (res.status === 200 && res.data.length > 0) {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false));
+                    dispatch(replaceFriendListAction({ friendList: res.data, pageNumber: pageNumber }))
+                    dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    successCallback(res.data);
                     // DOC: Calling for getting online friends
                     // dispatch(getAllOnlineFriends(userId));
-                    if (pageNumber === 0) {
-                        dispatch(replaceFriendListAction({ friendType, friendList: res.data }))
-                    } else {
-                        dispatch(updateFriendListAction({ friendType, friendList: res.data }))
-                    }
+                    // if (pageNumber === 0) {
+                    //     dispatch(replaceFriendListAction({ friendType, friendList: res.data }))
+                    // } else {
+                    //     dispatch(updateFriendListAction({ friendType, friendList: res.data }))
+                    // }
+                }
+                else if (res.data.length === 0) {
+                    successCallback(false);
                 }
             })
             .catch(er => {
@@ -948,6 +960,7 @@ export const getAllFriends = (friendType, userId, pageNumber, toggleLoader) => {
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
+                errorCallback(er);
             })
     };
 }
@@ -1173,23 +1186,55 @@ export const getFriendsLocationList = (userId, friendsIdList) => {
             })
     };
 }
-export const getFriendGroups = (userId, toggleLoader) => {
+// export const getFriendGroups = (userId, toggleLoader) => {
+//     return dispatch => {
+//         // dispatch(toggleLoaderAction(true));
+//         toggleLoader && dispatch(apiLoaderActions(true))
+//         axios.get(FRIENDS_BASE_URL + `getFriendGroups?memberId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+//             .then(res => {
+//                 if (res.status === 200) {
+//                     console.log('getFriendGroups : ',res.data)
+//                     // dispatch(toggleLoaderAction(false));
+//                     dispatch(apiLoaderActions(false))
+//                     return dispatch(replaceFriendGroupListAction(res.data))
+//                 }
+//             })
+//             .catch(er => {
+//                 console.log(`getFriendGroups error: `, er.response);
+//                 // TODO: Dispatch error info action
+//                 // dispatch(toggleLoaderAction(false));
+//                 dispatch(apiLoaderActions(false))
+//             })
+//     };
+// }
+export const getFriendGroups = (userId, toggleLoader, pageNumber, successCallback, errorCallback) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         toggleLoader && dispatch(apiLoaderActions(true))
-        axios.get(FRIENDS_BASE_URL + `getFriendGroups?memberId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.get(FRIENDS_BASE_URL + `getFriendGroups?memberId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                if (res.status === 200) {
-                    // dispatch(toggleLoaderAction(false));
+                console.log('getFriendGroups : ', res.data)
+                if (res.status === 200 && res.data.length > 0) {
+                    dispatch(replaceFriendGroupListAction({ groupList: res.data, pageNumber: pageNumber }))
                     dispatch(apiLoaderActions(false))
-                    return dispatch(replaceFriendGroupListAction(res.data))
+                    dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    successCallback(res.data)
+
+                    // dispatch(toggleLoaderAction(false));
+
+                    // return dispatch(replaceFriendGroupListAction(res.data))
+                }
+                else if (res.data.length === 0) {
+                    successCallback(false)
                 }
             })
             .catch(er => {
-                console.log(`getFriendGroups error: `, er.response);
+                console.log('getFriendGroups error : ', res.data)
+                errorCallback(er)
+                dispatch(apiLoaderActions(false))
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
-                dispatch(apiLoaderActions(false))
+
             })
     };
 }
@@ -1236,27 +1281,57 @@ export const exitFriendGroup = (groupId, memberId) => {
             })
     };
 }
-export const getAllGroupMembers = (groupId, userId) => {
+// export const getAllGroupMembers = (groupId, userId, groupName) => {
+//     console.log('groupId  : ', groupId);
+//     return dispatch => {
+//         // dispatch(toggleLoaderAction(true));
+//         dispatch(apiLoaderActions(true))
+//         axios.get(FRIENDS_BASE_URL + `getAllGroupMembers?groupId=${groupId}&memberId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+//             .then(res => {
+//                 if (res.status === 200) {
+//                     console.log('getAllGroupMembers sucess: ', res);
+//                     // dispatch(toggleLoaderAction(false));
+//                     dispatch(apiLoaderActions(false))
+//                     return dispatch(resetMembersFromCurrentGroupAction({ member: res.data, groupId: groupId, groupName: groupName }))
+//                 }
+//             })
+//             .catch(er => {
+//                 console.log(`getAllGroupMembers error: `, er.response ? er.response : er);
+//                 // TODO: Dispatch error info action
+//                 // dispatch(toggleLoaderAction(false));
+//                 dispatch(apiLoaderActions(false))
+//             })
+//     };
+// }
+
+export const getGroupMembers = (groupId, userId, groupName, toggleLoader, pageNumber, successCallback, errorCallback) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
-        dispatch(apiLoaderActions(true))
-        axios.get(FRIENDS_BASE_URL + `getAllGroupMembers?groupId=${groupId}&memberId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        toggleLoader && dispatch(apiLoaderActions(true))
+        axios.get(GRAPH_BASE_URL + `getMembers?groupId=${groupId}&memberId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                if (res.status === 200) {
-                    console.log('getAllGroupMembers sucess: ', res.data);
+                console.log('getGroupMembers sucess: ', res);
+                if (res.status === 200 && res.data.length > 0) {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
-                    return dispatch(resetMembersFromCurrentGroupAction(res.data))
+                    dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    dispatch(resetMembersFromCurrentGroupAction({ member: res.data, groupId: groupId, groupName: groupName, pageNumber: pageNumber, userId: userId }))
+                    successCallback(res.data)
+                }
+                else if (res.data.length === 0) {
+                    successCallback(false)
                 }
             })
             .catch(er => {
-                console.log(`getAllGroupMembers error: `, er.response ? er.response : er);
+                console.log(`getGroupMembers error: `, er.response ? er.response : er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                errorCallback(er)
             })
     };
 }
+
 export const addMembers = (groupId, memberDetails) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
@@ -1321,6 +1396,8 @@ export const dismissMemberAsAdmin = (groupId, memberId) => {
     };
 }
 export const removeMember = (groupId, memberId) => {
+    console.log('groupId : ', groupId)
+    console.log('memberId : ', memberId)
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))

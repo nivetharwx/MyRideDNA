@@ -2,32 +2,43 @@ import { REPLACE_FRIEND_GROUP_LIST, ADD_FRIEND_GROUP_TO_LIST, ADD_MEMBERS_TO_CUR
 
 const initialState = {
     friendGroupList: [],
-    currentGroup: null,
+    // currentGroup: null,
+    currentGroup: { groupMembers: [] },
 };
 
 export default (state = initialState, action) => {
     switch (action.type) {
         case REPLACE_FRIEND_GROUP_LIST:
-            return {
-                ...state,
-                friendGroupList: action.data.map(group => {
-                    if (!group.groupMembers) group.groupMembers = [];
-                    return group;
-                }),
-                // friendGroupList: [
-                //     { groupName: 'Group 1', grouupId: 1, groupMembers: [] },
-                //     { groupName: 'Group 2', grouupId: 2, groupMembers: [] },
-                //     { groupName: 'Group 3', grouupId: 3, groupMembers: [] },
-                //     { groupName: 'Group 4', grouupId: 4, groupMembers: [] },
-                //     { groupName: 'Group 5', grouupId: 5, groupMembers: [] },
-                //     { groupName: 'Group 6', grouupId: 6, groupMembers: [] },
-                //     { groupName: 'Group 7', grouupId: 7, groupMembers: [] },
-                //     { groupName: 'Group 8', grouupId: 8, groupMembers: [] },
-                //     { groupName: 'Group 9', grouupId: 9, groupMembers: [] },
-                //     { groupName: 'Group 10', grouupId: 10, groupMembers: [] },
-                // ],
-                currentGroup: null
+            if (action.data.pageNumber === 0) {
+                return {
+                    ...state,
+                    friendGroupList: action.data.groupList,
+                    currentGroup: { groupMembers: [] }
+                }
+            } else {
+                return {
+                    ...state,
+                    friendGroupList: [
+                        ...state.friendGroupList,
+                        ...action.data.groupList
+                    ],
+                    currentGroup: { groupMembers: [] }
+                }
             }
+
+        // friendGroupList: [
+        //     { groupName: 'Group 1', grouupId: 1, groupMembers: [] },
+        //     { groupName: 'Group 2', grouupId: 2, groupMembers: [] },
+        //     { groupName: 'Group 3', grouupId: 3, groupMembers: [] },
+        //     { groupName: 'Group 4', grouupId: 4, groupMembers: [] },
+        //     { groupName: 'Group 5', grouupId: 5, groupMembers: [] },
+        //     { groupName: 'Group 6', grouupId: 6, groupMembers: [] },
+        //     { groupName: 'Group 7', grouupId: 7, groupMembers: [] },
+        //     { groupName: 'Group 8', grouupId: 8, groupMembers: [] },
+        //     { groupName: 'Group 9', grouupId: 9, groupMembers: [] },
+        //     { groupName: 'Group 10', grouupId: 10, groupMembers: [] },
+        // ],
+
         case ADD_FRIEND_GROUP_TO_LIST:
             if (!action.data.groupMembers) action.data.groupMembers = [];
             return {
@@ -46,12 +57,12 @@ export default (state = initialState, action) => {
                     ...state.friendGroupList.slice(0, groupIndex),
                     ...state.friendGroupList.slice(groupIndex + 1)
                 ],
-                currentGroup: state.currentGroup && selGroupId === state.currentGroup.groupId ? null : state.currentGroup
+                currentGroup: state.currentGroup && selGroupId === state.currentGroup.groupId ? { groupMembers: [] } : state.currentGroup
             }
         case RESET_CURRENT_GROUP:
             return {
                 ...state,
-                currentGroup: null
+                currentGroup: { groupMembers: [] }
             }
         case UPDATE_CURRENT_GROUP:
             return {
@@ -59,12 +70,27 @@ export default (state = initialState, action) => {
                 currentGroup: { ...state.currentGroup, ...action.data }
             }
         case RESET_MEMBERS_IN_CURRENT_GROUP:
-            action.data[0].name = 'You';
-            action.data[0].nickname = '';
-            return {
-                ...state,
-                currentGroup: { ...state.currentGroup, groupMembers: action.data }
+            if (action.data.pageNumber === 0) {
+                action.data.member[0].name = 'You';
+                action.data.member[0].nickname = '';
+                return {
+                    ...state,
+                    currentGroup: { ...state.currentGroup, groupMembers: action.data.member, groupId: action.data.groupId, groupName: action.data.groupName, userId: action.data.userId }
+                }
             }
+            else {
+                return {
+                    ...state,
+                    currentGroup: {
+                        ...state.currentGroup,
+                        groupMembers: [
+                            ...state.currentGroup.groupMembers,
+                            ...action.data.member
+                        ]
+                    }
+                }
+            }
+
         case ADD_MEMBERS_TO_CURRENT_GROUP:
             return {
                 ...state,
@@ -114,6 +140,22 @@ export default (state = initialState, action) => {
                     currentGroup: {
                         ...state.currentGroup,
                         groupMembers: updatedGroupMemberList
+                    }
+                }
+            }
+            else if (action.data.updates) {
+                const memberIdx = state.currentGroup.groupMembers.findIndex(member => member.memberId === action.data.memberId);
+                if (memberIdx > -1) {
+                    return {
+                        ...state,
+                        currentGroup: {
+                            ...state.currentGroup,
+                            groupMembers: [
+                                ...state.currentGroup.groupMembers.slice(0, memberIdx),
+                                { ...state.currentGroup.groupMembers[memberIdx], ...action.data.updates },
+                                ...state.currentGroup.groupMembers.slice(memberIdx + 1)
+                            ]
+                        }
                     }
                 }
             }
