@@ -81,6 +81,7 @@ const DEFAULT_ZOOM_LEVEL = 15;
 export class Map extends Component {
     prevUserTrackTime = 0;
     _mapView = null;
+    _hiddenMapView = null;
     _searchRef = null;
     locationPermission = null;
     watchID = null;
@@ -144,6 +145,8 @@ export class Map extends Component {
             showLoader: false,
             refreshWaypointList: false,
             snapMode: false,
+            commentMode: false,
+            onWaypointList: false
         };
     }
 
@@ -161,6 +164,7 @@ export class Map extends Component {
             if (this.props.ride.rideId != ride.rideId) {
                 this.initializeEmptyRide(updatedState);
                 updatedState.rideUpdateCount = 0;
+                updatedState.activeMarkerIndex = -1;
                 if (ride.isRecorded === false && ride.userId === this.props.user.userId) {
                     updatedState.isEditable = true;
                 } else {
@@ -283,7 +287,7 @@ export class Map extends Component {
             }
         }
         if (Object.keys(updatedState).length > 0) {
-            this.setState(updatedState, () => {
+            this.setState(prevState => updatedState, () => {
                 if (ride.isRecorded) {
                     let coordinates = [];
                     if (ride.source) {
@@ -297,6 +301,7 @@ export class Map extends Component {
                         // DOC: Update the mapbounds to include the recorded ride path
                         const newBounds = turfBBox({ coordinates, type: 'LineString' });
                         this._mapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 20, 1000);
+                        this._hiddenMapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 35, 0);
                     }
                 } else if (updatedState.markerCollection && updatedState.markerCollection.features.length > 1) {
                     // DOC: Fetch route for build ride if waypoints are more than one
@@ -527,20 +532,32 @@ export class Map extends Component {
             if (this.state.rideUpdateCount > 0 || this.hasModifiedRide) {
                 const { ride } = this.props;
                 this.setState({ showLoader: true, snapMode: true }, () => {
-                    setTimeout(() => {
-                        this.getMapSnapshot((mapSnapshot) => {
-                            const body = {};
-                            if (ride.source) body.source = ride.source;
-                            if (ride.destination) body.destination = ride.destination;
-                            if (ride.waypoints) body.waypoints = ride.waypoints;
-                            if (ride.totalDistance) body.totalDistance = ride.totalDistance;
-                            if (ride.totalTime) body.totalTime = ride.totalTime;
-                            if (mapSnapshot) body.snapshot = { mimeType: 'image/jpeg', picture: mapSnapshot };
-                            replaceRide(ride.rideId, body,
-                                () => this.setState({ showLoader: false, snapMode: false }),
-                                () => this.setState({ showLoader: false, snapMode: false }));
-                        });
-                    }, 500);
+                    // setTimeout(() => {
+                    //     this.getMapSnapshot((mapSnapshot) => {
+                    //         const body = {};
+                    //         if (ride.source) body.source = ride.source;
+                    //         if (ride.destination) body.destination = ride.destination;
+                    //         if (ride.waypoints) body.waypoints = ride.waypoints;
+                    //         if (ride.totalDistance) body.totalDistance = ride.totalDistance;
+                    //         if (ride.totalTime) body.totalTime = ride.totalTime;
+                    //         if (mapSnapshot) body.snapshot = { mimeType: 'image/jpeg', picture: mapSnapshot };
+                    //         replaceRide(ride.rideId, body,
+                    //             () => this.setState({ showLoader: false, snapMode: false }),
+                    //             () => this.setState({ showLoader: false, snapMode: false }));
+                    //     });
+                    // }, 500);
+                    this.getMapSnapshot((mapSnapshot) => {
+                        const body = {};
+                        if (ride.source) body.source = ride.source;
+                        if (ride.destination) body.destination = ride.destination;
+                        if (ride.waypoints) body.waypoints = ride.waypoints;
+                        if (ride.totalDistance) body.totalDistance = ride.totalDistance;
+                        if (ride.totalTime) body.totalTime = ride.totalTime;
+                        if (mapSnapshot) body.snapshot = { mimeType: 'image/jpeg', picture: mapSnapshot };
+                        replaceRide(ride.rideId, body,
+                            () => this.setState({ showLoader: false, snapMode: false }),
+                            () => this.setState({ showLoader: false, snapMode: false }));
+                    });
                 });
             }
         }
@@ -877,13 +894,14 @@ export class Map extends Component {
                 // DOC: Update the mapbounds to include the direction results
                 const newBounds = turfBBox(responseBody.routes[0].geometry);
                 this._mapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 20, 1000);
-                this.setState({ directions: responseBody.routes[0], showLoader: false });
+                this._hiddenMapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 35, 0);
+                this.setState(prevState => ({ directions: responseBody.routes[0], showLoader: false }));
             } catch (err) {
-                this.setState({ showLoader: false });
+                this.setState(prevState => ({ showLoader: false }));
                 console.log("Error in getDirections(): ", err);
             }
         } else {
-            directions && this.setState({ directions: null });
+            directions && this.setState(prevState => ({ directions: null }));
         }
     }
 
@@ -996,26 +1014,29 @@ export class Map extends Component {
     }
 
     onPressPointCommentOption = (index) => {
-        const { activeMarkerIndex } = this.state;
-        const point = typeof index === 'undefined'
-            ? this.getRidePointOnActiveIndex(activeMarkerIndex)
-            : this.getRidePointOnActiveIndex(index)
-        this.setState({ commentingPoint: point }, () => {
-            this.showCommentSection();
-        });
+        // const { activeMarkerIndex } = this.state;
+        // const point = typeof index === 'undefined'
+        //     ? this.getRidePointOnActiveIndex(activeMarkerIndex)
+        //     : this.getRidePointOnActiveIndex(index)
+        // const point = this.getRidePointOnActiveIndex(activeMarkerIndex);
+        if (typeof index === 'undefined') this.setState({ commentMode: true }, () => this.showCommentSection());
+        else {
+            this.updateSelectedPointIcon(this.state.markerCollection.features[index], () => {
+                this.setState({ commentMode: true }, () => {
+                    if (this.state.activeMarkerIndex > -1) this.showCommentSection();
+                });
+            });
+        }
     }
 
     getRidePointOnActiveIndex(index) {
         const { ride } = this.props;
         const ridePoints = ride.waypoints.length + (ride.source ? 1 : 0) + (ride.destination ? 1 : 0);
         if (ride.source && index === 0) {
-            console.log("Source");
             return ride.source;
         } else if (ride.destination && index === ridePoints) {
-            console.log("Destination");
             return ride.destination;
         } else {
-            console.log("Waypoint");
             return ride.source ? ride.waypoints[index - 1] : ride.waypoints[index];
         }
     }
@@ -1358,32 +1379,27 @@ export class Map extends Component {
             if (coordinates.length > 1) {
                 // DOC: Update the mapbounds to include the recorded ride path
                 rideBounds = turfBBox({ coordinates, type: 'LineString' });
-                this._mapView.fitBounds(rideBounds.slice(0, 2), rideBounds.slice(2), 20, 0);
+                this._hiddenMapView.fitBounds(rideBounds.slice(0, 2), rideBounds.slice(2), 35, 0);
             } else {
-                this._mapView.flyTo(coordinates[0], 0);
+                // this._hiddenMapView.flyTo(coordinates[0], 0);
             }
             console.log("this._mapView.fitBounds for recorded ride");
         } else {
             if (!this.state.directions) return;
             rideBounds = turfBBox(this.state.directions.geometry);
-            this._mapView.fitBounds(rideBounds.slice(0, 2), rideBounds.slice(2), 20, 0);
+            this._hiddenMapView.fitBounds(rideBounds.slice(0, 2), rideBounds.slice(2), 35, 0);
             console.log("this._mapView.fitBounds for build ride");
         }
-        setTimeout(() => this._mapView.takeSnap(false).then(mapSnapshotString => {
+        // setTimeout(() => this._hiddenMapView.takeSnap(false).then(mapSnapshotString => {
+        //     console.log("snapshot: ", mapSnapshotString);
+        //     // this.setState({ snapshot: mapBase64 }, () => console.log("State updated: ", this.state));
+        //     successCallback && successCallback(mapSnapshotString);
+        // }).catch(er => console.log(er)), 100);
+        this._hiddenMapView.takeSnap(false).then(mapSnapshotString => {
             console.log("snapshot: ", mapSnapshotString);
             // this.setState({ snapshot: mapBase64 }, () => console.log("State updated: ", this.state));
             successCallback && successCallback(mapSnapshotString);
-        }).catch(er => console.log(er)), 800);
-        // setTimeout(() => {
-        //     MapboxGL.snapshotManager.takeSnap({
-        //         bounds: [rideBounds.slice(0, 2), rideBounds.slice(2)],
-        //         width: widthPercentageToDP(100),
-        //         height: heightPercentageToDP(100),
-        //     }).then(mapSnapshotString => {
-        //         console.log("snapshot: ", mapSnapshotString);
-        //         successCallback && successCallback(mapSnapshotString);
-        //     }).catch(er => console.log("MapboxGL.snapshotManager.takeSnap Error: ", er))
-        // }, 500);
+        }).catch(er => console.log(er))
     }
 
     onPressClear = () => {
@@ -1575,24 +1591,40 @@ export class Map extends Component {
         if (this.props.ride.userId === this.props.user.userId && this.state.rideUpdateCount > 0 || this.hasModifiedRide) {
             const { ride } = this.props;
             this.setState({ showLoader: true, snapMode: true }, () => {
-                setTimeout(() => {
-                    this.getMapSnapshot((mapSnapshot) => {
-                        const body = {};
-                        if (ride.source) body.source = ride.source;
-                        if (ride.destination) body.destination = ride.destination;
-                        if (ride.waypoints) body.waypoints = ride.waypoints;
-                        if (this.state.directions) {
-                            body.totalDistance = this.state.directions.distance;
-                            body.totalTime = this.state.directions.duration;
-                        }
-                        if (mapSnapshot) body.snapshot = { mimeType: 'image/jpeg', picture: mapSnapshot };
-                        replaceRide(ride.rideId, body,
-                            () => this.setState({ showLoader: false, snapMode: false }),
-                            () => this.setState({ showLoader: false, snapMode: false }));
-                        if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
-                        this.props.clearRideFromMap();
-                    });
-                }, 500);
+                // setTimeout(() => {
+                //     this.getMapSnapshot((mapSnapshot) => {
+                //         const body = {};
+                //         if (ride.source) body.source = ride.source;
+                //         if (ride.destination) body.destination = ride.destination;
+                //         if (ride.waypoints) body.waypoints = ride.waypoints;
+                //         if (this.state.directions) {
+                //             body.totalDistance = this.state.directions.distance;
+                //             body.totalTime = this.state.directions.duration;
+                //         }
+                //         if (mapSnapshot) body.snapshot = { mimeType: 'image/jpeg', picture: mapSnapshot };
+                //         replaceRide(ride.rideId, body,
+                //             () => this.setState({ showLoader: false, snapMode: false }),
+                //             () => this.setState({ showLoader: false, snapMode: false }));
+                //         if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
+                //         this.props.clearRideFromMap();
+                //     });
+                // }, 500);
+                this.getMapSnapshot((mapSnapshot) => {
+                    const body = {};
+                    if (ride.source) body.source = ride.source;
+                    if (ride.destination) body.destination = ride.destination;
+                    if (ride.waypoints) body.waypoints = ride.waypoints;
+                    if (this.state.directions) {
+                        body.totalDistance = this.state.directions.distance;
+                        body.totalTime = this.state.directions.duration;
+                    }
+                    if (mapSnapshot) body.snapshot = { mimeType: 'image/jpeg', picture: mapSnapshot };
+                    replaceRide(ride.rideId, body,
+                        () => this.setState({ showLoader: false, snapMode: false }),
+                        () => this.setState({ showLoader: false, snapMode: false }));
+                    if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
+                    this.props.clearRideFromMap();
+                });
             });
         } else {
             if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
@@ -1756,7 +1788,7 @@ export class Map extends Component {
                 duration: 300,
                 useNativeDriver: true
             }
-        ).start();
+        ).start(() => this.setState({ onWaypointList: true }));
     }
 
     hideWaypointList = () => {
@@ -1767,7 +1799,14 @@ export class Map extends Component {
                 duration: 300,
                 useNativeDriver: true
             }
-        ).start();
+        ).start(() => {
+            if (this.state.activeMarkerIndex > -1) {
+                this.onCloseOptionsBar();
+                this.setState(prevState => ({ onWaypointList: false }));
+            } else {
+                this.setState({ onWaypointList: false })
+            }
+        });
     }
 
     showCommentSection = () => {
@@ -1789,22 +1828,33 @@ export class Map extends Component {
                 duration: 300,
                 useNativeDriver: true
             }
-        ).start(() => this.setState({ commentingPoint: null }));
+        ).start(() => this.setState({ commentMode: false }));
     }
 
     onPressMarker = (e) => {
-        const { ride, user } = this.props;
-        if (ride.isRecorded === true) return;
-
+        if (this.props.ride.isRecorded === true) return;
         const selectedFeature = e.nativeEvent.payload;
+        this.updateSelectedPointIcon(selectedFeature, () => {
+            Animated.timing(
+                this.state.optionsBarRightAnim,
+                {
+                    toValue: this.state.optionsBarRightAnim._value == 100 ? 0 : 100,
+                    duration: 500,
+                    useNativeDriver: true
+                }
+            ).start()
+        });
+    }
+
+    updateSelectedPointIcon(selectedFeature, callback) {
         const selectedMarkerIndex = this.state.markerCollection.features.findIndex(marker => marker.geometry.coordinates.join('') === selectedFeature.id);
-        const { activeMarkerIndex, markerCollection, optionsBarRightAnim } = this.state;
+        const { activeMarkerIndex, markerCollection } = this.state;
         const isDestinationSelected = this.isDestination(selectedFeature);
         let updatedState = {};
-        if (activeMarkerIndex > -1) {
+        if (activeMarkerIndex > -1 && !(this.state.onWaypointList && (activeMarkerIndex === selectedMarkerIndex))) {
             let selectedIcon = ICON_NAMES.WAYPOINT_DEFAULT;
             const prevMarker = markerCollection.features[activeMarkerIndex];
-            if (activeMarkerIndex === 0 && ride.source) {
+            if (activeMarkerIndex === 0 && this.props.ride.source) {
                 selectedIcon = ICON_NAMES.SOURCE_DEFAULT;
             } else if (this.isDestination(prevMarker)) {
                 selectedIcon = ICON_NAMES.DESTINATION_DEFAULT;
@@ -1816,9 +1866,9 @@ export class Map extends Component {
             };
             updatedState.activeMarkerIndex = -1;
         }
-        if (activeMarkerIndex != selectedMarkerIndex) {
+        if (activeMarkerIndex !== selectedMarkerIndex) {
             let activeIcon = ICON_NAMES.WAYPOINT_SELECTED;
-            if (selectedMarkerIndex === 0 && ride.source) {
+            if (selectedMarkerIndex === 0 && this.props.ride.source) {
                 activeIcon = ICON_NAMES.SOURCE_SELECTED;
             } else if (isDestinationSelected) {
                 activeIcon = ICON_NAMES.DESTINATION_SELECTED;
@@ -1837,16 +1887,11 @@ export class Map extends Component {
                 }
             updatedState.activeMarkerIndex = selectedMarkerIndex;
         }
-        this.setState(updatedState, () => {
-            Animated.timing(
-                optionsBarRightAnim,
-                {
-                    toValue: optionsBarRightAnim._value == 100 ? 0 : 100,
-                    duration: 500,
-                    useNativeDriver: true
-                }
-            ).start()
-        });
+        if (typeof callback === 'function') {
+            this.setState(updatedState, () => callback());
+        } else {
+            this.setState(updatedState);
+        }
     }
 
     onPressLogout = async () => {
@@ -1925,7 +1970,7 @@ export class Map extends Component {
                 /> */}
                 <View style={[styles.fillParent, { flexShrink: 1 }]}>
                     {
-                        !showCreateRide && !this.state.snapMode
+                        !showCreateRide
                             ? <View style={styles.mapHeader}>
                                 {
                                     searchResults.length === 0
@@ -1950,7 +1995,7 @@ export class Map extends Component {
                             : null
                     }
                     {
-                        !showCreateRide && ride.rideId && !this.state.snapMode
+                        !showCreateRide && ride.rideId
                             ? <View style={styles.mapSubHeader}>
                                 {
                                     ride.isRecorded
@@ -1986,42 +2031,51 @@ export class Map extends Component {
                     }
                     <MapboxGL.MapView
                         styleURL={MapboxGL.StyleURL.Street}
+                        zoomLevel={14}
+                        centerCoordinate={[
+                            4.895168,
+                            52.370216
+                        ]}
+                        style={styles.hiddenMapStyles}
+                        ref={el => this._hiddenMapView = el}
+                    >
+                        {
+                            currentLocation ? this.renderCurrentLocation(currentLocation) : null
+                        }
+                        {
+                            directions ?
+                                <MapboxGL.ShapeSource id='ridePathLayer' shape={directions.geometry}>
+                                    <MapboxGL.LineLayer id='ridePath' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
+                                </MapboxGL.ShapeSource>
+                                : null
+                        }
+                        {
+                            markerCollection.features.length > 0
+                                ? <MapboxGL.ShapeSource
+                                    id='markers'
+                                    shape={markerCollection}
+                                    images={shapeSourceImages}
+                                    onPress={this.onPressMarker}>
+                                    <MapboxGL.SymbolLayer id="exampleIconName" style={[MapboxStyles.icon, MapboxStyles.markerTitle]} />
+                                </MapboxGL.ShapeSource>
+                                : null
+                        }
+                        {
+                            gpsPointCollection.features[0].geometry.coordinates.length >= 2 ?
+                                <MapboxGL.Animated.ShapeSource id='recordRidePathLayer' shape={gpsPointCollection}>
+                                    <MapboxGL.Animated.LineLayer id='recordRidePath' style={[{ lineColor: 'red', lineWidth: 3, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
+                                </MapboxGL.Animated.ShapeSource>
+                                : null
+                        }
+                    </MapboxGL.MapView>
+                    <MapboxGL.MapView
+                        styleURL={MapboxGL.StyleURL.Street}
                         zoomLevel={15}
                         centerCoordinate={[
                             4.895168,
                             52.370216
                         ]}
-                        style={[styles.fillParent, { marginTop: showCreateRide ? -WINDOW_HALF_HEIGHT : 0 }, this.state.snapMode ? { marginTop: heightPercentageToDP(26), marginBottom: heightPercentageToDP(26) } : null]}
-                        // userTrackingMode={1}
-                        // showUserLocation={true}
-                        // onUserLocationUpdate={({ coords }) => {
-                        //     const { gpsPointCollection } = this.state;
-                        //     const feature = gpsPointCollection.features[0];
-
-                        //     if (feature.geometry.coordinates.length > 0 && feature.geometry.coordinates.slice(-1)[0].join('') === [coords.longitude, coords.latitude].join('')) return;
-
-                        //     this.bgTimeTrackList.push({ loc: [coords.longitude, coords.latitude], time: Date.now() });
-                        //     let points = [...feature.geometry.coordinates, [coords.longitude, coords.latitude]];
-                        //     // trackpointTick++;
-                        //     this.updatedgpsCollection.gpsPointCollection = {
-                        //         ...gpsPointCollection,
-                        //         features: [{
-                        //             ...feature, geometry: {
-                        //                 ...feature.geometry,
-                        //                 coordinates: points
-                        //             }
-                        //         }]
-                        //     }
-                        //     this.gpsPointTimestamps.push(new Date().toISOString()); // TODO: Use Date.now() for sending to mapbox api, if it is supporting timestamps
-                        //     // trackpointTick = 0;
-                        //     // if (this.gpsPointTimestamps.length === 100) {
-                        //     //     this.getCoordsOnRoad(points.slice(-this.gpsPointTimestamps.length), this.gpsPointTimestamps, (responseBody, trackpoints, distance) => this.props.addTrackpoints(trackpoints, distance, ride, this.props.user.userId));
-                        //     //     this.gpsPointTimestamps = [];
-                        //     // }
-                        //     this.setState({ ...this.updatedgpsCollection, currentLocation: { location: [coords.longitude, coords.latitude], name: '' } });
-                        //     // if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (location.longitude + '' + location.latitude)) {
-                        //     // }
-                        // }}
+                        style={[styles.fillParent, { marginTop: showCreateRide ? -WINDOW_HALF_HEIGHT : 0 }]}
                         ref={el => this._mapView = el}
                         onDidFinishLoadingMap={this.onFinishMapLoading}
                         onRegionDidChange={this.onRegionDidChange}
@@ -2097,16 +2151,12 @@ export class Map extends Component {
                             </TouchableOpacity>
                             : null
                     }
-                    {
-                        this.state.snapMode
-                            ? null
-                            : <View style={{ position: 'absolute', zIndex: 100, left: 5, top: 140, width: 55 }}>
-                                {/* <IconButton style={[styles.mapControlButton, { backgroundColor: 'transparent' }]} iconProps={{ name: 'controller-play', type: 'Entypo', style: { fontSize: 40, elevation: 10 } }} onPress={this.showMapControls} /> */}
-                                <TouchableOpacity style={{ width: widthPercentageToDP(10), height: widthPercentageToDP(15) }} onPress={this.showMapControls}>
-                                    <Image source={require('../../assets/img/arrow-right.png')} style={{ flex: 1, width: null, height: null }} />
-                                </TouchableOpacity>
-                            </View>
-                    }
+                    <View style={{ position: 'absolute', zIndex: 100, left: 5, top: 140, width: 55 }}>
+                        {/* <IconButton style={[styles.mapControlButton, { backgroundColor: 'transparent' }]} iconProps={{ name: 'controller-play', type: 'Entypo', style: { fontSize: 40, elevation: 10 } }} onPress={this.showMapControls} /> */}
+                        <TouchableOpacity style={{ width: widthPercentageToDP(10), height: widthPercentageToDP(15) }} onPress={this.showMapControls}>
+                            <Image source={require('../../assets/img/arrow-right.png')} style={{ flex: 1, width: null, height: null }} />
+                        </TouchableOpacity>
+                    </View>
                     <Animated.View style={[{ left: 5, elevation: 10, position: 'absolute', zIndex: 100, top: 140, width: 55 }, { transform: [{ translateX: controlsBarLeftAnim }] }]}>
                         {/* <IconButton style={styles.mapControlButton} iconProps={{ name: 'controller-play', type: 'Entypo', style: { fontSize: 40, elevation: 10, transform: [{ rotate: '180deg' }] } }} onPress={this.hideMapControls} /> */}
                         <TouchableOpacity style={{ backgroundColor: '#fff', flex: 1, height: widthPercentageToDP(15) }} onPress={this.hideMapControls}>
@@ -2144,12 +2194,12 @@ export class Map extends Component {
                     {
                         ride.rideId !== null && ride.isRecorded === false
                             ? <Animated.View style={[{ height: '100%', width: '100%', elevation: 11, position: 'absolute', zIndex: 110 }, { transform: [{ translateX: waypointListLeftAnim }] }]}>
-                                <WaypointList isEditable={!ride.isRecorded && ride.userId === user.userId} refreshContent={this.state.refreshWaypointList} onPressOutside={this.hideWaypointList} onCancel={this.hideWaypointList} />
+                                <WaypointList isEditable={!ride.isRecorded && ride.userId === user.userId} refreshContent={this.state.refreshWaypointList} onPressOutside={this.hideWaypointList} onCancel={this.hideWaypointList} changeToCommentMode={this.onPressPointCommentOption} />
                             </Animated.View>
                             : null
                     }
                     {
-                        this.state.commentingPoint
+                        this.state.commentMode
                             ? <Animated.View style={[{ height: '100%', width: '100%', elevation: 12, position: 'absolute', zIndex: 120 }, { transform: [{ translateY: this.state.commentSecAnim }] }]}>
                                 {/* <View style={styles.modalRoot}>
                                     <View style={styles.container}>
@@ -2159,7 +2209,7 @@ export class Map extends Component {
                                         </View>
                                     </View>
                                 </View> */}
-                                <CommentSection isEditable={this.props.ride.userId === this.props.user.userId} point={this.state.commentingPoint} onClose={this.hideCommentSection} />
+                                <CommentSection isEditable={this.props.ride.userId === this.props.user.userId} index={activeMarkerIndex} onClose={this.hideCommentSection} />
                             </Animated.View>
                             : null
                     }
@@ -2229,7 +2279,7 @@ export class Map extends Component {
                 }
                 {/* Shifter: - Brings the app navigation menu */}
                 {
-                    showCreateRide || this.state.snapMode
+                    showCreateRide
                         ? null
                         : <ShifterButton onPress={this.toggleAppNavigation} alignLeft={user.handDominance === 'left'} />
                 }

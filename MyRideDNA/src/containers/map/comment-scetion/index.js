@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../../constants';
 import { IconButton } from '../../../components/buttons';
 import { Item } from 'native-base';
+import { updateSource, updateWaypoint, updateDestination } from '../../../api';
 
 class CommentSection extends Component {
     txtInputRef = null;
@@ -11,8 +12,38 @@ class CommentSection extends Component {
         super(props);
         this.state = {
             showEditConentent: false,
-            description: null
+            point: null,
+            isSource: false,
+            isDestination: false,
         };
+    }
+
+    componentDidMount() {
+        this.setState({ point: this.getRidePoint(this.props.index) });
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevProps.ride !== this.props.ride && this.props.ride) {
+            const point = this.getRidePoint(this.props.index);
+            this.state.showEditConentent
+                ? this.setState({ showEditConentent: false, point })
+                : this.setState({ point });
+        }
+        if (prevProps.index !== this.props.index) {
+            this.setState({ point: this.getRidePoint(this.props.index) });
+        }
+    }
+
+    getRidePoint(index) {
+        const { ride } = this.props;
+        const ridePoints = ride.waypoints.length + (ride.source ? 1 : 0) + (ride.destination ? 1 : 0);
+        if (ride.source && index === 0) {
+            return ride.source;
+        } else if (ride.destination && index === ridePoints - 1) {
+            return ride.destination;
+        } else {
+            return ride.source ? ride.waypoints[index - 1] : ride.waypoints[index];
+        }
     }
 
     onPressEdit = () => {
@@ -22,25 +53,49 @@ class CommentSection extends Component {
     }
 
     onSubmitDescription = ({ nativeEvent }) => {
-        this.setState({ description: nativeEvent.text + '', showEditConentent: false });
+        this.txtInputRef.blur();
+        this.updateDescription({ ...this.state.point, description: '' + nativeEvent.text });
+        // this.setState({ showEditConentent: false });
     }
 
     onPressSubmit = () => {
         const text = this.txtInputRef._lastNativeText;
-        if (typeof text === 'undefined') return;
-        this.setState({ description: text + '', showEditConentent: false });
+        this.txtInputRef.blur();
+        if (typeof text === 'undefined') {
+            this.setState({ showEditConentent: false });
+            return;
+        }
+        this.updateDescription({ ...this.state.point, description: '' + text });
+        // this.setState({ showEditConentent: false });
+    }
+
+    updateDescription(point) {
+        if (this.props.index === 0) {
+            console.log("updating source: ", point);
+            this.props.updateSource(point, this.props.ride);
+        } else if (this.props.ride.destination &&
+            (this.props.ride.destination.lng + '' + this.props.ride.destination.lat === point.lng + '' + point.lat)) {
+            console.log("updating destination: ", point);
+            this.props.updateDestination(point, this.props.ride);
+        } else {
+            console.log("updating waypoint: ", point);
+            this.props.updateWaypoint(point, this.props.ride, this.props.index - 1);
+        }
     }
 
     render() {
-        const { point, onClose, isEditable } = this.props;
-        const { description, showEditConentent } = this.state;
+        const { onClose, isEditable } = this.props;
+        const { showEditConentent, point } = this.state;
+        if (point === null) return <View style={styles.modalRoot}>
+            <View style={styles.container}></View>
+        </View>
         return (
             <View style={styles.modalRoot}>
                 <View style={styles.container}>
                     <View style={styles.header}>
                         <Text style={styles.headerText}>{point.name}</Text>
                         {
-                            isEditable && description && !showEditConentent
+                            isEditable && point.description && !showEditConentent
                                 ? <IconButton onPress={this.onPressEdit} style={{ backgroundColor: 'transparent', alignSelf: 'center', alignItems: 'flex-end', justifyContent: 'flex-end' }}
                                     iconProps={{ name: 'edit', type: 'MaterialIcons', style: { color: '#fff' } }} />
                                 : null
@@ -49,13 +104,17 @@ class CommentSection extends Component {
                             iconProps={{ name: 'window-close', type: 'MaterialCommunityIcons', style: { color: '#fff' } }} />
                     </View>
                     <View style={styles.bodyContent}>
-                        <Text>{description}</Text>
+                        {
+                            isEditable
+                                ? <Text style={!point.description ? { color: '#ACACAC' } : null}>{point.description ? point.description : 'Add description'}</Text>
+                                : <Text style={!point.description ? { color: '#ACACAC' } : null}>{point.description ? point.description : 'No description added for this point'}</Text>
+                        }
                     </View>
                     {
-                        showEditConentent || description === null
+                        showEditConentent || (isEditable && !point.description)
                             ? <Item style={styles.msgInputBoxContainer}>
                                 {/* <IconButton style={styles.footerLeftIcon} iconProps={{ name: 'md-attach', type: 'Ionicons' }} /> */}
-                                <TextInput ref={el => this.txtInputRef = el} defaultValue={description} placeholder='Add description here' style={{ flex: 1, marginRight: widthPercentageToDP(1) }} onSubmitEditing={this.onSubmitDescription} />
+                                <TextInput multiline={true} ref={el => this.txtInputRef = el} defaultValue={point.description} placeholder='Add description here' style={{ flex: 1, marginRight: widthPercentageToDP(1) }} onSubmitEditing={this.onSubmitDescription} />
                                 <IconButton iconProps={{ name: 'md-send', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={this.onPressSubmit} />
                             </Item>
                             : null
@@ -67,10 +126,15 @@ class CommentSection extends Component {
 }
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    return { user };
+    const { ride } = state.RideInfo.present;
+    return { user, ride };
 }
 const mapDispatchToProps = (dispatch) => {
-    return {};
+    return {
+        updateSource: (point, ride) => dispatch(updateSource(point, ride)),
+        updateWaypoint: (point, ride, index) => dispatch(updateWaypoint(point, ride, index)),
+        updateDestination: (point, ride) => dispatch(updateDestination(point, ride)),
+    };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(CommentSection);
 

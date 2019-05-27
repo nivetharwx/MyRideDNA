@@ -32,8 +32,16 @@ class WaypointList extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        // console.log("componentDidUpdate: ", prevProps.ride.waypoints[0], this.props.ride.waypoints[0]);
         if (prevProps.ride !== this.props.ride) {
             if (this.props.ride.rideId) {
+                // if (this.state.activeDescriptionIdx > -1) {
+                //     this.setState(({ points }) => ({
+                //         points: [...points.slice(0, this.state.activeDescriptionIdx), ...points.slice(this.state.activeDescriptionIdx + 1)]
+                //     }, () => this.updatePoints()));
+                // } else {
+                //     this.updatePoints();
+                // }
                 this.updatePoints();
             }
         }
@@ -47,7 +55,7 @@ class WaypointList extends React.Component {
             return arr;
         }, points);
         if (this.props.ride.destination) points.push({ ...this.props.ride.destination });
-        this.setState({ points });
+        this.setState(prevState => ({ points }), () => console.log("points: ", points));
     }
 
     componentDidMount() {
@@ -74,7 +82,7 @@ class WaypointList extends React.Component {
         if (this.state.activeDescriptionIdx === -1) {
             this.setState(({ points }) => ({
                 points: [...points.slice(0, index + 1),
-                { isDescription: true, index: index + 1, description: points[index].description || `${points[index].name} description \n ${points[index].name} description` },
+                { isDescription: true, index: index + 1, description: points[index].description || '' },
                 ...points.slice(index + 1)],
                 activeDescriptionIdx: index + 1,
                 isEditable: false
@@ -95,7 +103,7 @@ class WaypointList extends React.Component {
                 }
                 this.setState(({ points }) => ({
                     points: [...points.slice(0, index + 1),
-                    { isDescription: true, index: index + 1, description: points[index].description || `${points[index].name} description \n ${points[index].name} description` },
+                    { isDescription: true, index: index + 1, description: points[index].description || '' },
                     ...points.slice(index + 1)],
                     isEditable: false,
                     activeDescriptionIdx: index + 1
@@ -104,23 +112,61 @@ class WaypointList extends React.Component {
         }
     }
 
+    onPressEditDescription = (index) => {
+        this.props.changeToCommentMode(index);
+        this.toggleDescription(this.state.activeDescriptionIdx - 1);
+    }
+
     renderRidePoint = ({ item, index, move, moveEnd, isActive }) => {
-        let indexLabel = index;
         if (item.isDescription) {
-            return <ListItem>
-                <Body style={{ height: '100%' }}>
-                    <View style={{ flex: 1, justifyContent: 'center' }}>
-                        <Text>{item.description}</Text>
-                    </View>
+            return <ListItem avatar>
+                {
+                    this.props.isEditable
+                        ? <Left>
+                            <View style={[styles.itemNumber, { backgroundColor: APP_COMMON_STYLES.headerColor }]}>
+                                {
+                                    item.description
+                                        ? <TouchableOpacity onPress={() => this.onPressEditDescription(index - 1)}>
+                                            <NBIcon name='edit' type='MaterialIcons' style={styles.whiteFont} />
+                                        </TouchableOpacity>
+                                        : <TouchableOpacity onPress={() => this.onPressEditDescription(index - 1)}>
+                                            <NBIcon name='add' type='MaterialIcons' style={styles.whiteFont} />
+                                        </TouchableOpacity>
+                                }
+                            </View>
+                        </Left>
+                        : null
+                }
+                <Body style={{ height: '100%', flex: 1 }}>
+                    {
+                        item.description
+                            ? <View style={{ flex: 1, justifyContent: 'space-around', flexDirection: 'row' }}>
+                                <Text>{item.description}</Text>
+                                {/* {
+                                    this.props.isEditable
+                                        ? <IconButton onPress={() => this.onPressEditDescription(index - 1)} style={{ backgroundColor: 'transparent', alignSelf: 'flex-end' }}
+                                            iconProps={{ name: 'edit', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.headerColor } }} />
+                                        : null
+                                } */}
+                            </View>
+                            : <View style={{ flex: 1, justifyContent: 'space-between', flexDirection: 'row' }}>
+                                <Text style={{ color: '#ACACAC' }}>{this.props.isEditable ? 'Add description' : 'No description added for this point'}</Text>
+                                {/* {
+                                    this.props.isEditable
+                                        ? <IconButton onPress={() => this.onPressEditDescription(index - 1)} style={{ backgroundColor: 'transparent', alignSelf: 'flex-end' }}
+                                            iconProps={{ name: 'add', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.headerColor } }} />
+                                        : null
+                                } */}
+                            </View>
+                    }
                 </Body>
             </ListItem >
         }
-        if (this.state.activeDescriptionIdx !== -1 && index > this.state.activeDescriptionIdx) indexLabel--;
         return this.state.isEditable
             ? <ListItem avatar onLongPress={move} onPressOut={moveEnd} onPress={() => this.toggleDescription(index)}
                 style={{ backgroundColor: isActive ? APP_COMMON_STYLES.infoColor : '#fff' }}>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
-                    <View style={styles.itemNumber}>
+                    <View style={[styles.itemNumber, { backgroundColor: APP_COMMON_STYLES.infoColor }]}>
                         {/* <Text style={styles.whiteFont}>{
                             index === 0
                                 ? 'S'
@@ -148,7 +194,7 @@ class WaypointList extends React.Component {
             </ListItem>
             : <ListItem avatar onPress={() => this.toggleDescription(index)}>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
-                    <View style={styles.itemNumber}>
+                    <View style={[styles.itemNumber, { backgroundColor: APP_COMMON_STYLES.infoColor }]}>
                         {
                             this.renderItemIcon(index)
                         }
@@ -355,7 +401,7 @@ const styles = StyleSheet.create({
         marginTop: APP_COMMON_STYLES.headerHeight
     },
     itemNumber: {
-        backgroundColor: APP_COMMON_STYLES.infoColor,
+        // backgroundColor: APP_COMMON_STYLES.infoColor,
         width: widthPercentageToDP(10),
         height: widthPercentageToDP(10),
         borderRadius: widthPercentageToDP(5),
