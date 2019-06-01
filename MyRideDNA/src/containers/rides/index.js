@@ -9,9 +9,9 @@ import { connect } from 'react-redux';
 import { Tab, TabHeading, Tabs, ScrollableTab, Icon as NBIcon, ListItem, Left, Toast, Card, CardItem, Thumbnail, Body, Button, Right } from "native-base";
 import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../constants';
 import { ShifterButton, LinkButton, ImageButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, screenChangeAction, clearRideAction, updateRidePictureInListAction, updateRideCreatorPictureInListAction } from '../../actions';
+import { appNavMenuVisibilityAction, screenChangeAction, clearRideAction, updateRidePictureInListAction, updateRideCreatorPictureInListAction, apiLoaderActions, updateRideInListAction, updateRideAction } from '../../actions';
 import { BasicHeader } from '../../components/headers';
-import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide, logoutUser, getPicture, getPictureList } from '../../api';
+import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide, logoutUser, getPicture, getPictureList, updateRide } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
 import { LabeledInput } from '../../components/inputs';
 import { IconLabelPair } from '../../components/labels';
@@ -34,6 +34,16 @@ export class Rides extends Component {
                 });
             }
         },
+        {
+            text: 'Change to ', id: 'changePrivacyMode', handler: () => {
+                const { rideId, privacyMode } = this.props.buildRides[this.state.selectedRide.index];
+                this.setState({ isVisibleOptionsModal: false }, () => {
+                    const updatedRide = { rideId };
+                    updatedRide.privacyMode = privacyMode === 'private' ? 'public' : 'private';
+                    this.props.updateRideInList(updatedRide, RIDE_TYPE.BUILD_RIDE, updatedRide.rideId === this.props.ride.rideId);
+                });
+            }
+        },
         { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }
     ];
     RECORD_RIDE_OPTIONS = [
@@ -47,6 +57,16 @@ export class Rides extends Component {
                 const { rideId, name } = this.props.recordedRides[this.state.selectedRide.index];
                 this.setState({ isVisibleOptionsModal: false }, () => {
                     this.deleteRideConfirmation(rideId, name, this.state.selectedRide.index, RIDE_TYPE.RECORD_RIDE);
+                });
+            }
+        },
+        {
+            text: 'Change to ', id: 'changePrivacyMode', handler: () => {
+                const { rideId, privacyMode } = this.props.recordedRides[this.state.selectedRide.index];
+                this.setState({ isVisibleOptionsModal: false }, () => {
+                    const updatedRide = { rideId };
+                    updatedRide.privacyMode = privacyMode === 'private' ? 'public' : 'private';
+                    this.props.updateRideInList(updatedRide, RIDE_TYPE.RECORD_RIDE, updatedRide.rideId === this.props.ride.rideId);
                 });
             }
         },
@@ -89,6 +109,9 @@ export class Rides extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        if (this.props.ride.rideId && (prevProps.ride.rideId !== this.props.ride.rideId)) {
+            this.props.changeScreen({ name: PageKeys.MAP });
+        }
         const { activeTab } = this.state;
         if (prevState.activeTab != activeTab) {
             if (activeTab === 0) {
@@ -205,12 +228,17 @@ export class Rides extends Component {
         }, 100);
     }
 
-    onPressRide(rideId) {
+    onPressRide(ride) {
         if (this.props.ride.rideId) {
             this.props.clearRideFromMap();
         }
-        this.props.changeScreen({ name: PageKeys.MAP });
-        this.props.loadRideOnMap(rideId);
+        let rideType = RIDE_TYPE.BUILD_RIDE;
+        if (this.state.activeTab === 1) {
+            rideType = RIDE_TYPE.RECORD_RIDE;
+        } else if (this.state.activeTab === 2) {
+            rideType = RIDE_TYPE.SHARED_RIDE;
+        }
+        this.props.loadRideOnMap(ride.rideId, { rideType, creatorName: ride.creatorName, creatorNickname: ride.creatorNickname, creatorProfilePictureId: ride.creatorProfilePictureId });
     }
 
     onSubmitRenameForm = () => {
@@ -243,8 +271,18 @@ export class Rides extends Component {
         switch (selectedRide.rideType) {
             case RIDE_TYPE.BUILD_RIDE:
                 return (
-                    this.BUILD_RIDE_OPTIONS.map(option => (
-                        <LinkButton
+                    this.BUILD_RIDE_OPTIONS.map(option => {
+                        if (option.id === 'changePrivacyMode') {
+                            return <LinkButton
+                                key={option.id}
+                                onPress={option.handler}
+                                highlightColor={APP_COMMON_STYLES.infoColor}
+                                style={APP_COMMON_STYLES.menuOptHighlight}
+                                title={this.props.buildRides[selectedRide.index].privacyMode === 'private' ? option.text + 'public' : option.text + 'private'}
+                                titleStyle={APP_COMMON_STYLES.menuOptTxt}
+                            />
+                        }
+                        return <LinkButton
                             key={option.id}
                             onPress={option.handler}
                             highlightColor={APP_COMMON_STYLES.infoColor}
@@ -252,13 +290,22 @@ export class Rides extends Component {
                             title={option.text}
                             titleStyle={APP_COMMON_STYLES.menuOptTxt}
                         />
-                    ))
+                    })
                 )
             case RIDE_TYPE.RECORD_RIDE:
                 return (
-
-                    this.RECORD_RIDE_OPTIONS.map(option => (
-                        <LinkButton
+                    this.RECORD_RIDE_OPTIONS.map(option => {
+                        if (option.id === 'changePrivacyMode') {
+                            return <LinkButton
+                                key={option.id}
+                                onPress={option.handler}
+                                highlightColor={APP_COMMON_STYLES.infoColor}
+                                style={APP_COMMON_STYLES.menuOptHighlight}
+                                title={this.props.recordedRides[selectedRide.index].privacyMode === 'private' ? option.text + 'public' : option.text + 'private'}
+                                titleStyle={APP_COMMON_STYLES.menuOptTxt}
+                            />
+                        }
+                        return <LinkButton
                             key={option.id}
                             onPress={option.handler}
                             highlightColor={APP_COMMON_STYLES.infoColor}
@@ -266,7 +313,7 @@ export class Rides extends Component {
                             title={option.text}
                             titleStyle={APP_COMMON_STYLES.menuOptTxt}
                         />
-                    ))
+                    })
                 )
             case RIDE_TYPE.SHARED_RIDE:
                 return (
@@ -353,7 +400,7 @@ export class Rides extends Component {
                     </Body>
                 </Left>
             </CardItem>
-            <CardItem cardBody button onPress={() => this.onPressRide(item.rideId)} onLongPress={() => {
+            <CardItem cardBody button onPress={() => this.onPressRide(item)} onLongPress={() => {
                 let rideType = RIDE_TYPE.BUILD_RIDE;
                 if (this.state.activeTab === 1) {
                     rideType = RIDE_TYPE.RECORD_RIDE;
@@ -546,7 +593,15 @@ const mapDispatchToProps = (dispatch) => {
         getAllBuildRides: (userId) => dispatch(getAllBuildRides(userId)),
         getAllRecordedRides: (userId) => dispatch(getAllRecordedRides(userId)),
         getAllPublicRides: (userId, toggleLoader) => dispatch(getAllPublicRides(userId, toggleLoader)),
-        loadRideOnMap: (rideId) => dispatch(getRideByRideId(rideId)),
+        loadRideOnMap: (rideId, rideInfo) => dispatch(getRideByRideId(rideId, rideInfo)),
+        updateRideInList: (updates, rideType, updateActiveRide) => {
+            dispatch(apiLoaderActions(true));
+            updateRide(updates, () => {
+                dispatch(apiLoaderActions(false));
+                dispatch(updateRideInListAction({ ride: updates, rideType }));
+                updateActiveRide === true && dispatch(updateRideAction(updates));
+            }, (err) => dispatch(apiLoaderActions(false)))
+        },
         deleteRide: (rideId, index, rideType) => dispatch(deleteRide(rideId, index, rideType)),
         copyRide: (rideId, rideName, rideType, date) => dispatch(copyRide(rideId, rideName, rideType, date)),
         copySharedRide: (rideId, rideName, rideType, userId, date) => dispatch(copySharedRide(rideId, rideName, rideType, userId, date)),

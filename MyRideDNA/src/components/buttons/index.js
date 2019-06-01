@@ -50,16 +50,46 @@ export const RoundButton = ({ title, onPress, style, titleStyle }) => (
     </TouchableOpacity>
 );
 
-export const IconButton = ({ iconProps, onPress, onPressOut, style, disabled, disabledColor = '#DBDBDB' }) => {
+export const IconButton = ({ title, titleStyle, iconRight, iconProps, onPress, onPressOut, style, disabled, disabledColor = '#DBDBDB' }) => {
     return disabled
-        ? <View style={[{ justifyContent: 'center', alignItems: 'center' }, style, { borderColor: disabledColor }]}>
-            <NBIcon name={iconProps.name}
-                type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style, { color: disabledColor, borderColor: disabledColor }]} />
-        </View>
-        : <TouchableOpacity style={[{ justifyContent: 'center', alignItems: 'center' }, style]} activeOpacity={0.6} onPress={onPress} onPressOut={onPressOut}>
-            <NBIcon name={iconProps.name}
-                type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style]} />
-        </TouchableOpacity>
+        ? iconRight
+            ? <View style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style, { borderColor: disabledColor }]}>
+                {
+                    title !== undefined || title !== null
+                        ? <Text style={titleStyle}>{title}</Text>
+                        : null
+                }
+                <NBIcon name={iconProps.name}
+                    type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style, { color: disabledColor, borderColor: disabledColor }]} />
+            </View>
+            : <View style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style, { borderColor: disabledColor }]}>
+                <NBIcon name={iconProps.name}
+                    type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style, { color: disabledColor, borderColor: disabledColor }]} />
+                {
+                    title !== undefined || title !== null
+                        ? <Text style={titleStyle}>{title}</Text>
+                        : null
+                }
+            </View>
+        : iconRight
+            ? <TouchableOpacity style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} activeOpacity={0.6} onPress={onPress} onPressOut={onPressOut}>
+                {
+                    title !== undefined || title !== null
+                        ? <Text style={titleStyle}>{title}</Text>
+                        : null
+                }
+                <NBIcon name={iconProps.name}
+                    type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style]} />
+            </TouchableOpacity>
+            : <TouchableOpacity style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} activeOpacity={0.6} onPress={onPress} onPressOut={onPressOut}>
+                <NBIcon name={iconProps.name}
+                    type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style]} />
+                {
+                    title !== undefined || title !== null
+                        ? <Text style={titleStyle}>{title}</Text>
+                        : null
+                }
+            </TouchableOpacity>
 };
 
 export const AppMenuButton = ({ containerStyle, iconProps, onPress }) => (

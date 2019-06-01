@@ -1,17 +1,18 @@
 import React from 'react';
-import { StyleSheet, FlatList, View, TouchableWithoutFeedback, TouchableOpacity, Text, ScrollView } from 'react-native';
+import { StyleSheet, FlatList, TextInput, View, TouchableWithoutFeedback, TouchableOpacity, Text, ScrollView } from 'react-native';
 import { connect } from 'react-redux';
 import { BaseModal } from '../../../components/modal';
-import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, TAB_CONTAINER_HEIGHT, JS_SDK_ACCESS_TOKEN, RIDE_POINT } from '../../../constants';
-import { Icon as NBIcon, Tabs, ScrollableTab, TabHeading, Tab, ListItem, Left, Body, Right } from 'native-base';
-import { updateWaypointNameAction, updateSourceOrDestinationNameAction, reorderRideSourceAction, reorderRideDestinationAction, reorderRideWaypointsAction } from '../../../actions';
+import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, TAB_CONTAINER_HEIGHT, JS_SDK_ACCESS_TOKEN, RIDE_POINT, APP_EVENT_TYPE } from '../../../constants';
+import { Icon as NBIcon, Tabs, ScrollableTab, TabHeading, Tab, ListItem, Left, Body, Right, Item } from 'native-base';
+import { updateWaypointNameAction, updateSourceOrDestinationNameAction, reorderRideSourceAction, reorderRideDestinationAction, reorderRideWaypointsAction, apiLoaderActions, updateRideAction, updateRideInListAction } from '../../../actions';
 import { IconLabelPair } from '../../../components/labels';
 import DraggableFlatList from 'react-native-draggable-flatlist';
-import { IconButton } from '../../../components/buttons';
+import { IconButton, SwitchIconButton, LinkButton } from '../../../components/buttons';
 import { getFormattedDateFromISO } from '../../../util';
+import { updateRide } from '../../../api';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
-const BOTTOM_TAB_CONTAINER_WIDTH = widthPercentageToDP(70);
+const BOTTOM_TAB_CONTAINER_WIDTH = widthPercentageToDP(90);
 class WaypointList extends React.Component {
     tabsRef = null;
     constructor(props) {
@@ -27,7 +28,9 @@ class WaypointList extends React.Component {
             activeTab: 0,
             points: points,
             isEditable: props.isEditable,
-            activeDescriptionIdx: -1
+            activeDescriptionIdx: -1,
+            isEditingName: false,
+            rideName: props.ride.name + ''
         };
     }
 
@@ -176,7 +179,7 @@ class WaypointList extends React.Component {
                         }</Text> */}
                         {
                             index === 0
-                                ? <NBIcon name='map-pin' type='FontAwesome' style={styles.whiteFont} />
+                                ? <NBIcon name='map-pin' type='FontAwesome' style={[styles.whiteFont, { paddingLeft: widthPercentageToDP(1) }]} />
                                 : index === this.state.points.length - 1 && this.props.ride.destination
                                     ? <NBIcon name='flag-variant' type='MaterialCommunityIcons' style={styles.whiteFont} />
                                     : <Text style={styles.whiteFont}>{index}</Text>
@@ -210,11 +213,11 @@ class WaypointList extends React.Component {
 
     renderItemIcon = (index) => {
         if (index === 0) {
-            return <NBIcon name='map-pin' type='FontAwesome' style={styles.whiteFont} />;
+            return <NBIcon name='map-pin' type='FontAwesome' style={[styles.whiteFont, { paddingLeft: widthPercentageToDP(1) }]} />;
         } else {
             if (this.state.activeDescriptionIdx === -1) {
                 if (index === this.state.points.length - 1 && this.props.ride.destination) {
-                    return <NBIcon name='map-pin' type='FontAwesome' style={styles.whiteFont} />;
+                    return <NBIcon name='map-pin' type='FontAwesome' style={[styles.whiteFont, { paddingLeft: widthPercentageToDP(1) }]} />;
                 } else {
                     return <Text style={styles.whiteFont}>{index}</Text>;
                 }
@@ -230,6 +233,24 @@ class WaypointList extends React.Component {
                 }
             }
         }
+    }
+
+    onPressEditRideName = () => this.setState({ isEditingName: true });
+
+    onChangeName = val => this.setState({ rideName: val + '' });
+
+    onPressSubmitRideName = () => {
+        const { rideId, rideType } = this.props.ride;
+        const updatedRide = { rideId, name: this.state.rideName };
+        this.props.updateRide(updatedRide, rideType);
+        this.setState({ isEditingName: false });
+    }
+
+    onChangePrivacyMode = (isPrivate) => {
+        const { rideId, privacyMode, rideType } = this.props.ride;
+        const updatedRide = { rideId };
+        updatedRide.privacyMode = privacyMode === 'private' ? 'public' : 'private';
+        this.props.updateRide(updatedRide, rideType);
     }
 
     onChangeOrder = ({ from, to, data }) => {
@@ -265,7 +286,7 @@ class WaypointList extends React.Component {
 
     render() {
         const { onPressOutside, user, ride } = this.props;
-        const { points, isEditable } = this.state;
+        const { points, isEditable, isEditingName, rideName } = this.state;
         return (
             <View style={styles.modalRoot}>
                 <View style={styles.container}>
@@ -273,7 +294,13 @@ class WaypointList extends React.Component {
                         <TouchableOpacity style={styles.iconPadding} onPress={this.onCloseModal}>
                             <NBIcon name='md-arrow-round-back' type='Ionicons' />
                         </TouchableOpacity>
-                        <Text style={styles.headerText}>Waypoints - {ride.name.length > 10 ? ride.name.substring(0, 10) + '...' : ride.name}</Text>
+                        <Text style={styles.headerText}>Waypoints</Text>
+                        {/* <IconButton style={{ alignSelf: 'flex-end' }} title='Itinerary' titleStyle={{ color: '#fff' }} iconRight={true} iconProps={{ name: 'arrow-right', type: 'MaterialCommunityIcons', style: { color: '#fff' } }} onPress={this.props.changeToItineraryMode} /> */}
+                        {
+                            this.props.isEditable
+                                ? <LinkButton title='Itinerary' titleStyle={[styles.whiteFont, { fontSize: widthPercentageToDP(3.5), fontWeight: 'bold', textDecorationLine: 'underline' }]} style={{ marginTop: 10 }} onPress={this.props.changeToItineraryMode} />
+                                : null
+                        }
                     </View>
                     {/* <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab tabsContainerStyle={{ width: BOTTOM_TAB_CONTAINER_WIDTH }} style={{ width: BOTTOM_TAB_CONTAINER_WIDTH }} ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                         <Tab heading={<TabHeading style={{ width: BOTTOM_TAB_CONTAINER_WIDTH / 2, backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 0.5 }}>
@@ -289,18 +316,56 @@ class WaypointList extends React.Component {
                     </Tabs> */}
                     <View style={styles.bodyContent}>
                         <View style={styles.rideInfo}>
-                            <IconLabelPair
-                                iconProps={{ name: 'navigation', type: 'MaterialCommunityIcons' }}
-                                text={ride.name}
-                            />
-                            {/* <IconLabelPair
-                                iconProps={{ name: 'ios-person', type: 'Ionicons' }}
-                                text={ride.createdBy}
-                            /> */}
-                            <IconLabelPair
-                                iconProps={{ name: 'calendar-today', type: 'MaterialCommunityIcons' }}
-                                text={getFormattedDateFromISO(ride.date)}
-                            />
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                {
+                                    isEditingName
+                                        ? <Item style={{ flexDirection: 'row', flex: 1, marginLeft: 10, borderBottomColor: 'rgba(0,0,0,0.3)', borderBottomWidth: 1, justifyContent: 'space-between' }}>
+                                            <TextInput style={{ flex: 1 }} value={rideName} onChangeText={this.onChangeName} onSubmitEditing={this.onPressSubmitRideName} />
+                                            <IconButton onPress={this.onPressSubmitRideName} style={{ backgroundColor: 'transparent', alignSelf: 'center', alignItems: 'flex-end', justifyContent: 'flex-end', marginRight: widthPercentageToDP(2) }}
+                                                iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor, fontSize: widthPercentageToDP(5) } }} />
+                                        </Item>
+                                        : <Item style={{ flexDirection: 'row', flex: 1, borderBottomWidth: 0, justifyContent: 'space-between' }}>
+                                            <IconLabelPair
+                                                iconProps={{ name: 'navigation', type: 'MaterialCommunityIcons' }}
+                                                text={rideName}
+                                            />
+                                            {
+                                                this.props.isEditable
+                                                    ? <IconButton onPress={this.onPressEditRideName} style={{ backgroundColor: 'transparent', alignSelf: 'center', alignItems: 'flex-end', justifyContent: 'flex-end' }}
+                                                        iconProps={{ name: 'edit', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.headerColor, fontSize: widthPercentageToDP(5) } }} />
+                                                    : null
+                                            }
+                                        </Item>
+                                }
+                                {/* <IconLabelPair
+                                    iconProps={{ name: 'navigation', type: 'MaterialCommunityIcons' }}
+                                    text={ride.privacyMode.toUpperCase()}
+                                /> */}
+                                {
+                                    this.props.isEditable
+                                        ? <SwitchIconButton
+                                            activeIcon={<NBIcon name='close' type='FontAwesome' style={{ color: '#fff', alignSelf: 'flex-start', paddingHorizontal: 10, fontSize: widthPercentageToDP(6) }} />}
+                                            inactiveIcon={<NBIcon name='eye' type='MaterialCommunityIcons' style={{ color: '#fff', alignSelf: 'flex-end', paddingHorizontal: 10, fontSize: widthPercentageToDP(6) }} />}
+                                            value={ride.privacyMode === 'private'} onChangeValue={this.onChangePrivacyMode} />
+                                        : null
+                                }
+
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <IconLabelPair
+                                    iconProps={{ name: 'calendar-today', type: 'MaterialCommunityIcons' }}
+                                    text={getFormattedDateFromISO(ride.date)}
+                                />
+                                {
+                                    ride.createdBy !== user.userId
+                                        ?
+                                        <IconLabelPair
+                                            iconProps={{ name: 'person', type: 'MaterialIcons' }}
+                                            text={<Text>{ride.creatorName + '  '}<Text style={{ color: APP_COMMON_STYLES.infoColor }}>{`${ride.creatorNickname}`}</Text></Text>}
+                                        />
+                                        : null
+                                }
+                            </View>
                         </View>
                         {
                             isEditable
@@ -339,6 +404,14 @@ const mapDipatchToProps = (dispatch) => {
         reorderRideSource: (to) => dispatch(reorderRideSourceAction({ to })),
         reorderRideDestination: (to) => dispatch(reorderRideDestinationAction({ to })),
         reorderRideWaypoints: (from, to) => dispatch(reorderRideWaypointsAction({ from, to })),
+        updateRide: (updates, rideType) => {
+            dispatch(apiLoaderActions(true));
+            updateRide(updates, () => {
+                dispatch(apiLoaderActions(false));
+                dispatch(updateRideAction(updates));
+                dispatch(updateRideInListAction({ ride: updates, rideType }));
+            }, (err) => dispatch(apiLoaderActions(false)))
+        },
     };
 }
 export default connect(mapStateToProps, mapDipatchToProps)(WaypointList);
@@ -368,7 +441,7 @@ const styles = StyleSheet.create({
         fontSize: widthPercentageToDP(4),
         fontWeight: 'bold',
         flex: 1,
-        marginLeft: 5
+        marginLeft: widthPercentageToDP(2)
     },
     safePadding: {
         paddingTop: heightPercentageToDP(2)
@@ -412,8 +485,10 @@ const styles = StyleSheet.create({
         color: '#fff'
     },
     rideInfo: {
+        height: heightPercentageToDP(15),
         padding: widthPercentageToDP(2),
         borderBottomWidth: 1,
-        borderBottomColor: '#000'
+        borderBottomColor: '#000',
+        justifyContent: 'space-between'
     }
 });

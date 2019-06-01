@@ -1,4 +1,4 @@
-import { UPDATE_RIDE, CLEAR_RIDE, UPDATE_WAYPOINT, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_SOURCE_OR_DESTINATION_NAME, UPDATE_WAYPOINT_NAME, REORDER_SOURCE, REORDER_DESTINATION, REORDER_WAYPOINTS } from "../actions/actionConstants";
+import { UPDATE_RIDE, CLEAR_RIDE, UPDATE_WAYPOINT, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_SOURCE_OR_DESTINATION, UPDATE_WAYPOINT_NAME, REORDER_SOURCE, REORDER_DESTINATION, REORDER_WAYPOINTS } from "../actions/actionConstants";
 import { undoable } from "./Undoable";
 import { RIDE_POINT } from "../constants";
 
@@ -56,12 +56,12 @@ const rideInfo = (state = initialState, action) => {
                     ...state.ride,
                     waypoints: [
                         ...state.ride.waypoints.slice(0, action.data.index),
-                        action.data.waypoint,
+                        { ...state.ride.waypoints[action.data.index], ...action.data.updates },
                         ...state.ride.waypoints.slice(action.data.index + 1)
                     ]
                 }
             }
-        case UPDATE_SOURCE_OR_DESTINATION_NAME:
+        case UPDATE_SOURCE_OR_DESTINATION:
             if (state.ride.rideId === null) return state;
             if (action.data.identifier === RIDE_POINT.SOURCE) {
                 if (state.ride.source === null) return state;
@@ -71,7 +71,7 @@ const rideInfo = (state = initialState, action) => {
                         ...state.ride,
                         source: {
                             ...state.ride.source,
-                            name: action.data.locationName
+                            ...action.data.updates
                         }
                     }
                 }
@@ -83,7 +83,7 @@ const rideInfo = (state = initialState, action) => {
                         ...state.ride,
                         destination: {
                             ...state.ride.destination,
-                            name: action.data.locationName
+                            ...action.data.updates
                         }
                     }
                 }

@@ -8,7 +8,8 @@ const styles = StyleSheet.create({
         // height: heightPercentageToDP(100),
         width: widthPercentageToDP(100),
         top: heightPercentageToDP(26),
-        bottom: heightPercentageToDP(26)
+        bottom: heightPercentageToDP(26),
+        // display: 'none'
     },
     fillParent: {
         flex: 1,

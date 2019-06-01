@@ -6,6 +6,7 @@ import { IS_ANDROID, DEVICE_TOKEN, PageKeys } from './constants';
 import store from './store';
 import { screenChangeAction } from './actions';
 import { Actions } from 'react-native-router-flux';
+import { Root } from "native-base";
 
 
 // this shall be called regardless of app state: running, background or not running. Won't be called when app is killed by user in iOS
@@ -117,7 +118,9 @@ export default class App extends Component {
 
     render() {
         return (
-            <Navigation />
+            <Root>
+                <Navigation />
+            </Root>
         )
     }
 }
