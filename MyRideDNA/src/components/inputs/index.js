@@ -19,7 +19,7 @@ const getKeyboardTypeForContentType = (contentType) => {
     }
 }
 
-export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder, placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus, onBlur,editable }) => (
+export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder, placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus, onBlur, editable }) => (
     <View style={[{ flexDirection: 'row', marginBottom: 10 }, containerStyle]}>
         {
             label
@@ -129,7 +129,7 @@ export const IconicDatePicker = ({ iconProps, selectedDate, selectedDateString, 
     )
 }
 
-export const SearchBox = ({ value, hideIcon, onTextChange, onPressClear, style, hideBoxStyle }) => (
+export const SearchBox = ({ value, hideIcon, onTextChange, onFocus, onPressClear, style, hideBoxStyle }) => (
     <View style={[styles.searchBox, style]}>
         <View style={[styles.inputWrapper, hideBoxStyle ? null : styles.boxStyle]}>
             <View style={{ flexDirection: 'row' }}>
@@ -138,7 +138,7 @@ export const SearchBox = ({ value, hideIcon, onTextChange, onPressClear, style, 
                         ? null
                         : <NBIcon name='search' type='FontAwesome' style={styles.icon} />
                 }
-                <TextInput style={styles.inputSearch} value={value} placeholder='Search here' onChangeText={onTextChange} />
+                <TextInput onFocus={onFocus} style={styles.inputSearch} value={value} placeholder='Search here' onChangeText={onTextChange} />
                 <NBIcon name='close' style={styles.icon} onPress={onPressClear} />
             </View>
         </View>

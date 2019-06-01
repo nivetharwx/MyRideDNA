@@ -6,6 +6,7 @@ import { IS_ANDROID, DEVICE_TOKEN, PageKeys } from './constants';
 import store from './store';
 import { screenChangeAction } from './actions';
 import { Actions } from 'react-native-router-flux';
+import { Root } from "native-base";
 
 
 // this shall be called regardless of app state: running, background or not running. Won't be called when app is killed by user in iOS
@@ -44,7 +45,7 @@ export default class App extends Component {
             description: 'used for example',
             priority: 'high'
         })
-        FCM.getInitialNotification().then (notif => {
+        FCM.getInitialNotification().then(notif => {
             console.log("InitialNotification received: ", notif);
         });
 
@@ -104,7 +105,7 @@ export default class App extends Component {
                     store.getState().TabVisibility.currentScreen.name !== PageKeys.FRIENDS
                         ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: body } }))
                         : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: body });
-                }else if(targetScreen === 'GROUP'){
+                } else if (targetScreen === 'GROUP') {
                     console.log('group notification')
                 }
                 return;
@@ -119,7 +120,9 @@ export default class App extends Component {
 
     render() {
         return (
-            <Navigation />
+            <Root>
+                <Navigation />
+            </Root>
         )
     }
 }

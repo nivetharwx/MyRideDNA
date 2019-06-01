@@ -1,9 +1,9 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
     replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
-    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, updateNotificationCountAction, isloadingDataAction
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, updateNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction
 } from '../actions';
-import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN } from '../constants';
+import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN, RIDE_POINT } from '../constants';
 import axios from 'axios';
 
 import { AsyncStorage } from 'react-native';
@@ -636,6 +636,37 @@ export const continueRecordRide = (resumeTime, ride, userId) => {
     };
 }
 
+export const updateRide = (updates, successCallback, errorCallback) => {
+    axios.put(RIDE_BASE_URL + `updateRide`, updates, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        .then(res => {
+            if (res.status === 200) {
+                successCallback(res.data);
+            }
+        })
+        .catch(er => {
+            console.log(er.response || er);
+            errorCallback(er.response || er);
+        })
+    // return dispatch => {
+    //     // dispatch(toggleLoaderAction(true));
+    //     dispatch(apiLoaderActions(true))
+    //     axios.put(RIDE_BASE_URL + `updateRide`, updatedRide, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+    //         .then(res => {
+    //             if (res.status === 200) {
+    //                 // dispatch(toggleLoaderAction(false));
+    //                 dispatch(apiLoaderActions(false));
+    //                 dispatch(updateRideInListAction({ ride: updatedRide, rideType }));
+    //                 updateActiveRide === true && dispatch(updateRideAction(updatedRide));
+    //             }
+    //         })
+    //         .catch(er => {
+    //             console.log(er.response || er);
+    //             // TODO: Dispatch error info action
+    //             // dispatch(toggleLoaderAction(false));
+    //             dispatch(apiLoaderActions(false))
+    //         })
+    // };
+}
 export const addSource = (waypoint, ride) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
@@ -696,16 +727,22 @@ export const deleteWaypoint = (ride, index) => {
             })
     };
 }
-export const updateWaypoint = (waypoint, ride, index) => {
+export const updateWaypoint = (updates, waypoint, ride, index) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
-        axios.put(RIDE_BASE_URL + `updateWaypoint?rideId=${ride.rideId}&index=${index}`, waypoint, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `updateWaypoint?rideId=${ride.rideId}&index=${index}`, updates, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
-                    return dispatch(updateWaypointAction({ index, waypoint }));
+                    if (res.data.pictureIdList.length > 0) {
+                        waypoint.pictureIdList
+                            ? dispatch(updateWaypointAction({ index, updates: { pictureIdList: [...waypoint.pictureIdList, ...res.data.pictureIdList] } }))
+                            : dispatch(updateWaypointAction({ index, updates: { pictureIdList: res.data.pictureIdList } }));
+                    } else {
+                        dispatch(updateWaypointAction({ index, updates }));
+                    }
                 }
             })
             .catch(er => {
@@ -716,16 +753,23 @@ export const updateWaypoint = (waypoint, ride, index) => {
             })
     };
 }
-export const updateSource = (waypoint, ride) => {
+export const updateSource = (updates, waypoint, ride) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
-        axios.put(RIDE_BASE_URL + `updateSource?rideId=${ride.rideId}`, waypoint, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `updateSource?rideId=${ride.rideId}`, updates, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     // dispatch(toggleLoaderAction(false));
+                    console.log("updateSource response: ", res.data);
                     dispatch(apiLoaderActions(false))
-                    return dispatch(updateRideAction({ source: waypoint }));
+                    if (res.data.pictureIdList.length > 0) {
+                        waypoint.pictureIdList
+                            ? dispatch(updateRideAction({ source: { ...waypoint, pictureIdList: [...waypoint.pictureIdList, ...res.data.pictureIdList] } }))
+                            : dispatch(updateRideAction({ source: { ...waypoint, pictureIdList: res.data.pictureIdList } }));
+                    } else {
+                        dispatch(updateRideAction({ source: { ...waypoint, ...updates } }));
+                    }
                 }
             })
             .catch(er => {
@@ -756,16 +800,22 @@ export const deleteSource = (ride) => {
             })
     };
 }
-export const updateDestination = (waypoint, ride) => {
+export const updateDestination = (updates, waypoint, ride) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
-        axios.put(RIDE_BASE_URL + `updateDestination?rideId=${ride.rideId}`, waypoint, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.put(RIDE_BASE_URL + `updateDestination?rideId=${ride.rideId}`, updates, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
-                    return dispatch(updateRideAction({ destination: waypoint }));
+                    if (res.data.pictureIdList.length > 0) {
+                        waypoint.pictureIdList
+                            ? dispatch(updateRideAction({ destination: { ...waypoint, pictureIdList: [...waypoint.pictureIdList, ...res.data.pictureIdList] } }))
+                            : dispatch(updateRideAction({ destination: { ...waypoint, pictureIdList: res.data.pictureIdList } }));
+                    } else {
+                        dispatch(updateRideAction({ destination: { ...waypoint, ...updates } }));
+                    }
                 }
             })
             .catch(er => {
@@ -903,7 +953,7 @@ export const replaceRide = (rideId, ride, successCallback, errorCallback) => {
             // ToDo handle timeout error seperately for map
         })
 }
-export const getRideByRideId = (rideId) => {
+export const getRideByRideId = (rideId, rideInfo = {}) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
@@ -912,11 +962,110 @@ export const getRideByRideId = (rideId) => {
                 if (res.status === 200) {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
-                    dispatch(updateRideAction({ ...res.data }));
+                    dispatch(updateRideAction({ ...rideInfo, ...res.data }));
                 }
             })
             .catch(er => {
                 console.log(`getRideByRideId: ${RIDE_BASE_URL}getRideByRideId?rideId=${rideId}`, er.response);
+                // TODO: Dispatch error info action
+                // dispatch(toggleLoaderAction(false));
+                dispatch(apiLoaderActions(false))
+            })
+    };
+}
+export const getWaypointPictureList = (id, pictureIdList) => {
+    return dispatch => {
+        // dispatch(toggleLoaderAction(true));
+        dispatch(apiLoaderActions(true))
+        axios.put(RIDE_BASE_URL + `getWaypointPictureList`, { id, pictureIdList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    // dispatch(toggleLoaderAction(false));
+                    dispatch(apiLoaderActions(false))
+                    console.log("getWaypointPictureList success: ", res.data);
+                    if (res.data.id === RIDE_POINT.SOURCE || res.data.id === RIDE_POINT.DESTINATION) {
+                        dispatch(updateSourceOrDestinationAction({
+                            identifier: res.data.id, updates: {
+                                pictureList: Object.keys(res.data.picture).reduce((list, k) => {
+                                    list.push(res.data.picture[k]);
+                                    return list;
+                                }, [])
+                            }
+                        }))
+                    } else {
+                        dispatch(updateWaypointAction({
+                            index: res.data.id, updates: {
+                                pictureList: Object.keys(res.data.picture).reduce((list, k) => {
+                                    list.push(res.data.picture[k]);
+                                    return list;
+                                }, [])
+                            }
+                        }))
+                    }
+                }
+            })
+            .catch(er => {
+                console.log(`getWaypointPictureList error: ${RIDE_BASE_URL}getWaypointPictureList`, { id, pictureIdList }, er.response || er);
+                // TODO: Dispatch error info action
+                // dispatch(toggleLoaderAction(false));
+                dispatch(apiLoaderActions(false))
+            })
+    };
+}
+export const deleteWaypointPicture = (ride, id, pictureIdList) => {
+    return dispatch => {
+        // dispatch(toggleLoaderAction(true));
+        console.log(RIDE_BASE_URL + `deleteWaypointPicture`, { rideId: ride.rideId, id, pictureIdList });
+        dispatch(apiLoaderActions(true))
+        axios.put(RIDE_BASE_URL + `deleteWaypointPicture`, { rideId: ride.rideId, id, pictureIdList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    // dispatch(toggleLoaderAction(false));
+                    dispatch(apiLoaderActions(false))
+                    console.log("deleteWaypointPicture success: ", res.data);
+                    if (res.data.id === RIDE_POINT.SOURCE || res.data.id === RIDE_POINT.DESTINATION) {
+                        const point = id === RIDE_POINT.SOURCE ? ride.source : ride.destination;
+                        console.log("sourceOrDestination: ", point);
+                        const newPicList = [];
+                        const newPicIdList = point.pictureIdList.reduce((list, picId, idx) => {
+                            if (res.data.pictureIdList.indexOf(picId) === -1) {
+                                list.push(picId);
+                                newPicList.push(point.pictureList[idx]);
+                            }
+                            return list;
+                        }, []);
+                        console.log("newPicList: ", newPicList);
+                        console.log("newPicIdList: ", newPicIdList);
+                        dispatch(updateSourceOrDestinationAction({
+                            identifier: res.data.id, updates: {
+                                pictureList: newPicList,
+                                pictureIdList: newPicIdList
+                            }
+                        }))
+                    } else {
+                        const point = ride.waypoints[id];
+                        console.log("waypoint: ", point);
+                        const newPicList = [];
+                        const newPicIdList = point.pictureIdList.reduce((list, picId, idx) => {
+                            if (res.data.pictureIdList.indexOf(picId) === -1) {
+                                list.push(picId);
+                                newPicList.push(point.pictureList[idx]);
+                            }
+                            return list;
+                        }, []);
+                        console.log("newPicList: ", newPicList);
+                        console.log("newPicIdList: ", newPicIdList);
+                        dispatch(updateWaypointAction({
+                            index: res.data.id, updates: {
+                                pictureList: newPicList,
+                                pictureIdList: newPicIdList
+                            }
+                        }))
+                    }
+                }
+            })
+            .catch(er => {
+                console.log(`deleteWaypointPicture error: ${RIDE_BASE_URL}deleteWaypointPicture`, { rideId, id, pictureIdList }, er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
