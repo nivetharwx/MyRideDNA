@@ -65,21 +65,18 @@ class CommentSection extends Component {
             this.setState({ showEditConentent: false });
             return;
         }
-        this.updateDescription({ ...this.state.point, description: '' + text });
+        this.updateDescription({ description: '' + text }, this.state.point);
         // this.setState({ showEditConentent: false });
     }
 
-    updateDescription(point) {
+    updateDescription(updates, point) {
         if (this.props.index === 0) {
-            console.log("updating source: ", point);
-            this.props.updateSource(point, this.props.ride);
+            this.props.updateSource(updates, point, this.props.ride);
         } else if (this.props.ride.destination &&
             (this.props.ride.destination.lng + '' + this.props.ride.destination.lat === point.lng + '' + point.lat)) {
-            console.log("updating destination: ", point);
-            this.props.updateDestination(point, this.props.ride);
+            this.props.updateDestination(updates, point, this.props.ride);
         } else {
-            console.log("updating waypoint: ", point);
-            this.props.updateWaypoint(point, this.props.ride, this.props.index - 1);
+            this.props.updateWaypoint(updates, point, this.props.ride, this.props.index - 1);
         }
     }
 
@@ -131,9 +128,9 @@ const mapStateToProps = (state) => {
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSource: (point, ride) => dispatch(updateSource(point, ride)),
-        updateWaypoint: (point, ride, index) => dispatch(updateWaypoint(point, ride, index)),
-        updateDestination: (point, ride) => dispatch(updateDestination(point, ride)),
+        updateSource: (updates, point, ride) => dispatch(updateSource(updates, point, ride)),
+        updateWaypoint: (updates, point, ride, index) => dispatch(updateWaypoint(updates, point, ride, index)),
+        updateDestination: (updates, point, ride) => dispatch(updateDestination(updates, point, ride)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(CommentSection);

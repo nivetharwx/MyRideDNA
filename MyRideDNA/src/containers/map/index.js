@@ -21,7 +21,7 @@ import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon } from 'native-base';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationNameAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction } from '../../actions';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction } from '../../actions';
 import { SearchBox } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -29,6 +29,7 @@ import { MapControlPair, BasicButton, IconButton, ShifterButton, LinkButton } fr
 import { IconLabelPair } from '../../components/labels';
 import WaypointList from './waypoint-list';
 import CommentSection from './comment-scetion';
+import ItinerarySection from './itinerary-section';
 
 import Base64 from '../../util';
 
@@ -42,7 +43,7 @@ import DEFAULT_DESTINATION_ICON from '../../assets/img/destination-pin-red.png';
 import SELECTED_DESTINATION_ICON from '../../assets/img/destination-pin-green.png';
 import FRIENDS_LOCATION_ICON from '../../assets/img/friends-location.png';
 
-import { updateRide, addWaypoint, addSource, createRecordRide, pauseRecordRide, updateWaypoint, updateSource, updateDestination, makeWaypointAsDestination, makeDestinationAsWaypoint, makeSourceAsWaypoint, makeWaypointAsSource, continueRecordRide, addTrackpoints, completeRecordRide, deleteWaypoint, deleteDestination, deleteSource, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser, updateLocation } from '../../api';
+import { createRecordRide, pauseRecordRide, updateDestination, continueRecordRide, addTrackpoints, completeRecordRide, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser, updateLocation } from '../../api';
 
 import Bubble from '../../components/bubble';
 import MenuModal from '../../components/modal';
@@ -118,6 +119,7 @@ export class Map extends Component {
             controlsBarLeftAnim: new Animated.Value(-100),
             waypointListLeftAnim: new Animated.Value(-widthPercentageToDP(100)),
             commentSecAnim: new Animated.Value(-heightPercentageToDP(100)),
+            itinerarySecAnim: new Animated.Value(heightPercentageToDP(100)),
             currentLocation: null,
             gpsPointCollection:
             {
@@ -146,7 +148,8 @@ export class Map extends Component {
             refreshWaypointList: false,
             snapMode: false,
             commentMode: false,
-            onWaypointList: false
+            onWaypointList: false,
+            onItinerary: false,
         };
     }
 
@@ -301,7 +304,7 @@ export class Map extends Component {
                         // DOC: Update the mapbounds to include the recorded ride path
                         const newBounds = turfBBox({ coordinates, type: 'LineString' });
                         this._mapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 20, 1000);
-                        this._hiddenMapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 35, 0);
+                        if (this._hiddenMapView) this._hiddenMapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 35, 0);
                     }
                 } else if (updatedState.markerCollection && updatedState.markerCollection.features.length > 1) {
                     // DOC: Fetch route for build ride if waypoints are more than one
@@ -311,6 +314,7 @@ export class Map extends Component {
                     }
                 } else if (updatedState.markerCollection && updatedState.markerCollection.features.length === 1) {
                     this._mapView.flyTo(updatedState.markerCollection.features[0].geometry.coordinates, 500);
+                    if (this._hiddenMapView) this._hiddenMapView.flyTo(updatedState.markerCollection.features[0].geometry.coordinates, 0);
                 } else if (ride.rideId === null) {
                     this.onPressRecenterMap();
                 }
@@ -362,7 +366,7 @@ export class Map extends Component {
                     console.log("source added");
                     if (!newRide.source.name) {
                         this.getPlaceNameByReverseGeocode([newRide.source.lng, newRide.source.lat],
-                            (locationName) => locationName && this.props.updateSourceOrDestinationName(RIDE_POINT.SOURCE, locationName),
+                            (locationName) => locationName && this.props.updateSourceOrDestination(RIDE_POINT.SOURCE, locationName),
                             (err) => {
                                 console.log("Reverse geocoding error for source: ", err);
                             }
@@ -375,7 +379,7 @@ export class Map extends Component {
                     console.log("source changed");
                     this.setState(prevState => ({ rideUpdateCount: prevState.rideUpdateCount + 1 }));
                     this.getPlaceNameByReverseGeocode([newRide.source.lng, newRide.source.lat],
-                        (locationName) => locationName && this.props.updateSourceOrDestinationName(RIDE_POINT.SOURCE, locationName),
+                        (locationName) => locationName && this.props.updateSourceOrDestination(RIDE_POINT.SOURCE, locationName),
                         (err) => {
                             console.log("Reverse geocoding error for source: ", err);
                         }
@@ -389,7 +393,7 @@ export class Map extends Component {
                 if (prevRide.destination === null) {
                     if (!newRide.destination.name) {
                         this.getPlaceNameByReverseGeocode([newRide.destination.lng, newRide.destination.lat],
-                            (locationName) => locationName && this.props.updateSourceOrDestinationName(RIDE_POINT.DESTINATION, locationName),
+                            (locationName) => locationName && this.props.updateSourceOrDestination(RIDE_POINT.DESTINATION, locationName),
                             (err) => {
                                 console.log("Reverse geocoding error for destination: ", err);
                             }
@@ -402,7 +406,7 @@ export class Map extends Component {
                     console.log("destination changed");
                     this.setState(prevState => ({ rideUpdateCount: prevState.rideUpdateCount + 1 }));
                     this.getPlaceNameByReverseGeocode([newRide.destination.lng, newRide.destination.lat],
-                        (locationName) => locationName && this.props.updateSourceOrDestinationName(RIDE_POINT.DESTINATION, locationName),
+                        (locationName) => locationName && this.props.updateSourceOrDestination(RIDE_POINT.DESTINATION, locationName),
                         (err) => {
                             console.log("Reverse geocoding error for destination: ", err);
                         }
@@ -855,7 +859,7 @@ export class Map extends Component {
     }
 
     onBackButtonPress = () => {
-        if (Actions.state.index != 0) {
+        if (Actions.state.index !== 0) {
             if (Actions.currentScene === PageKeys.FRIENDS_PROFILE) {
                 this.props.resetCurrentFriend();
                 // this.props.changeScreen(Actions.currentScene);
@@ -868,6 +872,7 @@ export class Map extends Component {
             }
             return true;
         } else {
+            this.state.onItinerary && this.hideItinerarySection();
             return true;
         }
     }
@@ -1306,6 +1311,31 @@ export class Map extends Component {
             // });
             options.centerCoordinate = this.state.currentLocation.location;
             this._mapView.setCamera(options);
+        }
+    }
+
+    onPressBoundRideToScreen = () => {
+        const { ride } = this.props;
+        let rideBounds = null;
+        if (ride.isRecorded) {
+            let coordinates = [];
+            if (ride.source) {
+                coordinates.push([ride.source.lng, ride.source.lat]);
+            }
+            coordinates.push(...this.state.gpsPointCollection.features[0].geometry.coordinates);
+            if (ride.destination) {
+                coordinates.push([ride.destination.lng, ride.destination.lat]);
+            }
+            if (coordinates.length > 1) {
+                rideBounds = turfBBox({ coordinates, type: 'LineString' });
+                this._mapView.fitBounds(rideBounds.slice(0, 2), rideBounds.slice(2), 35, 0);
+            } else {
+                this._mapView.flyTo(coordinates[0], 0);
+            }
+        } else {
+            if (!this.state.directions) return;
+            rideBounds = turfBBox(this.state.directions.geometry);
+            this._mapView.fitBounds(rideBounds.slice(0, 2), rideBounds.slice(2), 35, 0);
         }
     }
 
@@ -1789,7 +1819,7 @@ export class Map extends Component {
         ).start(() => this.setState({ onWaypointList: true }));
     }
 
-    hideWaypointList = () => {
+    hideWaypointList = (callback) => {
         Animated.timing(
             this.state.waypointListLeftAnim,
             {
@@ -1800,9 +1830,9 @@ export class Map extends Component {
         ).start(() => {
             if (this.state.activeMarkerIndex > -1) {
                 this.onCloseOptionsBar();
-                this.setState(prevState => ({ onWaypointList: false }));
+                this.setState(prevState => ({ onWaypointList: false }), () => typeof callback === 'function' && callback());
             } else {
-                this.setState({ onWaypointList: false })
+                this.setState({ onWaypointList: false }, () => typeof callback === 'function' && callback())
             }
         });
     }
@@ -1827,6 +1857,35 @@ export class Map extends Component {
                 useNativeDriver: true
             }
         ).start(() => this.setState({ commentMode: false }));
+    }
+
+    showItinerarySection = () => {
+        Animated.timing(
+            this.state.itinerarySecAnim,
+            {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true
+            }
+        ).start(() => this.setState({ onItinerary: true }));
+    }
+
+    hideItinerarySection = () => {
+        Animated.timing(
+            this.state.itinerarySecAnim,
+            {
+                toValue: heightPercentageToDP(100),
+                duration: 300,
+                useNativeDriver: true
+            }
+        ).start(() => this.setState({ onItinerary: false }));
+    }
+
+    changeToItineraryMode = () => {
+        this.hideMapControls();
+        this.hideWaypointList(() => {
+            this.showItinerarySection();
+        });
     }
 
     onPressMarker = (e) => {
@@ -2027,45 +2086,49 @@ export class Map extends Component {
                                 cancelPopup={(centerLocation) => this.setState({ showCreateRide: false }, () => this.onPressRecenterMap(centerLocation))} />
                             : null
                     }
-                    <MapboxGL.MapView
-                        styleURL={MapboxGL.StyleURL.Street}
-                        zoomLevel={14}
-                        centerCoordinate={[
-                            4.895168,
-                            52.370216
-                        ]}
-                        style={styles.hiddenMapStyles}
-                        ref={el => this._hiddenMapView = el}
-                    >
-                        {
-                            currentLocation ? this.renderCurrentLocation(currentLocation) : null
-                        }
-                        {
-                            directions ?
-                                <MapboxGL.ShapeSource id='ridePathLayer' shape={directions.geometry}>
-                                    <MapboxGL.LineLayer id='ridePath' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
-                                </MapboxGL.ShapeSource>
-                                : null
-                        }
-                        {
-                            markerCollection.features.length > 0
-                                ? <MapboxGL.ShapeSource
-                                    id='markers'
-                                    shape={markerCollection}
-                                    images={shapeSourceImages}
-                                    onPress={this.onPressMarker}>
-                                    <MapboxGL.SymbolLayer id="exampleIconName" style={[MapboxStyles.icon, MapboxStyles.markerTitle]} />
-                                </MapboxGL.ShapeSource>
-                                : null
-                        }
-                        {
-                            gpsPointCollection.features[0].geometry.coordinates.length >= 2 ?
-                                <MapboxGL.Animated.ShapeSource id='recordRidePathLayer' shape={gpsPointCollection}>
-                                    <MapboxGL.Animated.LineLayer id='recordRidePath' style={[{ lineColor: 'red', lineWidth: 3, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
-                                </MapboxGL.Animated.ShapeSource>
-                                : null
-                        }
-                    </MapboxGL.MapView>
+                    {
+                        markerCollection.features.length > 0
+                            ? <MapboxGL.MapView
+                                styleURL={MapboxGL.StyleURL.Street}
+                                zoomLevel={14}
+                                centerCoordinate={[
+                                    4.895168,
+                                    52.370216
+                                ]}
+                                style={styles.hiddenMapStyles}
+                                ref={el => this._hiddenMapView = el}
+                            >
+                                {
+                                    currentLocation ? this.renderCurrentLocation(currentLocation) : null
+                                }
+                                {
+                                    directions ?
+                                        <MapboxGL.ShapeSource id='ridePathLayer' shape={directions.geometry}>
+                                            <MapboxGL.LineLayer id='ridePath' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
+                                        </MapboxGL.ShapeSource>
+                                        : null
+                                }
+                                {
+                                    markerCollection.features.length > 0
+                                        ? <MapboxGL.ShapeSource
+                                            id='markers'
+                                            shape={markerCollection}
+                                            images={shapeSourceImages}
+                                            onPress={this.onPressMarker}>
+                                            <MapboxGL.SymbolLayer id="exampleIconName" style={[MapboxStyles.icon, MapboxStyles.markerTitle]} />
+                                        </MapboxGL.ShapeSource>
+                                        : null
+                                }
+                                {
+                                    gpsPointCollection.features[0].geometry.coordinates.length >= 2 ?
+                                        <MapboxGL.Animated.ShapeSource id='recordRidePathLayer' shape={gpsPointCollection}>
+                                            <MapboxGL.Animated.LineLayer id='recordRidePath' style={[{ lineColor: 'red', lineWidth: 3, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
+                                        </MapboxGL.Animated.ShapeSource>
+                                        : null
+                                }
+                            </MapboxGL.MapView>
+                            : null
+                    }
                     <MapboxGL.MapView
                         styleURL={MapboxGL.StyleURL.Street}
                         zoomLevel={15}
@@ -2182,6 +2245,11 @@ export class Map extends Component {
                                 : null
                         }
                         <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'target', type: 'MaterialCommunityIcons' }} onPress={this.onPressRecenterMap} />
+                        {
+                            ride.rideId
+                                ? <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'map-marker-circle', type: 'MaterialCommunityIcons' }} onPress={this.onPressBoundRideToScreen} />
+                                : null
+                        }
                         {/* <IconButton style={styles.mapControlButton} iconProps={{ name: 'arrow-left-bold-circle', type: 'MaterialCommunityIcons', style: styles.whiteColor }} onPress={this.hideMapControls} />
                         <IconButton style={[styles.mapControlButton, styles.buttonGap]} iconProps={{ name: 'md-undo', type: 'Ionicons', style: styles.whiteColor }} onPress={this.onPressUndo} />
                         <IconButton style={[styles.mapControlButton, styles.buttonGap]} iconProps={{ name: 'md-redo', type: 'Ionicons', style: styles.whiteColor }} onPress={this.onPressRedo} />
@@ -2192,24 +2260,30 @@ export class Map extends Component {
                     {
                         ride.rideId !== null && ride.isRecorded === false
                             ? <Animated.View style={[{ height: '100%', width: '100%', elevation: 11, position: 'absolute', zIndex: 110 }, { transform: [{ translateX: waypointListLeftAnim }] }]}>
-                                <WaypointList isEditable={!ride.isRecorded && ride.userId === user.userId} refreshContent={this.state.refreshWaypointList} onPressOutside={this.hideWaypointList} onCancel={this.hideWaypointList} changeToCommentMode={this.onPressPointCommentOption} />
+                                <WaypointList isEditable={!ride.isRecorded && ride.userId === user.userId} refreshContent={this.state.refreshWaypointList} onPressOutside={() => this.hideWaypointList()} onCancel={() => this.hideWaypointList()} changeToCommentMode={this.onPressPointCommentOption} changeToItineraryMode={this.changeToItineraryMode} />
                             </Animated.View>
                             : null
                     }
                     {
                         this.state.commentMode
                             ? <Animated.View style={[{ height: '100%', width: '100%', elevation: 12, position: 'absolute', zIndex: 120 }, { transform: [{ translateY: this.state.commentSecAnim }] }]}>
-                                {/* <View style={styles.modalRoot}>
-                                    <View style={styles.container}>
-                                        <IconButton onPress={() => this.setState({ commentMode: false })} style={{ backgroundColor: 'transparent', alignSelf: 'flex-end', alignItems: 'flex-end', justifyContent: 'flex-end' }}
-                                            iconProps={{ name: 'window-close', type: 'MaterialCommunityIcons' }} />
-                                        <View style={styles.bodyContent}>
-                                        </View>
-                                    </View>
-                                </View> */}
                                 <CommentSection isEditable={this.props.ride.userId === this.props.user.userId} index={activeMarkerIndex} onClose={this.hideCommentSection} />
                             </Animated.View>
                             : null
+                    }
+                    {
+                        ride.rideId
+                            ? <TouchableOpacity style={{ position: 'absolute', zIndex: 100, left: widthPercentageToDP(45), bottom: 0, width: widthPercentageToDP(10), height: widthPercentageToDP(15) }} onPress={this.showItinerarySection}>
+                                <Image source={require('../../assets/img/arrow-right.png')} style={{ flex: 1, width: null, height: null, transform: [{ rotate: '270deg' }] }} />
+                            </TouchableOpacity>
+                            : null
+                    }
+                    {/* <View style={{}}>
+                    </View> */}
+                    {
+                        <Animated.View style={[{ height: heightPercentageToDP(100), width: '100%', elevation: 12, position: 'absolute', zIndex: 999 }, { transform: [{ translateY: this.state.itinerarySecAnim }] }]}>
+                            <ItinerarySection onClose={this.hideItinerarySection} isEditable={this.props.ride.userId === this.props.user.userId} />
+                        </Animated.View>
                     }
                     {/* <View style={{
                         position: 'absolute',
@@ -2277,7 +2351,7 @@ export class Map extends Component {
                 }
                 {/* Shifter: - Brings the app navigation menu */}
                 {
-                    showCreateRide
+                    showCreateRide || this.state.onItinerary
                         ? null
                         : <ShifterButton onPress={this.toggleAppNavigation} alignLeft={user.handDominance === 'left'} />
                 }
@@ -2329,7 +2403,7 @@ const mapDispatchToProps = (dispatch) => {
         // addWaypoint: (waypoint, ride, index) => dispatch(addWaypoint(waypoint, ride, index)),
         addWaypoint: (waypoint, index) => dispatch(addWaypointAction({ index, waypoint })),
         // updateWaypoint: (waypoint, ride, index) => dispatch(updateWaypoint(waypoint, ride, index)),
-        updateWaypoint: (waypoint, index) => dispatch(updateWaypointAction({ index, waypoint })),
+        updateWaypoint: (waypoint, index) => dispatch(updateWaypointAction({ index, updates: waypoint })),
         // deleteWaypoint: (ride, index) => dispatch(deleteWaypoint(ride, index)),
         deleteWaypoint: (ride, index) => dispatch(deleteWaypointAction({ index })),
         // updateDestination: (waypoint, ride) => dispatch(updateDestination(waypoint, ride)),
@@ -2367,7 +2441,7 @@ const mapDispatchToProps = (dispatch) => {
         doUndo: () => dispatch(undoRideAction()),
         doRedo: () => dispatch(redoRideAction()),
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
-        updateSourceOrDestinationName: (identifier, locationName) => dispatch(updateSourceOrDestinationNameAction({ identifier, locationName })),
+        updateSourceOrDestination: (identifier, locationName) => dispatch(updateSourceOrDestinationAction({ identifier, updates: { name: locationName } })),
         updateWaypointName: (waypointId, locationName) => dispatch(updateWaypointNameAction({ waypointId, locationName })),
         hideFriendsLocation: () => dispatch(hideFriendsLocationAction()),
         updateAppState: (appState) => {
