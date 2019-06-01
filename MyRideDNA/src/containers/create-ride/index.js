@@ -14,14 +14,13 @@ import { Switch } from 'react-native-switch';
 
 import { RideInfo } from '../../model/map-models';
 import { BasicHeader } from '../../components/headers';
-import { IconicInput, SearchBox } from '../../components/inputs';
+import { SearchBox } from '../../components/inputs';
 import styles from './styles';
 import { Actions } from 'react-native-router-flux';
 import { createNewRide } from '../../api';
 
 import Geolocation from 'react-native-geolocation-service';
 import { SwitchIconButton, LinkButton } from '../../components/buttons';
-import { IconLabelPair } from '../../components/labels';
 
 import { Icon as NBIcon, Item, Toast } from 'native-base';
 import { WindowDimensions, JS_SDK_ACCESS_TOKEN, IS_ANDROID, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES } from '../../constants';
@@ -205,7 +204,7 @@ export class CreateRide extends Component {
     render() {
         const { ride, searchQuery, placeSearchList, startRideFrom } = this.state;
         return (
-            <View style={{ height: this.props.containerHeight, zIndex: 500, backgroundColor: 'transparent' }}>
+            <View style={{ height: this.props.containerHeight, zIndex: 500, elevation: 11, backgroundColor: 'transparent' }}>
                 <View style={{ height: (WindowDimensions.height / 2) }}>
                     <BasicHeader headerHeight={HEADER_HEIGHT} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
                         title='Create Ride' />
@@ -231,17 +230,18 @@ export class CreateRide extends Component {
                                     inactiveIcon={<NBIcon name='eye' type='MaterialCommunityIcons' style={{ color: '#fff', alignSelf: 'flex-end', paddingHorizontal: 10, fontSize: widthPercentageToDP(6) }} />}
                                     value={ride.privacyMode === 'private'} onChangeValue={this.onChangePrivacyMode} />
                             </View>
-                            <Item style={{ borderBottomWidth: 0, marginLeft: widthPercentageToDP(4), marginRight: widthPercentageToDP(4) }}>
+                            <Item style={{ marginLeft: widthPercentageToDP(4), marginRight: widthPercentageToDP(4) }}>
                                 {/* <NBIcon name='map-pin' type='FontAwesome' style={[styles.formFieldIcon, { paddingHorizontal: widthPercentageToDP(2) }]} /> */}
                                 <Text style={{ color: '#8C8C8C' }}>Start ride from: </Text>
-                                <SearchBox value={searchQuery} hideIcon={true} onTextChange={this.onSearchPlace} onPressClear={() => this.setState({ searchQuery: '', })} />
+                                <SearchBox value={searchQuery} onFocus={() => this.setState({ searchQuery: '' })} hideIcon={true} onTextChange={this.onSearchPlace} onPressClear={() => this.setState({ searchQuery: '', })} />
                             </Item>
+                            <LinkButton style={{ alignSelf: 'flex-end', marginRight: widthPercentageToDP(4) }} title='Use my current location' titleStyle={{ color: APP_COMMON_STYLES.headerColor }} onPress={() => this.setState({ searchQuery: 'Current location' })} />
                         </View>
                     </ScrollView>
                 </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-around', backgroundColor: 'rgba(82, 137, 25, 0.8)', height: 100, minHeight: 100, alignItems: 'center' }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', backgroundColor: 'rgba(82, 137, 25, 0.8)', height: 100, minHeight: 100, alignItems: 'center' }}>
                     <LinkButton title='SUBMIT' onPress={this.onSubmitForm} titleStyle={{ fontSize: 18, color: '#fff' }} />
-                    <LinkButton title='CANCEL' onPress={this.onPressBackButton} titleStyle={{ fontSize: 18, color: '#fff' }} />
+                    {/* <LinkButton title='CANCEL' onPress={this.onPressBackButton} titleStyle={{ fontSize: 18, color: '#fff' }} /> */}
                 </View>
                 {/* {
                     placeSearchList.length > 0 ?
@@ -256,7 +256,6 @@ export class CreateRide extends Component {
 const mapStateToProps = (state) => {
     const { ride } = state.RideInfo;
     const { user } = state.UserAuth;
-    console.log("mapStateToProps: ", { ride, user });
     return { ride, user };
 }
 
