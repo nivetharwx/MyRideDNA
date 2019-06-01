@@ -60,7 +60,7 @@ export default class App extends Component {
         }
 
         this.notificationListener = FCM.on(FCMEvent.Notification, (notification) => {
-            console.log("FCMEvent.Notification: ", notification);
+            console.log('body notification : ', JSON.parse(notification.body));
             // if (!IS_ANDROID) {
             //     switch (notification._notificationType) {
             //         case NotificationType.Remote:
@@ -77,7 +77,7 @@ export default class App extends Component {
             //             break;
             //     }
             // }
-            notification.targetScreen && this.redirectToTargetScreen(notification.targetScreen, JSON.parse(notification.body));
+            JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));
         });
 
         FCM.getFCMToken().then(token => {
@@ -98,19 +98,17 @@ export default class App extends Component {
         // FCM.unsubscribeFromTopic('sometopic')
     }
 
-    redirectToTargetScreen(targetScreen, body) {
+    redirectToTargetScreen(body) {
         if (store.getState().PageState.appState === 'background') {
-            if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
-                if (targetScreen === 'REQUESTS') {
+            if (Object.keys(PageKeys).indexOf(body.reference.targetScreen) === -1) {
+                if (body.reference.targetScreen === 'REQUESTS') {
                     store.getState().TabVisibility.currentScreen.name !== PageKeys.FRIENDS
-                        ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: body } }))
-                        : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: body });
-                } else if (targetScreen === 'GROUP') {
-                    console.log('group notification')
+                        ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: body.reference.targetScreen, notificationBody: body } }))
+                        : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: body.reference.targetScreen, notificationBody: body });
                 }
                 return;
             }
-            store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
+            store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
         }
     }
 

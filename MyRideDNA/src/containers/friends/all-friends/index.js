@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableHighlight, Alert } from 'react-native';
+import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableHighlight, Alert, ActivityIndicator } from 'react-native';
 import { getAllFriends, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend, getAllOnlineFriends, getPicture, getFriendsLocationList } from '../../../api';
 import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, heightPercentageToDP, RELATIONSHIP, PageKeys } from '../../../constants';
 import { BaseModal } from '../../../components/modal';
@@ -63,7 +63,9 @@ class AllFriendsTab extends Component {
             selectedPerson: null,
             selectedPersonImg: null,
             friendsFilter: FLOAT_ACTION_IDS.BTN_ALL_FRIENDS,
-            refreshList: false
+            refreshList: false,
+            isLoading: false,
+            isLoadingData: false,
         }
     }
 
@@ -181,7 +183,9 @@ class AllFriendsTab extends Component {
     onPullRefresh = () => {
         this.setState({ isRefreshing: true });
         // TODO: Do API call based on searchfriend or all friends
-        this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, this.props.paginationNum, false)
+        this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, false, (res) => {
+        }, (err) => {
+        })
     }
 
     showOptionsModal = (index) => {
@@ -327,6 +331,36 @@ class AllFriendsTab extends Component {
         }
     }
 
+    loadMoreData = () => {
+        if (this.state.isLoadingData && this.state.isLoading === false) {
+            this.setState({ isLoading: true, isLoadingData: false })
+            // this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
+            this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, this.props.pageNumber, false, (res) => {
+                this.setState({ isLoading: false })
+            }, (err) => {
+                this.setState({ isLoading: false })
+            });
+        }
+    }
+
+    renderFooter = () => {
+        if (this.state.isLoading) {
+            return (
+                <View
+                    style={{
+                        paddingVertical: 20,
+                        borderTopWidth: 1,
+                        borderColor: "#CED0CE"
+                    }}
+                >
+                    <ActivityIndicator animating size="large" />
+                </View>
+            );
+        }
+        return null
+    }
+
+
     render() {
         const { isRefreshing, isVisibleOptionsModal, friendsFilter } = this.state;
         const { allFriends, searchQuery, searchFriendList, user } = this.props;
@@ -334,7 +368,7 @@ class AllFriendsTab extends Component {
         if (friendsFilter === FLOAT_ACTION_IDS.BTN_ALL_FRIENDS) {
             filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
-                  ( friend.nickname ?friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1:false))
+                    (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
         } else if (friendsFilter === FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS) {
             const onlineFriends = allFriends.filter(friend => friend.isOnline);
@@ -378,6 +412,10 @@ class AllFriendsTab extends Component {
                                         onPress={() => this.openProfile(index, FRIEND_TYPE.ALL_FRIENDS)}
                                     />
                                 )}
+                                ListFooterComponent={this.renderFooter}
+                                onEndReached={this.loadMoreData}
+                                onEndReachedThreshold={0.1}
+                                onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
                             />
                 }
                 <FloatingAction
@@ -396,11 +434,12 @@ class AllFriendsTab extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { allFriends, paginationNum, searchFriendList, friendsLocationList } = state.FriendList;
-    return { user, allFriends, paginationNum, searchFriendList, friendsLocationList };
+    const { pageNumber } = state.PageState;
+    return { user, allFriends, paginationNum, searchFriendList, friendsLocationList, pageNumber };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
-        getAllFriends: (friendType, userId, pageNumber,toggleLoader) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader)),
+        getAllFriends: (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback)),
         getAllOnlineFriends: (userId) => dispatch(getAllOnlineFriends(userId)),
         searchForFriend: (searchParam, userId, pageNumber) => dispatch(searchForFriend(searchParam, userId, pageNumber)),
         sendFriendRequest: (requestBody, personId) => dispatch(sendFriendRequest(requestBody, personId)),

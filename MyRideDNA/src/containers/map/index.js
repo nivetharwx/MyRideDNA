@@ -569,8 +569,8 @@ export class Map extends Component {
     }
 
     async componentDidMount() {
-        FCM.getInitialNotification().then(notif => {
-            notif.targetScreen && this.redirectToTargetScreen(notif.targetScreen, JSON.parse(notif.body));
+        FCM.getInitialNotification().then(notification => {
+            notification.body && JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));
 
         });
         BackgroundGeolocation.configure({
@@ -603,7 +603,9 @@ export class Map extends Component {
         this.trackpointTick = 0;
         this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         this.props.pushNotification(this.props.user.userId);
-        this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString());
+        this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString(), (res) => {
+        }, (err) => {
+        });
         // this.props.getAllNotifications(this.props.user.userId);
         // this.notificationInterval = setInterval(() => {
         //     this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
@@ -714,14 +716,14 @@ export class Map extends Component {
 
     }
 
-    redirectToTargetScreen(targetScreen, body) {
-        if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
-            if (targetScreen === 'REQUESTS') {
-                this.props.changeScreen({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: body } });
+    redirectToTargetScreen(body) {
+        if (Object.keys(PageKeys).indexOf(body.reference.targetScreen) === -1) {
+            if (body.reference.targetScreen === 'REQUESTS') {
+                this.props.changeScreen({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: body.reference.targetScreen, notificationBody: body } });
             }
             return;
         }
-        store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
+        store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
     }
 
     handleAppStateChange = (nextAppState) => {
@@ -2388,7 +2390,7 @@ const mapDispatchToProps = (dispatch) => {
         pushNotification: (userId) => pushNotification(userId),
         updateLocation: (userId, locationInfo) => updateLocation(userId, locationInfo),
         // getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
-        getAllNotifications: (userId, pageNumber, date) => dispatch(getAllNotifications(userId, pageNumber, date)),
+        getAllNotifications: (userId, pageNumber, date, successCallback, errorCallback) => dispatch(getAllNotifications(userId, pageNumber, date, successCallback, errorCallback)),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
         deleteNotifications: (notificationIds) => dispatch(deleteNotifications(notificationIds)),
         deleteAllNotifications: (userId) => dispatch(deleteAllNotifications(userId)),

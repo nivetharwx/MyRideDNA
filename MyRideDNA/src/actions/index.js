@@ -25,7 +25,8 @@ import {
     IS_LOADING_DATA,
     UPDATE_RIDE_SNAPSHOT,
     UPDATE_RIDE_CREATOR_PICTURE,
-    UPDATE_RIDE_IN_LIST
+    UPDATE_RIDE_IN_LIST,
+    UPDATE_PAGENUMBER
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -37,6 +38,12 @@ export const toggleLoaderAction = (data) => (
 export const apiLoaderActions = (data) => (
     {
         type: TOGGLE_LOADER,
+        data: data
+    }
+);
+export const updatePageNumberAction = (data) => (
+    {
+        type: UPDATE_PAGENUMBER,
         data: data
     }
 );

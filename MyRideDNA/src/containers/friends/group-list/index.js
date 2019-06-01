@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, TextInput, Animated, Text, Alert, Keyboard, FlatList, View, ImageBackground } from 'react-native';
+import { StyleSheet, TextInput, Animated, Text, Alert, Keyboard, FlatList, View, ImageBackground, ActivityIndicator } from 'react-native';
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { widthPercentageToDP, heightPercentageToDP, PageKeys, APP_COMMON_STYLES } from '../../../constants';
 import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast } from 'native-base';
 import { ThumbnailCard } from '../../../components/cards';
-import { createFriendGroup, getFriendGroups, addMembers, getAllGroupMembers, exitFriendGroup } from '../../../api';
+import { createFriendGroup, getFriendGroups, addMembers, getAllGroupMembers, exitFriendGroup, getAllGroups } from '../../../api';
 import { Actions } from 'react-native-router-flux';
 import { BaseModal } from '../../../components/modal';
 
@@ -27,12 +27,17 @@ class GroupListTab extends Component {
             newGroupName: null,
             kbdBtmOffset: this.defaultBtmOffset,
             isVisibleOptionsModal: false,
-            selectedGroup: null
+            selectedGroup: null,
+            isLoading: false,
+            isLoadingData: false,
         };
     }
 
     componentDidMount() {
-        this.props.getFriendGroups(this.props.user.userId, true);
+        // this.props.getFriendGroups(this.props.user.userId, true);
+        this.props.getFriendGroups(this.props.user.userId, true, 0, (res) => {
+        }, (err) => {
+        });
     }
 
     adjustLayoutOnKeyboardVisibility = ({ endCoordinates }) => {
@@ -51,12 +56,18 @@ class GroupListTab extends Component {
             }
         }
         if (this.props.refreshContent === true && prevProps.refreshContent === false) {
-            this.props.getFriendGroups(this.props.user.userId, true);
+            // this.props.getFriendGroups(this.props.user.userId, true);
+            this.props.getFriendGroups(this.props.user.userId, true, 0, (res) => {
+            }, (err) => {
+            });
         }
     }
     onPullRefresh = () => {
         this.setState({ isRefreshing: true });
-        this.props.getFriendGroups(this.props.user.userId, false);
+        // this.props.getFriendGroups(this.props.user.userId, false);
+        this.props.getFriendGroups(this.props.user.userId, false, 0, (res) => {
+        }, (err) => {
+        });
     }
 
     addKeyboardListeners() {
@@ -77,7 +88,7 @@ class GroupListTab extends Component {
     onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false, selectedGroup: null })
 
     openGroupInfo = (index) => {
-        this.state.isVisibleOptionsModal && this.setState({isVisibleOptionsModal:false});
+        this.state.isVisibleOptionsModal && this.setState({ isVisibleOptionsModal: false });
         if (this.borderWidthAnim.__getValue() > 0) {
             this.closeCreateGroupSection(() => Actions.push(PageKeys.GROUP, { grpIndex: index }));
         } else {
@@ -130,8 +141,8 @@ class GroupListTab extends Component {
 
     renderMenuOptions = () => {
         if (this.state.selectedGroup === null) return;
-        const index=this.props.friendGroupList.findIndex(item => item.groupId === this.state.selectedGroup.groupId);
-        const options = [{ text: 'Open group', id: 'openGroup', handler: () => this.openGroupInfo(index) },{ text: 'Exit group', id: 'exitGroup', handler: () => this.showExitGroupConfirmation() }, { text: 'Clear chat', id: 'clearChat', handler: () => { } }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
+        const index = this.props.friendGroupList.findIndex(item => item.groupId === this.state.selectedGroup.groupId);
+        const options = [{ text: 'Open group', id: 'openGroup', handler: () => this.openGroupInfo(index) }, { text: 'Exit group', id: 'exitGroup', handler: () => this.showExitGroupConfirmation() }, { text: 'Clear chat', id: 'clearChat', handler: () => { } }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
         return (
             options.map(option => (
                 <LinkButton
@@ -259,8 +270,36 @@ class GroupListTab extends Component {
         });
     }
 
+    loadMoreData = () => {
+        if (this.state.isLoadingData && this.state.isLoading === false) {
+            this.setState({ isLoading: true, isLoadingData: false })
+            this.props.getFriendGroups(this.props.user.userId, false, this.props.pageNumber, (res) => {
+                this.setState({ isLoading: false })
+            }, (err) => {
+                this.setState({ isLoading: false })
+            });
+        }
+    }
+
+    renderFooter = () => {
+        if (this.state.isLoading) {
+            return (
+                <View
+                    style={{
+                        paddingVertical: 20,
+                        borderTopWidth: 1,
+                        borderColor: "#CED0CE"
+                    }}
+                >
+                    <ActivityIndicator animating size="large" />
+                </View>
+            );
+        }
+        return null
+    }
+
     render() {
-        const { newGroupName, isVisibleOptionsModal,isRefreshing } = this.state;
+        const { newGroupName, isVisibleOptionsModal, isRefreshing } = this.state;
         const { friendGroupList, user, searchQuery } = this.props;
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
@@ -268,8 +307,8 @@ class GroupListTab extends Component {
         });
         let filteredGroups = [];
         filteredGroups = searchQuery === '' ? friendGroupList : friendGroupList.filter(group => {
-                return (group.groupName.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
-            });
+            return (group.groupName.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
+        });
         return (
             <View style={styles.fill}>
                 <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
@@ -281,19 +320,25 @@ class GroupListTab extends Component {
                 </BaseModal>
                 {
                     friendGroupList.length === 0
-                    ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
-                    : filteredGroups.length === 0
-                        ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage}>
-                            <Text style={{ color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6), fontWeight: 'bold', letterSpacing: 1 }}>{`No Groups found`}</Text>
-                        </ImageBackground>
-                        :<FlatList
-                            data={filteredGroups}
-                            refreshing={isRefreshing}
-                            onRefresh={this.onPullRefresh}
-                            keyExtractor={this.groupKeyExtractor}
-                            renderItem={this.renderGroup}
-                            extraData={this.state}
-                        />
+                        ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
+                        : filteredGroups.length === 0
+                            ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage}>
+                                <Text style={{ color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6), fontWeight: 'bold', letterSpacing: 1 }}>{`No Groups found`}</Text>
+                            </ImageBackground>
+                            : <FlatList
+                                data={filteredGroups}
+                                refreshing={isRefreshing}
+                                onRefresh={this.onPullRefresh}
+                                keyExtractor={this.groupKeyExtractor}
+                                renderItem={this.renderGroup}
+                                extraData={this.state}
+                                ListFooterComponent={this.renderFooter}
+                                // onTouchMove={this.loadMoreData}
+                                // onTouchStart={this.loadMoreData}
+                                onEndReached={this.loadMoreData}
+                                onEndReachedThreshold={0.1}
+                                onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                            />
                 }
                 {/* <Animated.View style={[styles.createGrpContainer, { bottom: this.state.kbdBtmOffset, width: this.createSecAnim }]}>
                     <Animated.View style={[styles.createGrpActionSec, { backgroundColor: newGroupName === null ? 'transparent' : '#fff', borderWidth: this.borderWidthAnim }]}>
@@ -318,12 +363,14 @@ const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { friendGroupList, currentGroup } = state.FriendGroupList;
     const { allFriends } = state.FriendList;
-    return { user, friendGroupList, allFriends, currentGroup };
+    const { pageNumber } = state.PageState;
+    return { user, friendGroupList, allFriends, currentGroup, pageNumber };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
         createFriendGroup: (newGroupInfo) => dispatch(createFriendGroup(newGroupInfo)),
-        getFriendGroups: (userId, toggleLoader) => dispatch(getFriendGroups(userId, toggleLoader)),
+        // getFriendGroups: (userId, toggleLoader) => dispatch(getFriendGroups(userId, toggleLoader)),
+        getFriendGroups: (userId, toggleLoader, pageNumber, successCallback, errorCallback) => dispatch(getFriendGroups(userId, toggleLoader, pageNumber, successCallback, errorCallback)),
         exitFriendGroup: (groupId, memberId) => dispatch(exitFriendGroup(groupId, memberId)),
         addMembers: (groupId, memberDetails) => dispatch(addMembers(groupId, memberDetails)),
         getAllGroupMembers: (groupId, userId) => dispatch(getAllGroupMembers(groupId, userId)),

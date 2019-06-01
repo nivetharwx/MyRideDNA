@@ -19,10 +19,21 @@ export default (state = initialState, action) => {
     switch (action.type) {
 
         case REPLACE_FRIEND_LIST:
-            return {
-                ...state,
-                allFriends: action.data.friendList
-            };
+            if (action.data.pageNumber === 0) {
+                return {
+                    ...state,
+                    allFriends: action.data.friendList
+                }
+            } else {
+                return {
+                    ...state,
+                    allFriends: [
+                        ...state.allFriends,
+                        ...action.data.friendList
+                    ]
+                }
+            }
+
 
         case UPDATE_FRIEND_LIST:
             if (typeof action.data.index === 'number' && action.data.index >= 0) {
