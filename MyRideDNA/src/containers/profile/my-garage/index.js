@@ -54,9 +54,9 @@ class MyGarageTab extends Component {
                     this.props.getBikePicture(newBike.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), newBike.spaceId);
                 }
             } else if (this.props.garage.spaceList.length === prevProps.garage.spaceList.length) {
-                prevProps.garage.spaceList.forEach(item =>{
+                prevProps.garage.spaceList.forEach(item => {
                     const index = this.props.garage.spaceList.findIndex(val => val.spaceId === item.spaceId && val.pictureIdList !== item.pictureIdList);
-                    if(index>-1 && this.props.garage.spaceList[index].pictureIdList.length>0){
+                    if (index > -1 && this.props.garage.spaceList[index].pictureIdList.length > 0) {
                         this.props.getBikePicture(this.props.garage.spaceList[index].pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), this.props.garage.spaceList[index].spaceId);
                     }
                 })
@@ -164,7 +164,7 @@ class MyGarageTab extends Component {
                                 // FIXME: Change this based on pictureIdList
                                 media={item.pictureList && item.pictureList[0] ? { uri: item.pictureList[0] } : require('../../../assets/img/bike_placeholder.png')}
                                 mainHeading={item.name}
-                                subHeading={`${item.make}-${item.model}, ${item.year}`}
+                                subHeading={`${item.make ? item.make + '-' : ''}${item.model ? item.model + ',' : ''}${item.year ? item.year : ''}`}
                                 notes={item.notes}
                                 onLongPress={() => this.showOptionsModal(index)}
                             >

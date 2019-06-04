@@ -55,12 +55,12 @@ class GroupListTab extends Component {
                  **/
             }
         }
-        if (this.props.refreshContent === true && prevProps.refreshContent === false) {
-            // this.props.getFriendGroups(this.props.user.userId, true);
-            this.props.getFriendGroups(this.props.user.userId, true, 0, (res) => {
-            }, (err) => {
-            });
-        }
+        // if (this.props.refreshContent === true && prevProps.refreshContent === false) {
+        //     // this.props.getFriendGroups(this.props.user.userId, true);
+        //     this.props.getFriendGroups(this.props.user.userId, true, 0, (res) => {
+        //     }, (err) => {
+        //     });
+        // }
     }
     onPullRefresh = () => {
         this.setState({ isRefreshing: true });

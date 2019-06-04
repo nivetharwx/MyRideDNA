@@ -92,13 +92,18 @@ class Notifications extends Component {
     //     this.props.readNotification(this.props.user.userId, item.id);
     // }
     onPressnotification = (item) => {
-        if (Object.keys(PageKeys).indexOf(item.reference.targetScreen) === -1) {
-            if (item.reference.targetScreen === 'REQUESTS') {
-                store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: 'notificationPage', goTo: item.reference.targetScreen, notificationBody: item } }));
+        if (item.reference && item.reference.targetScreen) {
+            if (Object.keys(PageKeys).indexOf(item.reference.targetScreen) === -1) {
+                if (item.reference.targetScreen === 'REQUESTS') {
+                    store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: 'notificationPage', goTo: item.reference.targetScreen, notificationBody: item } }));
+                }
+                return;
             }
-            return;
+            store.dispatch(screenChangeAction({ name: PageKeys[item.reference.targetScreen], params: { comingFrom: 'notificationPage', notificationBody: item } }));
         }
-        store.dispatch(screenChangeAction({ name: PageKeys[item.reference.targetScreen], params: { comingFrom: 'notificationPage', notificationBody: item } }));
+        else {
+            this.props.readNotification(this.props.user.userId, item.id)
+        }
     }
 
     _keyExtractor = (item, index) => item.id;
