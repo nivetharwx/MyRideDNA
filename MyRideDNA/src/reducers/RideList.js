@@ -1,10 +1,11 @@
-import { UPDATE_RIDE_LIST, CLEAR_RIDE_LIST, DELETE_RIDE, REPLACE_RIDE_LIST, UPDATE_RIDE_SNAPSHOT, UPDATE_RIDE_CREATOR_PICTURE, UPDATE_RIDE_IN_LIST } from "../actions/actionConstants";
-import { RIDE_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from "../constants";
+import { UPDATE_RIDE_LIST, CLEAR_RIDE_LIST, DELETE_RIDE, REPLACE_RIDE_LIST, UPDATE_RIDE_SNAPSHOT, UPDATE_RIDE_CREATOR_PICTURE, UPDATE_RIDE_IN_LIST, IS_REMOVED } from "../actions/actionConstants";
+import { RIDE_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, RIDE_TAIL_TAG } from "../constants";
 
 const initialState = {
     buildRides: [],
     recordedRides: [],
-    sharedRides: []
+    sharedRides: [],
+    isRemoved: false,
 };
 
 export default (state = initialState, action) => {
@@ -14,37 +15,75 @@ export default (state = initialState, action) => {
         case REPLACE_RIDE_LIST:
             var rideKey = getRideListByType(action.data.rideType);
             // updatedState[rideKey] = [...action.data.rideList];
-            if (action.data.rideType === RIDE_TYPE.SHARED_RIDE) {
-                updatedState[rideKey] = action.data.rideList.map(ride => {
-                    let rideIdx = updatedState[rideKey].findIndex(item => item.rideId === ride.rideId);
-                    if (rideIdx > -1) {
-                        let snapshot = null;
-                        let creatorProfPic = null;
-                        if (updatedState[rideKey][rideIdx].snapshotId === ride.snapshotId && updatedState[rideKey][rideIdx].snapshot) {
-                            snapshot = { snapshot: updatedState[rideKey][rideIdx].snapshot };
+            if (action.data.pageNumber === 0) {
+                if (action.data.rideType === RIDE_TYPE.SHARED_RIDE) {
+                    updatedState[rideKey] = action.data.rideList.map(ride => {
+                        let rideIdx = updatedState[rideKey].findIndex(item => item.rideId === ride.rideId);
+                        if (rideIdx > -1) {
+                            let snapshot = null;
+                            let creatorProfPic = null;
+                            if (updatedState[rideKey][rideIdx].snapshotId === ride.snapshotId && updatedState[rideKey][rideIdx].snapshot) {
+                                snapshot = { snapshot: updatedState[rideKey][rideIdx].snapshot };
+                            }
+                            if (updatedState[rideKey][rideIdx].creatorProfilePictureId === ride.creatorProfilePictureId && updatedState[rideKey][rideIdx].creatorProfilePicture) {
+                                creatorProfPic = { creatorProfilePicture: updatedState[rideKey][rideIdx].creatorProfilePicture };
+                            }
+                            if (snapshot || creatorProfPic) {
+                                return { ...ride, ...snapshot, ...creatorProfPic };
+                            }
                         }
-                        if (updatedState[rideKey][rideIdx].creatorProfilePictureId === ride.creatorProfilePictureId && updatedState[rideKey][rideIdx].creatorProfilePicture) {
-                            creatorProfPic = { creatorProfilePicture: updatedState[rideKey][rideIdx].creatorProfilePicture };
-                        }
-                        if (snapshot || creatorProfPic) {
-                            return { ...ride, ...snapshot, ...creatorProfPic };
-                        }
-                    }
-                    return ride;
-                });
-                return updatedState;
+                        return ride;
+                    });
+                    return updatedState;
 
-            } else {
-                updatedState[rideKey] = action.data.rideList.map(ride => {
-                    let rideIdx = updatedState[rideKey].findIndex(item => item.rideId === ride.rideId);
-                    if (rideIdx > -1) {
-                        if (updatedState[rideKey][rideIdx].snapshotId === ride.snapshotId && updatedState[rideKey][rideIdx].snapshot) {
-                            return { ...ride, snapshot: updatedState[rideKey][rideIdx].snapshot }
+                } else {
+                    updatedState[rideKey] = action.data.rideList.map(ride => {
+                        let rideIdx = updatedState[rideKey].findIndex(item => item.rideId === ride.rideId);
+                        if (rideIdx > -1) {
+                            if (updatedState[rideKey][rideIdx].snapshotId === ride.snapshotId && updatedState[rideKey][rideIdx].snapshot) {
+                                return { ...ride, snapshot: updatedState[rideKey][rideIdx].snapshot }
+                            }
                         }
-                    }
-                    return ride;
-                });
-                return updatedState;
+                        return ride;
+                    });
+                    return updatedState;
+                }
+            }
+            else {
+                if (action.data.rideType === RIDE_TYPE.SHARED_RIDE) {
+                    const rideList = action.data.rideList.map(ride => {
+                        let rideIdx = updatedState[rideKey].findIndex(item => item.rideId === ride.rideId);
+                        if (rideIdx > -1) {
+                            let snapshot = null;
+                            let creatorProfPic = null;
+                            if (updatedState[rideKey][rideIdx].snapshotId === ride.snapshotId && updatedState[rideKey][rideIdx].snapshot) {
+                                snapshot = { snapshot: updatedState[rideKey][rideIdx].snapshot };
+                            }
+                            if (updatedState[rideKey][rideIdx].creatorProfilePictureId === ride.creatorProfilePictureId && updatedState[rideKey][rideIdx].creatorProfilePicture) {
+                                creatorProfPic = { creatorProfilePicture: updatedState[rideKey][rideIdx].creatorProfilePicture };
+                            }
+                            if (snapshot || creatorProfPic) {
+                                return { ...ride, ...snapshot, ...creatorProfPic };
+                            }
+                        }
+                        return ride;
+                    });
+                    updatedState[rideKey] = [...updatedState[rideKey], ...rideList]
+                    return updatedState;
+
+                } else {
+                    const rideList = action.data.rideList.map(ride => {
+                        let rideIdx = updatedState[rideKey].findIndex(item => item.rideId === ride.rideId);
+                        if (rideIdx > -1) {
+                            if (updatedState[rideKey][rideIdx].snapshotId === ride.snapshotId && updatedState[rideKey][rideIdx].snapshot) {
+                                return { ...ride, snapshot: updatedState[rideKey][rideIdx].snapshot }
+                            }
+                        }
+                        return ride;
+                    });
+                    updatedState[rideKey] = [...updatedState[rideKey], ...rideList]
+                    return updatedState;
+                }
             }
 
         case UPDATE_RIDE_LIST:
@@ -58,7 +97,8 @@ export default (state = initialState, action) => {
             var rideKey = getRideListByType(action.data.rideType);
             updatedState[rideKey] = updatedState[rideKey].map(ride => {
                 if (!ride.snapshotId) return ride;
-                let id = ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG);
+                // let id = ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG);
+                let id = ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, RIDE_TAIL_TAG);
                 if (typeof action.data.pictureObject[id] === 'string') {
                     return { ...ride, snapshot: action.data.pictureObject[id] };
                 }
@@ -102,6 +142,13 @@ export default (state = initialState, action) => {
             var rideKey = getRideListByType(action.data.rideType);
             updatedState[rideKey] = [];
             return updatedState;
+
+
+        case IS_REMOVED:
+            return {
+                ...state,
+                isRemoved: action.data
+            }
 
         default: return state
     }

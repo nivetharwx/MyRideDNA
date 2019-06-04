@@ -34,6 +34,7 @@ export const DELETE_FRIEND = 'DELETE_FRIEND';
 export const CLEAR_RIDE = 'CLEAR_RIDE';
 export const LOAD_RIDE = 'LOAD_RIDE';
 export const DELETE_RIDE = 'DELETE_RIDE';
+export const IS_REMOVED = 'IS_REMOVED';
 export const UPDATE_RIDE_LIST = 'UPDATE_RIDE_LIST';
 export const UPDATE_RIDE_IN_LIST = 'UPDATE_RIDE_IN_LIST';
 export const REPLACE_RIDE_LIST = 'REPLACE_RIDE_LIST';

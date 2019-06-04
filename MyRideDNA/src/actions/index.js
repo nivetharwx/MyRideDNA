@@ -26,7 +26,8 @@ import {
     UPDATE_RIDE_SNAPSHOT,
     UPDATE_RIDE_CREATOR_PICTURE,
     UPDATE_RIDE_IN_LIST,
-    UPDATE_PAGENUMBER
+    UPDATE_PAGENUMBER,
+    IS_REMOVED
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -194,6 +195,12 @@ export const loadRideAction = (data) => (
 export const deleteRideAction = (data) => (
     {
         type: DELETE_RIDE,
+        data: data
+    }
+);
+export const isRemovedAction = (data) => (
+    {
+        type: IS_REMOVED,
         data: data
     }
 );
