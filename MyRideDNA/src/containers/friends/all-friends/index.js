@@ -66,6 +66,7 @@ class AllFriendsTab extends Component {
             refreshList: false,
             isLoading: false,
             isLoadingData: false,
+            filteredFriends : []
         }
     }
 
@@ -203,9 +204,8 @@ class AllFriendsTab extends Component {
     showOptionsModal = (userId) => { 
         let person  = null;
         if(this.props.searchQuery.trim().length > 0){
-            console.log('searchQuery : ',this.props.searchQuery)
-            const index = this.props.searchFriendList.findIndex(item => item.userId === userId)
-            person  = this.props.searchFriendList[index];
+            const index = this.state.filteredFriends.findIndex(item => item.userId === userId)
+            person  = this.state.filteredFriends[index];
         }
         else{
             const index = this.props.allFriends.findIndex(item => item.userId === userId)
@@ -386,16 +386,15 @@ class AllFriendsTab extends Component {
     render() {
         const { isRefreshing, isVisibleOptionsModal, friendsFilter } = this.state;
         const { allFriends, searchQuery, searchFriendList, user } = this.props;
-        let filteredFriends = [];
         
         if (friendsFilter === FLOAT_ACTION_IDS.BTN_ALL_FRIENDS) {
-            filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
+            this.state.filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                     (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
         } else if (friendsFilter === FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS) {
             const onlineFriends = allFriends.filter(friend => friend.isOnline);
-            filteredFriends = searchQuery === '' ? onlineFriends : onlineFriends.filter(friend => {
+            this.state.filteredFriends = searchQuery === '' ? onlineFriends : onlineFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                 (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
@@ -412,7 +411,7 @@ class AllFriendsTab extends Component {
                 {
                     allFriends.length === 0
                         ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
-                        : filteredFriends.length === 0
+                        : this.state.filteredFriends.length === 0
                             ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage}>
                                 <Text style={{ color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6), fontWeight: 'bold', letterSpacing: 1 }}>{`No friends found`}</Text>
                             </ImageBackground>
@@ -420,7 +419,7 @@ class AllFriendsTab extends Component {
                                 style={{ flexDirection: 'column' }}
                                 contentContainerStyle={styles.friendList}
                                 numColumns={2}
-                                data={filteredFriends}
+                                data={this.state.filteredFriends}
                                 refreshing={isRefreshing}
                                 onRefresh={this.onPullRefresh}
                                 keyExtractor={this.friendKeyExtractor}
