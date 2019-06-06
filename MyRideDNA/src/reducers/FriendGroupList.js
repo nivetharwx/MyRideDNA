@@ -26,19 +26,6 @@ export default (state = initialState, action) => {
                 }
             }
 
-        // friendGroupList: [
-        //     { groupName: 'Group 1', grouupId: 1, groupMembers: [] },
-        //     { groupName: 'Group 2', grouupId: 2, groupMembers: [] },
-        //     { groupName: 'Group 3', grouupId: 3, groupMembers: [] },
-        //     { groupName: 'Group 4', grouupId: 4, groupMembers: [] },
-        //     { groupName: 'Group 5', grouupId: 5, groupMembers: [] },
-        //     { groupName: 'Group 6', grouupId: 6, groupMembers: [] },
-        //     { groupName: 'Group 7', grouupId: 7, groupMembers: [] },
-        //     { groupName: 'Group 8', grouupId: 8, groupMembers: [] },
-        //     { groupName: 'Group 9', grouupId: 9, groupMembers: [] },
-        //     { groupName: 'Group 10', grouupId: 10, groupMembers: [] },
-        // ],
-
         case ADD_FRIEND_GROUP_TO_LIST:
             if (!action.data.groupMembers) action.data.groupMembers = [];
             return {
@@ -71,11 +58,20 @@ export default (state = initialState, action) => {
             }
         case RESET_MEMBERS_IN_CURRENT_GROUP:
             if (action.data.pageNumber === 0) {
-                action.data.member[0].name = 'You';
-                action.data.member[0].nickname = '';
+                action.data.members[0].name = 'You';
+                action.data.members[0].nickname = '';
+                const groupMembers = action.data.members.map(member => {
+                    let memberIdx = state.currentGroup.groupMembers.findIndex(item => item.memberId === member.memberId);
+                    if (memberIdx > -1) {
+                        if (state.currentGroup.groupMembers[memberIdx].profilePictureId === member.profilePictureId && state.currentGroup.groupMembers[memberIdx].profilePicture) {
+                            return { ...member, profilePicture: state.currentGroup.groupMembers[memberIdx].profilePicture };
+                        }
+                    }
+                    return member;
+                });
                 return {
                     ...state,
-                    currentGroup: { ...state.currentGroup, groupMembers: action.data.member, groupId: action.data.groupId, groupName: action.data.groupName, userId: action.data.userId }
+                    currentGroup: { ...state.currentGroup, groupMembers, groupId: action.data.groupId, groupName: action.data.groupName, userId: action.data.userId }
                 }
             }
             else {
@@ -85,7 +81,7 @@ export default (state = initialState, action) => {
                         ...state.currentGroup,
                         groupMembers: [
                             ...state.currentGroup.groupMembers,
-                            ...action.data.member
+                            ...action.data.members
                         ]
                     }
                 }
@@ -96,6 +92,7 @@ export default (state = initialState, action) => {
                 ...state,
                 currentGroup: { ...state.currentGroup, groupMembers: [...state.currentGroup.groupMembers, ...action.data] }
             }
+
         case REMOVE_MEMBER_FROM_CURRENT_GROUP:
             const memberIndex = state.currentGroup.groupMembers.findIndex(member => member.memberId === action.data);
             if (memberIndex > -1) {
