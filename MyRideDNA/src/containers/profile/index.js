@@ -50,7 +50,7 @@ class Profile extends Component {
                             : null
                 }
                 <View style={{ flex: 1 }}>
-                    <Tabs locked={true} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B', height: BOTTOM_TAB_HEIGHT }} underlineStyle={{ height: 0 }} />}>
+                    <Tabs locked={activeTab === 0} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B', height: BOTTOM_TAB_HEIGHT }} underlineStyle={{ height: 0 }} />}>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 0 ? '#0083CA' : '#6C6C6B' }]}>
                             <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>MY PROFILE</Text>
                         </TabHeading>}>

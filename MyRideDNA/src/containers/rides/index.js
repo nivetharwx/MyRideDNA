@@ -207,7 +207,9 @@ export class Rides extends Component {
 
     onPullRefresh = () => {
         this.setState({ isRefreshing: true });
-        this.props.getAllPublicRides(this.props.user.userId, false);
+        this.props.getAllPublicRides(this.props.user.userId, false,0, (res) => {
+        }, (err) => {
+        });
     }
 
     showDeleteSuccessMessage() {

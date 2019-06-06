@@ -99,7 +99,8 @@ export default (state = initialState, action) => {
             }
 
         case GET_FRIEND_INFO:
-            const friend = state.allFriends[action.data.index];
+            const index = state.allFriends.findIndex(item => item.userId ===  action.data.userId);
+            const friend = state.allFriends[index];
             if (!friend.profilePictureId) {
                 friend.profilePictureId = null;
             }

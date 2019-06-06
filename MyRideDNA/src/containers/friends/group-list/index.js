@@ -142,7 +142,7 @@ class GroupListTab extends Component {
     renderMenuOptions = () => {
         if (this.state.selectedGroup === null) return;
         const index = this.props.friendGroupList.findIndex(item => item.groupId === this.state.selectedGroup.groupId);
-        const options = [{ text: 'Open group', id: 'openGroup', handler: () => this.openGroupInfo(index) }, { text: 'Exit group', id: 'exitGroup', handler: () => this.showExitGroupConfirmation() }, { text: 'Clear chat', id: 'clearChat', handler: () => { } }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
+        const options = [{ text: 'Open group', id: 'openGroup', handler: () => this.openGroupInfo(index) }, { text: 'Exit group', id: 'exitGroup', handler: () => this.showExitGroupConfirmation() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
         return (
             options.map(option => (
                 <LinkButton

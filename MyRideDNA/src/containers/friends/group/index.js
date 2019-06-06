@@ -17,8 +17,7 @@ import { Loader } from '../../../components/loader';
 class Group extends Component {
     floatSecAnim = new Animated.Value(CREATE_GROUP_WIDTH / 2);
     borderWidthAnim = new Animated.Value(0);
-    addMemberInputRef = null;
-    filteredFriends = null
+    addMemberInputRef = null; l
     defaultBtmOffset = widthPercentageToDP(8);
     constructor(props) {
         super(props);
@@ -35,6 +34,7 @@ class Group extends Component {
             searchName: '',
             isLoading: false,
             isLoadingData: false,
+            filteredFriends : null
         };
     }
 
@@ -91,6 +91,7 @@ class Group extends Component {
         //     }, 0);
         // }
         if (prevProps.currentGroup.groupMembers !== this.props.currentGroup.groupMembers) {
+            console.log('didUpdate');
             // this.props.currentGroup.groupMembers.forEach(picture => {
             //     if (!picture.profilePicture && picture.profilePictureId) {
             //         this.props.getPicture(picture.profilePictureId, picture.memberId)
@@ -106,7 +107,9 @@ class Group extends Component {
                 this.props.getGroupMemberPicture(groupMemberIdList)
             }
             setTimeout(() => {
-                this.filteredFriends = this.props.allFriends.filter(friend => this.props.currentGroup.groupMembers.findIndex(member => member.memberId === friend.userId) === -1);
+                console.log('didUpdate settimeout');
+                console.log('this.props.currentGroup.groupMembers : ',this.props.currentGroup.groupMembers);
+                this.state.filteredFriends = this.props.allFriends.filter(friend => this.props.currentGroup.groupMembers.findIndex(member => member.memberId === friend.userId) === -1);
             }, 0);
         }
 
@@ -146,7 +149,7 @@ class Group extends Component {
                 //     { name: 'friend 1' }, { name: 'friend 2' }, { name: 'friend 3' }, { name: 'friend 4' }, { name: 'friend 5' }, { name: 'friend 6' }, { name: 'friend 7' }, { name: 'friend 8' },
                 //     { name: 'friend 9' }, { name: 'friend 10' }, { name: 'friend 11' }, { name: 'friend 12' }, { name: 'friend 13' }, { name: 'friend 14' }, { name: 'friend 15' }, { name: 'friend 16' }
                 // ]
-                searchFriendList: this.filteredFriends
+                searchFriendList: this.state.filteredFriends
             });
         });
     }
@@ -176,7 +179,7 @@ class Group extends Component {
     searchForFriend = (value) => {
         this.setState({ searchName: value }, () => {
             value = value.trim();
-            this.setState(prevState => ({ searchFriendList: this.filteredFriends.filter(friend => friend.name.toLowerCase().includes(value.toLowerCase())) }));
+            this.setState(prevState => ({ searchFriendList: this.state.filteredFriends.filter(friend => friend.name.toLowerCase().includes(value.toLowerCase())) }));
         });
     }
 

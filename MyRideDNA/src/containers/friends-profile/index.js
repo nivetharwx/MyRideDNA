@@ -48,7 +48,7 @@ class FriendsProfile extends Component {
         //     this.props.readNotification(this.props.user.userId, this.props.notificationBody.id);
         // }
         else {
-            this.props.getFriendsInfo(this.props.friendIdx, this.props.friendType);
+            this.props.getFriendsInfo(this.props.frienduserId, this.props.friendType);
         }
 
     }
@@ -238,7 +238,7 @@ class FriendsProfile extends Component {
                                                 // FIXME: Change this based on pictureIdList
                                                 media={item.profilePicture ? { uri: item.profilePicture } : require('../../assets/img/bike_placeholder.png')}
                                                 mainHeading={item.name}
-                                                subHeading={`${item.make}-${item.model}, ${item.year}`}
+                                                subHeading={`${item.make ? item.make + '-' : ''}${item.model ? item.model + ',' : ''}${item.year ? item.year : ''}`}
                                                 notes={item.notes}
                                             // onLongPress={() => this.showOptionsModal(index)}
                                             >
@@ -304,7 +304,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         getAllFriends: (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        getFriendsInfo: (friendIdx, friendType) => dispatch(getFriendsInfoAction({ index: friendIdx, friendType })),
+        getFriendsInfo: (frienduserId, friendType) => dispatch(getFriendsInfoAction({ userId: frienduserId, friendType })),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
         getUserById: (userId) => dispatch(getUserById(userId)),
         getProfilePicture: (pictureId, friendId, friendType) => getPicture(pictureId, ({ picture, pictureId }) => {

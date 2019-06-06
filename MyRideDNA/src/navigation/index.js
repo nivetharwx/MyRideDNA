@@ -30,6 +30,7 @@ import AddBikeForm from '../containers/profile/my-garage/add-edit-bike-form';
 import EditProfileForm from '../containers/profile/my-profile/edit-profile-form';
 import Settings from '../containers/settings';
 import Offers from '../containers/offers';
+import ChatList from '../containers/chats/chat-list';
 
 export default class Navigation extends Component {
     render() {
@@ -61,6 +62,7 @@ export default class Navigation extends Component {
                             <Scene gesturesEnabled={false} key={PageKeys.FRIENDS_PROFILE} component={FriendsProfile} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.CHAT} component={Chat} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.OFFERS} component={Offers} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.CHAT_LIST} component={ChatList} hideNavBar></Scene>
                         </Scene>
                     </Router>
                 </Root>

@@ -51,6 +51,7 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                             </View>
                         </TouchableOpacity>
                         <ImageButton imageSrc={require('../../assets/img/menu-settings.png')} styles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.SETTINGS)} />
+                        <ImageButton imageSrc={require('../../assets/img/chat.png')} styles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.CHAT_LIST)} />
                         <ImageButton imageSrc={require('../../assets/img/menu-offers.png')} styles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.OFFERS)} />
                     </View>
                 </View>

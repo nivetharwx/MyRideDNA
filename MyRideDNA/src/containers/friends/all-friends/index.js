@@ -49,7 +49,7 @@ const FLOAT_ACTIONS = [{
 },];
 
 class AllFriendsTab extends Component {
-    FRIEND_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => this.openProfile() }, { text: 'Rides', id: 'rides', handler: () => this.openProfile(undefined, undefined, 2) }, { text: 'Chat', id: 'chat', handler: () => { this.openChatPage() } }, { text: 'Call', id: 'call', handler: () => { } }, { text: 'Garage', id: 'garage', handler: () => this.openProfile(undefined, undefined, 1) }, { text: 'Unfriend', id: 'unfriend', handler: () => this.doUnfriend() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
+    FRIEND_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => this.openFriendsProfileTab() }, { text: 'Rides', id: 'rides', handler: () => this.openFriendRideTab() }, { text: 'Chat', id: 'chat', handler: () => { this.openChatPage() } }, { text: 'Garage', id: 'garage', handler: () => this.openFriendGarageTab() }, { text: 'Unfriend', id: 'unfriend', handler: () => this.doUnfriend() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     UNKNOWN_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Send\nRequest', id: 'sendRequest', handler: () => this.sendFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     SENT_REQUEST_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Cancel\nRequest', id: 'cancelRequest', handler: () => this.cancelFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     RECEIVED_REQUEST_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Accept\nRequest', id: 'acceptRequest', handler: () => { } }, { text: 'Reject\nRequest', id: 'rejectRequest', handler: () => { } }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
@@ -105,7 +105,19 @@ class AllFriendsTab extends Component {
         //     this.props.searchForFriend(this.props.searchQuery, this.props.user.userId, 0);
         // }
     }
-
+    
+    openFriendRideTab = () =>{
+        const { selectedPerson } = this.state;
+         this.openProfile(selectedPerson.userId, FRIEND_TYPE.ALL_FRIENDS, 2)
+    }
+    openFriendGarageTab = () =>{
+        const { selectedPerson } = this.state;
+         this.openProfile(selectedPerson.userId, FRIEND_TYPE.ALL_FRIENDS, 1)
+    }
+    openFriendsProfileTab = () =>{
+        const { selectedPerson } = this.state;
+         this.openProfile(selectedPerson.userId, FRIEND_TYPE.ALL_FRIENDS, 0)
+    }
     sendFriendRequest = (person) => {
         const { user } = this.props;
         const { selectedPerson } = this.state;
@@ -188,8 +200,18 @@ class AllFriendsTab extends Component {
         })
     }
 
-    showOptionsModal = (index) => {
-        const person = this.props.searchQuery.trim().length > 0 ? this.props.searchFriendList[index] : this.props.allFriends[index];
+    showOptionsModal = (userId) => { 
+        let person  = null;
+        if(this.props.searchQuery.trim().length > 0){
+            console.log('searchQuery : ',this.props.searchQuery)
+            const index = this.props.searchFriendList.findIndex(item => item.userId === userId)
+            person  = this.props.searchFriendList[index];
+        }
+        else{
+            const index = this.props.allFriends.findIndex(item => item.userId === userId)
+            person  = this.props.allFriends[index];
+        }
+        // this.props.searchQuery.trim().length > 0 ? this.props.searchFriendList[index] : this.props.allFriends[index];
         this.setState({ selectedPerson: person, isVisibleOptionsModal: true });
     }
 
@@ -272,7 +294,7 @@ class AllFriendsTab extends Component {
         }
     }
 
-    openProfile = (index, friendType, activeTab) => {
+    openProfile = (userId, friendType, activeTab) => {
         this.props.resetCurrentFriend();
         // if (this.props.searchFriendList.length > 0) {
         //     const person = this.props.searchFriendList[index];
@@ -289,13 +311,13 @@ class AllFriendsTab extends Component {
         //         this.props.openUserProfile({ personInfo: userInfo, oldPosition });
         //     });
         // }
-        if (typeof index !== 'number') {
-            index = this.props.allFriends.findIndex(person => person.userId === this.state.selectedPerson.userId);
-        }
+        // if (typeof index !== 'number') {
+        //     index = this.props.allFriends.findIndex(person => person.userId === this.state.selectedPerson.userId);
+        // }
         if (this.state.isVisibleOptionsModal) {
             this.setState({ isVisibleOptionsModal: false })
         }
-        Actions.push(PageKeys.FRIENDS_PROFILE, { friendIdx: index, friendType: FRIEND_TYPE.ALL_FRIENDS, activeTab: activeTab });
+        Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId, friendType: FRIEND_TYPE.ALL_FRIENDS, activeTab: activeTab });
     }
 
     filterOnlineFriends() {
@@ -365,6 +387,7 @@ class AllFriendsTab extends Component {
         const { isRefreshing, isVisibleOptionsModal, friendsFilter } = this.state;
         const { allFriends, searchQuery, searchFriendList, user } = this.props;
         let filteredFriends = [];
+        
         if (friendsFilter === FLOAT_ACTION_IDS.BTN_ALL_FRIENDS) {
             filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
@@ -374,7 +397,7 @@ class AllFriendsTab extends Component {
             const onlineFriends = allFriends.filter(friend => friend.isOnline);
             filteredFriends = searchQuery === '' ? onlineFriends : onlineFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
-                    friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
+                (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
         }
         return (
@@ -408,8 +431,8 @@ class AllFriendsTab extends Component {
                                         thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                                         item={item}
                                         thumbnailRef={imgRef => this.friendsImageRef[index] = imgRef}
-                                        onLongPress={() => this.showOptionsModal(index)}
-                                        onPress={() => this.openProfile(index, FRIEND_TYPE.ALL_FRIENDS)}
+                                        onLongPress={() => this.showOptionsModal(item.userId)}
+                                        onPress={() => this.openProfile(item.userId, FRIEND_TYPE.ALL_FRIENDS)}
                                     />
                                 )}
                                 ListFooterComponent={this.renderFooter}

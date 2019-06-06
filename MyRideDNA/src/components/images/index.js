@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, Image, Text, TouchableWithoutFeedback, StyleSheet } from 'react-native';
-import { widthPercentageToDP } from '../../constants';
+import { widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
 
 const THUMBNAIL_MAX_WIDTH = widthPercentageToDP(50);
 export const Thumbnail = (props) => {
     return (
         <TouchableWithoutFeedback onLongPress={props.onLongPress} style={{ flex: 1 }}>
             <View style={[props.horizontal ? styles.flexRow : styles.flexColumn, {
-                borderColor: props.selected ? '#EB861E' : props.active ? 'rgba(0,118,181,0.7)' : 'transparent',
+                borderColor: props.selected ? '#EB861E' : props.active ? APP_COMMON_STYLES.infoColor : 'transparent',
                 borderWidth: props.selected ? 4 : props.active ? 4 : 2
             }, props.containerStyle]}>
                 {props.horizontal ? <Text style={{ alignSelf: 'center', color: 'black', fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>{props.title}</Text> : null}
@@ -29,7 +29,7 @@ export const Thumbnail = (props) => {
                         props.hideOverlay
                             ? null
                             : !props.active
-                                ? <View style={{ position: 'absolute', width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)' }} />
+                                ? <View style={{ position: 'absolute', width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0)' }} />
                                 : null
                     }
                 </View>
