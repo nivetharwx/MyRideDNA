@@ -54,33 +54,31 @@ export const IconicInput = ({ inputColor, containerStyle, iconProps, placeholder
 );
 
 // DOC: Controlled component, caller have to pass onValueChange function to persist the user selection
-export const IconicList = ({ iconProps, values, selectedValue, placeholder, onChange }) => {
+export const IconicList = ({ iconProps, values, selectedValue, placeholder, onChange, containerStyle, style }) => {
     let options = selectedValue ? values : [{ label: placeholder || 'Select any', value: '' }, ...values];
     return (
-        <View>
-            <View style={{ flexDirection: 'row', paddingLeft: 10 }}>
+        <View style={[{ flexDirection: 'row', paddingLeft: 10 }, containerStyle]}>
+            {
+                iconProps
+                    ? <View style={{ paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
+                        <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, iconProps.style]} />
+                    </View>
+                    : null
+            }
+            <Picker
+                mode="dropdown"
+                iosIcon={<NBIcon name="ios-arrow-down-outline" />}
+                placeholder={placeholder}
+                placeholderStyle={{ color: "#a9a9a9", marginLeft: 0, paddingLeft: 0 }}
+                placeholderIconColor="#a9a9a9"
+                style={[{ width: iconProps ? WindowDimensions.width - 30 : WindowDimensions.width, borderBottomWidth: 1, borderBottomColor: '#a9a9a9' }, style]}
+                selectedValue={selectedValue}
+                onValueChange={onChange && onChange}
+            >
                 {
-                    iconProps
-                        ? <View style={{ paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
-                            <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, iconProps.style]} />
-                        </View>
-                        : null
+                    options.map((option, index) => <Picker.Item key={option.value} label={option.label} value={option.value} />)
                 }
-                <Picker
-                    mode="dropdown"
-                    iosIcon={<NBIcon name="ios-arrow-down-outline" />}
-                    placeholder={placeholder}
-                    placeholderStyle={{ color: "#a9a9a9", marginLeft: 0, paddingLeft: 0 }}
-                    placeholderIconColor="#a9a9a9"
-                    style={{ width: iconProps ? WindowDimensions.width - 30 : WindowDimensions.width, borderBottomWidth: 1, borderBottomColor: '#a9a9a9' }}
-                    selectedValue={selectedValue}
-                    onValueChange={onChange && onChange}
-                >
-                    {
-                        options.map((option, index) => <Picker.Item key={option.value} label={option.label} value={option.value} />)
-                    }
-                </Picker>
-            </View>
+            </Picker>
         </View>
     );
 }

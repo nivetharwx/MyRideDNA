@@ -27,7 +27,8 @@ import {
     UPDATE_RIDE_CREATOR_PICTURE,
     UPDATE_RIDE_IN_LIST,
     UPDATE_PAGENUMBER,
-    IS_REMOVED
+    IS_REMOVED,
+    UPDATE_FRIENDS_RIDE_SNAPSHOT
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -377,6 +378,12 @@ export const resetCurrentFriendAction = (data) => (
 export const updateCurrentFriendAction = (data) => (
     {
         type: UPDATE_CURRENT_FRIEND,
+        data: data
+    }
+);
+export const updateFriendsRideSnapshotAction = (data) => (
+    {
+        type: UPDATE_FRIENDS_RIDE_SNAPSHOT,
         data: data
     }
 );

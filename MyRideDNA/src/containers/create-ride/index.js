@@ -42,7 +42,8 @@ export class CreateRide extends Component {
             ride: new RideInfo(props.ride),
             searchQuery: 'Current location',
             placeSearchList: [],
-            startRideFrom: null
+            startRideFrom: null,
+            currentLocation: this.props.currentLocation || null
         };
     }
 
@@ -114,6 +115,7 @@ export class CreateRide extends Component {
         if (lastCharacter === ' ') return;
         const response = await geocodingClient.forwardGeocode({
             query: placeQuery,
+            proximity: this.state.currentLocation,
             limit: 10
         }).send();
         this.setState({ placeSearchList: response.body.features });

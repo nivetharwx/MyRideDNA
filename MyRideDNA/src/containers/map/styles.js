@@ -90,6 +90,7 @@ const styles = StyleSheet.create({
         height: 70,
         backgroundColor: '#fff',
         flexDirection: 'row',
+        justifyContent: 'space-between'
     },
     actionButtonIcon: {
         fontSize: 20,
