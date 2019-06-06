@@ -286,14 +286,15 @@ class FriendsProfile extends Component {
                 {
                     item.privacyMode === 'public'
                         ? <Left>
-                            <Button style={{ justifyContent: 'space-between' }} transparent>
+                            {/* <Button style={{ justifyContent: 'space-between' }} transparent>
                                 <NBIcon active name="thumbs-up" />
                                 <Text>{item.totalLikes !== 1 ? item.totalLikes + ' Likes' : '1 Like'}</Text>
                             </Button>
                             <Button style={{ justifyContent: 'space-between' }} transparent>
                                 <NBIcon active name="chatbubbles" />
                                 <Text>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</Text>
-                            </Button>
+                            </Button> */}
+                            <IconButton title={item.totalLikes !== 1 ? item.totalLikes + ' Likes' : '1 Like'} titleStyle={{ marginLeft: 8 }} iconProps={{ name: 'ios-thumbs-up', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} />
                         </Left>
                         : <Left></Left>
                 }
@@ -302,6 +303,7 @@ class FriendsProfile extends Component {
                         <NBIcon active name="chatbubbles" />
                         <Text>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</Text>
                     </Button> */}
+                    <IconButton title={item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'} titleStyle={{ marginLeft: 8 }} iconProps={{ name: 'ios-chatbubbles', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} />
                 </Body>
                 <Right>
                     <Text note>{this.getDateLabel((Date.now() - new Date(item.date).getTime()) / 1000 / 60 / 60)}</Text>

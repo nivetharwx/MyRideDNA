@@ -31,11 +31,12 @@ const styles = StyleSheet.create({
     },
     searchResultsContainer: {
         position: 'absolute',
-        top: APP_COMMON_STYLES.headerHeight,
+        top: 130,
         marginTop: 62,
         zIndex: 100,
         width: '100%',
-        height: heightPercentageToDP(50),
+        height: heightPercentageToDP(100) - 130,
+        backgroundColor: 'transparent',
         backgroundColor: 'rgba(0,0,0,0.8)',
     },
     closeIcon: {

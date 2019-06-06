@@ -305,7 +305,9 @@ export class Map extends Component {
         }
         if (Object.keys(updatedState).length > 0) {
             this.setState(prevState => updatedState, () => {
-                if (ride.isRecorded) {
+                if (ride.rideId === null) {
+                    this.onPressRecenterMap();
+                } else if (ride.isRecorded) {
                     let coordinates = [];
                     if (ride.source) {
                         coordinates.push([ride.source.lng, ride.source.lat]);
@@ -318,7 +320,9 @@ export class Map extends Component {
                         // DOC: Update the mapbounds to include the recorded ride path
                         const newBounds = turfBBox({ coordinates, type: 'LineString' });
                         this._mapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 20, 1000);
-                        if (this._hiddenMapView) this._hiddenMapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 35, 0);
+                        if (this._hiddenMapView) {
+                            setTimeout(() => this._hiddenMapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 35, 0), 1000);
+                        }
                     }
                 } else if (updatedState.markerCollection && updatedState.markerCollection.features.length > 1) {
                     // DOC: Fetch route for build ride if waypoints are more than one
@@ -326,11 +330,13 @@ export class Map extends Component {
                         this.prevCoordsStr = currentCoordsStr;
                         this.fetchDirections();
                     }
-                } else if (updatedState.markerCollection && updatedState.markerCollection.features.length === 1) {
+                }
+                // DOC: Fly to the single point of the build/recorded ride
+                if (updatedState.markerCollection && updatedState.markerCollection.features.length === 1) {
                     this._mapView.flyTo(updatedState.markerCollection.features[0].geometry.coordinates, 500);
-                    if (this._hiddenMapView) this._hiddenMapView.flyTo(updatedState.markerCollection.features[0].geometry.coordinates, 0);
-                } else if (ride.rideId === null) {
-                    this.onPressRecenterMap();
+                    if (this._hiddenMapView) {
+                        setTimeout(() => this._hiddenMapView.flyTo(updatedState.markerCollection.features[0].geometry.coordinates, 0), 1000);
+                    }
                 }
             });
         }
@@ -550,20 +556,6 @@ export class Map extends Component {
             if (this.state.rideUpdateCount > 0 || this.hasModifiedRide) {
                 const { ride } = this.props;
                 this.setState({ showLoader: true, snapMode: true }, () => {
-                    // setTimeout(() => {
-                    //     this.getMapSnapshot((mapSnapshot) => {
-                    //         const body = {};
-                    //         if (ride.source) body.source = ride.source;
-                    //         if (ride.destination) body.destination = ride.destination;
-                    //         if (ride.waypoints) body.waypoints = ride.waypoints;
-                    //         if (ride.totalDistance) body.totalDistance = ride.totalDistance;
-                    //         if (ride.totalTime) body.totalTime = ride.totalTime;
-                    //         if (mapSnapshot) body.snapshot = { mimeType: 'image/jpeg', picture: mapSnapshot };
-                    //         replaceRide(ride.rideId, body,
-                    //             () => this.setState({ showLoader: false, snapMode: false }),
-                    //             () => this.setState({ showLoader: false, snapMode: false }));
-                    //     });
-                    // }, 500);
                     this.getMapSnapshot((mapSnapshot) => {
                         const body = {};
                         if (ride.source) body.source = ride.source;
@@ -1531,6 +1523,7 @@ export class Map extends Component {
     }
 
     onPressPauseRide = () => {
+        this.hasModifiedRide = true;
         const { ride } = this.props;
         this.watchID != null && clearInterval(this.watchID);
         const { gpsPointCollection } = this.state;
@@ -1552,6 +1545,7 @@ export class Map extends Component {
     }
 
     onPressStopRide = () => {
+        this.hasModifiedRide = true;
         const { ride } = this.props;
         this.watchID != null && clearInterval(this.watchID);
         const { gpsPointCollection } = this.state;
@@ -2101,7 +2095,7 @@ export class Map extends Component {
                                     <Animated.View style={{ marginLeft: widthPercentageToDP(1), alignItems: 'center', justifyContent: 'center', opacity: searchClearAnim }}>
                                         <IconButton onPress={this.onPressClear} iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons', style: { fontSize: 25, } }} />
                                     </Animated.View>
-                                    <IconButton style={{ marginHorizontal: widthPercentageToDP(1) }} iconProps={this.state.activeSearch.icon} onPress={this.openDropdown} />
+                                    {/* <IconButton style={{ marginHorizontal: widthPercentageToDP(1) }} iconProps={this.state.activeSearch.icon} onPress={this.openDropdown} /> */}
                                 </Animated.View>
                                 : null
                     }
@@ -2135,17 +2129,13 @@ export class Map extends Component {
                                         </MapboxGL.ShapeSource>
                                         : null
                                 }
-                                {
-                                    markerCollection.features.length > 0
-                                        ? <MapboxGL.ShapeSource
-                                            id='markers'
-                                            shape={markerCollection}
-                                            images={shapeSourceImages}
-                                            onPress={this.onPressMarker}>
-                                            <MapboxGL.SymbolLayer id="exampleIconName" style={[MapboxStyles.icon, MapboxStyles.markerTitle]} />
-                                        </MapboxGL.ShapeSource>
-                                        : null
-                                }
+                                <MapboxGL.ShapeSource
+                                    id='markers'
+                                    shape={markerCollection}
+                                    images={shapeSourceImages}
+                                    onPress={this.onPressMarker}>
+                                    <MapboxGL.SymbolLayer id="exampleIconName" style={[MapboxStyles.icon, MapboxStyles.markerTitle]} />
+                                </MapboxGL.ShapeSource>
                                 {
                                     gpsPointCollection.features[0].geometry.coordinates.length >= 2 ?
                                         <MapboxGL.Animated.ShapeSource id='recordRidePathLayer' shape={gpsPointCollection}>
@@ -2240,7 +2230,7 @@ export class Map extends Component {
                             </TouchableOpacity>
                             : null
                     }
-                    <Animated.View style={{ backgroundColor: '#fff', paddingHorizontal: widthPercentageToDP(2), position: 'absolute', zIndex: 800, elevation: 10, top: heightPercentageToDP(18), right: 0, height: this.state.dropdownAnim }}>
+                    {/* <Animated.View style={{ backgroundColor: '#fff', paddingHorizontal: widthPercentageToDP(2), position: 'absolute', zIndex: 800, elevation: 10, top: heightPercentageToDP(18), right: 0, height: this.state.dropdownAnim }}>
                         <FlatList
                             data={this.state.searchTypes}
                             keyExtractor={item => item.value}
@@ -2248,7 +2238,7 @@ export class Map extends Component {
                                 return <IconButton style={{ marginVertical: heightPercentageToDP(1) }} iconProps={item.icon} onPress={() => this.closeDropdown(index)} />
                             }}
                         />
-                    </Animated.View>
+                    </Animated.View> */}
                     <View style={{ position: 'absolute', zIndex: 100, left: 5, top: 140, width: 55 }}>
                         {/* <IconButton style={[styles.mapControlButton, { backgroundColor: 'transparent' }]} iconProps={{ name: 'controller-play', type: 'Entypo', style: { fontSize: 40, elevation: 10 } }} onPress={this.showMapControls} /> */}
                         <TouchableOpacity style={{ width: widthPercentageToDP(10), height: widthPercentageToDP(15) }} onPress={this.showMapControls}>
@@ -2345,7 +2335,7 @@ export class Map extends Component {
                     </View> */}
                     {
                         searchResults.length > 0 ?
-                            <SearchResults style={{ marginTop: 132 }} data={searchResults} onPressClose={this.onPressSearchResultsClose} onSelectItem={this.onSelectPlace} />
+                            <SearchResults style={{ marginTop: 0 }} data={searchResults} onPressClose={this.onPressSearchResultsClose} onSelectItem={this.onSelectPlace} />
                             : null
                     }
                     {/* {
