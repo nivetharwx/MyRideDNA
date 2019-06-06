@@ -1,5 +1,5 @@
-import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION, ADD_FRIENDS_LOCATION, REPLACE_FRIEND_INFO } from "../actions/actionConstants";
-import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP } from "../constants";
+import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION, ADD_FRIENDS_LOCATION, REPLACE_FRIEND_INFO, UPDATE_FRIENDS_RIDE_SNAPSHOT } from "../actions/actionConstants";
+import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP, RIDE_TAIL_TAG, THUMBNAIL_TAIL_TAG } from "../constants";
 
 const initialState = {
     allFriends: [],
@@ -10,7 +10,8 @@ const initialState = {
         garage: {
             garageId: null
         },
-        userId: null
+        userId: null,
+        rideList: [],
     },
     friendsLocationList: null
 };
@@ -85,7 +86,8 @@ export default (state = initialState, action) => {
                         garage: {
                             garageId: null
                         },
-                        userId: null
+                        userId: null,
+                        rideList: []
                     }
                 }
             }
@@ -110,6 +112,7 @@ export default (state = initialState, action) => {
                         garageId: null
                     },
                     userId: null,
+                    rideList: [],
                     ...friend
                 }
             };
@@ -122,6 +125,7 @@ export default (state = initialState, action) => {
                     garage: {
                         garageId: null
                     },
+                    rideList: []
                 }
             }
 
@@ -140,7 +144,8 @@ export default (state = initialState, action) => {
                             garage: {
                                 garageId: null
                             },
-                            userId: null
+                            userId: null,
+                            rideList: []
                         }
                     }
                 }
@@ -163,6 +168,18 @@ export default (state = initialState, action) => {
                     ...action.data
                 }
             };
+
+        case UPDATE_FRIENDS_RIDE_SNAPSHOT:
+            if (state.currentFriend.userId === null || (action.data.userId !== state.currentFriend.userId)) return state;
+            updatedRideList = state.currentFriend.rideList.map(ride => {
+                if (!ride.snapshotId) return ride;
+                let id = ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, RIDE_TAIL_TAG);
+                if (typeof action.data.pictureObject[id] === 'string') {
+                    return { ...ride, snapshot: action.data.pictureObject[id] };
+                }
+                return ride;
+            });
+            return { ...state, currentFriend: { ...state.currentFriend, rideList: updatedRideList } };
 
         case UPDATE_CURRENT_FRIEND_GARAGE:
             if ((state.currentFriend.userId === null) || (action.data.userId !== state.currentFriend.userId)) return state;

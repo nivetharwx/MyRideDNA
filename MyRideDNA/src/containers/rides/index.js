@@ -2,16 +2,16 @@ import React, { Component } from 'react';
 import {
     SafeAreaView, Text, View, FlatList, ImageBackground,
     TouchableOpacity, Alert, StatusBar, Platform, StyleSheet,
-    AsyncStorage, Image
+    AsyncStorage, Image, ActivityIndicator
 } from 'react-native';
 import { connect } from 'react-redux';
 
 import { Tab, TabHeading, Tabs, ScrollableTab, Icon as NBIcon, ListItem, Left, Toast, Card, CardItem, Thumbnail, Body, Button, Right } from "native-base";
-import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../constants';
+import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, RIDE_TAIL_TAG } from '../../constants';
 import { ShifterButton, LinkButton, ImageButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, screenChangeAction, clearRideAction, updateRidePictureInListAction, updateRideCreatorPictureInListAction, apiLoaderActions, updateRideInListAction, updateRideAction } from '../../actions';
+import { appNavMenuVisibilityAction, screenChangeAction, clearRideAction, updateRidePictureInListAction, updateRideCreatorPictureInListAction, apiLoaderActions, updateRideInListAction, updateRideAction, isRemovedAction } from '../../actions';
 import { BasicHeader } from '../../components/headers';
-import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide, logoutUser, getPicture, getPictureList, updateRide } from '../../api';
+import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide, logoutUser, getPicture, getPictureList, updateRide, getRidePictureList } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
 import { LabeledInput } from '../../components/inputs';
 import { IconLabelPair } from '../../components/labels';
@@ -91,7 +91,9 @@ export class Rides extends Component {
             newRideName: '',
             isVisibleRenameModal: false,
             isVisibleOptionsModal: false,
-            selectedRide: null
+            selectedRide: null,
+            isLoadingData: false,
+            isLoading: false
         };
     }
 
@@ -100,11 +102,17 @@ export class Rides extends Component {
     componentDidMount() {
         const { activeTab } = this.state;
         if (activeTab === 0) {
-            this.props.getAllBuildRides(this.props.user.userId);
+            this.props.getAllBuildRides(this.props.user.userId, true, 0, (res) => {
+            }, (err) => {
+            });
         } else if (activeTab === 1) {
-            this.props.getAllRecordedRides(this.props.user.userId);
+            this.props.getAllRecordedRides(this.props.user.userId, true, 0, (res) => {
+            }, (err) => {
+            });
         } else {
-            this.props.getAllPublicRides(this.props.user.userId, true);
+            this.props.getAllPublicRides(this.props.user.userId, true, 0, (res) => {
+            }, (err) => {
+            });
         }
     }
 
@@ -115,11 +123,17 @@ export class Rides extends Component {
         const { activeTab } = this.state;
         if (prevState.activeTab != activeTab) {
             if (activeTab === 0) {
-                this.props.getAllBuildRides(this.props.user.userId);
+                this.props.getAllBuildRides(this.props.user.userId, true, 0, (res) => {
+                }, (err) => {
+                });
             } else if (activeTab === 1) {
-                this.props.getAllRecordedRides(this.props.user.userId);
+                this.props.getAllRecordedRides(this.props.user.userId, true, 0, (res) => {
+                }, (err) => {
+                });
             } else {
-                this.props.getAllPublicRides(this.props.user.userId, true);
+                this.props.getAllPublicRides(this.props.user.userId, true, 0, (res) => {
+                }, (err) => {
+                });
             }
         }
 
@@ -132,13 +146,14 @@ export class Rides extends Component {
                 return;
             }
             this.onCancelRenameForm();
-            if (this.props.buildRides.length < prevProps.buildRides.length) {
+            if (this.props.buildRides.length < prevProps.buildRides.length && this.props.isRemoved) {
                 this.showDeleteSuccessMessage();
                 return;
             }
             let buildPicIdList = this.props.buildRides.reduce((list, ride) => {
                 if (ride.snapshotId && !ride.snapshot) {
-                    list.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
+                    // list.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
+                    list.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, RIDE_TAIL_TAG));
                 }
                 return list;
             }, []);
@@ -152,7 +167,8 @@ export class Rides extends Component {
             }
             let recordPicIdList = this.props.recordedRides.reduce((list, ride) => {
                 if (ride.snapshotId && !ride.snapshot) {
-                    list.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
+                    // list.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
+                    list.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, RIDE_TAIL_TAG));
                 }
                 return list;
             }, []);
@@ -167,7 +183,8 @@ export class Rides extends Component {
             let sharedPicIdObj = this.props.sharedRides.reduce((obj, ride) => {
                 if (ride.snapshotId && !ride.snapshot && !this.callInitiatedObj[ride.snapshotId]) {
                     this.callInitiatedObj[ride.snapshotId] = true;
-                    obj.snapshotIdList.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
+                    // obj.snapshotIdList.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
+                    obj.snapshotIdList.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, RIDE_TAIL_TAG));
                 } else {
                     this.callInitiatedObj[ride.snapshotId] = false;
                 }
@@ -198,6 +215,7 @@ export class Rides extends Component {
             text: 'Ride removed successfully',
             buttonText: 'Okay'
         });
+        this.props.isRemovedAction(false);
     }
 
     onChangeTab = ({ from, i }) => {
@@ -257,6 +275,7 @@ export class Rides extends Component {
             case RIDE_TYPE.SHARED_RIDE:
                 this.props.copySharedRide(this.props.sharedRides[index].rideId, this.state.newRideName,
                     RIDE_TYPE.BUILD_RIDE, this.props.user.userId, new Date().toISOString());
+                this.setState({ isVisibleRenameModal: false })
                 break;
         }
     }
@@ -468,6 +487,51 @@ export class Rides extends Component {
         return days;
     }
 
+
+    loadMoreData = () => {
+        if (this.state.isLoadingData && this.state.isLoading === false) {
+            this.setState({ isLoading: true, isLoadingData: false });
+            if (this.state.activeTab === 0) {
+                this.props.getAllBuildRides(this.props.user.userId, false, this.props.pageNumber, (res) => {
+                    this.setState({ isLoading: false })
+                }, (err) => {
+                    this.setState({ isLoading: false })
+                });
+            }
+            else if (this.state.activeTab === 1) {
+                this.props.getAllRecordedRides(this.props.user.userId, false, this.props.pageNumber, (res) => {
+                    this.setState({ isLoading: false })
+                }, (err) => {
+                    this.setState({ isLoading: false })
+                });
+            }
+            else if (this.state.activeTab === 2) {
+                this.props.getAllPublicRides(this.props.user.userId, false, this.props.pageNumber, (res) => {
+                    this.setState({ isLoading: false })
+                }, (err) => {
+                    this.setState({ isLoading: false })
+                });
+            }
+        }
+    }
+
+    renderFooter = () => {
+        if (this.state.isLoading) {
+            return (
+                <View
+                    style={{
+                        paddingVertical: 20,
+                        borderTopWidth: 1,
+                        borderColor: "#CED0CE"
+                    }}
+                >
+                    <ActivityIndicator animating size="large" />
+                </View>
+            );
+        }
+        return null
+    }
+
     render() {
         const { activeTab, searchQuery, headerSearchMode, isVisibleRenameModal, isVisibleOptionsModal, isRefreshing } = this.state;
         const { buildRides, recordedRides, sharedRides, user, showLoader } = this.props;
@@ -514,6 +578,11 @@ export class Rides extends Component {
                                             data={buildRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
                                             renderItem={this.renderRides}
                                             keyExtractor={this.keyExtractor}
+                                            ListFooterComponent={this.renderFooter}
+                                            onEndReached={this.loadMoreData}
+                                            onEndReachedThreshold={0.1}
+                                            onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+
                                         />
                                         : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
                                 }
@@ -535,6 +604,11 @@ export class Rides extends Component {
                                             data={recordedRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
                                             renderItem={this.renderRides}
                                             keyExtractor={this.keyExtractor}
+                                            ListFooterComponent={this.renderFooter}
+                                            onEndReached={this.loadMoreData}
+                                            onEndReachedThreshold={0.1}
+                                            onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+
                                         />
                                         : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
                                 }
@@ -558,6 +632,10 @@ export class Rides extends Component {
                                             onRefresh={this.onPullRefresh}
                                             renderItem={this.renderRides}
                                             keyExtractor={this.keyExtractor}
+                                            ListFooterComponent={this.renderFooter}
+                                            onEndReached={this.loadMoreData}
+                                            onEndReachedThreshold={0.1}
+                                            onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
                                         />
                                         : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
                                 }
@@ -581,18 +659,18 @@ export class Rides extends Component {
 const mapStateToProps = (state) => {
     const { showMenu } = state.TabVisibility;
     const { user, userAuthToken, deviceToken } = state.UserAuth;
-    const { buildRides, recordedRides, sharedRides } = state.RideList;
+    const { buildRides, recordedRides, sharedRides, isRemoved } = state.RideList;
     const { ride } = state.RideInfo.present;
-    const { showLoader } = state.PageState;
-    return { showMenu, user, userAuthToken, deviceToken, buildRides, recordedRides, sharedRides, ride, showLoader };
+    const { showLoader, pageNumber } = state.PageState;
+    return { showMenu, user, userAuthToken, deviceToken, buildRides, recordedRides, sharedRides, ride, showLoader, pageNumber, isRemoved };
 }
 
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        getAllBuildRides: (userId) => dispatch(getAllBuildRides(userId)),
-        getAllRecordedRides: (userId) => dispatch(getAllRecordedRides(userId)),
-        getAllPublicRides: (userId, toggleLoader) => dispatch(getAllPublicRides(userId, toggleLoader)),
+        getAllBuildRides: (userId, toggleLoader, pageNumber, successCallback, errorCallback) => dispatch(getAllBuildRides(userId, toggleLoader, pageNumber, successCallback, errorCallback)),
+        getAllRecordedRides: (userId, toggleLoader, pageNumber, successCallback, errorCallback) => dispatch(getAllRecordedRides(userId, toggleLoader, pageNumber, successCallback, errorCallback)),
+        getAllPublicRides: (userId, toggleLoader, pageNumber, successCallback, errorCallback) => dispatch(getAllPublicRides(userId, toggleLoader, pageNumber, successCallback, errorCallback)),
         loadRideOnMap: (rideId, rideInfo) => dispatch(getRideByRideId(rideId, rideInfo)),
         updateRideInList: (updates, rideType, updateActiveRide) => {
             dispatch(apiLoaderActions(true));
@@ -612,7 +690,11 @@ const mapDispatchToProps = (dispatch) => {
             console.log("getPicture-ride success: ", response);
             dispatch(updateRidePictureInListAction({ rideId, rideType, ...response }))
         }, (error) => console.log("getPicture-ride error: ", error)),
-        getRidePictureList: (pictureIdList, rideType) => getPictureList(pictureIdList, (response) => {
+        // getRidePictureList: (pictureIdList, rideType) => getPictureList(pictureIdList, (response) => {
+        //     console.log("getRidePictureList-ride success: ", response);
+        //     dispatch(updateRidePictureInListAction({ rideType, pictureObject: response }))
+        // }, (error) => console.log("getRidePictureList-ride error: ", error)),
+        getRidePictureList: (pictureIdList, rideType) => getRidePictureList(pictureIdList, (response) => {
             console.log("getRidePictureList-ride success: ", response);
             dispatch(updateRidePictureInListAction({ rideType, pictureObject: response }))
         }, (error) => console.log("getRidePictureList-ride error: ", error)),
@@ -625,6 +707,7 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(updateRideCreatorPictureInListAction({ rideType, pictureObject: response }))
         }, (error) => console.log("getRideCreatorPictureList error: ", error)),
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
+        isRemovedAction: (state) => dispatch(isRemovedAction(false))
     }
 }
 

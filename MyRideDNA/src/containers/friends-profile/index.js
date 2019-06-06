@@ -1,16 +1,17 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, View, Text, StatusBar, ImageBackground, ScrollView, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG, RELATIONSHIP, PageKeys, MEDIUM_TAIL_TAG, FRIEND_TYPE } from '../../constants/index';
+import { StyleSheet, View, Text, StatusBar, Image, ImageBackground, ScrollView, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG, RELATIONSHIP, PageKeys, MEDIUM_TAIL_TAG, FRIEND_TYPE, RIDE_TAIL_TAG } from '../../constants/index';
 import { ShifterButton, IconButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction, apiLoaderActions, initUndoRedoRideAction } from '../../actions';
-import { Tabs, Tab, ScrollableTab, TabHeading, Accordion, ListItem, Left } from 'native-base';
+import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction, apiLoaderActions, initUndoRedoRideAction, updateFriendsRideSnapshotAction } from '../../actions';
+import { Tabs, Tab, ScrollableTab, TabHeading, Accordion, ListItem, Left, Right, Card, CardItem, Thumbnail, Body, Button, Icon as NBIcon } from 'native-base';
 import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { ImageLoader, Loader } from '../../components/loader';
 import styles from './styles';
-import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend, getFriendsLocationList, getUserById, getAllFriends, readNotification } from '../../api';
+import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend, getFriendsLocationList, getUserById, getAllFriends, readNotification, getPictureList, getRidePictureList } from '../../api';
 import { BasicCard } from '../../components/cards';
+import { IconLabelPair } from '../../components/labels';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
 class FriendsProfile extends Component {
@@ -54,6 +55,9 @@ class FriendsProfile extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        if (this.props.ride.rideId && (prevProps.ride.rideId !== this.props.ride.rideId)) {
+            this.props.changeScreen({ name: PageKeys.MAP });
+        }
         if (prevProps.friendsLocationList !== this.props.friendsLocationList) {
             if (this.props.friendsLocationList) {
                 this.props.changeScreen({ name: PageKeys.MAP });
@@ -62,7 +66,9 @@ class FriendsProfile extends Component {
         if (prevProps.currentFriend !== this.props.currentFriend) {
             if (this.props.currentFriend.userId === null) {
                 if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
-                    this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
+                    this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
+                    }, (err) => {
+                    });
                 }
                 Actions.pop();
                 return;
@@ -108,6 +114,17 @@ class FriendsProfile extends Component {
                     })
                     return;
                 }
+            } else if (this.state.activeTab === 2) {
+                let ridePicIdList = this.props.currentFriend.rideList.reduce((list, ride) => {
+                    if (ride.snapshotId && !ride.snapshot) {
+                        list.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, RIDE_TAIL_TAG));
+                    }
+                    return list;
+                }, []);
+                if (ridePicIdList.length > 0) {
+                    this.props.getRidePictureList(ridePicIdList, this.props.currentFriend.userId);
+                }
+                // this.props.getFirendsRideInfo(this.props.currentFriend.userId, RELATIONSHIP.FRIEND)
             }
         }
     }
@@ -136,14 +153,21 @@ class FriendsProfile extends Component {
             { cancelable: false }
         );
     }
-    onPressRide(rideId) {
+
+    onPressRide(ride) {
         if (this.props.ride.rideId) {
-            this.props.clearRideFromMap();
+            if (this.props.ride.rideId === ride.rideId) {
+                this.props.changeScreen({ name: PageKeys.MAP });
+                return;
+            } else {
+                this.props.clearRideFromMap();
+            }
         }
-        this.props.changeScreen({ name: PageKeys.MAP });
-        this.props.loadRideOnMap(rideId);
+        this.props.loadRideOnMap(ride.rideId, { creatorName: this.props.currentFriend.name, creatorNickname: this.props.currentFriend.nickname, creatorProfilePictureId: this.props.currentFriend.profilePictureId });
     }
+
     rideKeyExtractor = (item) => item.rideId;
+
     onPressBackButton = () => {
         this.props.resetCurrentFriend();
     }
@@ -174,6 +198,116 @@ class FriendsProfile extends Component {
                 }
             </View>
         );
+    }
+
+    getDateLabel(hourDiff) {
+        var days = parseInt(parseInt(hourDiff) / 24);
+        if (days >= 365) {
+            days = parseInt(days / 365);
+            days = days > 1 ? days + ' years ago' : days + ' year ago';
+        } else if (days >= 30) {
+            days = parseInt(days / 30);
+            days = days > 1 ? days + ' months ago' : days + ' month ago';
+        } else if (days >= 7) {
+            days = parseInt(days / 7);
+            days = days > 1 ? days + ' weeks ago' : days + ' week ago';
+        } else if (days >= 1) {
+            days = days > 1 ? days + ' days ago' : days + ' day ago';
+        } else if (hourDiff >= 1) {
+            hourDiff = parseInt(hourDiff);
+            days = hourDiff > 1 ? hourDiff + ' hours ago' : hourDiff + ' hour ago';
+        } else if (hourDiff * 60 >= 1) {
+            let mintDiff = parseInt(hourDiff * 60);
+            days = mintDiff > 1 ? mintDiff + ' minutes ago' : mintDiff + ' minute ago';
+        } else {
+            days = 'just now';
+        }
+        return days;
+    }
+
+    getTimeAsFormattedString(estimatedTime) {
+        if (!estimatedTime) {
+            return '0 h 0 m';
+        }
+        let h = Math.floor(estimatedTime / 3600);
+        let m = Math.floor(estimatedTime % 3600 / 60);
+        let timeText = '';
+        if (h > 0) {
+            timeText += `${h} h`;
+        }
+        if (m > 0) {
+            timeText += ` ${m} m`;
+        }
+        return timeText;
+    }
+
+    getDistanceAsFormattedString(distance, distanceUnit) {
+        if (!distance) {
+            return '0 ' + distanceUnit;
+        }
+        if (distanceUnit === 'km') {
+            return (distance / 1000).toFixed(2) + ' km';
+        } else {
+            return (distance * 0.000621371192).toFixed(2) + ' mi';
+        }
+    }
+
+    renderRides = ({ item, index }) => {
+        return <Card>
+            <CardItem bordered>
+                <Body>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <View>
+                            <Text style={{ fontWeight: 'bold', fontSize: widthPercentageToDP(3.8) }}>{item.name}</Text>
+                            <Text note></Text>
+                        </View>
+                        {
+                            // this.state.activeTab !== 2
+                            //     ? <Text style={{ color: item.privacyMode === 'private' ? '#6B7663' : APP_COMMON_STYLES.infoColor }}>{item.privacyMode.toUpperCase()}</Text>
+                            //     : null
+                        }
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <IconLabelPair iconProps={{ name: 'road-variant', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(5) } }} text={this.getDistanceAsFormattedString(item.totalDistance, this.props.user.distanceUnit)}
+                            textStyle={{ fontSize: widthPercentageToDP(3.5) }} />
+                        <IconLabelPair iconProps={{ name: 'access-time', type: 'MaterialIcons', style: { fontSize: widthPercentageToDP(5) } }} text={this.getTimeAsFormattedString(item.totalTime)}
+                            textStyle={{ fontSize: widthPercentageToDP(3.5) }} />
+                    </View>
+                </Body>
+            </CardItem>
+            <CardItem cardBody button onPress={() => this.onPressRide(item)}>
+                {
+                    item.snapshot
+                        ? <Image resizeMode='stretch' source={{ uri: item.snapshot }} style={{ height: 200, width: null, flex: 1 }} />
+                        : <ImageBackground blurRadius={3} resizeMode='cover' source={require('../../assets/img/ride-placeholder-image.png')} style={{ height: 200, width: null, flex: 1 }} />
+                }
+            </CardItem>
+            <CardItem>
+                {
+                    item.privacyMode === 'public'
+                        ? <Left>
+                            <Button style={{ justifyContent: 'space-between' }} transparent>
+                                <NBIcon active name="thumbs-up" />
+                                <Text>{item.totalLikes !== 1 ? item.totalLikes + ' Likes' : '1 Like'}</Text>
+                            </Button>
+                            <Button style={{ justifyContent: 'space-between' }} transparent>
+                                <NBIcon active name="chatbubbles" />
+                                <Text>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</Text>
+                            </Button>
+                        </Left>
+                        : <Left></Left>
+                }
+                <Body>
+                    {/* <Button transparent>
+                        <NBIcon active name="chatbubbles" />
+                        <Text>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</Text>
+                    </Button> */}
+                </Body>
+                <Right>
+                    <Text note>{this.getDateLabel((Date.now() - new Date(item.date).getTime()) / 1000 / 60 / 60)}</Text>
+                </Right>
+            </CardItem>
+        </Card>
     }
 
     render() {
@@ -252,17 +386,10 @@ class FriendsProfile extends Component {
                             <View style={{ backgroundColor: '#fff', flex: 1 }}>
 
                                 {
-                                    currentFriend.rideList && currentFriend.rideList.length > 0 ?
+                                    currentFriend.rideList.length > 0 ?
                                         <FlatList
                                             data={currentFriend.rideList}
-                                            renderItem={({ item, index }) => <ListItem style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
-                                                <Left style={{ flex: 1 }}>
-                                                    <TouchableOpacity style={{ flex: 1 }}
-                                                        onPress={() => this.onPressRide(item.rideId)}>
-                                                        <Text>{item.name}</Text>
-                                                    </TouchableOpacity>
-                                                </Left>
-                                            </ListItem>}
+                                            renderItem={this.renderRides}
                                             keyExtractor={this.rideKeyExtractor}
                                         />
                                         : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
@@ -300,7 +427,7 @@ const mapStateToProps = (state) => {
 };
 const mapDispatchToProps = (dispatch) => {
     return {
-        getAllFriends: (friendType, userId, pageNumber, toggleLoader) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader)),
+        getAllFriends: (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         getFriendsInfo: (friendIdx, friendType) => dispatch(getFriendsInfoAction({ index: friendIdx, friendType })),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
@@ -316,14 +443,11 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(updateCurrentFriendGarageAction({ spaceId, userId }))
         }),
         getGarageInfo: (friendId, friendType) => {
-            // dispatch(toggleLoaderAction(true));
             dispatch(apiLoaderActions(true))
             getGarageInfo(friendId, (garage) => {
-                // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
                 dispatch(updateCurrentFriendAction({ garage, userId: friendId }));
             }, (error) => {
-                // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
                 console.log(`getGarage error: `, error);
             })
@@ -331,7 +455,12 @@ const mapDispatchToProps = (dispatch) => {
         getFirendsRideInfo: (friendId, relationship) => {
             dispatch(getFriendsRideList(friendId, relationship))
         },
-        loadRideOnMap: (rideId) => dispatch(getRideByRideId(rideId)),
+        getRidePictureList: (pictureIdList, userId) => {
+            getRidePictureList(pictureIdList, (response) => {
+                dispatch(updateFriendsRideSnapshotAction({ userId, pictureObject: response }))
+            }, (error) => console.log("getRidePictureList-ride error: ", error))
+        },
+        loadRideOnMap: (rideId, rideInfo) => dispatch(getRideByRideId(rideId, rideInfo)),
         changeScreen: (screenKey) => dispatch(screenChangeAction(screenKey)),
         doUnfriend: (userId, personId) => dispatch(doUnfriend(userId, personId)),
         getFriendsLocationList: (userId, friendsIdList) => dispatch(getFriendsLocationList(userId, friendsIdList)),

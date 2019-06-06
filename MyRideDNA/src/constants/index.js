@@ -22,6 +22,7 @@ export const DEVICE_LOCATION_STATE = { ON: 'on', OFF: 'off' };
 
 export const THUMBNAIL_TAIL_TAG = '_thumb';
 export const MEDIUM_TAIL_TAG = '_medium';
+export const RIDE_TAIL_TAG = '_ride';
 
 const BASE_URL = 'http://104.43.254.82';
 const RIDES_URL = 'http://104.43.208.200';

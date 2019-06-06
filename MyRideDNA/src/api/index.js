@@ -1,7 +1,7 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
     replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
-    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, updateNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, updateNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN, RIDE_POINT } from '../constants';
 import axios from 'axios';
@@ -10,6 +10,7 @@ import { AsyncStorage } from 'react-native';
 
 import Base64 from '../util';
 import { Actions } from 'react-native-router-flux';
+import DeviceInfo from 'react-native-device-info';
 
 const CancelToken = axios.CancelToken;
 const axiosSource = CancelToken.source();
@@ -53,6 +54,24 @@ export const getPictureList = (pictureIdList, successCallback, errorCallback) =>
             errorCallback(er.response || er);
         })
 }
+
+export const getRidePictureList = (pictureIdList, successCallback, errorCallback) => {
+    axios.put(RIDE_BASE_URL + `getPictureList`, { pictureIdList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        .then(res => {
+            if (res.status === 200) {
+                if (Object.keys(res.data).length === 0) {
+                    errorCallback(res.data);
+                } else {
+
+                    successCallback(res.data);
+                }
+            }
+        })
+        .catch(er => {
+            errorCallback(er.response || er);
+        })
+}
+
 export const pushNotification = (userId) => {
     axios.get(NOTIFICATIONS_BASE_URL + `pushNotification?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
@@ -92,6 +111,7 @@ export const getAllNotifications = (userId, pageNumber, date, successCallback, e
                     successCallback(res.data)
                 }
                 else if (res.data.notification.length === 0) {
+                    dispatch(apiLoaderActions(false));
                     // dispatch(isloadingDataAction(false));
                     successCallback(false)
                 }
@@ -191,7 +211,7 @@ export const logoutUser = (userId, accessToken, deviceToken) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
-        axios.post(USER_BASE_URL + `logoutUser`, { userId, accessToken, registrationToken: deviceToken }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.post(USER_BASE_URL + `logoutUser`, { userId, accessToken, registrationToken: deviceToken, deviceId: DeviceInfo.getUniqueID() }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     // dispatch(toggleLoaderAction(false));
@@ -351,38 +371,23 @@ export const updateProfilePicture = (profilePicStr, mimeType, userId) => {
         // })
     };
 }
-export const getAllBuildRides = (userId) => {
-    return dispatch => {
-        // dispatch(toggleLoaderAction(true));
-        dispatch(apiLoaderActions(true))
-        axios.get(RIDE_BASE_URL + `getAllBuildRides?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
-            .then(res => {
-                if (res.status === 200) {
-                    console.log('getAllBuildRides : ', res.data);
-                    // dispatch(toggleLoaderAction(false));
-                    dispatch(apiLoaderActions(false))
-                    dispatch(replaceRideListAction({ rideType: RIDE_TYPE.BUILD_RIDE, rideList: res.data }));
-                }
-            })
-            .catch(er => {
-                console.log(er.response);
-                // TODO: Dispatch error info action
-                // dispatch(toggleLoaderAction(false));
-                dispatch(apiLoaderActions(false))
-            })
-    };
-}
-export const getAllPublicRides = (userId, toggleLoader) => {
+export const getAllBuildRides = (userId, toggleLoader, pageNumber, successCallback, errorCallback) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         toggleLoader && dispatch(apiLoaderActions(true))
-        axios.get(RIDE_BASE_URL + `getAllPublicRides?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.get(RIDE_BASE_URL + `getAllBuildRides?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                if (res.status === 200) {
+                console.log('getAllBuildRides : ', res.data);
+                if (res.status === 200 && res.data.length > 0) {
                     // dispatch(toggleLoaderAction(false));
-                    console.log('getAllPublic : ', res.data)
                     dispatch(apiLoaderActions(false))
-                    dispatch(replaceRideListAction({ rideType: RIDE_TYPE.SHARED_RIDE, rideList: res.data }));
+                    dispatch(replaceRideListAction({ rideType: RIDE_TYPE.BUILD_RIDE, rideList: res.data, pageNumber: pageNumber }));
+                    dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    successCallback(res.data);
+                }
+                else if (res.data.length === 0) {
+                    dispatch(apiLoaderActions(false))
+                    successCallback(res.data)
                 }
             })
             .catch(er => {
@@ -390,20 +395,55 @@ export const getAllPublicRides = (userId, toggleLoader) => {
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                errorCallback(er)
             })
     };
 }
-export const getAllRecordedRides = (userId) => {
+export const getAllPublicRides = (userId, toggleLoader, pageNumber, successCallback, errorCallback) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
-        dispatch(apiLoaderActions(true))
-        axios.get(RIDE_BASE_URL + `getAllRecordRides?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        toggleLoader && dispatch(apiLoaderActions(true))
+        axios.get(RIDE_BASE_URL + `getAllPublicRides?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                if (res.status === 200) {
-                    console.log('getAllRecordRides : ', res.data);
+                console.log('getAllPublicRides success: ', res.data)
+                if (res.status === 200 && res.data.length > 0) {
                     // dispatch(toggleLoaderAction(false));
+                    dispatch(apiLoaderActions(false));
+                    dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    dispatch(replaceRideListAction({ rideType: RIDE_TYPE.SHARED_RIDE, rideList: res.data, pageNumber: pageNumber }));
+                    successCallback(res.data);
+                }
+                else if (res.data.length === 0) {
+                    successCallback(false);
                     dispatch(apiLoaderActions(false))
-                    dispatch(replaceRideListAction({ rideType: RIDE_TYPE.RECORD_RIDE, rideList: res.data }));
+                }
+            })
+            .catch(er => {
+                console.log(er.response);
+                // TODO: Dispatch error info action
+                // dispatch(toggleLoaderAction(false));
+                dispatch(apiLoaderActions(false));
+                errorCallback(er)
+            })
+    };
+}
+export const getAllRecordedRides = (userId, toggleLoader, pageNumber, successCallback, errorCallback) => {
+    return dispatch => {
+        // dispatch(toggleLoaderAction(true));
+        toggleLoader && dispatch(apiLoaderActions(true))
+        axios.get(RIDE_BASE_URL + `getAllRecordRides?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log('getAllRecordRides : ', res.data);
+                if (res.status === 200 && res.data.length > 0) {
+                    // dispatch(toggleLoaderAction(false));
+                    dispatch(apiLoaderActions(false));
+                    dispatch(replaceRideListAction({ rideType: RIDE_TYPE.RECORD_RIDE, rideList: res.data, pageNumber: pageNumber }));
+                    dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    successCallback(res.data);
+                }
+                else if (res.data.length === 0) {
+                    dispatch(apiLoaderActions(false))
+                    successCallback(res.data);
                 }
             })
             .catch(er => {
@@ -411,6 +451,7 @@ export const getAllRecordedRides = (userId) => {
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                errorCallback(er);
             })
     };
 }
@@ -545,6 +586,7 @@ export const deleteRide = (rideId, index, rideType) => {
                 if (res.status === 200) {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
+                    dispatch(isRemovedAction(true))
                     dispatch(deleteRideAction({ rideType, index }));
                 }
             })
@@ -1076,7 +1118,7 @@ export const deleteWaypointPicture = (ride, id, pictureIdList) => {
             })
     };
 }
-export const getAllFriends = (friendType, userId, pageNumber, toggleLoader) => {
+export const getAllFriends = (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => {
     return dispatch => {
         toggleLoader && dispatch(apiLoaderActions(true))
         // pageNumber > 0 && dispatch(toggleLoaderAction(true));
@@ -1100,6 +1142,7 @@ export const getAllFriends = (friendType, userId, pageNumber, toggleLoader) => {
                     // }
                 }
                 else if (res.data.length === 0) {
+                    dispatch(apiLoaderActions(false));
                     successCallback(false);
                 }
             })
@@ -1373,6 +1416,7 @@ export const getFriendGroups = (userId, toggleLoader, pageNumber, successCallbac
                     // return dispatch(replaceFriendGroupListAction(res.data))
                 }
                 else if (res.data.length === 0) {
+                    dispatch(apiLoaderActions(false));
                     successCallback(false)
                 }
             })
@@ -1467,6 +1511,7 @@ export const getGroupMembers = (groupId, userId, groupName, toggleLoader, pageNu
                     successCallback(res.data)
                 }
                 else if (res.data.length === 0) {
+                    dispatch(apiLoaderActions(false));
                     successCallback(false)
                 }
             })
