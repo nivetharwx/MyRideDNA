@@ -1484,7 +1484,7 @@ export const exitFriendGroup = (groupId, memberId) => {
 //                     console.log('getAllGroupMembers sucess: ', res);
 //                     // dispatch(toggleLoaderAction(false));
 //                     dispatch(apiLoaderActions(false))
-//                     return dispatch(resetMembersFromCurrentGroupAction({ member: res.data, groupId: groupId, groupName: groupName }))
+//                     return dispatch(resetMembersFromCurrentGroupAction({ members: res.data, groupId: groupId, groupName: groupName }))
 //                 }
 //             })
 //             .catch(er => {
@@ -1507,7 +1507,7 @@ export const getGroupMembers = (groupId, userId, groupName, toggleLoader, pageNu
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
-                    dispatch(resetMembersFromCurrentGroupAction({ member: res.data, groupId: groupId, groupName: groupName, pageNumber: pageNumber, userId: userId }))
+                    dispatch(resetMembersFromCurrentGroupAction({ members: res.data, groupId: groupId, groupName: groupName, pageNumber: pageNumber, userId: userId }))
                     successCallback(res.data)
                 }
                 else if (res.data.length === 0) {

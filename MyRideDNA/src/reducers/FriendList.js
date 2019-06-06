@@ -23,7 +23,7 @@ export default (state = initialState, action) => {
             if (action.data.pageNumber === 0) {
                 return {
                     ...state,
-                    allFriends: action.data.friendList
+                    allFriends: getUpdatedFriendList(state.allFriends, action.data.friendList)
                 }
             } else {
                 return {
@@ -101,7 +101,7 @@ export default (state = initialState, action) => {
             }
 
         case GET_FRIEND_INFO:
-            const index = state.allFriends.findIndex(item => item.userId ===  action.data.userId);
+            const index = state.allFriends.findIndex(item => item.userId === action.data.userId);
             const friend = state.allFriends[index];
             if (!friend.profilePictureId) {
                 friend.profilePictureId = null;
@@ -262,23 +262,20 @@ export default (state = initialState, action) => {
             }
 
             return state;
-        // case CLEAR_FRIEND_LIST:
-        //     // var friendKey = getFriendListByType(action.data.friendType);
-        //     // updatedState.allFriends = [];
-        //     return {
-        //         ...state,
-        //         allFriends: []
-        //     };
 
         default: return state
     }
 }
 
-const getFriendListByType = (friendType) => {
-    switch (friendType) {
-        case FRIEND_TYPE.ALL_FRIENDS:
-            return 'allFriends'
-        case FRIEND_TYPE.ONLINE_FRIENDS:
-            return 'onlineFriends'
-    }
+const getUpdatedFriendList = (oldList, newList) => {
+    const allFriends = newList.map(friend => {
+        let friendIdx = oldList.findIndex(item => item.userId === friend.userId);
+        if (friendIdx > -1) {
+            if (oldList[friendIdx].profilePictureId === friend.profilePictureId && oldList[friendIdx].profilePicture) {
+                return { ...friend, profilePicture: oldList[friendIdx].profilePicture };
+            }
+        }
+        return friend;
+    });
+    return allFriends;
 }
