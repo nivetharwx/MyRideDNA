@@ -6,7 +6,7 @@ import { BasicHeader } from '../../components/headers';
 import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, PageKeys } from '../../constants';
 import { List, ListItem, Left, Thumbnail, Body, Right } from 'native-base';
 import { ShifterButton, IconButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, updateNotificationAction, screenChangeAction, isloadingDataAction } from '../../actions';
+import { appNavMenuVisibilityAction, updateNotificationAction, screenChangeAction, isloadingDataAction, resetCurrentFriendAction } from '../../actions';
 import { connect } from 'react-redux';
 import { logoutUser, getAllNotifications, getPicture, readNotification, seenNotification, deleteNotifications, getPictureList } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
@@ -92,6 +92,7 @@ class Notifications extends Component {
     //     this.props.readNotification(this.props.user.userId, item.id);
     // }
     onPressnotification = (item) => {
+        this.props.resetCurrentFriend();
         if (item.reference && item.reference.targetScreen) {
             if (Object.keys(PageKeys).indexOf(item.reference.targetScreen) === -1) {
                 if (item.reference.targetScreen === 'REQUESTS') {
@@ -239,6 +240,7 @@ const mapDispatchToProps = (dispatch) => {
             // dispatch(updateNotificationAction(pictureObj))
         }),
         deleteNotification: (notificationIds) => dispatch(deleteNotifications(notificationIds)),
+        resetCurrentFriend: () => dispatch(resetCurrentFriendAction())
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Notifications);
