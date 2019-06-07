@@ -20,17 +20,17 @@ export default (state = initialState, action) => {
                 ]
             }
         case UPDATE_PASSENGER_IN_LIST:
-            const passengerIndex = state.passengerList.findIndex(passenger => passenger.id === action.data.id);
+            const passengerIndex = state.passengerList.findIndex(passenger => passenger.passengerId === action.data.passengerId);
             return {
                 ...state,
                 passengerList: [
                     ...state.passengerList.slice(0, passengerIndex),
-                    { ...stat.passengerList[passengerIndex], ...action.data },
+                    { ...state.passengerList[passengerIndex], ...action.data },
                     ...state.passengerList.slice(passengerIndex + 1)
                 ],
             }
         case REMOVE_PASSENGER_FROM_LIST:
-            const passengerIdx = state.passengerList.findIndex(passenger => passenger.id === action.data);
+            const passengerIdx = state.passengerList.findIndex(passenger => passenger.passengerId === action.data);
             return {
                 ...state,
                 passengerList: [

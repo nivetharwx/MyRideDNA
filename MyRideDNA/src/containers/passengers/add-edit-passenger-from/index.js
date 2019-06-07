@@ -19,7 +19,7 @@ class PaasengerForm extends Component {
             passenger: props.passengerIdx >= 0 ? props.passengerList[props.passengerIdx] : {}
         };
         if (!this.state.passenger.homeAddress) {
-            this.state.passenger.homeAddress = { address: '', city: '', state: '', country: '', zipCode: '' };
+            this.state.passenger['homeAddress'] = { address: '', city: '', state: '', country: '', zipCode: '' };
         }
     }
 
@@ -64,7 +64,7 @@ class PaasengerForm extends Component {
             Alert.alert('Field Error', 'Please enter a passenger name');
             return;
         }
-        if (!passenger.id) {
+        if (!passenger.passengerId) {
             this.props.registerPassenger(this.props.user.userId, passenger);
         } else {
             this.props.updatePassengerDetails(passenger);
@@ -80,7 +80,7 @@ class PaasengerForm extends Component {
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
-                    <BasicHeader headerHeight={heightPercentageToDP(8.5)} title={passenger.id ? 'Edit Passenger' : 'Add Passenger'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
+                    <BasicHeader headerHeight={heightPercentageToDP(8.5)} title={passenger.passengerId ? 'Edit Passenger' : 'Add Passenger'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
                     <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
                         <LabeledInput inputValue={passenger.name} inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
                         <IconicList
@@ -88,12 +88,12 @@ class PaasengerForm extends Component {
                             onChange={this.onChangeGender} />
                         <IconicDatePicker selectedDate={passenger.dob} onChange={this.onChangeDOB} />
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.address} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onChangeAddress} placeholder='Building number, street' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.city} inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChange={this.onChangeCity} placeholder='City' onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.homeAddress.address} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onChangeAddress} placeholder='Building number, street' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.homeAddress.city} inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChange={this.onChangeCity} placeholder='City' onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
                         </View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.state} inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChange={this.onChangeState} placeholder='State' onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.country} inputRef={elRef => this.fieldRefs[4] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} />
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.homeAddress.state} inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChange={this.onChangeState} placeholder='State' onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.homeAddress.country} inputRef={elRef => this.fieldRefs[4] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} />
                         </View>
                     </ScrollView>
                     <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />

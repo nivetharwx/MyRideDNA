@@ -70,7 +70,7 @@ class FriendsProfile extends Component {
                     }, (err) => {
                     });
                 }
-                Actions.pop();
+                // Actions.pop();
                 return;
             }
             if (this.state.activeTab === 0) {
@@ -169,7 +169,8 @@ class FriendsProfile extends Component {
     rideKeyExtractor = (item) => item.rideId;
 
     onPressBackButton = () => {
-        this.props.resetCurrentFriend();
+        Actions.pop();
+        setTimeout(() => {this.props.resetCurrentFriend()},50);
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu();

@@ -4,7 +4,7 @@ import Navigation from './navigation';
 import FCM, { NotificationActionType, NotificationType, FCMEvent, RemoteNotificationResult, WillPresentNotificationResult } from "react-native-fcm";
 import { IS_ANDROID, DEVICE_TOKEN, PageKeys } from './constants';
 import store from './store';
-import { screenChangeAction } from './actions';
+import { screenChangeAction, resetCurrentFriendAction } from './actions';
 import { Actions } from 'react-native-router-flux';
 import { Root } from "native-base";
 
@@ -108,7 +108,13 @@ export default class App extends Component {
                 }
                 return;
             }
-            store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
+            if (body.reference.targetScreen === "FRIENDS_PROFILE") {
+                store.dispatch(resetCurrentFriendAction())
+                store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
+            }
+            else{
+                store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
+            }
         }
     }
 

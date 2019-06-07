@@ -877,7 +877,8 @@ export class Map extends Component {
     onBackButtonPress = () => {
         if (Actions.state.index !== 0) {
             if (Actions.currentScene === PageKeys.FRIENDS_PROFILE) {
-                this.props.resetCurrentFriend();
+                Actions.pop();
+                setTimeout(() => {this.props.resetCurrentFriend()},50);
                 // this.props.changeScreen(Actions.currentScene);
             } else if (Actions.currentScene === PageKeys.GROUP) {
                 this.props.resetCurrentGroup();

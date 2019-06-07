@@ -210,8 +210,11 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 currentFriend: {
-                    ...state.currentFriend,
-                    userId: null
+                    garage: {
+                        garageId: null
+                    },
+                    userId: null,
+                    rideList: [],
                 }
             }
 
