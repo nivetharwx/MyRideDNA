@@ -21,7 +21,7 @@ import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon } from 'native-base';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction } from '../../actions';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, updateiOSNotifStateAction } from '../../actions';
 import { SearchBox, IconicList } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -576,8 +576,7 @@ export class Map extends Component {
 
     async componentDidMount() {
         FCM.getInitialNotification().then(notification => {
-            notification.body && JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));
-
+            notification && JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));
         });
         BackgroundGeolocation.configure({
             desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
@@ -616,7 +615,7 @@ export class Map extends Component {
         // this.notificationInterval = setInterval(() => {
         //     this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber);
         // }, 60 * 1000);
-        // AppState.addEventListener('change', this.handleAppStateChange);
+        AppState.addEventListener('change', this.handleAppStateChange);
         BackgroundGeolocation.on('location', (location) => {
             // const { gpsPointCollection } = this.state;
             // const feature = gpsPointCollection.features[0];
@@ -688,22 +687,18 @@ export class Map extends Component {
         });
         BackgroundGeolocation.on('background', () => {
             if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
-                console.log("app in background");
                 clearInterval(this.watchID);
                 this.startTrackingLocation();
             }
-            this.props.updateAppState('background');
             // this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         });
 
         BackgroundGeolocation.on('foreground', () => {
             if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
-                console.log("app in foreground");
                 updatedgpsPointCollection = {};
                 if (this.trackpointTick >= 5) this.trackpointTick = 0;
                 this.watchLocation();
             }
-            this.props.updateAppState('foreground');
             // this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         });
         BackgroundGeolocation.checkStatus(status => {
@@ -734,9 +729,12 @@ export class Map extends Component {
 
     handleAppStateChange = (nextAppState) => {
         if (nextAppState === 'active') {
-            this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { userId: this.props.user.userId } });
+            console.log("app in foreground");
+            this.props.updateAppState('foreground');
         } else {
-            this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { userId: this.props.user.userId } });
+            console.log("app in background");
+            this.props.updateAppState('background');
+            this.props.updateiOSNotifState(true);
         }
     }
 
@@ -870,7 +868,7 @@ export class Map extends Component {
         if (Actions.state.index !== 0) {
             if (Actions.currentScene === PageKeys.FRIENDS_PROFILE) {
                 Actions.pop();
-                setTimeout(() => {this.props.resetCurrentFriend()},50);
+                setTimeout(() => { this.props.resetCurrentFriend() }, 50);
                 // this.props.changeScreen(Actions.currentScene);
             } else if (Actions.currentScene === PageKeys.GROUP) {
                 this.props.resetCurrentGroup();
@@ -1607,6 +1605,7 @@ export class Map extends Component {
     componentWillUnmount() {
         console.log("Map unmounted");
         this.stopTrackingLocation();
+        AppState.removeEventListener('change', this.handleAppStateChange);
         BackgroundGeolocation.removeAllListeners();
         // DeviceEventEmitter.removeListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent);
         // this.watchID != null && Geolocation.clearWatch(this.watchID);
@@ -2474,6 +2473,9 @@ const mapDispatchToProps = (dispatch) => {
         hideFriendsLocation: () => dispatch(hideFriendsLocationAction()),
         updateAppState: (appState) => {
             dispatch(updateAppStateAction({ appState }))
+        },
+        updateiOSNotifState: (iosNotifState) => {
+            dispatch(updateiOSNotifStateAction({ iosNotifState }))
         },
         resetStoreToDefault: () => dispatch(resetStateOnLogout())
     }

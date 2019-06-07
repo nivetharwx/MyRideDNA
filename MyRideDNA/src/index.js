@@ -60,24 +60,10 @@ export default class App extends Component {
         }
 
         this.notificationListener = FCM.on(FCMEvent.Notification, (notification) => {
-            console.log('body notification : ', JSON.parse(notification.body));
-            // if (!IS_ANDROID) {
-            //     switch (notification._notificationType) {
-            //         case NotificationType.Remote:
-            //             notification.finish(RemoteNotificationResult.NewData) //other types available: RemoteNotificationResult.NewData, RemoteNotificationResult.ResultFailed
-            //             console.log("NotificationType.Remote: ", notification);
-            //             break;
-            //         case NotificationType.NotificationResponse:
-            //             notification.finish();
-            //             console.log("NotificationType.NotificationResponse: ", notification);
-            //             break;
-            //         case NotificationType.WillPresent:
-            //             notification.finish(WillPresentNotificationResult.All) //other types available: WillPresentNotificationResult.None
-            //             console.log("NotificationType.WillPresent: ", notification);
-            //             break;
-            //     }
-            // }
-            JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));
+            if (notification) {
+                console.log('body notification : ', JSON.parse(notification.body));
+                JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));
+            }
         });
 
         FCM.getFCMToken().then(token => {
