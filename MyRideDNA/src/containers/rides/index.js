@@ -8,7 +8,7 @@ import { connect } from 'react-redux';
 
 import { Tab, TabHeading, Tabs, ScrollableTab, Icon as NBIcon, ListItem, Left, Toast, Card, CardItem, Thumbnail, Body, Button, Right } from "native-base";
 import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, RIDE_TAIL_TAG } from '../../constants';
-import { ShifterButton, LinkButton, ImageButton } from '../../components/buttons';
+import { ShifterButton, LinkButton, ImageButton, IconButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, screenChangeAction, clearRideAction, updateRidePictureInListAction, updateRideCreatorPictureInListAction, apiLoaderActions, updateRideInListAction, updateRideAction, isRemovedAction } from '../../actions';
 import { BasicHeader } from '../../components/headers';
 import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide, logoutUser, getPicture, getPictureList, updateRide, getRidePictureList } from '../../api';
@@ -207,7 +207,7 @@ export class Rides extends Component {
 
     onPullRefresh = () => {
         this.setState({ isRefreshing: true });
-        this.props.getAllPublicRides(this.props.user.userId, false,0, (res) => {
+        this.props.getAllPublicRides(this.props.user.userId, false, 0, (res) => {
         }, (err) => {
         });
     }
@@ -291,6 +291,7 @@ export class Rides extends Component {
         if (selectedRide === null) return;
         switch (selectedRide.rideType) {
             case RIDE_TYPE.BUILD_RIDE:
+                if (!this.props.buildRides[selectedRide.index]) return;
                 return (
                     this.BUILD_RIDE_OPTIONS.map(option => {
                         if (option.id === 'changePrivacyMode') {
@@ -314,6 +315,7 @@ export class Rides extends Component {
                     })
                 )
             case RIDE_TYPE.RECORD_RIDE:
+                if (!this.props.recordedRides[selectedRide.index]) return;
                 return (
                     this.RECORD_RIDE_OPTIONS.map(option => {
                         if (option.id === 'changePrivacyMode') {
@@ -440,14 +442,15 @@ export class Rides extends Component {
                 {
                     item.privacyMode === 'public'
                         ? <Left>
-                            <Button transparent>
+                            {/* <Button transparent>
                                 <NBIcon active name="thumbs-up" />
                                 <Text>{item.totalLikes !== 1 ? item.totalLikes + ' Likes' : '1 Like'}</Text>
                             </Button>
                             <Button transparent>
                                 <NBIcon active name="chatbubbles" />
                                 <Text>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</Text>
-                            </Button>
+                            </Button> */}
+                            <IconButton title={item.totalLikes !== 1 ? item.totalLikes + ' Likes' : '1 Like'} titleStyle={{ marginLeft: 8 }} iconProps={{ name: 'ios-thumbs-up', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} />
                         </Left>
                         : <Left></Left>
                 }
@@ -456,6 +459,7 @@ export class Rides extends Component {
                         <NBIcon active name="chatbubbles" />
                         <Text>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</Text>
                     </Button> */}
+                    <IconButton title={item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'} titleStyle={{ marginLeft: 8 }} iconProps={{ name: 'ios-chatbubbles', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} />
                 </Body>
                 <Right>
                     <Text note>{this.getDateLabel((Date.now() - new Date(item.date).getTime()) / 1000 / 60 / 60)}</Text>
