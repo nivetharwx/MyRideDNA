@@ -454,13 +454,17 @@ export class Rides extends Component {
                         </Left>
                         : <Left></Left>
                 }
-                <Body>
-                    {/* <Button transparent>
+                {
+                    item.privacyMode === 'public'
+                        ? <Body>
+                            {/* <Button transparent>
                         <NBIcon active name="chatbubbles" />
                         <Text>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</Text>
                     </Button> */}
-                    <IconButton title={item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'} titleStyle={{ marginLeft: 8 }} iconProps={{ name: 'ios-chatbubbles', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} />
-                </Body>
+                            <IconButton title={item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'} titleStyle={{ marginLeft: 8 }} iconProps={{ name: 'ios-chatbubbles', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} />
+                        </Body>
+                        : <Body></Body>
+                }
                 <Right>
                     <Text note>{this.getDateLabel((Date.now() - new Date(item.date).getTime()) / 1000 / 60 / 60)}</Text>
                 </Right>

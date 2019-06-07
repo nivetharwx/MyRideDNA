@@ -296,7 +296,11 @@ class WaypointList extends React.Component {
                         </TouchableOpacity>
                         <Text style={styles.headerText}>Waypoints</Text>
                         {/* <IconButton style={{ alignSelf: 'flex-end' }} title='Itinerary' titleStyle={{ color: '#fff' }} iconRight={true} iconProps={{ name: 'arrow-right', type: 'MaterialCommunityIcons', style: { color: '#fff' } }} onPress={this.props.changeToItineraryMode} /> */}
-                        <LinkButton title='Itinerary' titleStyle={[styles.whiteFont, { fontSize: widthPercentageToDP(3.5), fontWeight: 'bold', textDecorationLine: 'underline' }]} style={{ marginTop: 10 }} onPress={this.props.changeToItineraryMode} />
+                        {
+                            this.props.ride.isRecorded
+                                ? null
+                                : <LinkButton title='Itinerary' titleStyle={[styles.whiteFont, { fontSize: widthPercentageToDP(3.5), fontWeight: 'bold', textDecorationLine: 'underline' }]} style={{ marginTop: 10 }} onPress={this.props.changeToItineraryMode} />
+                        }
                     </View>
                     {/* <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab tabsContainerStyle={{ width: BOTTOM_TAB_CONTAINER_WIDTH }} style={{ width: BOTTOM_TAB_CONTAINER_WIDTH }} ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                         <Tab heading={<TabHeading style={{ width: BOTTOM_TAB_CONTAINER_WIDTH / 2, backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 0.5 }}>

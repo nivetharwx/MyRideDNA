@@ -256,11 +256,10 @@ export class Map extends Component {
                     }
 
                     if (ride.waypoints.length > 0) {
-                        let idx = 1;
-                        updatedState.markerCollection.features = ride.waypoints.reduce((arr, loc) => {
+                        updatedState.markerCollection.features = ride.waypoints.reduce((arr, loc, idx) => {
+                            idx++;
                             arr.push(this.createMarkerFeature([loc.lng, loc.lat], ICON_NAMES.WAYPOINT_DEFAULT, idx));
                             currentCoordsStr += loc.lng + loc.lat;
-                            idx++;
                             return arr;
                         }, updatedState.markerCollection.features);
                     }
@@ -2299,7 +2298,7 @@ export class Map extends Component {
                             : null
                     }
                     {
-                        ride.rideId
+                        ride.rideId && !ride.isRecorded
                             ? <TouchableOpacity style={{ position: 'absolute', zIndex: 100, left: widthPercentageToDP(45), bottom: 0, width: widthPercentageToDP(10), height: widthPercentageToDP(15) }} onPress={this.showItinerarySection}>
                                 <Image source={require('../../assets/img/arrow-right.png')} style={{ flex: 1, width: null, height: null, transform: [{ rotate: '270deg' }] }} />
                             </TouchableOpacity>
