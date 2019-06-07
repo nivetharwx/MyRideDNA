@@ -60,7 +60,7 @@ export default class App extends Component {
         }
 
         this.notificationListener = FCM.on(FCMEvent.Notification, (notification) => {
-            if (notification) {
+            if (notification.body) {
                 console.log('body notification : ', JSON.parse(notification.body));
                 JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));
             }

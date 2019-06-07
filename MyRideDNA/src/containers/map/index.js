@@ -575,8 +575,10 @@ export class Map extends Component {
 
     async componentDidMount() {
         FCM.getInitialNotification().then(notification => {
-            console.log('notification map  :',notification )
-            notification.body && JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));
+            if (notification.body) {
+                console.log('notification map  :', notification)
+                JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));
+            }
         });
         BackgroundGeolocation.configure({
             desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
@@ -724,7 +726,13 @@ export class Map extends Component {
             }
             return;
         }
-        store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
+        if (body.reference.targetScreen === "FRIENDS_PROFILE") {
+            store.dispatch(resetCurrentFriendAction())
+            store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
+        }
+        else {
+            store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
+        }
     }
 
     handleAppStateChange = (nextAppState) => {
