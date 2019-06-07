@@ -96,7 +96,7 @@ export class Map extends Component {
     trackpointTick = 0;
     hasModifiedRide = false;
     prevCoordsStr = '';
-    lastLocation = null;
+    locationProximity = null;
     defaultSearch = { value: 'all', icon: { name: 'filter-list', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.infoColor } } };
     constructor(props) {
         super(props);
@@ -185,6 +185,7 @@ export class Map extends Component {
                     updatedState.isEditable = false;
                 }
                 this.hasModifiedRide = false;
+                this.locationProximity = null;
                 if (ride.rideId === null) this.prevCoordsStr = '';
 
                 // TODO: Loading different ride
@@ -205,7 +206,7 @@ export class Map extends Component {
                         updatedState.markerCollection.features = [sourceMarker];
                         currentCoordsStr += ride.source.lng + ride.source.lat;
                         if (ride.waypoints.length === 0 && !ride.destination) {
-                            this.lastLocation = [ride.source.lng, ride.source.lat];
+                            this.locationProximity = [ride.source.lng, ride.source.lat];
                         }
                     }
 
@@ -304,6 +305,7 @@ export class Map extends Component {
         }
         if (Object.keys(updatedState).length > 0) {
             this.setState(prevState => updatedState, () => {
+                console.log("updatedState: ", updatedState);
                 if (ride.rideId === null) {
                     this.onPressRecenterMap();
                 } else if (ride.isRecorded) {
@@ -339,6 +341,29 @@ export class Map extends Component {
                 }
             });
         }
+    }
+
+    initializeEmptyRide(updatedState) {
+        updatedState.directions = null;
+        updatedState.markerCollection = {
+            ...this.state.markerCollection,
+            features: []
+        };
+
+        // DOC: Resetting record ride features
+        this.gpsPointTimestamps.length = 0;
+        updatedState.gpsPointCollection = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": []
+                    }
+                }
+            ]
+        };
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -490,30 +515,6 @@ export class Map extends Component {
             }
         }
     }
-
-    initializeEmptyRide(updatedState) {
-        updatedState.directions = null;
-        updatedState.markerCollection = {
-            ...this.state.markerCollection,
-            features: []
-        };
-
-        // DOC: Resetting record ride features
-        this.gpsPointTimestamps.length = 0;
-        updatedState.gpsPointCollection = {
-            "type": "FeatureCollection",
-            "features": [
-                {
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "LineString",
-                        "coordinates": []
-                    }
-                }
-            ]
-        };
-    }
-
 
     getPlaceNameByReverseGeocode = async (location, successCallback, errorCallback) => {
         try {
@@ -911,7 +912,7 @@ export class Map extends Component {
                 // DOC: Update the mapbounds to include the direction results
                 const newBounds = turfBBox(responseBody.routes[0].geometry);
                 this._mapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 20, 1000);
-                this._hiddenMapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 35, 0);
+                this._hiddenMapView && this._hiddenMapView.fitBounds(newBounds.slice(0, 2), newBounds.slice(2), 35, 0);
                 this.setState(prevState => ({ directions: responseBody.routes[0], showLoader: false }));
             } catch (err) {
                 this.setState(prevState => ({ showLoader: false }));
@@ -1072,7 +1073,7 @@ export class Map extends Component {
                 activeMarkerIndex: -1
             }
         }, () => {
-            this.onCloseOptionsBar();
+            this.onCloseOptionsBar(false);
             const { ride } = this.props;
             if (deletingSource) {
                 this.props.deleteSource(ride);
@@ -1095,10 +1096,11 @@ export class Map extends Component {
                 activeMarkerIndex: -1
             }
         }, () => {
-            this.onCloseOptionsBar();
-            this.props.makeWaypointAsSource(ride, activeMarkerIndex - 1);
-            this.setState(prevState => ({ refreshWaypointList: true }), () => {
-                setTimeout(() => this.setState(prevState => ({ refreshWaypointList: false })), 50);
+            this.onCloseOptionsBar(false, () => {
+                this.props.makeWaypointAsSource(ride, activeMarkerIndex - 1);
+                this.setState(prevState => ({ refreshWaypointList: true }), () => {
+                    setTimeout(() => this.setState(prevState => ({ refreshWaypointList: false })), 50);
+                });
             });
         });
     }
@@ -1113,10 +1115,11 @@ export class Map extends Component {
                 activeMarkerIndex: -1
             }
         }, () => {
-            this.onCloseOptionsBar();
-            this.props.makeSourceAsWaypoint(ride);
-            this.setState(prevState => ({ refreshWaypointList: true }), () => {
-                setTimeout(() => this.setState(prevState => ({ refreshWaypointList: false })), 50);
+            this.onCloseOptionsBar(false, () => {
+                this.props.makeSourceAsWaypoint(ride);
+                this.setState(prevState => ({ refreshWaypointList: true }), () => {
+                    setTimeout(() => this.setState(prevState => ({ refreshWaypointList: false })), 50);
+                });
             });
         });
     }
@@ -1132,10 +1135,11 @@ export class Map extends Component {
                 activeMarkerIndex: -1
             }
         }, () => {
-            this.onCloseOptionsBar();
-            this.props.makeWaypointAsDestination(ride, activeMarkerIndex - 1);
-            this.setState(prevState => ({ refreshWaypointList: true }), () => {
-                setTimeout(() => this.setState(prevState => ({ refreshWaypointList: false })), 50);
+            this.onCloseOptionsBar(false, () => {
+                this.props.makeWaypointAsDestination(ride, activeMarkerIndex - 1);
+                this.setState(prevState => ({ refreshWaypointList: true }), () => {
+                    setTimeout(() => this.setState(prevState => ({ refreshWaypointList: false })), 50);
+                });
             });
         });
     }
@@ -1150,10 +1154,11 @@ export class Map extends Component {
                 activeMarkerIndex: -1
             }
         }, () => {
-            this.onCloseOptionsBar();
-            this.props.makeDestinationAsWaypoint(ride);
-            this.setState(prevState => ({ refreshWaypointList: true }), () => {
-                setTimeout(() => this.setState(prevState => ({ refreshWaypointList: false })), 50);
+            this.onCloseOptionsBar(false, () => {
+                this.props.makeDestinationAsWaypoint(ride);
+                this.setState(prevState => ({ refreshWaypointList: true }), () => {
+                    setTimeout(() => this.setState(prevState => ({ refreshWaypointList: false })), 50);
+                });
             });
         });
     }
@@ -1179,7 +1184,7 @@ export class Map extends Component {
 
         if (this.state.isUpdatingWaypoint) { //DOC: nextWaypointIndex will be the activeMarkerIndex of the array
             nextWaypointIndex = this.state.activeMarkerIndex;
-            this.lastLocation = mapCenter;
+            this.locationProximity = mapCenter;
             this.updateWaypointAtIndex(nextWaypointIndex, newMarker);
         } else {
             if (isDestinationSelected) { //DOC: nextWaypointIndex will be the second last index of the array (array.length - 2)
@@ -1187,7 +1192,7 @@ export class Map extends Component {
             } else if (this.state.activeMarkerIndex > -1) { //DOC: nextWaypointIndex will be the new index to the array (array.length + 1)
                 nextWaypointIndex = this.state.activeMarkerIndex + 1;
             }
-            this.lastLocation = mapCenter;
+            this.locationProximity = mapCenter;
             this.addWaypointAtIndex(nextWaypointIndex, newMarker);
         }
     }
@@ -1212,15 +1217,16 @@ export class Map extends Component {
             // DOC: Call the callback function, if any.
             callback && callback();
 
-            this.onCloseOptionsBar();
-            const { ride } = this.props;
-            let waypoint = { name: '', address: '', lat: marker.geometry.coordinates[1], lng: marker.geometry.coordinates[0] };
-            if (!ride.source) {
-                this.props.addSource(waypoint);
-            } else {
-                const indexOnServer = index - 1;
-                this.props.addWaypoint(waypoint, indexOnServer);
-            }
+            this.onCloseOptionsBar(false, () => {
+                const { ride } = this.props;
+                let waypoint = { name: '', address: '', lat: marker.geometry.coordinates[1], lng: marker.geometry.coordinates[0] };
+                if (!ride.source) {
+                    this.props.addSource(waypoint);
+                } else {
+                    const indexOnServer = index - 1;
+                    this.props.addWaypoint(waypoint, indexOnServer);
+                }
+            });
         });
     }
 
@@ -1237,17 +1243,18 @@ export class Map extends Component {
             // DOC: Call the callback function, if any.
             callback && callback();
 
-            this.onCloseOptionsBar();
-            const { ride } = this.props;
-            let waypoint = { name: '', address: '', lat: marker.geometry.coordinates[1], lng: marker.geometry.coordinates[0] };
-            const indexOnServer = index - 1;
-            if (index === 0) {
-                this.props.updateSource(waypoint, ride);
-            } else if (ride.destination && index === this.state.markerCollection.features.length - 1) {
-                this.props.updateDestination(waypoint, ride);
-            } else {
-                this.props.updateWaypoint(waypoint, indexOnServer);
-            }
+            this.onCloseOptionsBar(false, () => {
+                const { ride } = this.props;
+                let waypoint = { name: '', address: '', lat: marker.geometry.coordinates[1], lng: marker.geometry.coordinates[0] };
+                const indexOnServer = index - 1;
+                if (index === 0) {
+                    this.props.updateSource(waypoint, ride);
+                } else if (ride.destination && index === this.state.markerCollection.features.length - 1) {
+                    this.props.updateDestination(waypoint, ride);
+                } else {
+                    this.props.updateWaypoint(waypoint, indexOnServer);
+                }
+            });
         });
     }
 
@@ -1358,16 +1365,16 @@ export class Map extends Component {
             if (coordinates.length > 1) {
                 // DOC: Update the mapbounds to include the recorded ride path
                 rideBounds = turfBBox({ coordinates, type: 'LineString' });
-                this._hiddenMapView.fitBounds(rideBounds.slice(0, 2), rideBounds.slice(2), 35, 0);
+                this._hiddenMapView && this._hiddenMapView.fitBounds(rideBounds.slice(0, 2), rideBounds.slice(2), 35, 0);
             } else {
-                this._hiddenMapView.flyTo(coordinates[0], 0);
+                this._hiddenMapView && this._hiddenMapView.flyTo(coordinates[0], 0);
             }
         } else {
             if (!this.state.directions) return;
             rideBounds = turfBBox(this.state.directions.geometry);
-            this._hiddenMapView.fitBounds(rideBounds.slice(0, 2), rideBounds.slice(2), 35, 0);
+            this._hiddenMapView && this._hiddenMapView.fitBounds(rideBounds.slice(0, 2), rideBounds.slice(2), 35, 0);
         }
-        this._hiddenMapView.takeSnap(false).then(mapSnapshotString => {
+        this._hiddenMapView && this._hiddenMapView.takeSnap(false).then(mapSnapshotString => {
             successCallback && successCallback(mapSnapshotString);
         }).catch(er => console.log(er))
     }
@@ -1411,7 +1418,7 @@ export class Map extends Component {
 
         if (this.state.isUpdatingWaypoint) { //DOC: nextWaypointIndex will be the activeMarkerIndex of the array
             nextWaypointIndex = activeMarkerIndex;
-            this.lastLocation = place.geometry.coordinates;
+            this.locationProximity = place.geometry.coordinates;
             this.updateWaypointAtIndex(nextWaypointIndex, newMarker, () => this._mapView.flyTo(place.geometry.coordinates, 500));
         } else {
             if (isDestinationSelected) { //DOC: nextWaypointIndex will be the second last index of the array (array.length - 2)
@@ -1419,7 +1426,7 @@ export class Map extends Component {
             } else if (activeMarkerIndex > -1) { //DOC: nextWaypointIndex will be the new index to the array (array.length + 1)
                 nextWaypointIndex = activeMarkerIndex + 1;
             }
-            this.lastLocation = place.geometry.coordinates;
+            this.locationProximity = place.geometry.coordinates;
             this.addWaypointAtIndex(nextWaypointIndex, newMarker, () => this._mapView.flyTo(place.geometry.coordinates, 500));
         }
     }
@@ -1430,8 +1437,8 @@ export class Map extends Component {
         const lastCharacter = placeQuery.slice(-1);
         if (lastCharacter === ' ') return;
         const config = { query: placeQuery, limit: 10 };
-        if (this.lastLocation || this.state.currentLocation) {
-            config.proximity = this.lastLocation || this.state.currentLocation.location;
+        if (this.locationProximity || this.state.currentLocation) {
+            config.proximity = this.locationProximity || this.state.currentLocation.location;
         }
         if (this.state.activeSearch.value !== 'all') {
             config.types = [`poi.${this.state.activeSearch.value}`];
@@ -1685,7 +1692,7 @@ export class Map extends Component {
         return [...arr.slice(0, index), data, ...arr.slice(index + 1)]
     }
 
-    onCloseOptionsBar = (cancelMarkerUpdate) => {
+    onCloseOptionsBar = (cancelMarkerUpdate, callback) => {
         const { markerCollection, activeMarkerIndex } = this.state;
         if (activeMarkerIndex === -1 || cancelMarkerUpdate === true) {
             Animated.timing(
@@ -1721,7 +1728,7 @@ export class Map extends Component {
                             { ...prevMarker, properties: { ...prevMarker.properties, icon: defaultIcon } })
                     },
                     activeMarkerIndex: -1
-                });
+                }, () => typeof callback === 'function' && callback());
             }, 0)
         })
     }
@@ -1779,7 +1786,7 @@ export class Map extends Component {
             }
         ).start(() => {
             if (this.state.activeMarkerIndex > -1) {
-                this.onCloseOptionsBar();
+                this.onCloseOptionsBar(false);
                 this.setState(prevState => ({ onWaypointList: false }), () => typeof callback === 'function' && callback());
             } else {
                 this.setState({ onWaypointList: false }, () => typeof callback === 'function' && callback())
@@ -2115,43 +2122,43 @@ export class Map extends Component {
                             : null
                     }
                     {
-                        markerCollection.features.length > 0
-                            ? <MapboxGL.MapView
-                                styleURL={MapboxGL.StyleURL.Street}
-                                zoomLevel={14}
-                                centerCoordinate={[
-                                    4.895168,
-                                    52.370216
-                                ]}
-                                style={styles.hiddenMapStyles}
-                                ref={el => this._hiddenMapView = el}
-                            >
-                                {
-                                    currentLocation ? this.renderCurrentLocation(currentLocation) : null
-                                }
-                                {
-                                    directions ?
-                                        <MapboxGL.ShapeSource id='ridePathLayer' shape={directions.geometry}>
-                                            <MapboxGL.LineLayer id='ridePath' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
-                                        </MapboxGL.ShapeSource>
-                                        : null
-                                }
-                                <MapboxGL.ShapeSource
-                                    id='markers'
-                                    shape={markerCollection}
-                                    images={shapeSourceImages}
-                                    onPress={this.onPressMarker}>
-                                    <MapboxGL.SymbolLayer id="exampleIconName" style={[MapboxStyles.icon, MapboxStyles.markerTitle]} />
-                                </MapboxGL.ShapeSource>
-                                {
-                                    gpsPointCollection.features[0].geometry.coordinates.length >= 2 ?
-                                        <MapboxGL.Animated.ShapeSource id='recordRidePathLayer' shape={gpsPointCollection}>
-                                            <MapboxGL.Animated.LineLayer id='recordRidePath' style={[{ lineColor: 'red', lineWidth: 3, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
-                                        </MapboxGL.Animated.ShapeSource>
-                                        : null
-                                }
-                            </MapboxGL.MapView>
-                            : null
+                        // markerCollection.features.length > 0
+                        //     ? <MapboxGL.MapView
+                        //         styleURL={MapboxGL.StyleURL.Street}
+                        //         zoomLevel={14}
+                        //         centerCoordinate={[
+                        //             4.895168,
+                        //             52.370216
+                        //         ]}
+                        //         style={styles.hiddenMapStyles}
+                        //         ref={el => this._hiddenMapView = el}
+                        //     >
+                        //         {
+                        //             currentLocation ? this.renderCurrentLocation(currentLocation) : null
+                        //         }
+                        //         {
+                        //             directions ?
+                        //                 <MapboxGL.ShapeSource id='ridePathLayer' shape={directions.geometry}>
+                        //                     <MapboxGL.LineLayer id='ridePath' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
+                        //                 </MapboxGL.ShapeSource>
+                        //                 : null
+                        //         }
+                        //         <MapboxGL.ShapeSource
+                        //             id='markers'
+                        //             shape={markerCollection}
+                        //             images={shapeSourceImages}
+                        //             onPress={this.onPressMarker}>
+                        //             <MapboxGL.SymbolLayer id="exampleIconName" style={[MapboxStyles.icon, MapboxStyles.markerTitle]} />
+                        //         </MapboxGL.ShapeSource>
+                        //         {
+                        //             gpsPointCollection.features[0].geometry.coordinates.length >= 2 ?
+                        //                 <MapboxGL.Animated.ShapeSource id='recordRidePathLayer' shape={gpsPointCollection}>
+                        //                     <MapboxGL.Animated.LineLayer id='recordRidePath' style={[{ lineColor: 'red', lineWidth: 3, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
+                        //                 </MapboxGL.Animated.ShapeSource>
+                        //                 : null
+                        //         }
+                        //     </MapboxGL.MapView>
+                        //     : null
                     }
                     <MapboxGL.MapView
                         styleURL={MapboxGL.StyleURL.Street}

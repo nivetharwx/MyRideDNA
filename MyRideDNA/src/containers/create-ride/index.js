@@ -48,7 +48,7 @@ export class CreateRide extends Component {
     }
 
     componentDidMount() {
-        if (this.state.currentLocation === null) {
+        if (this.props.currentLocation === null) {
             Geolocation.getCurrentPosition(
                 ({ coords }) => {
                     this.props.onChangeStartRideFrom([coords.longitude, coords.latitude]);
@@ -117,8 +117,8 @@ export class CreateRide extends Component {
             query: placeQuery,
             limit: 10
         };
-        if (this.state.currentLocation) {
-            config.proximity = this.state.currentLocation.location;
+        if (this.props.currentLocation) {
+            config.proximity = this.props.currentLocation.location;
         }
         const response = await geocodingClient.forwardGeocode(config).send();
         this.setState({ placeSearchList: response.body.features });
@@ -169,7 +169,7 @@ export class CreateRide extends Component {
             this.props.cancelPopup([startRideFrom.lng, startRideFrom.lat]);
         } else {
             this.setState({ searchQuery: 'Current location' });
-            if (this.state.currentLocation === null) {
+            if (this.props.currentLocation === null) {
                 Geolocation.getCurrentPosition(
                     ({ coords }) => {
                         this.props.onChangeStartRideFrom([coords.longitude, coords.latitude]);
@@ -195,20 +195,20 @@ export class CreateRide extends Component {
                 rideDetails = {
                     ...rideDetails,
                     source: {
-                        name: this.state.currentLocation.name,
-                        lat: this.state.currentLocation.location[1],
-                        lng: this.state.currentLocation.location[0]
+                        name: this.props.currentLocation.name,
+                        lat: this.props.currentLocation.location[1],
+                        lng: this.props.currentLocation.location[0]
                     }
                 }
                 this.props.onSubmitForm(rideDetails);
-                this.props.cancelPopup(this.state.currentLocation.location);
+                this.props.cancelPopup(this.props.currentLocation.location);
             }
         }
     }
 
     onPressUseCurrentLocation = () => {
         this.setState({ searchQuery: 'Current location', placeSearchList: [] });
-        this.props.onChangeStartRideFrom(this.state.currentLocation);
+        this.props.onChangeStartRideFrom(this.props.currentLocation);
     }
 
     render() {
