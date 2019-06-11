@@ -1,5 +1,5 @@
-import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION, ADD_FRIENDS_LOCATION, REPLACE_FRIEND_INFO, UPDATE_FRIENDS_RIDE_SNAPSHOT } from "../actions/actionConstants";
-import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP, RIDE_TAIL_TAG, THUMBNAIL_TAIL_TAG } from "../constants";
+import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION, ADD_FRIENDS_LOCATION, REPLACE_FRIEND_INFO, UPDATE_FRIENDS_RIDE_SNAPSHOT, GET_NOT_FRIEND_INFO } from "../actions/actionConstants";
+import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP, RIDE_TAIL_TAG, THUMBNAIL_TAIL_TAG, PageKeys } from "../constants";
 
 const initialState = {
     allFriends: [],
@@ -103,6 +103,7 @@ export default (state = initialState, action) => {
         case GET_FRIEND_INFO:
             const index = state.allFriends.findIndex(item => item.userId === action.data.userId);
             const friend = state.allFriends[index];
+            console.log('GET_FRIEND_INFO friend : ',friend)
             if (!friend.profilePictureId) {
                 friend.profilePictureId = null;
             }
@@ -115,6 +116,24 @@ export default (state = initialState, action) => {
                     userId: null,
                     rideList: [],
                     ...friend
+                }
+            };
+        case GET_NOT_FRIEND_INFO:
+            const notFriend = action.data.notFriendData;
+            console.log('not Friend GET_NOT_FRIEND_INFO: ',notFriend);
+            if (action.data.notFriendData && !notFriend.userId) {
+                notFriend['userId'] = action.data.notFriendData.memberId
+            }
+            console.log('GET_NOT_FRIEND_INFO notFriend : ', notFriend);
+            return {
+                ...state,
+                currentFriend: {
+                    garage: {
+                        garageId: null
+                    },
+                    userId: null,
+                    rideList: [],
+                    ...notFriend
                 }
             };
 
@@ -207,16 +226,33 @@ export default (state = initialState, action) => {
 
 
         case RESET_CURRENT_FRIEND:
-            return {
-                ...state,
-                currentFriend: {
-                    garage: {
-                        garageId: null
-                    },
-                    userId: null,
-                    rideList: [],
+            console.log('RESET_CURRENT_FRIEND : ',action.data)
+            if(action.data && action.data.comingFrom === PageKeys.NOTIFICATIONS){
+                return {
+                    ...state,
+                    currentFriend: {
+                        garage: {
+                            garageId: null
+                        },
+                        userId: null,
+                        rideList: [],
+                    }
                 }
             }
+            else{
+                return {
+                    ...state,
+                    currentFriend: {
+                        garage: {
+                            garageId: null
+                        },
+                        ...state.currentFriend,
+                        userId: null,
+                        rideList: [],
+                    }
+                }
+            }
+            
 
         case DELETE_FRIEND:
             return {

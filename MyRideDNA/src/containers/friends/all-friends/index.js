@@ -66,7 +66,7 @@ class AllFriendsTab extends Component {
             refreshList: false,
             isLoading: false,
             isLoadingData: false,
-            filteredFriends : []
+            filteredFriends: []
         }
     }
 
@@ -106,18 +106,18 @@ class AllFriendsTab extends Component {
         //     this.props.searchForFriend(this.props.searchQuery, this.props.user.userId, 0);
         // }
     }
-    
-    openFriendRideTab = () =>{
+
+    openFriendRideTab = () => {
         const { selectedPerson } = this.state;
-         this.openProfile(selectedPerson.userId, FRIEND_TYPE.ALL_FRIENDS, 2)
+        this.openProfile(selectedPerson.userId, FRIEND_TYPE.ALL_FRIENDS, 2)
     }
-    openFriendGarageTab = () =>{
+    openFriendGarageTab = () => {
         const { selectedPerson } = this.state;
-         this.openProfile(selectedPerson.userId, FRIEND_TYPE.ALL_FRIENDS, 1)
+        this.openProfile(selectedPerson.userId, FRIEND_TYPE.ALL_FRIENDS, 1)
     }
-    openFriendsProfileTab = () =>{
+    openFriendsProfileTab = () => {
         const { selectedPerson } = this.state;
-         this.openProfile(selectedPerson.userId, FRIEND_TYPE.ALL_FRIENDS, 0)
+        this.openProfile(selectedPerson.userId, FRIEND_TYPE.ALL_FRIENDS, 0)
     }
     sendFriendRequest = (person) => {
         const { user } = this.props;
@@ -201,15 +201,15 @@ class AllFriendsTab extends Component {
         })
     }
 
-    showOptionsModal = (userId) => { 
-        let person  = null;
-        if(this.props.searchQuery.trim().length > 0){
+    showOptionsModal = (userId) => {
+        let person = null;
+        if (this.props.searchQuery.trim().length > 0) {
             const index = this.state.filteredFriends.findIndex(item => item.userId === userId)
-            person  = this.state.filteredFriends[index];
+            person = this.state.filteredFriends[index];
         }
-        else{
+        else {
             const index = this.props.allFriends.findIndex(item => item.userId === userId)
-            person  = this.props.allFriends[index];
+            person = this.props.allFriends[index];
         }
         // this.props.searchQuery.trim().length > 0 ? this.props.searchFriendList[index] : this.props.allFriends[index];
         this.setState({ selectedPerson: person, isVisibleOptionsModal: true });
@@ -386,7 +386,7 @@ class AllFriendsTab extends Component {
     render() {
         const { isRefreshing, isVisibleOptionsModal, friendsFilter } = this.state;
         const { allFriends, searchQuery, searchFriendList, user } = this.props;
-        
+
         if (friendsFilter === FLOAT_ACTION_IDS.BTN_ALL_FRIENDS) {
             this.state.filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
@@ -396,7 +396,7 @@ class AllFriendsTab extends Component {
             const onlineFriends = allFriends.filter(friend => friend.isOnline);
             this.state.filteredFriends = searchQuery === '' ? onlineFriends : onlineFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
-                (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
+                    (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
         }
         return (

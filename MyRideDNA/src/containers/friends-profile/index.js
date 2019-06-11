@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { StyleSheet, View, Text, StatusBar, Image, ImageBackground, ScrollView, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG, RELATIONSHIP, PageKeys, MEDIUM_TAIL_TAG, FRIEND_TYPE, RIDE_TAIL_TAG } from '../../constants/index';
 import { ShifterButton, IconButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction, apiLoaderActions, initUndoRedoRideAction, updateFriendsRideSnapshotAction } from '../../actions';
+import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction, apiLoaderActions, initUndoRedoRideAction, updateFriendsRideSnapshotAction, getNotFriendsInfoAction } from '../../actions';
 import { Tabs, Tab, ScrollableTab, TabHeading, Accordion, ListItem, Left, Right, Card, CardItem, Thumbnail, Body, Button, Icon as NBIcon } from 'native-base';
 import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
@@ -28,8 +28,8 @@ class FriendsProfile extends Component {
                 { name: 'ios-chatbubbles', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.onPressChatIcon() },
                 { name: 'account-remove', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.onPressUnfriendIcon() },
                 // { name: 'ios-shirt', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => console.log("Vest pressed") },
-            ]
-
+            ],
+            totalTabs: 4
         };
     }
 
@@ -48,6 +48,10 @@ class FriendsProfile extends Component {
         //     this.props.getUserById(this.props.notificationBody.fromUserId);
         //     this.props.readNotification(this.props.user.userId, this.props.notificationBody.id);
         // }
+        else if (this.props.relationshipStatus === RELATIONSHIP.UNKNOWN) {
+            this.props.getFriendsNotFirend(this.props.person);
+            this.setState({ totalTabs: 3 })
+        }
         else {
             this.props.getFriendsInfo(this.props.frienduserId, this.props.friendType);
         }
@@ -70,7 +74,6 @@ class FriendsProfile extends Component {
                     }, (err) => {
                     });
                 }
-                // Actions.pop();
                 return;
             }
             if (this.state.activeTab === 0) {
@@ -170,7 +173,7 @@ class FriendsProfile extends Component {
 
     onPressBackButton = () => {
         Actions.pop();
-        setTimeout(() => { this.props.resetCurrentFriend() }, 50);
+        this.props.resetCurrentFriend()
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
@@ -320,6 +323,7 @@ class FriendsProfile extends Component {
     render() {
         const { user, currentFriend } = this.props;
         const { activeTab, isLoadingProfPic, friendsProfileIcons } = this.state;
+        console.log('currentFriend : ',currentFriend)
         return currentFriend === null
             ? <View style={styles.fill} />
             : <View style={styles.fill}>
@@ -340,7 +344,7 @@ class FriendsProfile extends Component {
                         </Text>
                     </Text>} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
                     <Tabs onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B', height: BOTTOM_TAB_HEIGHT }} underlineStyle={{ height: 0 }} />}>
-                        <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, backgroundColor: activeTab === 0 ? '#0083CA' : '#6C6C6B' }]}>
+                        <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, width: widthPercentageToDP(100 / this.state.totalTabs), backgroundColor: activeTab === 0 ? '#0083CA' : '#6C6C6B' }]}>
                             <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>PROFILE</Text>
                         </TabHeading>}>
                             <View style={{ backgroundColor: '#fff', flex: 1 }}>
@@ -355,13 +359,17 @@ class FriendsProfile extends Component {
                                         </ImageBackground>
                                     </View>
                                 </ImageBackground>
-                                <ScrollView styles={styles.scrollBottom} contentContainerStyle={styles.scrollBottomContent}>
-                                    <Accordion expanded={0} dataArray={[{ title: 'Actions', content: friendsProfileIcons }]}
-                                        renderContent={this.renderAccordionItem} headerStyle={styles.accordionHeader} />
-                                </ScrollView>
+                                {
+                                    this.props.relationshipStatus === RELATIONSHIP.UNKNOWN ? null
+                                        :
+                                        <ScrollView styles={styles.scrollBottom} contentContainerStyle={styles.scrollBottomContent}>
+                                            <Accordion expanded={0} dataArray={[{ title: 'Actions', content: friendsProfileIcons }]}
+                                                renderContent={this.renderAccordionItem} headerStyle={styles.accordionHeader} />
+                                        </ScrollView>
+                                }
                             </View>
                         </Tab>
-                        <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, backgroundColor: activeTab === 1 ? '#0083CA' : '#6C6C6B', borderLeftWidth: 2, borderLeftColor: '#fff', borderRightWidth: 1, borderRightColor: '#fff' }]}>
+                        <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, width: widthPercentageToDP(100 / this.state.totalTabs), backgroundColor: activeTab === 1 ? '#0083CA' : '#6C6C6B', borderLeftWidth: 2, borderLeftColor: '#fff', borderRightWidth: 1, borderRightColor: '#fff' }]}>
                             <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>GARAGE</Text>
                         </TabHeading>}>
                             <View style={{ backgroundColor: '#fff', flex: 1 }}>
@@ -387,7 +395,7 @@ class FriendsProfile extends Component {
                                 </View> : null}
                             </View>
                         </Tab>
-                        <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, backgroundColor: activeTab === 2 ? '#0083CA' : '#6C6C6B', borderLeftWidth: 1, borderLeftColor: '#fff', borderRightWidth: 2, borderRightColor: '#fff' }]}>
+                        <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, width: widthPercentageToDP(100 / this.state.totalTabs), backgroundColor: activeTab === 2 ? '#0083CA' : '#6C6C6B', borderLeftWidth: 1, borderLeftColor: '#fff', borderRightWidth: 2, borderRightColor: '#fff' }]}>
                             <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>RIDES</Text>
                         </TabHeading>}>
                             <View style={{ backgroundColor: '#fff', flex: 1 }}>
@@ -403,16 +411,19 @@ class FriendsProfile extends Component {
                                 }
                             </View>
                         </Tab>
-                        <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, backgroundColor: activeTab === 3 ? '#0083CA' : '#6C6C6B' }]}>
-                            <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>VEST</Text>
-                        </TabHeading>}>
-                            <View style={{ backgroundColor: 'rgba(149, 165, 166, 1)', flex: 1, }}>
-                                <ImageBackground source={require('../../assets/img/vest.png')} style={{ width: '100%', height: '100%' }} imageStyle={{ opacity: 0.5 }}></ImageBackground>
-                                <Text style={{ position: 'absolute', width: '100%', textAlign: 'center', marginTop: heightPercentageToDP(20), fontWeight: 'bold', fontSize: 80, color: 'rgba(rgba(46, 49, 49, 1))' }}> VEST</Text>
-                                <Text style={{ position: 'absolute', width: '100%', textAlign: 'center', marginTop: heightPercentageToDP(40), fontSize: 50, color: 'rgba(rgba(46, 49, 49, 1))' }}>Coming Soon...</Text>
+                        {
+                            this.props.relationshipStatus === RELATIONSHIP.UNKNOWN ? null
+                                :
+                                <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, width: widthPercentageToDP(100 / this.state.totalTabs), backgroundColor: activeTab === 3 ? '#0083CA' : '#6C6C6B' }]}>
+                                    <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>VEST</Text>
+                                </TabHeading>}>
+                                    <View style={{ backgroundColor: 'rgba(149, 165, 166, 1)', flex: 1, }}>
+                                        <ImageBackground source={require('../../assets/img/vest.png')} style={{ width: '100%', height: '100%' }} imageStyle={{ opacity: 0.5 }}></ImageBackground>
+                                        <Text style={{ position: 'absolute', width: '100%', textAlign: 'center', marginTop: heightPercentageToDP(20), fontWeight: 'bold', fontSize: 80, color: 'rgba(rgba(46, 49, 49, 1))' }}> VEST</Text>
+                                        <Text style={{ position: 'absolute', width: '100%', textAlign: 'center', marginTop: heightPercentageToDP(40), fontSize: 50, color: 'rgba(rgba(46, 49, 49, 1))' }}>Coming Soon...</Text>
 
-                            </View>
-                        </Tab>
+                                    </View>
+                                </Tab>}
                     </Tabs>
 
                     {/* Shifter: - Brings the app navigation menu */}
@@ -437,6 +448,7 @@ const mapDispatchToProps = (dispatch) => {
         getAllFriends: (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         getFriendsInfo: (frienduserId, friendType) => dispatch(getFriendsInfoAction({ userId: frienduserId, friendType })),
+        getFriendsNotFirend: (notFriendData) => dispatch(getNotFriendsInfoAction({ notFriendData })),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
         getUserById: (userId) => dispatch(getUserById(userId)),
         getProfilePicture: (pictureId, friendId, friendType) => getPicture(pictureId, ({ picture, pictureId }) => {

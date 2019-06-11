@@ -22,7 +22,6 @@ export default (state = initialState, action) => {
         //     return {...state, allFriendRequests:[...state.allFriendRequests.slice(0, index), ...state.allFriendRequests.slice(index +1)]}
         //     }
         case UPDATE_FRIEND_REQUEST_LIST:
-            let index = state.allFriendRequests.findIndex((requests) => { return requests.id === action.data.id })
             if (action.data.pictureObj) {
                 let updatedRequestList = state.allFriendRequests.map(item => {
                     if (!item.profilePictureId) return item;
@@ -33,6 +32,7 @@ export default (state = initialState, action) => {
                 })
                 return { ...state, allFriendRequests: updatedRequestList }
             } else {
+                let index = state.allFriendRequests.findIndex((requests) => { return requests.id === action.data.id })
                 return { ...state, allFriendRequests: [...state.allFriendRequests.slice(0, index), ...state.allFriendRequests.slice(index + 1)] }
             }
         default: return state

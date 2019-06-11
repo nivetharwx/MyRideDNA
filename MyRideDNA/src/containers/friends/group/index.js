@@ -5,7 +5,7 @@ import styles, { CREATE_GROUP_WIDTH } from './styles';
 import { BasicHeader } from '../../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { getGroupInfoAction, resetCurrentGroupAction, updateMemberAction } from '../../../actions';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, WindowDimensions, PageKeys } from '../../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, WindowDimensions, PageKeys, FRIEND_TYPE, RELATIONSHIP } from '../../../constants';
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { addMembers, getAllGroupMembers, dismissMemberAsAdmin, makeMemberAsAdmin, removeMember, getPicture, getPictureList, readNotification, getGroupMembers } from '../../../api';
 import { ThumbnailCard } from '../../../components/cards';
@@ -34,7 +34,7 @@ class Group extends Component {
             searchName: '',
             isLoading: false,
             isLoadingData: false,
-            filteredFriends : null
+            filteredFriends: null
         };
     }
 
@@ -91,7 +91,6 @@ class Group extends Component {
         //     }, 0);
         // }
         if (prevProps.currentGroup.groupMembers !== this.props.currentGroup.groupMembers) {
-            console.log('didUpdate');
             // this.props.currentGroup.groupMembers.forEach(picture => {
             //     if (!picture.profilePicture && picture.profilePictureId) {
             //         this.props.getPicture(picture.profilePictureId, picture.memberId)
@@ -107,8 +106,6 @@ class Group extends Component {
                 this.props.getGroupMemberPicture(groupMemberIdList)
             }
             setTimeout(() => {
-                console.log('didUpdate settimeout');
-                console.log('this.props.currentGroup.groupMembers : ',this.props.currentGroup.groupMembers);
                 this.state.filteredFriends = this.props.allFriends.filter(friend => this.props.currentGroup.groupMembers.findIndex(member => member.memberId === friend.userId) === -1);
             }, 0);
         }
@@ -248,6 +245,7 @@ class Group extends Component {
         const { selectedMember } = this.state;
         const userInfo = this.props.currentGroup.groupMembers[0];
         const options = [
+            { text: 'Open profile', id: 'profile', handler: () => { this.openProfile(selectedMember.memberId) } },
             { text: `Chat with ${selectedMember.name}`, id: 'chat', handler: () => { } },
         ];
         if (userInfo.isAdmin) {
@@ -319,6 +317,19 @@ class Group extends Component {
 
     onPressAddMember = () => {
         this.setState({ isVisibleSearchModal: true });
+
+    }
+    openProfile = (userId, friendType) => {
+        this.setState({ isVisibleOptionsModal: false, selectedMember: null });
+        if (this.props.allFriends.findIndex(friend => friend.userId === userId) === -1) {
+            const notFriend = this.props.currentGroup.groupMembers.filter(member => {
+                return member.memberId === userId
+            }, []);
+            Actions.push(PageKeys.FRIENDS_PROFILE, { relationshipStatus: RELATIONSHIP.UNKNOWN, person: notFriend[0], activeTab: 0 });
+        }
+        else {
+            Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId, friendType: FRIEND_TYPE.ALL_FRIENDS });
+        }
 
     }
 
@@ -443,6 +454,7 @@ class Group extends Component {
                             thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                             item={item}
                             onLongPress={() => this.showOptionsModal(index)}
+                            onPress={() => this.openProfile(item.memberId, FRIEND_TYPE.ALL_FRIENDS)}
                         />)}
                         ListFooterComponent={this.renderFooter}
                         // onTouchStart={this.loadMoreData}

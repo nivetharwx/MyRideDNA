@@ -28,7 +28,8 @@ import {
     UPDATE_RIDE_IN_LIST,
     UPDATE_PAGENUMBER,
     IS_REMOVED,
-    UPDATE_FRIENDS_RIDE_SNAPSHOT
+    UPDATE_FRIENDS_RIDE_SNAPSHOT,
+    GET_NOT_FRIEND_INFO
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -360,6 +361,12 @@ export const updateFriendInListAction = (data) => (
 export const getFriendsInfoAction = (data) => (
     {
         type: GET_FRIEND_INFO,
+        data: data
+    }
+);
+export const getNotFriendsInfoAction = (data) => (
+    {
+        type: GET_NOT_FRIEND_INFO,
         data: data
     }
 );

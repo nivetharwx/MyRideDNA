@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { StatusBar, Animated, Text, View, FlatList } from 'react-native';
 import { BasicHeader } from '../../components/headers';
 import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon, Toast, Thumbnail } from 'native-base';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, USER_AUTH_TOKEN, WindowDimensions, FRIEND_TYPE, PageKeys } from '../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, USER_AUTH_TOKEN, WindowDimensions, FRIEND_TYPE, PageKeys, RELATIONSHIP } from '../../constants';
 import styles from './styles';
 import AllFriendsTab from './all-friends';
 import GroupListTab from './group-list';
@@ -251,18 +251,19 @@ class Friends extends Component {
     }
 
     renderFriendRequestList = ({ item, index }) => {
+        console.log('item renderFriendRequestList: ',item)
         if (item.requestType === "sentRequest") {
             return (
-                <ListItem avatar style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
-                    <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
+                <ListItem avatar style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }} >
+                    <Left style={{ alignItems: 'center', justifyContent: 'center' }} onPress={() => this.openNotFriendProfile(index, FRIEND_TYPE.ALL_FRIENDS)}>
                         <Thumbnail style={styles.thumbnail} source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : require('../../assets/img/friend-profile-pic.png')} />
                     </Left>
-                    <Body >
+                    <Body onPress={() => this.openNotFriendProfile(index, FRIEND_TYPE.ALL_FRIENDS)}>
                         {/* <Text>{`${item.name} (${item.nickname})`}</Text> */}
                         <View style={{ flexDirection: 'row' }}>
                             <Text>{`${item.name}`}</Text>
                             {item.nickname ?
-                                <Text>{` (${item.nickname})`}</Text>
+                                <Text>{` (${item.userId})`}</Text>
                                 : null
                             }
                             <IconButton iconProps={{ name: 'call-made', type: 'MaterialCommunityIcons', style: { color: '#81BB41', fontSize: 13 } }} />
@@ -277,11 +278,11 @@ class Friends extends Component {
         }
         else {
             return (
-                <ListItem avatar style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
-                    <Left>
+                <ListItem avatar style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }} onPress={() => this.openNotFriendProfile(index, FRIEND_TYPE.ALL_FRIENDS)}>
+                    <Left onPress={() => this.openNotFriendProfile(index, FRIEND_TYPE.ALL_FRIENDS)}>
                         <Thumbnail style={styles.thumbnail} source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : require('../../assets/img/friend-profile-pic.png')} />
                     </Left>
-                    <Body >
+                    <Body onPress={() => this.openNotFriendProfile(index, FRIEND_TYPE.ALL_FRIENDS)}>
                         <View style={{ flexDirection: 'row' }}>
                             <Text>{`${item.name}`}</Text>
                             {item.nickname ?
@@ -330,6 +331,13 @@ class Friends extends Component {
 
     onPressCreateGroup = () => {
         this.setState({ isVisibleGroupModal: true })
+    }
+
+    openNotFriendProfile = (index, friendType) => {
+        const item = this.props.allFriendRequests[index];
+        console.log('item request: ',item);
+         Actions.push(PageKeys.FRIENDS_PROFILE, { relationshipStatus: RELATIONSHIP.UNKNOWN, person: item, activeTab: 0 });
+
     }
     render() {
         const { headerSearchMode, searchQuery, activeTab, friendsActiveTab, isRefreshing } = this.state;
