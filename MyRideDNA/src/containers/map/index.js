@@ -19,7 +19,7 @@ import { default as turfCircle } from '@turf/circle';
 import { default as turfDistance } from '@turf/distance';
 import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
-import { Icon as NBIcon } from 'native-base';
+import { Icon as NBIcon, Toast } from 'native-base';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT } from '../../constants';
 import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction } from '../../actions';
 import { SearchBox, IconicList } from '../../components/inputs';
@@ -125,8 +125,7 @@ export class Map extends Component {
             searchbarAnim: new Animated.Value(-widthPercentageToDP(100)),
             dropdownAnim: new Animated.Value(0),
             currentLocation: null,
-            gpsPointCollection:
-            {
+            gpsPointCollection: {
                 "type": "FeatureCollection",
                 "features": [
                     {
@@ -199,6 +198,15 @@ export class Map extends Component {
                             arr.push([trackpoint.lng, trackpoint.lat]);
                             return arr;
                         }, []);
+                        let collection = updatedState.gpsPointCollection.features[0].geometry.coordinates;
+                        if (ride.source) {
+                            collection = [[ride.source.lng, ride.source.lat], ...collection];
+                        }
+                        if (ride.destination) {
+                            collection = [...collection, [ride.destination.lng, ride.destination.lat]];
+                        }
+                        updatedState.gpsPointCollection.features[0].geometry.coordinates = collection;
+                        collection = null;
                     }
 
                     if (ride.source) {
@@ -607,7 +615,7 @@ export class Map extends Component {
             // }
         });
 
-        let updatedgpsPointCollection = {};
+        // let updatedgpsPointCollection = {};
         this.trackpointTick = 0;
         this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
         this.props.pushNotification(this.props.user.userId);
@@ -654,25 +662,24 @@ export class Map extends Component {
                     const feature = gpsPointCollection.features[0];
                     let points = [...feature.geometry.coordinates, [location.longitude, location.latitude]];
                     this.trackpointTick++;
-                    console.log("background trackpointTick: ", this.trackpointTick);
                     if (this.trackpointTick === 5) {
-                        updatedgpsPointCollection.gpsPointCollection = {
-                            ...gpsPointCollection,
-                            features: [{
-                                ...feature, geometry: {
-                                    ...feature.geometry,
-                                    coordinates: points
-                                }
-                            }]
-                        }
-                        this.gpsPointTimestamps.push(new Date().toISOString()); // TODO: Use Date.now() for sending to mapbox api, if it is supporting timestamps
+                        this.gpsPointTimestamps.push({ date: new Date().toISOString(), loc: [location.longitude, location.latitude] }); // TODO: Use Date.now() for sending to mapbox api, if it is supporting timestamps
                         this.trackpointTick = 0;
                         if (this.gpsPointTimestamps.length === 100) {
-                            this.getCoordsOnRoad(points.slice(-this.gpsPointTimestamps.length), this.gpsPointTimestamps, (responseBody, trackpoints, distance) => this.props.addTrackpoints(trackpoints, distance, ride, this.props.user.userId));
+                            this.getCoordsOnRoad(this.gpsPointTimestamps, (responseBody, trackpoints, distance) => this.props.addTrackpoints(trackpoints, distance, ride, this.props.user.userId));
                             this.gpsPointTimestamps = [];
                         }
                     }
-                    this.setState({ ...updatedgpsPointCollection, currentLocation: { location: [location.longitude, location.latitude], name: '' } });
+                    let updatedCollection = {
+                        ...gpsPointCollection,
+                        features: [{
+                            ...feature, geometry: {
+                                ...feature.geometry,
+                                coordinates: points
+                            }
+                        }]
+                    }
+                    this.setState({ gpsPointCollection: updatedCollection, currentLocation: { location: [location.longitude, location.latitude], name: '' } });
                 }
             }
         });
@@ -808,7 +815,7 @@ export class Map extends Component {
         //     this.setState({ currentLocation: { latitude: coords.latitude, longitude: coords.longitude } })
         // }, err => console.log("watchPosition error: ", err),
         //     { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 });
-        let updatedgpsPointCollection = {};
+        // let updatedgpsPointCollection = {};
         this.stopTrackingLocation();
         this.watchID = setInterval(() => {
             Geolocation.getCurrentPosition(
@@ -818,25 +825,24 @@ export class Map extends Component {
                         const feature = gpsPointCollection.features[0];
                         let points = [...feature.geometry.coordinates, [coords.longitude, coords.latitude]];
                         this.trackpointTick++;
-                        console.log("foreground trackpointTick: ", this.trackpointTick);
                         if (this.trackpointTick === 5) {
-                            updatedgpsPointCollection.gpsPointCollection = {
-                                ...gpsPointCollection,
-                                features: [{
-                                    ...feature, geometry: {
-                                        ...feature.geometry,
-                                        coordinates: points
-                                    }
-                                }]
-                            }
-                            this.gpsPointTimestamps.push(new Date().toISOString()); // TODO: Use Date.now() for sending to mapbox api, if it is supporting timestamps
+                            this.gpsPointTimestamps.push({ date: new Date().toISOString(), loc: [coords.longitude, coords.latitude] }); // TODO: Use Date.now() for sending to mapbox api, if it is supporting timestamps
                             this.trackpointTick = 0;
                             if (this.gpsPointTimestamps.length === 100) {
-                                this.getCoordsOnRoad(points.slice(-this.gpsPointTimestamps.length), this.gpsPointTimestamps, (responseBody, trackpoints, distance) => this.props.addTrackpoints(trackpoints, distance, ride, this.props.user.userId));
+                                this.getCoordsOnRoad(this.gpsPointTimestamps, (responseBody, trackpoints, distance) => this.props.addTrackpoints(trackpoints, distance, ride, this.props.user.userId));
                                 this.gpsPointTimestamps = [];
                             }
                         }
-                        this.setState({ ...updatedgpsPointCollection, currentLocation: { location: [coords.longitude, coords.latitude], name: '' } });
+                        let updatedCollection = {
+                            ...gpsPointCollection,
+                            features: [{
+                                ...feature, geometry: {
+                                    ...feature.geometry,
+                                    coordinates: points
+                                }
+                            }]
+                        }
+                        this.setState({ gpsPointCollection: updatedCollection, currentLocation: { location: [coords.longitude, coords.latitude], name: '' } });
                     }
 
                 },
@@ -848,7 +854,21 @@ export class Map extends Component {
         }, 1000);
     }
 
-    async getCoordsOnRoad(gpsPoints, gpsPointTimestamps, callback) {
+    async getCoordsOnRoad(gpsPointTimestamps, callback) {
+        // AsyncStorage.getItem('recordedRide').then(res => {
+        //     let points = null;
+        //     if (res) {
+        //         points = JSON.parse(res);
+        //         points = [...points, ...gpsPointTimestamps];
+        //     } else {
+        //         points = [...gpsPointTimestamps];
+        //     }
+        //     AsyncStorage.setItem('recordedRide', JSON.stringify(points));
+        // });
+        const gpsPoints = gpsPointTimestamps.reduce((list, item) => {
+            list.push(item.loc);
+            return list;
+        }, []);
         let locPathParam = gpsPoints.reduce((param, coord) => param + coord.join(',') + ';', "");
         locPathParam = locPathParam.slice(0, locPathParam.length - 1);
         axios.get(`https://api.mapbox.com/matching/v5/mapbox/driving/${locPathParam}?tidy=true&geometries=geojson&access_token=${JS_SDK_ACCESS_TOKEN}`)
@@ -862,7 +882,7 @@ export class Map extends Component {
                 }
                 // TODO: Return distance and duration from matching object (here matchings[0])
                 const trackpoints = matchings[0].geometry.coordinates.reduce((arr, coord, index) => {
-                    arr.push(coord[1], coord[0], gpsPointTimestamps[index]);
+                    arr.push(coord[1], coord[0], gpsPointTimestamps[index] ? gpsPointTimestamps[index].date : '');
                     return arr;
                 }, []);
                 callback(res.data, trackpoints, matchings[0].distance);
@@ -887,7 +907,13 @@ export class Map extends Component {
             }
             return true;
         } else {
-            this.state.onItinerary && this.hideItinerarySection();
+            if (this.state.onItinerary) {
+                this.hideItinerarySection();
+            } else if (this.state.showCreateRide) {
+                this.setState({ showCreateRide: false });
+            } else if (this.state.onWaypointList) {
+                this.hideWaypointList();
+            }
             return true;
         }
     }
@@ -1396,7 +1422,7 @@ export class Map extends Component {
         const { activeMarkerIndex } = this.state;
         const { ride } = this.props;
         if (features.length > 0 && features[features.length - 1].geometry.coordinates.join('') === placeKey) {
-            console.log("Found the last place same as this");
+            Toast.show({ text: 'Found the last place same as this', position: 'top' });
             return;
         }
         this.onPressSearchResultsClose();
@@ -1443,6 +1469,7 @@ export class Map extends Component {
         if (this.state.activeSearch.value !== 'all') {
             config.types = [`poi.${this.state.activeSearch.value}`];
         }
+        console.log({ config });
         try {
             const response = await geocodingClient.forwardGeocode(config).send();
             console.log("forwardgeocoding results: ", config, response.body.features);
@@ -1508,9 +1535,20 @@ export class Map extends Component {
                 lng: currentLocation.location[0],
                 date: dateTime
             };
-
             this.props.createRecordRide(rideDetails);
-            this.watchLocation();
+            this.trackpointTick++;
+            let updatedCollection = {
+                ...this.state.gpsPointCollection,
+                features: [{
+                    ...this.state.gpsPointCollection.features[0], geometry: {
+                        ...this.state.gpsPointCollection.features[0].geometry,
+                        coordinates: [currentLocation.location]
+                    }
+                }]
+            }
+            this.setState({ gpsPointCollection: updatedCollection }, () => {
+                this.watchLocation();
+            });
             return;
         } else {
             Geolocation.getCurrentPosition(
@@ -1522,8 +1560,17 @@ export class Map extends Component {
                     };
 
                     this.props.createRecordRide(rideDetails);
-
-                    this.setState({ currentLocation: { location: [coords.longitude, coords.latitude], name: '' } }, () => {
+                    this.trackpointTick++;
+                    let updatedCollection = {
+                        ...this.state.gpsPointCollection,
+                        features: [{
+                            ...this.state.gpsPointCollection.features[0], geometry: {
+                                ...this.state.gpsPointCollection.features[0].geometry,
+                                coordinates: [[coords.longitude, coords.latitude]]
+                            }
+                        }]
+                    }
+                    this.setState({ gpsPointCollection: updatedCollection, currentLocation: { location: [coords.longitude, coords.latitude], name: '' } }, () => {
                         this.watchLocation();
                     });
                 },
@@ -1540,15 +1587,31 @@ export class Map extends Component {
         const { ride } = this.props;
         this.watchID != null && clearInterval(this.watchID);
         const { gpsPointCollection } = this.state;
+        // if (this.gpsPointTimestamps.length > 1) {
+        //     this.getCoordsOnRoad(this.gpsPointTimestamps, (responseBody, trackpoints, distance) => {
+        //         this.props.pauseRecordRide(new Date().toISOString(), trackpoints, distance, ride, this.props.user.userId)
+        //     });
+        //     this.gpsPointTimestamps = [];
+        // } else {
+        //     this.props.pauseRecordRide(new Date().toISOString(), [], 0, ride, this.props.user.userId);
+        // }
+        if (this.trackpointTick >= 1) {
+            const lastPoints = gpsPointCollection.features[0].geometry.coordinates.slice(-this.trackpointTick);
+            this.gpsPointTimestamps = lastPoints.reduce((list, point) => {
+                list.push({ date: new Date().toISOString(), loc: point });
+                return list;
+            }, this.gpsPointTimestamps);
+        }
         if (this.gpsPointTimestamps.length > 1) {
-            this.getCoordsOnRoad(gpsPointCollection.features[0].geometry.coordinates.slice(-this.gpsPointTimestamps.length),
-                this.gpsPointTimestamps, (responseBody, trackpoints, distance) => {
-                    this.props.pauseRecordRide(new Date().toISOString(), trackpoints, distance, ride, this.props.user.userId)
-                });
-            this.gpsPointTimestamps = [];
+            this.getCoordsOnRoad(this.gpsPointTimestamps, (responseBody, trackpoints, distance) => {
+                this.props.pauseRecordRide(new Date().toISOString(), trackpoints, distance, ride, this.props.user.userId)
+            });
+        } else if (this.gpsPointTimestamps.length === 1) {
+            this.props.pauseRecordRide(new Date().toISOString(), [this.gpsPointTimestamps[0].loc[1], this.gpsPointTimestamps[0].loc[0], this.gpsPointTimestamps[0].date], 0, ride, this.props.user.userId);
         } else {
             this.props.pauseRecordRide(new Date().toISOString(), [], 0, ride, this.props.user.userId);
         }
+        this.gpsPointTimestamps = [];
     }
 
     onPressContinueRide = () => {
@@ -1562,11 +1625,19 @@ export class Map extends Component {
         const { ride } = this.props;
         this.watchID != null && clearInterval(this.watchID);
         const { gpsPointCollection } = this.state;
+        if (this.trackpointTick >= 1) {
+            const lastPoints = gpsPointCollection.features[0].geometry.coordinates.slice(-this.trackpointTick);
+            this.gpsPointTimestamps = lastPoints.reduce((list, point) => {
+                list.push({ date: new Date().toISOString(), loc: point });
+                return list;
+            }, this.gpsPointTimestamps);
+        }
         if (this.gpsPointTimestamps.length > 1) {
-            this.getCoordsOnRoad(gpsPointCollection.features[0].geometry.coordinates.slice(-this.gpsPointTimestamps.length),
-                this.gpsPointTimestamps, (responseBody, trackpoints, distance) => {
-                    this.props.completeRecordRide(new Date().toISOString(), trackpoints, distance, ride, this.props.user.userId)
-                });
+            this.getCoordsOnRoad(this.gpsPointTimestamps, (responseBody, trackpoints, distance) => {
+                this.props.completeRecordRide(new Date().toISOString(), trackpoints, distance, ride, this.props.user.userId)
+            });
+        } else if (this.gpsPointTimestamps.length === 1) {
+            this.props.completeRecordRide(new Date().toISOString(), [this.gpsPointTimestamps[0].loc[1], this.gpsPointTimestamps[0].loc[0], this.gpsPointTimestamps[0].date], 0, ride, this.props.user.userId);
         } else {
             this.props.completeRecordRide(new Date().toISOString(), [], 0, ride, this.props.user.userId);
         }
@@ -1702,7 +1773,7 @@ export class Map extends Component {
                     duration: 500,
                     useNativeDriver: true
                 }
-            ).start()
+            ).start(() => typeof callback === 'function' && callback())
             return;
         }
         const prevMarker = markerCollection.features[activeMarkerIndex];
@@ -1744,6 +1815,23 @@ export class Map extends Component {
     }
 
     showMapControls = () => {
+        // this.prevCoordsStr = this.state.gpsPointCollection.features[0].geometry.coordinates;
+        // this.setState({
+        //     gpsPointCollection: {
+        //         "type": "FeatureCollection",
+        //         "features": [
+        //             {
+        //                 "type": "Feature",
+        //                 "geometry": {
+        //                     "type": "LineString",
+        //                     "coordinates": this.props.ride.rideId === "5cfe3ddb9ae0c999cbf554a1"
+        //                         ? [[77.6251642, 12.9166953], [77.6259669, 12.9157532], [77.6266466, 12.9148677], [77.627162, 12.9142901], [77.6280028, 12.91417], [77.6319048, 12.9138727], [77.6313819, 12.9137836], [77.6331876, 12.9135721], [77.6344003, 12.914039], [77.6341597, 12.9140303], [77.6344564, 12.9137599], [77.6366237, 12.9140278]]
+        //                         : [[77.6510204, 12.9124248], [77.6489472, 12.9123579], [77.6462995, 12.9126112], [77.644686, 12.9132745], [77.6420555, 12.9140726], [77.6387594, 12.9144996], [77.6381489, 12.9143564], [77.6368614, 12.9143557], [77.6349645, 12.9140653], [77.634124, 12.914037], [77.6325104, 12.9136123], [77.6286946, 12.9144345], [77.6278794, 12.9165956], [77.6249574, 12.917188]]
+        //                 }
+        //             }
+        //         ]
+        //     }
+        // });
         Animated.timing(
             this.state.controlsBarLeftAnim,
             {
@@ -1755,6 +1843,20 @@ export class Map extends Component {
     }
 
     hideMapControls = () => {
+        // this.setState({
+        //     gpsPointCollection: {
+        //         "type": "FeatureCollection",
+        //         "features": [
+        //             {
+        //                 "type": "Feature",
+        //                 "geometry": {
+        //                     "type": "LineString",
+        //                     "coordinates": this.prevCoordsStr
+        //                 }
+        //             }
+        //         ]
+        //     }
+        // });
         Animated.timing(
             this.state.controlsBarLeftAnim,
             {
@@ -2122,43 +2224,43 @@ export class Map extends Component {
                             : null
                     }
                     {
-                        // markerCollection.features.length > 0
-                        //     ? <MapboxGL.MapView
-                        //         styleURL={MapboxGL.StyleURL.Street}
-                        //         zoomLevel={14}
-                        //         centerCoordinate={[
-                        //             4.895168,
-                        //             52.370216
-                        //         ]}
-                        //         style={styles.hiddenMapStyles}
-                        //         ref={el => this._hiddenMapView = el}
-                        //     >
-                        //         {
-                        //             currentLocation ? this.renderCurrentLocation(currentLocation) : null
-                        //         }
-                        //         {
-                        //             directions ?
-                        //                 <MapboxGL.ShapeSource id='ridePathLayer' shape={directions.geometry}>
-                        //                     <MapboxGL.LineLayer id='ridePath' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
-                        //                 </MapboxGL.ShapeSource>
-                        //                 : null
-                        //         }
-                        //         <MapboxGL.ShapeSource
-                        //             id='markers'
-                        //             shape={markerCollection}
-                        //             images={shapeSourceImages}
-                        //             onPress={this.onPressMarker}>
-                        //             <MapboxGL.SymbolLayer id="exampleIconName" style={[MapboxStyles.icon, MapboxStyles.markerTitle]} />
-                        //         </MapboxGL.ShapeSource>
-                        //         {
-                        //             gpsPointCollection.features[0].geometry.coordinates.length >= 2 ?
-                        //                 <MapboxGL.Animated.ShapeSource id='recordRidePathLayer' shape={gpsPointCollection}>
-                        //                     <MapboxGL.Animated.LineLayer id='recordRidePath' style={[{ lineColor: 'red', lineWidth: 3, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
-                        //                 </MapboxGL.Animated.ShapeSource>
-                        //                 : null
-                        //         }
-                        //     </MapboxGL.MapView>
-                        //     : null
+                        markerCollection.features.length > 0
+                            ? <MapboxGL.MapView
+                                styleURL={MapboxGL.StyleURL.Street}
+                                zoomLevel={14}
+                                centerCoordinate={[
+                                    4.895168,
+                                    52.370216
+                                ]}
+                                style={styles.hiddenMapStyles}
+                                ref={el => this._hiddenMapView = el}
+                            >
+                                {
+                                    currentLocation ? this.renderCurrentLocation(currentLocation) : null
+                                }
+                                {
+                                    directions ?
+                                        <MapboxGL.ShapeSource id='ridePathLayer' shape={directions.geometry}>
+                                            <MapboxGL.LineLayer id='ridePath' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
+                                        </MapboxGL.ShapeSource>
+                                        : null
+                                }
+                                <MapboxGL.ShapeSource
+                                    id='markers'
+                                    shape={markerCollection}
+                                    images={shapeSourceImages}
+                                    onPress={this.onPressMarker}>
+                                    <MapboxGL.SymbolLayer id="exampleIconName" style={[MapboxStyles.icon, MapboxStyles.markerTitle]} />
+                                </MapboxGL.ShapeSource>
+                                {
+                                    gpsPointCollection.features[0].geometry.coordinates.length >= 2 ?
+                                        <MapboxGL.Animated.ShapeSource id='recordRidePathLayer' shape={gpsPointCollection}>
+                                            <MapboxGL.Animated.LineLayer id='recordRidePath' style={[{ lineColor: 'red', lineWidth: 3, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapboxStyles.hideRoute : null]} />
+                                        </MapboxGL.Animated.ShapeSource>
+                                        : null
+                                }
+                            </MapboxGL.MapView>
+                            : null
                     }
                     <MapboxGL.MapView
                         styleURL={MapboxGL.StyleURL.Street}

@@ -18,7 +18,7 @@ export const ImageLoader = ({ show, offsetTop }) => {
     );
 }
 
-export const Loader = ({ isVisible, onCancel }) => {
+export const Loader = ({ isVisible, onCancel, title }) => {
     return isVisible
         ? <View style={styles.loaderContainer}>
             <View style={styles.loaderContent}>
@@ -27,7 +27,7 @@ export const Loader = ({ isVisible, onCancel }) => {
                         ? <ActivityIndicator size={widthPercentageToDP(20)} color='#fff' animating={isVisible} />
                         : <ActivityIndicator size={1} color='#fff' animating={isVisible} />
                 }
-                <Text style={{ color: '#fff' }}>Loading...</Text>
+                <Text style={{ color: '#fff' }}>{title ? title : 'Loading...'}</Text>
             </View>
         </View>
         : null
