@@ -735,7 +735,7 @@ export class Map extends Component {
             return;
         }
         if (body.reference.targetScreen === "FRIENDS_PROFILE") {
-            store.dispatch(resetCurrentFriendAction())
+            store.dispatch(resetCurrentFriendAction({ comingFrom: PageKeys.NOTIFICATIONS }))
             store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
         }
         else {
@@ -896,7 +896,7 @@ export class Map extends Component {
         if (Actions.state.index !== 0) {
             if (Actions.currentScene === PageKeys.FRIENDS_PROFILE) {
                 Actions.pop();
-                setTimeout(() => { this.props.resetCurrentFriend() }, 50);
+                this.props.resetCurrentFriend()
                 // this.props.changeScreen(Actions.currentScene);
             } else if (Actions.currentScene === PageKeys.GROUP) {
                 this.props.resetCurrentGroup();
