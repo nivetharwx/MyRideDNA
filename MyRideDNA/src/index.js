@@ -95,7 +95,7 @@ export default class App extends Component {
                 return;
             }
             if (body.reference.targetScreen === "FRIENDS_PROFILE") {
-                store.dispatch(resetCurrentFriendAction())
+                store.dispatch(resetCurrentFriendAction({comingFrom:PageKeys.NOTIFICATIONS}))
                 store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
             }
             else{

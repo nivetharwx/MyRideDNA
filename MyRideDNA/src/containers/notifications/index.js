@@ -240,7 +240,7 @@ const mapDispatchToProps = (dispatch) => {
             // dispatch(updateNotificationAction(pictureObj))
         }),
         deleteNotification: (notificationIds) => dispatch(deleteNotifications(notificationIds)),
-        resetCurrentFriend: () => dispatch(resetCurrentFriendAction())
+        resetCurrentFriend: () => dispatch(resetCurrentFriendAction({comingFrom:PageKeys.NOTIFICATIONS}))
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Notifications);
