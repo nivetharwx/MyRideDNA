@@ -103,7 +103,6 @@ export default (state = initialState, action) => {
         case GET_FRIEND_INFO:
             const index = state.allFriends.findIndex(item => item.userId === action.data.userId);
             const friend = state.allFriends[index];
-            console.log('GET_FRIEND_INFO friend : ',friend)
             if (!friend.profilePictureId) {
                 friend.profilePictureId = null;
             }
@@ -120,11 +119,9 @@ export default (state = initialState, action) => {
             };
         case GET_NOT_FRIEND_INFO:
             const notFriend = action.data.notFriendData;
-            console.log('not Friend GET_NOT_FRIEND_INFO: ',notFriend);
             if (action.data.notFriendData && !notFriend.userId) {
                 notFriend['userId'] = action.data.notFriendData.memberId
             }
-            console.log('GET_NOT_FRIEND_INFO notFriend : ', notFriend);
             return {
                 ...state,
                 currentFriend: {
@@ -226,8 +223,7 @@ export default (state = initialState, action) => {
 
 
         case RESET_CURRENT_FRIEND:
-            console.log('RESET_CURRENT_FRIEND : ',action.data)
-            if(action.data && action.data.comingFrom === PageKeys.NOTIFICATIONS){
+            if (action.data && action.data.comingFrom === PageKeys.NOTIFICATIONS) {
                 return {
                     ...state,
                     currentFriend: {
@@ -239,7 +235,7 @@ export default (state = initialState, action) => {
                     }
                 }
             }
-            else{
+            else {
                 return {
                     ...state,
                     currentFriend: {
@@ -252,7 +248,7 @@ export default (state = initialState, action) => {
                     }
                 }
             }
-            
+
 
         case DELETE_FRIEND:
             return {
