@@ -29,7 +29,10 @@ import {
     UPDATE_PAGENUMBER,
     IS_REMOVED,
     UPDATE_FRIENDS_RIDE_SNAPSHOT,
-    GET_NOT_FRIEND_INFO
+    GET_NOT_FRIEND_INFO,
+    REPLACE_UNSYNCED_RIDES,
+    ADD_UNSYNCED_RIDE,
+    DELETE_UNSYNCED_RIDE
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -143,6 +146,24 @@ export const updateRideAction = (data) => (
 export const updateRideInListAction = (data) => (
     {
         type: UPDATE_RIDE_IN_LIST,
+        data: data
+    }
+);
+export const replaceUnsyncedRidesAction = (data) => (
+    {
+        type: REPLACE_UNSYNCED_RIDES,
+        data: data
+    }
+);
+export const addUnsyncedRideAction = (data) => (
+    {
+        type: ADD_UNSYNCED_RIDE,
+        data: data
+    }
+);
+export const deleteUnsyncedRideAction = (data) => (
+    {
+        type: DELETE_UNSYNCED_RIDE,
         data: data
     }
 );

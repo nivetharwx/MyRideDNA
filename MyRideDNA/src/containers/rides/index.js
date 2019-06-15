@@ -7,16 +7,17 @@ import {
 import { connect } from 'react-redux';
 
 import { Tab, TabHeading, Tabs, ScrollableTab, Icon as NBIcon, ListItem, Left, Toast, Card, CardItem, Thumbnail, Body, Button, Right } from "native-base";
-import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, RIDE_TAIL_TAG } from '../../constants';
+import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, RIDE_TAIL_TAG, JS_SDK_ACCESS_TOKEN, RECORD_RIDE_STATUS, UNSYNCED_RIDE } from '../../constants';
 import { ShifterButton, LinkButton, ImageButton, IconButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, screenChangeAction, clearRideAction, updateRidePictureInListAction, updateRideCreatorPictureInListAction, apiLoaderActions, updateRideInListAction, updateRideAction, isRemovedAction } from '../../actions';
+import { appNavMenuVisibilityAction, screenChangeAction, clearRideAction, updateRidePictureInListAction, updateRideCreatorPictureInListAction, apiLoaderActions, updateRideInListAction, updateRideAction, isRemovedAction, updateRideSyncStatusAction, replaceUnsyncedRidesAction, deleteUnsyncedRideAction } from '../../actions';
 import { BasicHeader } from '../../components/headers';
-import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide, logoutUser, getPicture, getPictureList, updateRide, getRidePictureList } from '../../api';
+import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide, logoutUser, getPicture, getPictureList, updateRide, getRidePictureList, pauseRecordRide, completeRecordRide } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
 import { LabeledInput } from '../../components/inputs';
 import { IconLabelPair } from '../../components/labels';
 import { BaseModal } from '../../components/modal';
 import { Loader } from '../../components/loader';
+import axios from 'axios';
 
 
 export class Rides extends Component {
@@ -230,35 +231,120 @@ export class Rides extends Component {
         setTimeout(() => {
             Alert.alert(
                 'Confirmation to delete',
-                `Are you sure to delete the ${rideName}?`,
+                // `${this.props.ride.status === RECORD_RIDE_STATUS.RUNNING ? 'This ride is currently running. ' : ''}Are you sure to delete the ${rideName}`,
+                `Are you sure to delete the ${rideName}`,
                 [
+                    { text: 'Cancel', onPress: () => { }, style: 'cancel' },
                     {
                         text: 'Yes', onPress: () => {
                             // DOC: Clear ride from map if it is currently loaded on map
                             if (this.props.ride.rideId === rideId) {
-                                this.props.clearRideFromMap();
+                                if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING) {
+                                    console.log("Ride is running");
+                                } else {
+                                    this.props.clearRideFromMap();
+                                }
                             }
-                            this.props.deleteRide(rideId, index, rideType);
+                            AsyncStorage.removeItem(`${UNSYNCED_RIDE}${rideId}`).then(() => this.props.deleteRide(rideId, index, rideType));
                         }
                     },
-                    { text: 'Cancel', onPress: () => { }, style: 'cancel' },
                 ],
                 { cancelable: false }
             );
         }, 100);
     }
 
-    onPressRide(ride) {
-        if (this.props.ride.rideId) {
-            this.props.clearRideFromMap();
+    async onPressRide(ride) {
+        if (this.props.hasNetwork) {
+            if (this.props.ride.rideId === ride.rideId) {
+                this.props.changeScreen({ name: PageKeys.MAP });
+                return;
+            }
+            if (this.props.ride.rideId) {
+                this.props.clearRideFromMap();
+            }
+            let rideType = RIDE_TYPE.BUILD_RIDE;
+            if (this.state.activeTab === 1) {
+                rideType = RIDE_TYPE.RECORD_RIDE;
+            } else if (this.state.activeTab === 2) {
+                rideType = RIDE_TYPE.SHARED_RIDE;
+            }
+            if (ride.unsynced === true) {
+                const unsyncedPoints = await AsyncStorage.getItem(`${UNSYNCED_RIDE}${ride.rideId}`);
+                if (unsyncedPoints) {
+                    const points = JSON.parse(unsyncedPoints);
+                    if (points.length > 0) {
+                        this.syncCoordinatesWithServer(ride, points[points.length - 1].status, points);
+                        return;
+                    }
+                }
+            }
+            this.props.loadRideOnMap(ride.rideId, { rideType, creatorName: ride.creatorName, creatorNickname: ride.creatorNickname, creatorProfilePictureId: ride.creatorProfilePictureId });
+        } else {
+            console.log("No network found");
         }
-        let rideType = RIDE_TYPE.BUILD_RIDE;
-        if (this.state.activeTab === 1) {
-            rideType = RIDE_TYPE.RECORD_RIDE;
-        } else if (this.state.activeTab === 2) {
-            rideType = RIDE_TYPE.SHARED_RIDE;
+    }
+
+    async getCoordsOnRoad(gpsPointTimestamps, callback) {
+        const actualPoints = [];
+        const gpsPoints = gpsPointTimestamps.reduce((list, item) => {
+            list.push(item.loc);
+            actualPoints.push(item.loc[1], item.loc[0], item.date, item.status);
+            return list;
+        }, []);
+        let locPathParam = gpsPoints.reduce((param, coord) => param + coord.join(',') + ';', "");
+        locPathParam = locPathParam.slice(0, locPathParam.length - 1);
+        console.log(locPathParam);
+        try {
+            const res = await axios.get(`https://api.mapbox.com/matching/v5/mapbox/driving/${locPathParam}?tidy=true&geometries=geojson&access_token=${JS_SDK_ACCESS_TOKEN}`);
+            const { matchings } = res.data;
+            console.log(res.data);
+            if (res.data.code === "NoRoute" || (matchings && matchings.length === 0)) {
+                console.log("No matching coords found");
+                callback(res.data, [], [], 0);
+                return;
+            }
+            // TODO: Return distance and duration from matching object (here matchings[0])
+            const trackpoints = matchings[0].geometry.coordinates.reduce((arr, coord, index) => {
+                if (gpsPointTimestamps[index]) {
+                    arr.push(coord[1], coord[0], gpsPointTimestamps[index].date, gpsPointTimestamps[index].status);
+                } else {
+                    const lastPoint = gpsPointTimestamps[gpsPointTimestamps.length - 1];
+                    arr.push(coord[1], coord[0], lastPoint.date, lastPoint.status);
+                }
+                return arr;
+            }, []);
+            callback(res.data, actualPoints, trackpoints, matchings[0].distance);
+        } catch (er) {
+            console.log("matching error: ", er);
         }
-        this.props.loadRideOnMap(ride.rideId, { rideType, creatorName: ride.creatorName, creatorNickname: ride.creatorNickname, creatorProfilePictureId: ride.creatorProfilePictureId });
+    }
+
+    syncCoordinatesWithServer(ride, rideStatus, unsyncedPoints) {
+        console.log(unsyncedPoints);
+        if (rideStatus === RECORD_RIDE_STATUS.PAUSED) {
+            if (unsyncedPoints.length > 1) {
+                this.getCoordsOnRoad(unsyncedPoints, (responseBody, actualPoints, trackpoints, distance) => {
+                    this.props.pauseRecordRide(unsyncedPoints[unsyncedPoints.length - 1].date, actualPoints, trackpoints, distance, ride, this.props.user.userId, true);
+                });
+            } else if (unsyncedPoints.length === 1) {
+                const singlePoint = [unsyncedPoints[0].loc[1], unsyncedPoints[0].loc[0], unsyncedPoints[0].date, unsyncedPoints[0].status];
+                this.props.pauseRecordRide(unsyncedPoints[0].date, singlePoint, singlePoint, 0, ride, this.props.user.userId, true);
+            } else {
+                this.props.pauseRecordRide(new Date().toISOString(), [], [], 0, ride, this.props.user.userId, true);
+            }
+        } else if (rideStatus === RECORD_RIDE_STATUS.COMPLETED) {
+            if (unsyncedPoints.length > 1) {
+                this.getCoordsOnRoad(unsyncedPoints, (responseBody, actualPoints, trackpoints, distance) => {
+                    this.props.completeRecordRide(unsyncedPoints[unsyncedPoints.length - 1].date, actualPoints, trackpoints, distance, ride, this.props.user.userId, true)
+                });
+            } else if (unsyncedPoints.length === 1) {
+                const singlePoint = [unsyncedPoints[0].loc[1], unsyncedPoints[0].loc[0], unsyncedPoints[0].date, unsyncedPoints[0].status];
+                this.props.completeRecordRide(unsyncedPoints[0].date, singlePoint, singlePoint, 0, ride, this.props.user.userId, true);
+            } else {
+                this.props.completeRecordRide(new Date().toISOString(), [], [], 0, ride, this.props.user.userId, true);
+            }
+        }
     }
 
     onSubmitRenameForm = () => {
@@ -656,7 +742,7 @@ export class Rides extends Component {
                     {/* Shifter: - Brings the app navigation menu */}
                     <ShifterButton onPress={this.showAppNavMenu} alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
-                <Loader isVisible={showLoader} />
+                <Loader title={this.props.ride.unsynced ? 'You have unsynced data. Please wait to finish' : 'Loading...'} isVisible={showLoader} />
             </View>
         );
     }
@@ -669,10 +755,10 @@ export class Rides extends Component {
 const mapStateToProps = (state) => {
     const { showMenu } = state.TabVisibility;
     const { user, userAuthToken, deviceToken } = state.UserAuth;
-    const { buildRides, recordedRides, sharedRides, isRemoved } = state.RideList;
-    const { ride } = state.RideInfo.present;
-    const { showLoader, pageNumber } = state.PageState;
-    return { showMenu, user, userAuthToken, deviceToken, buildRides, recordedRides, sharedRides, ride, showLoader, pageNumber, isRemoved };
+    const { buildRides, recordedRides, sharedRides, isRemoved, unsyncedRides } = state.RideList;
+    const { ride, isSyncing } = state.RideInfo.present;
+    const { showLoader, pageNumber, hasNetwork } = state.PageState;
+    return { showMenu, user, userAuthToken, deviceToken, buildRides, recordedRides, sharedRides, unsyncedRides, ride, showLoader, pageNumber, isRemoved, hasNetwork, isSyncing };
 }
 
 const mapDispatchToProps = (dispatch) => {
@@ -717,7 +803,11 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(updateRideCreatorPictureInListAction({ rideType, pictureObject: response }))
         }, (error) => console.log("getRideCreatorPictureList error: ", error)),
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
-        isRemovedAction: (state) => dispatch(isRemovedAction(false))
+        isRemovedAction: (state) => dispatch(isRemovedAction(false)),
+        pauseRecordRide: (pauseTime, actualPoints, trackpoints, distance, ride, userId, loadRide) => dispatch(pauseRecordRide(pauseTime, actualPoints, trackpoints, distance, ride, userId, loadRide)),
+        completeRecordRide: (endTime, actualPoints, trackpoints, distance, ride, userId, loadRide) => dispatch(completeRecordRide(endTime, actualPoints, trackpoints, distance, ride, userId, loadRide)),
+        updateRide: (data) => dispatch(updateRideAction(data)),
+        deleteUnsyncedRide: (unsyncedRideId) => dispatch(deleteUnsyncedRideAction(unsyncedRideId))
     }
 }
 
