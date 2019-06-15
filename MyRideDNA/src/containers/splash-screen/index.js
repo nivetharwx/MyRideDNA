@@ -5,9 +5,9 @@ import {
 } from 'react-native';
 import { connect } from 'react-redux';
 import { Actions } from 'react-native-router-flux';
-import { USER_AUTH_TOKEN, PageKeys, WindowDimensions, USER_BASE_URL, DEVICE_TOKEN } from '../../constants';
+import { USER_AUTH_TOKEN, PageKeys, WindowDimensions, USER_BASE_URL, DEVICE_TOKEN, UNSYNCED_RIDE } from '../../constants';
 import { Icon as NBIcon } from 'native-base';
-import { storeUserAction, updateTokenAction } from '../../actions';
+import { storeUserAction, updateTokenAction, toggleNetworkStatusAction, updateUnsyncedRidesAction, replaceUnsyncedRidesAction } from '../../actions';
 import axios from 'axios';
 
 class SplashScreen extends React.Component {
@@ -20,6 +20,8 @@ class SplashScreen extends React.Component {
     }
 
     async componentDidMount() {
+        const keys = await AsyncStorage.getAllKeys();
+        this.props.updateUnsyncedRides(keys.filter(key => key.indexOf(UNSYNCED_RIDE) === 0));
         const connectionInfo = await NetInfo.getConnectionInfo();
         if (connectionInfo.type === 'none') {
             Alert.alert('Network Error', 'Failed to connect to internet');
@@ -48,25 +50,33 @@ class SplashScreen extends React.Component {
     }
     handleFirstConnectivityChange = async (connectionInfo) => {
         if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
-            var userAuthToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
-            var deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
-            if (userAuthToken) {
-                this.props.updateToken({ userAuthToken, deviceToken });
-                console.log("updateToken called: ", { userAuthToken, deviceToken });
-                axios.post(USER_BASE_URL + 'loginUserUsingAccessToken', { accessToken: userAuthToken, date: new Date().toISOString() }, { timeout: 15000 })
-                    .then(res => {
-                        if (res.status === 200) {
-                            this.props.storeUser(res.data);
-                        }
-                    })
-                    .catch(error => {
-                        console.log(error.response.data);
-                        Actions.reset(PageKeys.LOGIN);
-                    })
+            this.props.toggleNetworkStatus(true);
+            if (this.props.user === null || this.props.user.userId === null) {
+                this.doAuthTokenVerfication();
             }
-            else {
-                Actions.reset(PageKeys.LOGIN);
-            }
+        } else {
+            this.props.toggleNetworkStatus(false);
+        }
+    }
+
+    async doAuthTokenVerfication() {
+        var userAuthToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
+        var deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
+        if (userAuthToken) {
+            this.props.updateToken({ userAuthToken, deviceToken });
+            axios.post(USER_BASE_URL + 'loginUserUsingAccessToken', { accessToken: userAuthToken, date: new Date().toISOString() }, { timeout: 15000 })
+                .then(res => {
+                    if (res.status === 200) {
+                        this.props.storeUser(res.data);
+                    }
+                })
+                .catch(error => {
+                    console.log(error.response ? error.response.data : error.response);
+                    Actions.reset(PageKeys.LOGIN);
+                })
+        }
+        else {
+            Actions.reset(PageKeys.LOGIN);
         }
     }
 
@@ -127,6 +137,8 @@ const mapDispatchToProps = (dispatch) => {
     return {
         updateToken: (token) => dispatch(updateTokenAction(token)),
         storeUser: (userInfo) => dispatch(storeUserAction(userInfo)),
+        toggleNetworkStatus: (netStatus) => dispatch(toggleNetworkStatusAction(netStatus)),
+        updateUnsyncedRides: (unsyncedRides) => dispatch(replaceUnsyncedRidesAction(unsyncedRides))
     };
 }
 

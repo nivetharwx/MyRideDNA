@@ -1,11 +1,12 @@
-import { UPDATE_RIDE_LIST, CLEAR_RIDE_LIST, DELETE_RIDE, REPLACE_RIDE_LIST, UPDATE_RIDE_SNAPSHOT, UPDATE_RIDE_CREATOR_PICTURE, UPDATE_RIDE_IN_LIST, IS_REMOVED } from "../actions/actionConstants";
-import { RIDE_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, RIDE_TAIL_TAG } from "../constants";
+import { UPDATE_RIDE_LIST, CLEAR_RIDE_LIST, DELETE_RIDE, REPLACE_RIDE_LIST, UPDATE_RIDE_SNAPSHOT, UPDATE_RIDE_CREATOR_PICTURE, UPDATE_RIDE_IN_LIST, IS_REMOVED, UPDATE_UNSYNCED_RIDES, DELETE_UNSYNCED_RIDE, REPLACE_UNSYNCED_RIDES, ADD_UNSYNCED_RIDE } from "../actions/actionConstants";
+import { RIDE_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, RIDE_TAIL_TAG, UNSYNCED_RIDE } from "../constants";
 
 const initialState = {
     buildRides: [],
     recordedRides: [],
     sharedRides: [],
     isRemoved: false,
+    unsyncedRides: []
 };
 
 export default (state = initialState, action) => {
@@ -18,6 +19,7 @@ export default (state = initialState, action) => {
             if (action.data.pageNumber === 0) {
                 if (action.data.rideType === RIDE_TYPE.SHARED_RIDE) {
                     updatedState[rideKey] = action.data.rideList.map(ride => {
+                        if (state.unsyncedRides.indexOf(`${UNSYNCED_RIDE}${ride.rideId}`) > -1) ride.unsynced = true;
                         let rideIdx = updatedState[rideKey].findIndex(item => item.rideId === ride.rideId);
                         if (rideIdx > -1) {
                             let snapshot = null;
@@ -38,6 +40,7 @@ export default (state = initialState, action) => {
 
                 } else {
                     updatedState[rideKey] = action.data.rideList.map(ride => {
+                        if (state.unsyncedRides.indexOf(`${UNSYNCED_RIDE}${ride.rideId}`) > -1) ride.unsynced = true;
                         let rideIdx = updatedState[rideKey].findIndex(item => item.rideId === ride.rideId);
                         if (rideIdx > -1) {
                             if (updatedState[rideKey][rideIdx].snapshotId === ride.snapshotId && updatedState[rideKey][rideIdx].snapshot) {
@@ -52,6 +55,7 @@ export default (state = initialState, action) => {
             else {
                 if (action.data.rideType === RIDE_TYPE.SHARED_RIDE) {
                     const rideList = action.data.rideList.map(ride => {
+                        if (state.unsyncedRides.indexOf(`${UNSYNCED_RIDE}${ride.rideId}`) > -1) ride.unsynced = true;
                         let rideIdx = updatedState[rideKey].findIndex(item => item.rideId === ride.rideId);
                         if (rideIdx > -1) {
                             let snapshot = null;
@@ -73,6 +77,7 @@ export default (state = initialState, action) => {
 
                 } else {
                     const rideList = action.data.rideList.map(ride => {
+                        if (state.unsyncedRides.indexOf(`${UNSYNCED_RIDE}${ride.rideId}`) > -1) ride.unsynced = true;
                         let rideIdx = updatedState[rideKey].findIndex(item => item.rideId === ride.rideId);
                         if (rideIdx > -1) {
                             if (updatedState[rideKey][rideIdx].snapshotId === ride.snapshotId && updatedState[rideKey][rideIdx].snapshot) {
@@ -91,6 +96,32 @@ export default (state = initialState, action) => {
             updatedState[rideKey] = typeof action.data.index === 'number' && action.data.index >= 0
                 ? [...state[rideKey].slice(0, action.data.index), ...action.data.rideList, ...state[rideKey].slice(action.data.index + 1)]
                 : [...state[rideKey], ...action.data.rideList]
+            return updatedState;
+
+        case REPLACE_UNSYNCED_RIDES:
+            return { ...state, unsyncedRides: action.data };
+
+        case ADD_UNSYNCED_RIDE:
+            updatedState.recordedRides = state.recordedRides.map(ride => {
+                if (ride.rideId === action.data) {
+                    return { ...ride, unsynced: true };
+                }
+                return ride;
+            });
+            updatedState.unsyncedRides = [...updatedState.unsyncedRides, `${UNSYNCED_RIDE}${action.data}`];
+            return updatedState;
+
+        case DELETE_UNSYNCED_RIDE:
+            updatedState.recordedRides = state.recordedRides.map(ride => {
+                return ride.rideId === action.data ? { ...ride, unsynced: false } : ride;
+            });
+            const keyIdx = state.unsyncedRides.indexOf(`${UNSYNCED_RIDE}${action.data}`);
+            if (keyIdx > -1) {
+                return {
+                    ...updatedState,
+                    unsyncedRides: [...state.unsyncedRides.slice(0, keyIdx), ...state.unsyncedRides.slice(keyIdx + 1)]
+                }
+            }
             return updatedState;
 
         case UPDATE_RIDE_SNAPSHOT:
@@ -135,6 +166,12 @@ export default (state = initialState, action) => {
 
         case DELETE_RIDE:
             var rideKey = getRideListByType(action.data.rideType);
+            if (rideKey === 'recordedRides') {
+                const unsyncedKeyIdx = updatedState.unsyncedRides.indexOf(`${UNSYNCED_RIDE}${state.recordedRides[action.data.index].rideId}`);
+                if (unsyncedKeyIdx > -1) {
+                    updatedState.unsyncedRides = [...updatedState.unsyncedRides.slice(0, unsyncedKeyIdx), ...updatedState.unsyncedRides.slice(unsyncedKeyIdx + 1)];
+                }
+            }
             updatedState[rideKey] = [...state[rideKey].slice(0, action.data.index), ...state[rideKey].slice(action.data.index + 1)];
             return updatedState;
 

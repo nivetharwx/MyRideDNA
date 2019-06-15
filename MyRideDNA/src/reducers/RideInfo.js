@@ -23,8 +23,9 @@ const initialState = {
         status: null,
         fromRideId: null,
         totalDistance: 0,
-        totalTime: 0
-    }
+        totalTime: 0,
+        unsynced: false
+    },
 };
 
 const rideInfo = (state = initialState, action) => {
