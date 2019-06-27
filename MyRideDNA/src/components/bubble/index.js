@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, TouchableWithoutFeedback } from 'react-native';
 import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP } from '../../constants';
 
 class Bubble extends React.PureComponent {
@@ -22,17 +22,42 @@ class Bubble extends React.PureComponent {
     }
 }
 
-export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, messageTimeStyle, messageStyle, bubbleName, messageTime, message }) => (
-    <View style={[styles.chatBubble, bubbleStyle]}>
-        <View style={[styles.chatBubbleHeader, bubbleHeaderStyle]}>
-            <Text style={[styles.bubbleName, bubbleNameStyle]}>{bubbleName}</Text>
-            <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
-        </View>
-        <Text style={[messageStyle]}>{message}</Text>
-    </View>
+export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, messageTimeStyle, messageStyle, bubbleName, messageTime, message, onLongPress, onPress, selectedMessage }) => (
+
+    <TouchableWithoutFeedback onPress={() => onPress ? onPress() : null} activeOpacity={onLongPress ? 0.7 : 1} onLongPress={() => onLongPress && onLongPress()} style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
+    }}>
+        {
+            selectedMessage ?
+                <View style={styles.longPressColor}>
+                    <View style={[styles.chatBubble, bubbleStyle, styles.longPressColor]}>
+                        <View style={[styles.chatBubbleHeader, bubbleHeaderStyle]} >
+                            <Text style={[styles.bubbleName, bubbleNameStyle]}>{bubbleName}</Text>
+                            <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
+                        </View>
+                        <Text style={[messageStyle]}>{message}</Text>
+                    </View>
+                </View>
+                :
+                <View style={[styles.chatBubble, bubbleStyle]}>
+                    <View style={[styles.chatBubbleHeader, bubbleHeaderStyle]} >
+                        <Text style={[styles.bubbleName, bubbleNameStyle]}>{bubbleName}</Text>
+                        <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
+                    </View>
+                    <Text style={[messageStyle]}>{message}</Text>
+                </View>
+        }
+
+    </TouchableWithoutFeedback>
 );
 
 const styles = StyleSheet.create({
+    longPressColor: {
+        backgroundColor: 'rgba(97, 155, 213,0.4)',
+        minHeight: heightPercentageToDP(8),
+    },
     chatBubble: {
         padding: 8,
         width: widthPercentageToDP(80),

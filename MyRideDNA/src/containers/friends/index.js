@@ -263,7 +263,7 @@ class Friends extends Component {
                         <View style={{ flexDirection: 'row' }}>
                             <Text>{`${item.name}`}</Text>
                             {item.nickname ?
-                                <Text>{` (${item.userId})`}</Text>
+                                <Text>{` (${item.nickname})`}</Text>
                                 : null
                             }
                             <IconButton iconProps={{ name: 'call-made', type: 'MaterialCommunityIcons', style: { color: '#81BB41', fontSize: 13 } }} />

@@ -95,6 +95,13 @@ class GroupListTab extends Component {
             Actions.push(PageKeys.GROUP, { grpIndex: index });
         }
     }
+    openChatPage = (index) => {
+        const groupDetail = this.props.friendGroupList[index];
+        groupDetail['isGroup'] = true
+        groupDetail['id'] = groupDetail.groupId
+        Actions.push(PageKeys.CHAT, { isGroup: true, chatInfo: groupDetail })
+        this.setState({ isVisibleOptionsModal: false })
+    }
 
     openCreateGroupSection = () => {
         if (this.borderWidthAnim.__getValue() > 0) {
@@ -142,7 +149,7 @@ class GroupListTab extends Component {
     renderMenuOptions = () => {
         if (this.state.selectedGroup === null) return;
         const index = this.props.friendGroupList.findIndex(item => item.groupId === this.state.selectedGroup.groupId);
-        const options = [{ text: 'Open group', id: 'openGroup', handler: () => this.openGroupInfo(index) }, { text: 'Exit group', id: 'exitGroup', handler: () => this.showExitGroupConfirmation() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
+        const options = [{ text: 'Open group', id: 'openGroup', handler: () => this.openGroupInfo(index) }, { text: 'Chat', id: 'openChat', handler: () => this.openChatPage(index) }, { text: 'Exit group', id: 'exitGroup', handler: () => this.showExitGroupConfirmation() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
         return (
             options.map(option => (
                 <LinkButton

@@ -137,7 +137,11 @@ class FriendsProfile extends Component {
     }
 
     onPressChatIcon = () => {
-        Actions.push(PageKeys.CHAT, { friend: this.props.currentFriend });
+        console.log('this.props.currentFriend : ', this.props.currentFriend)
+        const friendDetail = this.props.currentFriend;
+        friendDetail['id'] = this.props.currentFriend.userId;
+        friendDetail['isGroup'] = false;
+        Actions.push(PageKeys.CHAT, { isGroup: false, chatInfo: friendDetail });
     }
 
     onPressUnfriendIcon = () => {
@@ -323,7 +327,7 @@ class FriendsProfile extends Component {
     render() {
         const { user, currentFriend } = this.props;
         const { activeTab, isLoadingProfPic, friendsProfileIcons } = this.state;
-        console.log('currentFriend : ',currentFriend)
+        console.log('currentFriend : ', currentFriend)
         return currentFriend === null
             ? <View style={styles.fill} />
             : <View style={styles.fill}>

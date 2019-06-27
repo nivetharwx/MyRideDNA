@@ -21,7 +21,7 @@ import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon, Toast } from 'native-base';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction } from '../../actions';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, resetChatMessageAction } from '../../actions';
 import { SearchBox, IconicList } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -55,6 +55,7 @@ import { BaseModal } from '../../components/modal';
 import { Loader } from '../../components/loader';
 
 import FCM, { NotificationActionType, NotificationType, FCMEvent, RemoteNotificationResult, WillPresentNotificationResult } from "react-native-fcm";
+import DeviceInfo from 'react-native-device-info';
 
 MapboxGL.setAccessToken(MAP_ACCESS_TOKEN);
 // DOC: JS mapbox library to make direction api calls
@@ -584,9 +585,15 @@ export class Map extends Component {
 
     async componentDidMount() {
         FCM.getInitialNotification().then(notification => {
-            if (notification.body) {
-                console.log('notification map  :', notification)
-                JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));
+            console.log('notification map : ', notification);
+            if (notification.body && !notification.local_notification && JSON.parse(notification.body).reference && JSON.parse(notification.body).reference.targetScreen) {
+                console.log('notification body map  :', notification)
+                if (JSON.parse(notification.body).reference.targetScreen === PageKeys.CHAT) {
+
+                }
+                else {
+                    JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));
+                }
             }
         });
         BackgroundGeolocation.configure({
@@ -617,7 +624,7 @@ export class Map extends Component {
 
         // let updatedgpsPointCollection = {};
         this.trackpointTick = 0;
-        this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
+        this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId, deviceId: DeviceInfo.getUniqueID() } });
         this.props.pushNotification(this.props.user.userId);
         this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString(), (res) => {
         }, (err) => {
@@ -738,6 +745,10 @@ export class Map extends Component {
             store.dispatch(resetCurrentFriendAction({ comingFrom: PageKeys.NOTIFICATIONS }))
             store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
         }
+        if (body.reference.targetScreen === "CHAT") {
+            store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, chatInfo: body } }));
+        }
+
         else {
             store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
         }
@@ -901,7 +912,10 @@ export class Map extends Component {
             } else if (Actions.currentScene === PageKeys.GROUP) {
                 this.props.resetCurrentGroup();
                 // this.props.changeScreen(Actions.currentScene);
-            } else {
+            } else if (Actions.currentScene === PageKeys.CHAT) {
+                this.props.resetChatMessage();
+            }
+            else {
                 Actions.pop();
                 this.props.changeScreen({ name: Actions.currentScene });
             }
@@ -1697,7 +1711,7 @@ export class Map extends Component {
         this.watchID != null && clearInterval(this.watchID);
         // this.notificationInterval != null && clearInterval(this.notificationInterval);
         BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPress);
-        this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: false, userId: this.props.user.userId } });
+        this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: false, userId: this.props.user.userId, deviceId: DeviceInfo.getUniqueID() } });
         this.props.resetStoreToDefault();
     }
 
@@ -2590,7 +2604,8 @@ const mapDispatchToProps = (dispatch) => {
         updateAppState: (appState) => {
             dispatch(updateAppStateAction({ appState }))
         },
-        resetStoreToDefault: () => dispatch(resetStateOnLogout())
+        resetStoreToDefault: () => dispatch(resetStateOnLogout()),
+        resetChatMessage: () => dispatch(resetChatMessageAction())
     }
 }
 

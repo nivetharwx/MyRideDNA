@@ -187,8 +187,9 @@ class AllFriendsTab extends Component {
     openChatPage = (person) => {
         const { selectedPerson } = this.state;
         person = person || selectedPerson;
-
-        Actions.push(PageKeys.CHAT, { friend: person })
+        person['isGroup'] = false
+        person['id'] = person.userId
+        Actions.push(PageKeys.CHAT, { chatInfo: person })
         if (this.state.isVisibleOptionsModal)
             this.onCancelOptionsModal();
     }

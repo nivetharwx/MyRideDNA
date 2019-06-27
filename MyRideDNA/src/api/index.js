@@ -1,9 +1,9 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
     replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
-    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, updateNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, replaceChatListAction, resetMessageCountAction
 } from '../actions';
-import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN, RIDE_POINT } from '../constants';
+import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN, RIDE_POINT, CHAT_BASE_URL } from '../constants';
 import axios from 'axios';
 
 import { AsyncStorage } from 'react-native';
@@ -129,7 +129,7 @@ export const seenNotification = (userId) => {
             .then(res => {
                 if (res.status === 200) {
                     console.log('seenNotification : ', res.data)
-                    dispatch(updateNotificationCountAction(res.data));
+                    dispatch(resetNotificationCountAction(res.data));
                 }
             })
             .catch(er => {
@@ -213,6 +213,7 @@ export const logoutUser = (userId, accessToken, deviceToken) => {
         dispatch(apiLoaderActions(true))
         axios.post(USER_BASE_URL + `logoutUser`, { userId, accessToken, registrationToken: deviceToken, deviceId: DeviceInfo.getUniqueID() }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
+                console.log('logoutUser : ', res.data)
                 if (res.status === 200) {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
@@ -1852,6 +1853,128 @@ export const deletePassenger = (passengerId) => {
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+            })
+    };
+}
+
+export const getAllChats = (userId) => {
+    return dispatch => {
+        axios.get(CHAT_BASE_URL + `getAllChats?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("getAllChats success: ", res.data);
+                if (res.status === 200) {
+                    dispatch(updateChatListAction({ comingFrom: 'getAllChatsApi', chatList: res.data }));
+                    // dispatch(toggleLoaderAction(false));
+                }
+            })
+            .catch(er => {
+                console.log(`getAllChats error: `, er.response || er);
+                // TODO: Dispatch error info action
+            })
+    };
+}
+
+export const getAllMessages = (id, userId, isGroup) => {
+    return dispatch => {
+        axios.get(CHAT_BASE_URL + `getAllMessages?id=${id}&userId=${userId}&isGroup=${isGroup}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                // console.log("getAllMessages success: ", res.data);
+                if (res.status === 200) {
+                    dispatch(updateChatMessagesAction(res.data));
+                    // dispatch(toggleLoaderAction(false));
+                }
+            })
+            .catch(er => {
+                console.log(`getAllMessages error: `, er.response || er);
+                // TODO: Dispatch error info action
+            })
+    };
+}
+
+export const sendMessgae = (isGroup, id, userId, content, userName, userNickname) => {
+    return dispatch => {
+        axios.post(CHAT_BASE_URL + `sendMessage`, { isGroup: isGroup, id: id, senderId: userId, senderName: userName, senderNickname: userNickname, date: new Date().toISOString(), type: 'text', content: content }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log('sendMessage : ', res.data)
+                if (res.status === 200) {
+                    const messageSent = [];
+                    messageSent['date'] = new Date().toISOString();
+                    messageSent['content'] = content;
+                    messageSent['messageId'] = res.data.messageId;
+                    messageSent['senderId'] = userId;
+                    messageSent['type'] = 'text';
+                    messageSent['senderName'] = userName;
+                    messageSent['senderNickname'] = userNickname;
+                    console.log('messageSent : ', messageSent);
+                    dispatch(replaceChatMessagesAction(messageSent));
+                    // dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: messageSent, id: id }));
+                }
+            })
+            .catch(er => {
+                console.log('sendMessage error : ', er);
+            })
+    };
+}
+export const deleteMessagesById = (isGroup, id, userId, messageToBeDeleted) => {
+    return dispatch => {
+        axios.put(CHAT_BASE_URL + `deleteMessagesById`, { isGroup: isGroup, id: id, userId: userId, messageIdList: messageToBeDeleted }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log('deleteMessagesById : ', res.data)
+                if (res.status === 200) {
+                    dispatch(replaceChatMessagesAction({ comingFrom: 'deleteMessage', messageIds: messageToBeDeleted }))
+                }
+            })
+            .catch(er => {
+                console.log('deleteMessagesById  error : ', er);
+            })
+    };
+}
+export const deleteMessagesByIdForEveryone = (isGroup, id, userId, messageToBeDeleted) => {
+    return dispatch => {
+        axios.put(CHAT_BASE_URL + `deleteMessagesByIdForEveryone `, { isGroup: isGroup, id: id, userId: userId, messageIdList: messageToBeDeleted }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log('deleteMessagesByIdForEveryone  : ', res.data)
+                if (res.status === 200) {
+                    dispatch(replaceChatMessagesAction({ comingFrom: 'deleteMessage', messageIds: messageToBeDeleted }))
+                }
+            })
+            .catch(er => {
+                console.log('deleteMessagesByIdForEveryone   error : ', er);
+            })
+    };
+}
+
+export const deleteAllMessages = (id, userId, isGroup) => {
+    return dispatch => {
+        axios.delete(CHAT_BASE_URL + `deleteAllMessages?id=${id}&userId=${userId}&isGroup=${isGroup}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("deleteAllMessages success: ", res.data);
+                if (res.status === 200) {
+
+
+                }
+            })
+            .catch(er => {
+                console.log(`deleteAllMessages error: `, er.response || er);
+                // TODO: Dispatch error info action
+            })
+    };
+}
+export const seenMessage = (id, userId, isGroup, comingFrom) => {
+    return dispatch => {
+        axios.put(CHAT_BASE_URL + `seenMessage?id=${id}&userId=${userId}&isGroup=${isGroup}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("seenMessage success: ", res.data);
+                if (res.status === 200) {
+                    if (comingFrom === 'chatList') {
+                        dispatch(resetMessageCountAction({ id: id, comingFrom: 'seenMessage' }));
+                    }
+
+                }
+            })
+            .catch(er => {
+                console.log(`seenMessage error: `, er.response || er);
+                // TODO: Dispatch error info action
             })
     };
 }

@@ -1,4 +1,4 @@
-import { RESET_NOTIFICATION_LIST, UPDATE_NOTIFICATION_IN_LIST, CLEAR_NOTIFICATION_LIST, UPDATE_NOTIFICATION_COUNT, DELETE_NOTIFICATIONS_FROM_LIST, IS_LOADING_DATA } from "../actions/actionConstants";
+import { RESET_NOTIFICATION_LIST, UPDATE_NOTIFICATION_IN_LIST, CLEAR_NOTIFICATION_LIST, RESET_NOTIFICATION_COUNT, DELETE_NOTIFICATIONS_FROM_LIST, IS_LOADING_DATA, UPDATE_NOTIFICATION_COUNT } from "../actions/actionConstants";
 import { updateShareLocationState } from "../api";
 
 const initialState = {
@@ -82,12 +82,20 @@ export default (state = initialState, action) => {
 
             return state;
 
-        case UPDATE_NOTIFICATION_COUNT:
+        case RESET_NOTIFICATION_COUNT:
             return {
                 ...state,
                 notificationList: {
                     ...state.notificationList,
                     totalUnseen: 0
+                }
+            }
+        case UPDATE_NOTIFICATION_COUNT:
+            return {
+                ...state,
+                notificationList: {
+                    ...state.notificationList,
+                    totalUnseen: state.notificationList.totalUnseen + 1
                 }
             }
 

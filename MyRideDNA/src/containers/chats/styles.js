@@ -22,16 +22,25 @@ const styles = StyleSheet.create({
         height: APP_COMMON_STYLES.headerHeight,
         padding: widthPercentageToDP(3)
     },
+    deleteButtonChatHeader: {
+        flexDirection: 'row',
+        position: 'absolute',
+        zIndex: 100,
+        width: '100%',
+        height: APP_COMMON_STYLES.headerHeight,
+        padding: widthPercentageToDP(3),
+        flex: 1,
+    },
     chatHeaderName: {
         color: '#fff',
         fontWeight: 'bold',
         fontSize: widthPercentageToDP(4),
         marginLeft: widthPercentageToDP(2),
     },
-    chatHeaderNickname: { 
-        color: APP_COMMON_STYLES.infoColor, 
+    chatHeaderNickname: {
+        color: APP_COMMON_STYLES.infoColor,
         fontWeight: 'bold',
-        marginLeft: widthPercentageToDP(2) 
+        marginLeft: widthPercentageToDP(2)
     },
     chatArea: {
         marginTop: APP_COMMON_STYLES.headerHeight,
@@ -70,6 +79,22 @@ const styles = StyleSheet.create({
         width: THUMBNAIL_SIZE,
         borderRadius: THUMBNAIL_SIZE / 2,
         alignSelf: 'center'
-    }
+    },
+    iconPadding: {
+        padding: 5,
+        backgroundColor: 'white',
+        borderRadius: 19,
+        height: 38,
+        width: 38,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop:heightPercentageToDP(1.8)
+    },
+    groupIconStyle: {
+        height: THUMBNAIL_SIZE,
+        width: THUMBNAIL_SIZE,
+        borderRadius: THUMBNAIL_SIZE / 2,
+        backgroundColor: '#6C6C6B',
+    },
 });
 export default styles;

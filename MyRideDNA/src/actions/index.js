@@ -20,7 +20,7 @@ import {
     UPDATE_TOKEN,
     PROFILE_LOADER,
     REPLACE_FRIEND_INFO,
-    UPDATE_NOTIFICATION_COUNT,
+    RESET_NOTIFICATION_COUNT,
     UPDATE_APPSTATE,
     IS_LOADING_DATA,
     UPDATE_RIDE_SNAPSHOT,
@@ -29,7 +29,15 @@ import {
     UPDATE_PAGENUMBER,
     IS_REMOVED,
     UPDATE_FRIENDS_RIDE_SNAPSHOT,
-    GET_NOT_FRIEND_INFO
+    GET_NOT_FRIEND_INFO,
+    UPDATE_CHAT_MESSAGES,
+    REPLACE_CHAT_MESSAGES,
+    UPDATE_CHAT_LIST,
+    REPLACE_CHAT_LIST,
+    RESET_MESSAGE_COUNT,
+    UPDATE_CHAT_DATA_LIST,
+    RESET_CHAT_MESSAGES,
+    UPDATE_NOTIFICATION_COUNT
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -533,6 +541,12 @@ export const resetNotificationListAction = (data) => (
         data: data
     }
 );
+export const resetNotificationCountAction = (data) => (
+    {
+        type: RESET_NOTIFICATION_COUNT,
+        data: data
+    }
+);
 export const updateNotificationCountAction = (data) => (
     {
         type: UPDATE_NOTIFICATION_COUNT,
@@ -596,6 +610,48 @@ export const reorderRideWaypointsAction = (data) => (
 export const updateAppStateAction = (data) => (
     {
         type: UPDATE_APPSTATE,
+        data: data
+    }
+);
+export const updateChatListAction = (data) => (
+    {
+        type: UPDATE_CHAT_LIST,
+        data: data
+    }
+);
+export const updateChatDatatAction = (data) => (
+    {
+        type: UPDATE_CHAT_DATA_LIST,
+        data: data
+    }
+);
+export const replaceChatListAction = (data) => (
+    {
+        type: REPLACE_CHAT_LIST,
+        data: data
+    }
+);
+export const resetMessageCountAction = (data) => (
+    {
+        type: RESET_MESSAGE_COUNT,
+        data: data
+    }
+);
+export const resetChatMessageAction = (data) => (
+    {
+        type: RESET_CHAT_MESSAGES,
+        data: data
+    }
+);
+export const updateChatMessagesAction = (data) => (
+    {
+        type: UPDATE_CHAT_MESSAGES,
+        data: data
+    }
+);
+export const replaceChatMessagesAction = (data) => (
+    {
+        type: REPLACE_CHAT_MESSAGES,
         data: data
     }
 );

@@ -246,7 +246,7 @@ class Group extends Component {
         const userInfo = this.props.currentGroup.groupMembers[0];
         const options = [
             { text: 'Open profile', id: 'profile', handler: () => { this.openProfile(selectedMember.memberId) } },
-            { text: `Chat with ${selectedMember.name}`, id: 'chat', handler: () => { } },
+            { text: `Chat with ${selectedMember.name}`, id: 'chat', handler: () => { this.openChatPage() } },
         ];
         if (userInfo.isAdmin) {
             options.push(...[
@@ -270,7 +270,14 @@ class Group extends Component {
             ))
         )
     }
-
+    openChatPage = (person) => {
+        const { selectedMember } = this.state;
+        person = person || selectedMember;
+        person['isGroup'] = false
+        person['id'] = person.memberId
+        Actions.push(PageKeys.CHAT, { chatInfo: person })
+        this.setState({ isVisibleOptionsModal: false, selectedMember: null });
+    }
     toggleFriendSelection = (index) => {
         let prevIndex = -1;
         this.setState(prevState => {
@@ -365,6 +372,8 @@ class Group extends Component {
     render() {
         const { kbdBtmOffset, isActiveSearch, selectedMember, selectedFriendList, searchFriendList, isVisibleOptionsModal, isVisibleSearchModal, searchName } = this.state;
         const { user, currentGroup, friendGroupList } = this.props;
+        console.log('selectedMemeber : ', selectedMember)
+        console.log('currentGroup.groupMembers : ', currentGroup.groupMembers)
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '45deg']
