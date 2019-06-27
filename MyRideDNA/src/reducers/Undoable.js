@@ -36,7 +36,7 @@ export function undoable(reducer) {
                 const newPresent = reducer(present, action)
                 if (present === newPresent) {
                     return state
-                } else if (present.ride.rideId === null || (present.ride.rideId !== newPresent.ride.rideId)) {
+                } else if (newPresent.ride.isRecorded || present.ride.rideId === null || (present.ride.rideId !== newPresent.ride.rideId)) {
                     return {
                         past: [],
                         present: newPresent,
