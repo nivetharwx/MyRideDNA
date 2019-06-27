@@ -18,6 +18,7 @@ import { IconLabelPair } from '../../components/labels';
 import { BaseModal } from '../../components/modal';
 import { Loader } from '../../components/loader';
 import axios from 'axios';
+import { APP_CONFIGS } from '../../config';
 
 
 export class Rides extends Component {
@@ -279,9 +280,28 @@ export class Rides extends Component {
                     }
                 }
             }
-            this.props.loadRideOnMap(ride.rideId, { rideType, creatorName: ride.creatorName, creatorNickname: ride.creatorNickname, creatorProfilePictureId: ride.creatorProfilePictureId });
+            this.props.loadRideOnMap(ride.rideId, { rideType, creatorName: ride.creatorName, creatorNickname: ride.creatorNickname, creatorProfilePictureId: ride.creatorProfilePictureId, totalDistance: ride.totalDistance, totalTime: ride.totalTime });
         } else {
             console.log("No network found");
+        }
+    }
+
+    getRouteMatrixInfo = async (source = null, destination = null, callback) => {
+        if (!source || !destination) {
+            typeof callback === 'function' && callback({ error: "Source or destination not found", distance: 0, duration: 0 });
+            return;
+        }
+        try {
+            const locPathParam = source.join() + ';' + destination.join();
+            const res = await axios.get(`https://api.mapbox.com/directions-matrix/v1/mapbox/driving/${locPathParam}?sources=0&destinations=1&annotations=distance,duration&access_token=${JS_SDK_ACCESS_TOKEN}`);
+            if (res.data.code === "Ok") {
+                const { distances, durations } = res.data;
+                typeof callback === 'function' && callback({ distance: distances[0][0], duration: durations[0][0] });
+            } else {
+                typeof callback === 'function' && callback({ error: "Response is not Ok", distance: 0, duration: 0 });
+            }
+        } catch (er) {
+            typeof callback === 'function' && callback({ error: `Something went wrong: ${er}`, distance: 0, duration: 0 });
         }
     }
 
@@ -321,29 +341,43 @@ export class Rides extends Component {
     }
 
     syncCoordinatesWithServer(ride, rideStatus, unsyncedPoints) {
-        console.log(unsyncedPoints);
+        let actualPoints = [];
+        let trackpoints = [];
+        actualPoints = unsyncedPoints.reduce((list, item) => {
+            list.push(item.loc[1], item.loc[0], item.date, item.status);
+            return list;
+        }, []);
+        trackpoints = [...actualPoints];
         if (rideStatus === RECORD_RIDE_STATUS.PAUSED) {
+            unsyncedPoints[unsyncedPoints.length - 1].status = rideStatus;
             if (unsyncedPoints.length > 1) {
-                this.getCoordsOnRoad(unsyncedPoints, (responseBody, actualPoints, trackpoints, distance) => {
-                    this.props.pauseRecordRide(unsyncedPoints[unsyncedPoints.length - 1].date, actualPoints, trackpoints, distance, ride, this.props.user.userId, true);
-                });
-            } else if (unsyncedPoints.length === 1) {
-                const singlePoint = [unsyncedPoints[0].loc[1], unsyncedPoints[0].loc[0], unsyncedPoints[0].date, unsyncedPoints[0].status];
-                this.props.pauseRecordRide(unsyncedPoints[0].date, singlePoint, singlePoint, 0, ride, this.props.user.userId, true);
-            } else {
-                this.props.pauseRecordRide(new Date().toISOString(), [], [], 0, ride, this.props.user.userId, true);
+                if (APP_CONFIGS.callRoadMapApi === true) {
+                    this.getCoordsOnRoad(unsyncedPoints, (responseBody, actualPoints, trackpoints, distance) => {
+                        this.props.pauseRecordRide(new Date().toISOString(), actualPoints, trackpoints, distance, ride, this.props.user.userId, true);
+                    });
+                } else {
+                    this.getRouteMatrixInfo(unsyncedPoints[0].loc, unsyncedPoints[unsyncedPoints.length - 1].loc, ({ error, distance, duration }) => {
+                        this.props.pauseRecordRide(new Date().toISOString(), actualPoints, trackpoints, distance, ride, this.props.user.userId, true);
+                    });
+                }
+                return;
             }
+            this.props.pauseRecordRide(new Date().toISOString(), actualPoints, trackpoints, 0, ride, this.props.user.userId, true);
         } else if (rideStatus === RECORD_RIDE_STATUS.COMPLETED) {
+            unsyncedPoints[unsyncedPoints.length - 1].status = rideStatus;
             if (unsyncedPoints.length > 1) {
-                this.getCoordsOnRoad(unsyncedPoints, (responseBody, actualPoints, trackpoints, distance) => {
-                    this.props.completeRecordRide(unsyncedPoints[unsyncedPoints.length - 1].date, actualPoints, trackpoints, distance, ride, this.props.user.userId, true)
-                });
-            } else if (unsyncedPoints.length === 1) {
-                const singlePoint = [unsyncedPoints[0].loc[1], unsyncedPoints[0].loc[0], unsyncedPoints[0].date, unsyncedPoints[0].status];
-                this.props.completeRecordRide(unsyncedPoints[0].date, singlePoint, singlePoint, 0, ride, this.props.user.userId, true);
-            } else {
-                this.props.completeRecordRide(new Date().toISOString(), [], [], 0, ride, this.props.user.userId, true);
+                if (APP_CONFIGS.callRoadMapApi === true) {
+                    this.getCoordsOnRoad(unsyncedPoints, (responseBody, actualPoints, trackpoints, distance) => {
+                        this.props.completeRecordRide(new Date().toISOString(), actualPoints, trackpoints, distance, ride, this.props.user.userId, true)
+                    });
+                } else {
+                    this.getRouteMatrixInfo(unsyncedPoints[0].loc, unsyncedPoints[unsyncedPoints.length - 1].loc, ({ error, distance, duration }) => {
+                        this.props.completeRecordRide(new Date().toISOString(), actualPoints, trackpoints, distance, ride, this.props.user.userId, true)
+                    });
+                }
+                return;
             }
+            this.props.completeRecordRide(new Date().toISOString(), actualPoints, trackpoints, 0, ride, this.props.user.userId, true);
         }
     }
 

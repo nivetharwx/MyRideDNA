@@ -509,7 +509,7 @@ export const createRecordRide = (rideData) => {
                 }
             })
             .catch(er => {
-                console.log(er.response);
+                console.log(er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -602,17 +602,17 @@ export const addTrackpoints = (actualPoints, trackpoints, distance, ride, userId
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
-        axios.post(RIDE_BASE_URL + `addTrackpoints?rideId=${ride.rideId}&userId=${userId}`,
+        axios.put(RIDE_BASE_URL + `addTrackpoints?rideId=${ride.rideId}&userId=${userId}`,
             { actualPoints: Base64.encode(actualPoints.join()), trackpoints: Base64.encode(trackpoints.join()), distance }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
-                    dispatch(updateRideAction({ ...ride, trackpoints: [...ride.trackpoints, ...trackpoints] }));
+                    dispatch(updateRideAction({ ...ride, trackpoints: [...ride.trackpoints, ...trackpoints], totalDistance: distance }));
                 }
             })
             .catch(er => {
-                console.log("addTrackpoints error: ", er || er.response);
+                console.log("addTrackpoints error: ", er.response || er);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -628,7 +628,7 @@ export const pauseRecordRide = (pauseTime, actualPoints, trackpoints, distance, 
             .then(res => {
                 if (res.status === 200) {
                     // dispatch(toggleLoaderAction(false));
-                    const updatedRide = { ...ride, trackpoints: ride.trackpoints ? [...ride.trackpoints, ...trackpoints] : trackpoints, ...res.data, unsynced: false, status: RECORD_RIDE_STATUS.PAUSED };
+                    const updatedRide = { ...ride, trackpoints: ride.trackpoints ? [...ride.trackpoints, ...trackpoints] : trackpoints, ...res.data, unsynced: false, status: RECORD_RIDE_STATUS.PAUSED, totalDistance: distance };
                     if (loadRide) {
                         dispatch(getRideByRideId(updatedRide.rideId, updatedRide));
                     } else {
@@ -655,7 +655,7 @@ export const completeRecordRide = (endTime, actualPoints, trackpoints, distance,
                 if (res.status === 200) {
                     dispatch(apiLoaderActions(false))
                     // dispatch(toggleLoaderAction(false));
-                    let updatedRide = { ...ride };
+                    let updatedRide = { ...ride, totalDistance: distance };
                     if (ride.trackpoints) {
                         updatedRide.trackpoints = [...ride.trackpoints];
                     } else {
@@ -665,7 +665,6 @@ export const completeRecordRide = (endTime, actualPoints, trackpoints, distance,
                         updatedRide.trackpoints.push(...[trackpoints.slice(0, trackpoints.length - 4)]);
                     }
                     const destinationPoint = trackpoints.slice(-4);
-                    console.log({ destinationPoint });
                     if (destinationPoint.length === 4) {
                         updatedRide.destination = { lng: destinationPoint[1], lat: destinationPoint[0] };
                     }
@@ -1032,7 +1031,7 @@ export const getRideByRideId = (rideId, rideInfo = {}) => {
             .then(res => {
                 if (res.status === 200) {
                     // dispatch(toggleLoaderAction(false));
-                    console.log("getRideByRideId success: ", res.data);
+                    console.log("getRideByRideId success: ", JSON.parse(JSON.stringify(res.data)));
                     dispatch(apiLoaderActions(false))
                     dispatch(updateRideAction({ ...rideInfo, ...res.data }));
                 }
