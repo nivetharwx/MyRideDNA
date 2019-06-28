@@ -4,9 +4,10 @@ import Navigation from './navigation';
 import FCM, { NotificationActionType, NotificationType, FCMEvent, RemoteNotificationResult, WillPresentNotificationResult } from "react-native-fcm";
 import { IS_ANDROID, DEVICE_TOKEN, PageKeys } from './constants';
 import store from './store';
-import { screenChangeAction, resetCurrentFriendAction, replaceChatMessagesAction, updateNotificationCountAction } from './actions';
+import { screenChangeAction, resetCurrentFriendAction, replaceChatMessagesAction, updateNotificationCountAction, updateMessageCountAction, updateChatListAction } from './actions';
 import { Actions } from 'react-native-router-flux';
 import { Root } from "native-base";
+import { seenMessage } from './api';
 
 
 // this shall be called regardless of app state: running, background or not running. Won't be called when app is killed by user in iOS
@@ -69,12 +70,22 @@ export default class App extends Component {
                             this.localNotification(notification)
                         }
                         else {
-                            store.dispatch(replaceChatMessagesAction({ comingFrom: PageKeys.NOTIFICATIONS, notificationBody: JSON.parse(notification.body) }));
+                            if (Actions.currentScene === "chatList") {
+                                store.dispatch(updateMessageCountAction({ id: JSON.parse(notification.body).id }));
+                            }
+                            else {
+                                store.dispatch(seenMessage(JSON.parse(notification.body).id, store.getState().UserAuth.user.userId, JSON.parse(notification.body).isGroup, PageKeys.NOTIFICATIONS));
+                                store.dispatch(replaceChatMessagesAction({ comingFrom: PageKeys.NOTIFICATIONS, notificationBody: JSON.parse(notification.body) }));
+                            }
+                            store.dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: JSON.parse(notification.body), id: JSON.parse(notification.body).id }));
                         }
 
                     }
                     else {
-                        store.dispatch(updateNotificationCountAction())
+                        if (!JSON.parse(notification.body).content) {
+                            store.dispatch(updateNotificationCountAction())
+                        }
+
                         this.redirectToTargetScreen(JSON.parse(notification.body));
                     }
 
@@ -139,12 +150,6 @@ export default class App extends Component {
                     }
                 }
                 else {
-
-                    /**
-                     * check the condition 
-                     * going to chat page from map
-                     * go background and check the condition action.prevState
-                     */
                     console.log("currentScreen.name is CHAT");
                     if (Actions.prevState.routes.length === 1 && Actions.prevState.routes[0].routeName === "map") {
                         console.log("currentScreen.name is CHAT if");
