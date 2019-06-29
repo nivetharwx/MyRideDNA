@@ -107,9 +107,23 @@ class Chat extends Component {
         this.setState({ selectedMessage: null, messageSelectionMode: false })
     }
     openDeleteModal = () => {
-        this.setState({ isVisibleDeleteModal: true })
+        // this.setState({ isVisibleDeleteModal: true })
+        Alert.alert(
+            'Delete Messages ?',
+            '',
+            [
+                {
+                    text: 'delete my messages', onPress: () => {
+                        this.deleteMessageForMe()
+                    }
+                },
+                { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+            ],
+            { cancelable: false }
+        );
     }
     deleteMessageForMe = () => {
+        console.log('coming inside dlete for me ');
         // if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
         //     this.props.deleteMessagesById(this.props.notificationBody.isGroup, this.props.notificationBody.id, this.props.user.userId, Object.keys(this.state.selectedMessage))
         // }
@@ -119,7 +133,14 @@ class Chat extends Component {
         // else {
         //     this.props.deleteMessagesById(this.props.isGroup, this.props.friend.userId, this.props.user.userId, Object.keys(this.state.selectedMessage))
         // }
-        this.props.deleteMessagesById(this.props.chatInfo.isGroup, this.props.chatInfo.id, this.props.user.userId, Object.keys(this.state.selectedMessage))
+        const newChatMessages = this.props.chatMessages.filter(msg => Object.keys(this.state.selectedMessage).indexOf(msg.messageId) === -1)
+        console.log('newChatMessages : ', newChatMessages);
+        if (newChatMessages.length > 0) {
+            this.props.deleteMessagesById(this.props.chatInfo.isGroup, this.props.chatInfo.id, this.props.user.userId, Object.keys(this.state.selectedMessage), newChatMessages[0])
+        }
+        else {
+            this.props.deleteMessagesById(this.props.chatInfo.isGroup, this.props.chatInfo.id, this.props.user.userId, Object.keys(this.state.selectedMessage))
+        }
 
         this.setState({ isVisibleDeleteModal: false, selectedMessage: null })
     }
@@ -287,7 +308,7 @@ class Chat extends Component {
                             </View>
                     }
 
-                    <BaseModal alignCenter={true} isVisible={isVisibleDeleteModal} onCancel={this.onCancelDeleteModal} onPressOutside={this.onCancelDeleteModal}>
+                    {/* <BaseModal alignCenter={true} isVisible={isVisibleDeleteModal} onCancel={this.onCancelDeleteModal} onPressOutside={this.onCancelDeleteModal}>
                         <View style={{ borderRadius: widthPercentageToDP(3), backgroundColor: '#fff', height: WindowDimensions.height / 3, width: WindowDimensions.width * 0.8, padding: 20, elevation: 3 }}>
                             <Text style={{ fontSize: widthPercentageToDP(5) }}>Delete Message?</Text>
                             <View style={{ marginTop: heightPercentageToDP(6) }}>
@@ -296,7 +317,7 @@ class Chat extends Component {
                                 <Text style={{ fontSize: widthPercentageToDP(4), color: '#6C6C6B', marginTop: heightPercentageToDP(3), alignSelf: 'flex-end' }} onPress={this.deleteMessageForEveryone}>DELETE FOR EVERYONE</Text>
                             </View>
                         </View>
-                    </BaseModal>
+                    </BaseModal> */}
                     <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
                         <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
                             {
@@ -390,7 +411,7 @@ const mapDispatchToProps = (dispatch) => {
         seenMessage: (id, userId, isGroup, comingFrom) => dispatch(seenMessage(id, userId, isGroup, comingFrom)),
         deleteAllMessages: (id, userId, isGroup) => dispatch(deleteAllMessages(id, userId, isGroup)),
         sendMessage: (isGroup, id, userId, content, userName, userNickname) => dispatch(sendMessgae(isGroup, id, userId, content, userName, userNickname)),
-        deleteMessagesById: (isGroup, id, userId, messageToBeDeleted) => dispatch(deleteMessagesById(isGroup, id, userId, messageToBeDeleted)),
+        deleteMessagesById: (isGroup, id, userId, messageToBeDeleted, newChatMessages) => dispatch(deleteMessagesById(isGroup, id, userId, messageToBeDeleted, newChatMessages)),
         deleteMessagesByIdForEveryone: (isGroup, id, userId, messageToBeDeleted) => dispatch(deleteMessagesByIdForEveryone(isGroup, id, userId, messageToBeDeleted)),
         resetMessageCount: () => dispatch(resetMessageCountAction({ resetTotalUnseen: true })),
         updateChatData: (chatData) => dispatch(updateChatDatatAction({ chatData: chatData })),

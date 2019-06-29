@@ -40,7 +40,8 @@ import {
     UPDATE_NOTIFICATION_COUNT,
     REPLACE_UNSYNCED_RIDES,
     ADD_UNSYNCED_RIDE,
-    DELETE_UNSYNCED_RIDE
+    DELETE_UNSYNCED_RIDE,
+    UPDATE_MESSAGE_COUNT
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -649,6 +650,12 @@ export const updateChatDatatAction = (data) => (
 export const replaceChatListAction = (data) => (
     {
         type: REPLACE_CHAT_LIST,
+        data: data
+    }
+);
+export const updateMessageCountAction = (data) => (
+    {
+        type: UPDATE_MESSAGE_COUNT,
         data: data
     }
 );

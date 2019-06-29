@@ -1725,7 +1725,7 @@ export const addBikeToGarage = (userId, bike, pictureList, successCallback, erro
 export const editBike = (userId, bike, pictureList, index, successCallback, errorCallback) => {
     // export const editBike = (userId, bike, index) => {
     return dispatch => {
-        dispatch(toggleLoaderAction(true));
+        // dispatch(toggleLoaderAction(true));
         axios.put(USER_BASE_URL + `updateSpace/${userId}`, { ...bike, pictureList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log("updateSpace success: ", res.data);
@@ -1932,7 +1932,7 @@ export const sendMessgae = (isGroup, id, userId, content, userName, userNickname
                     messageSent['senderNickname'] = userNickname;
                     console.log('messageSent : ', messageSent);
                     dispatch(replaceChatMessagesAction(messageSent));
-                    // dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: messageSent, id: id }));
+                    dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: messageSent, id: id }));
                 }
             })
             .catch(er => {
@@ -1940,13 +1940,17 @@ export const sendMessgae = (isGroup, id, userId, content, userName, userNickname
             })
     };
 }
-export const deleteMessagesById = (isGroup, id, userId, messageToBeDeleted) => {
+export const deleteMessagesById = (isGroup, id, userId, messageToBeDeleted, newChatMessages) => {
+    console.log('newChatMessages api : ', newChatMessages)
     return dispatch => {
         axios.put(CHAT_BASE_URL + `deleteMessagesById`, { isGroup: isGroup, id: id, userId: userId, messageIdList: messageToBeDeleted }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log('deleteMessagesById : ', res.data)
                 if (res.status === 200) {
                     dispatch(replaceChatMessagesAction({ comingFrom: 'deleteMessage', messageIds: messageToBeDeleted }))
+                    if (newChatMessages) {
+                        dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: newChatMessages, id: id }));
+                    }
                 }
             })
             .catch(er => {

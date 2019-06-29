@@ -62,7 +62,7 @@ class ChatList extends Component {
     }
 
     getDate = (item) => {
-        const itemDate = new Date(item.messageList[item.messageList.length - 1].date).toString().substr(4, 12).split(' ')[1];
+        const itemDate = new Date(item.message.date).toString().substr(4, 12).split(' ')[1];
         if (new Date().getDate() == itemDate) {
             return new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
@@ -129,7 +129,8 @@ class ChatList extends Component {
                         <Text>  </Text>
                         <Text style={{ fontSize: heightPercentageToDP(3), fontWeight: 'bold' }}>{item.nickname ? item.nickname : null}</Text>
                     </View>
-                    <Text style={{ marginTop: heightPercentageToDP(1) }}>{item.messageList.length > 0 ? item.messageList[item.messageList.length - 1].content.length > 25 ? item.messageList[item.messageList.length - 1].content.substring(0, 26) + '...' : item.messageList[item.messageList.length - 1].content : null}</Text>
+                    {/* <Text style={{ marginTop: heightPercentageToDP(1) }}>{item.messageList.length > 0 ? item.messageList[item.messageList.length - 1].content.length > 25 ? item.messageList[item.messageList.length - 1].content.substring(0, 26) + '...' : item.messageList[item.messageList.length - 1].content : null}</Text> */}
+                    <Text style={{ marginTop: heightPercentageToDP(1) }}>{item.message ? item.message.content.length > 25 ? item.message.content.substring(0, 26) + '...' : item.message.content : null}</Text>
                 </Body>
                 <Right style={{ height: heightPercentageToDP(12) }}>
                     <Text style={{ marginTop: heightPercentageToDP(0.7) }}>{this.getDate(item)}</Text>

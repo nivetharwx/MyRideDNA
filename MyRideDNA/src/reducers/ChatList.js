@@ -1,4 +1,4 @@
-import { UPDATE_CHAT_MESSAGES, REPLACE_CHAT_MESSAGES, UPDATE_CHAT_LIST, REPLACE_CHAT_LIST, RESET_CHAT_MESSAGES, RESET_MESSAGE_COUNT, UPDATE_CHAT_DATA_LIST } from "../actions/actionConstants";
+import { UPDATE_CHAT_MESSAGES, REPLACE_CHAT_MESSAGES, UPDATE_CHAT_LIST, REPLACE_CHAT_LIST, RESET_CHAT_MESSAGES, RESET_MESSAGE_COUNT, UPDATE_CHAT_DATA_LIST, UPDATE_MESSAGE_COUNT } from "../actions/actionConstants";
 import { PageKeys } from "../constants";
 
 
@@ -19,11 +19,11 @@ export default (state = initialState, action) => {
                     chatList: action.data.chatList
                 }
             }
-            else {
+            else if (action.data.comingFrom === 'sendMessgaeApi') {
                 const index = state.chatList.findIndex(list => list.id === action.data.id)
                 if (index > -1) {
                     const newChatList = state.chatList[index];
-                    newChatList.messageList = [...state.chatList[index].messageList, ...action.data.newMessage]
+                    newChatList.message = action.data.newMessage
                     return {
                         ...state,
                         chatList: [
@@ -31,6 +31,11 @@ export default (state = initialState, action) => {
                             newChatList,
                             ...state.chatList.slice(index + 1)
                         ]
+                    }
+                }
+                else {
+                    return {
+                        ...state,
                     }
                 }
 
@@ -54,7 +59,7 @@ export default (state = initialState, action) => {
                 chatMessages: action.data
             }
         case REPLACE_CHAT_MESSAGES:
-            console.log('REPLACE_CHAT_MESSAGES : ',action.data);
+            console.log('REPLACE_CHAT_MESSAGES : ', action.data);
             if (action.data.comingFrom === 'deleteMessage') {
                 // const updatedChatMessages = action.data.messageIds.map(deletedMessage => {
                 //     const index = state.chatMessages.findIndex(message => deletedMessage === message.messageId)
@@ -164,6 +169,20 @@ export default (state = initialState, action) => {
                 }
             }
 
+        case UPDATE_MESSAGE_COUNT:
+            const index = state.chatList.findIndex(chat => chat.id === action.data.id)
+            if (index > -1) {
+                const updatedChatLIst = state.chatList[index];
+                updatedChatLIst.totalUnseenMessage = state.chatList[index].totalUnseenMessage + 1
+                return {
+                    ...state,
+                    chatList: [
+                        ...state.chatList.slice(0, index),
+                        updatedChatLIst,
+                        ...state.chatList.slice(index + 1)
+                    ]
+                }
+            }
 
 
 
