@@ -10,6 +10,11 @@
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTRootView.h>
 #import "RNFIRMessaging.h"
+#if __has_include("RCTLog.h")
+#import "RCTLog.h"
+#else
+#import <React/RCTLog.h>
+#endif
 
 @import Firebase;
 @implementation AppDelegate
@@ -35,6 +40,35 @@
   [[UNUserNotificationCenter currentNotificationCenter] setDelegate:self];
   return YES;
 }
+
+//- (void)applicationWillTerminate:(UIApplication *)application {
+//  NSString *urlString = @"http://104.43.208.200:5055/publishEvent";
+//  RCTLogInfo(@"applicationWillTerminate is calling");
+//  NSString *uniqueIdentifier = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+//  NSDictionary *innerDict = @{ @"isLoggedIn" : @(false), @"deviceId" : uniqueIdentifier};
+//  NSDictionary *dict = @{ @"eventName" : @"userEvent", @"eventType" : @"inactive", @"eventParam": innerDict};
+//  NSData *jsonBodyData = [NSJSONSerialization dataWithJSONObject:dict options:kNilOptions error:nil];
+//
+//  NSMutableURLRequest *request = [NSMutableURLRequest new];
+//  request.HTTPMethod = @"POST";
+//  [request setURL:[NSURL URLWithString:urlString]];
+//  [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+//  [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
+//  [request setHTTPBody:jsonBodyData];
+//  NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
+//  NSURLSession *session = [NSURLSession sessionWithConfiguration:config
+//                                                        delegate:nil
+//                                                   delegateQueue:[NSOperationQueue mainQueue]];
+//  NSURLSessionDataTask *task = [session dataTaskWithRequest:request
+//                                          completionHandler:^(NSData * _Nullable data,
+//                                                              NSURLResponse * _Nullable response,
+//                                                              NSError * _Nullable error) {
+//                                            RCTLogInfo(@"Yay, done! Check for errors in response!");
+//                                            NSHTTPURLResponse *asHTTPResponse = (NSHTTPURLResponse *) response;
+//                                            RCTLogInfo(@"The response is: %@", asHTTPResponse);
+//                                          }];
+//  [task resume];
+//}
 
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completionHandler
 {
