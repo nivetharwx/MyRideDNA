@@ -1903,14 +1903,14 @@ export const getAllMessages = (id, userId, isGroup) => {
     return dispatch => {
         axios.get(CHAT_BASE_URL + `getAllMessages?id=${id}&userId=${userId}&isGroup=${isGroup}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                // console.log("getAllMessages success: ", res.data);
+                console.log("getAllMessages success: ", res.data);
                 if (res.status === 200) {
                     dispatch(updateChatMessagesAction(res.data));
                     // dispatch(toggleLoaderAction(false));
                 }
             })
             .catch(er => {
-                console.log(`getAllMessages error: `, er.response || er);
+                console.log(`getAllMessages error: `, er);
                 // TODO: Dispatch error info action
             })
     };
@@ -1958,13 +1958,16 @@ export const deleteMessagesById = (isGroup, id, userId, messageToBeDeleted, newC
             })
     };
 }
-export const deleteMessagesByIdForEveryone = (isGroup, id, userId, messageToBeDeleted) => {
+export const deleteMessagesByIdForEveryone = (isGroup, id, userId, messageToBeDeleted, newChatMessages) => {
     return dispatch => {
         axios.put(CHAT_BASE_URL + `deleteMessagesByIdForEveryone `, { isGroup: isGroup, id: id, userId: userId, messageIdList: messageToBeDeleted }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log('deleteMessagesByIdForEveryone  : ', res.data)
                 if (res.status === 200) {
                     dispatch(replaceChatMessagesAction({ comingFrom: 'deleteMessage', messageIds: messageToBeDeleted }))
+                    if (newChatMessages) {
+                        dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: newChatMessages, id: id }));
+                    }
                 }
             })
             .catch(er => {
@@ -1979,7 +1982,7 @@ export const deleteAllMessages = (id, userId, isGroup) => {
             .then(res => {
                 console.log("deleteAllMessages success: ", res.data);
                 if (res.status === 200) {
-
+                    dispatch(replaceChatMessagesAction({ comingFrom: 'deleteAllMessages', id: id }))
 
                 }
             })
@@ -2007,3 +2010,7 @@ export const seenMessage = (id, userId, isGroup, comingFrom) => {
             })
     };
 }
+
+
+
+

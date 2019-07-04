@@ -79,6 +79,59 @@ export default (state = initialState, action) => {
                     totalUnseenMessage: state.totalUnseenMessage + 1
                 }
             }
+            else if (action.data.comingFrom === 'deleteAllMessages') {
+                const index = state.chatList.findIndex(list => list.id === action.data.id)
+                const { ['message']: deletedKey, ...otherKeys } = state.chatList[index]
+                console.log('otherKeys : ', otherKeys);
+
+                return {
+                    ...state,
+                    chatMessages: [],
+                    chatList: [
+                        ...state.chatList.slice(0, index),
+                        otherKeys,
+                        ...state.chatList.slice(index + 1)
+                    ]
+                }
+            }
+            else if (action.data.comingFrom === 'fcmDeletForEveryone') {
+                if (state.chatMessages.length === 0) {
+                    return state
+                }
+                else {
+                    const updatedMessage = state.chatMessages.filter(msg => action.data.notificationBody.messageIdList.indexOf(msg.messageId) === -1);
+                    if (updatedMessage.length === 0) {
+                        const index = state.chatList.findIndex(list => list.id === action.data.notificationBody.id)
+                        const { ['message']: deletedKey, ...otherKeys } = state.chatList[index];
+
+                        return {
+                            ...state,
+                            chatMessages: updatedMessage,
+                            chatList: [
+                                ...state.chatList.slice(0, index),
+                                otherKeys,
+                                ...state.chatList.slice(index + 1)
+                            ]
+                        }
+                    }
+                    else {
+                        const index = state.chatList.findIndex(list => list.id === action.data.notificationBody.id)
+                        const updatedList = state.chatList[index];
+                        updatedList.message = updatedMessage[0];
+                        return {
+                            ...state,
+                            chatMessages: updatedMessage,
+                            chatList: [
+                                ...state.chatList.slice(0, index),
+                                updatedList,
+                                ...state.chatList.slice(index + 1)
+                            ]
+                        }
+                    }
+
+                }
+
+            }
             else {
                 return {
                     ...state,
@@ -91,6 +144,7 @@ export default (state = initialState, action) => {
             }
 
         case RESET_CHAT_MESSAGES:
+            console.log('RESET_CHAT_MESSAGES')
             return {
                 ...state,
                 chatMessages: [],

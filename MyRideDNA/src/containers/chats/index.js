@@ -24,6 +24,7 @@ class Chat extends Component {
             isVisibleDeleteModal: false,
             isNewMessage: false,
             isVisibleOptionsModal: false,
+            selectedsenderId: null
         };
     }
     componentDidMount() {
@@ -85,22 +86,23 @@ class Chat extends Component {
     }
     chatKeyExtractor = (item) => item.messageId;
 
-    changeToMessageSelectionMode = (messageId) => {
+    changeToMessageSelectionMode = (messageId, senderId) => {
         console.log('openMessageHandler index : ', messageId);
-        this.setState({ messageSelectionMode: true, selectedMessage: { [messageId]: true } });
+        this.setState({ messageSelectionMode: true, selectedMessage: { [messageId]: true }, selectedsenderId: { [senderId]: true } });
     }
 
-    onSelectMessage = (messageId) => {
+    onSelectMessage = (messageId, senderId) => {
         if (this.state.messageSelectionMode === false) return
-        if (this.state.selectedMessage[messageId]) return this.onUnselectMessage(messageId);
-        this.setState(prevState => ({ selectedMessage: { ...prevState.selectedMessage, [messageId]: true } }));
+        if (this.state.selectedMessage[messageId]) return this.onUnselectMessage(messageId, senderId);
+        this.setState(prevState => ({ selectedMessage: { ...prevState.selectedMessage, [messageId]: true }, selectedsenderId: { ...prevState.selectedsenderId, [senderId]: true } }));
     }
-    onUnselectMessage = (messageId) => this.setState(prevState => {
+    onUnselectMessage = (messageId, senderId) => this.setState(prevState => {
         const { [messageId]: deletedKey, ...otherKeys } = prevState.selectedMessage;
+        const { [senderId]: deletedKeys, ...otherIdKeys } = prevState.selectedsenderId;
         if (Object.keys(otherKeys).length === 0) {
-            return { selectedMessage: null, messageSelectionMode: false };
+            return { selectedMessage: null, messageSelectionMode: false, selectedsenderId: null };
         } else {
-            return { selectedMessage: { ...otherKeys } };
+            return { selectedMessage: { ...otherKeys }, selectedsenderId: { ...otherIdKeys } };
         }
     });
     unSelectAllMessage = () => {
@@ -108,31 +110,41 @@ class Chat extends Component {
     }
     openDeleteModal = () => {
         // this.setState({ isVisibleDeleteModal: true })
-        Alert.alert(
-            'Delete Messages ?',
-            '',
-            [
-                {
-                    text: 'delete my messages', onPress: () => {
-                        this.deleteMessageForMe()
-                    }
-                },
-                { text: 'Cancel', onPress: () => { }, style: 'cancel' },
-            ],
-            { cancelable: false }
-        );
+        console.log('selectedsenderId : ', Object.keys(this.state.selectedsenderId));
+        if (Object.keys(this.state.selectedsenderId).every(v => v === this.props.user.userId)) {
+            Alert.alert(
+                'Delete Messages ?',
+                '',
+                [
+                    {
+                        text: 'Delete For Everyone ', onPress: () => {
+                            this.deleteMessageForEveryone()
+                        }
+                    },
+                    { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+                ],
+                { cancelable: false }
+            );
+        }
+        else {
+            Alert.alert(
+                'Delete Messages ?',
+                '',
+                [
+                    {
+                        text: 'Delete For Me ', onPress: () => {
+                            this.deleteMessageForMe()
+                        }
+                    },
+                    { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+                ],
+                { cancelable: false }
+            );
+        }
+
     }
     deleteMessageForMe = () => {
-        console.log('coming inside dlete for me ');
-        // if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
-        //     this.props.deleteMessagesById(this.props.notificationBody.isGroup, this.props.notificationBody.id, this.props.user.userId, Object.keys(this.state.selectedMessage))
-        // }
-        // else if (this.props.isGroup) {
-        //     this.props.deleteMessagesById(this.props.isGroup, this.props.group.groupId, this.props.user.userId, Object.keys(this.state.selectedMessage))
-        // }
-        // else {
-        //     this.props.deleteMessagesById(this.props.isGroup, this.props.friend.userId, this.props.user.userId, Object.keys(this.state.selectedMessage))
-        // }
+
         const newChatMessages = this.props.chatMessages.filter(msg => Object.keys(this.state.selectedMessage).indexOf(msg.messageId) === -1)
         console.log('newChatMessages : ', newChatMessages);
         if (newChatMessages.length > 0) {
@@ -145,17 +157,14 @@ class Chat extends Component {
         this.setState({ isVisibleDeleteModal: false, selectedMessage: null })
     }
     deleteMessageForEveryone = () => {
-        // if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
-        //     this.props.deleteMessagesByIdForEveryone(this.props.notificationBody.isGroup, this.props.notificationBody.id, this.props.user.userId, Object.keys(this.state.selectedMessage))
-        // }
-        // else if (this.props.isGroup) {
-        //     this.props.deleteMessagesByIdForEveryone(this.props.isGroup, this.props.group.groupId, this.props.user.userId, Object.keys(this.state.selectedMessage))
-        // }
-        // else {
-        //     this.props.deleteMessagesByIdForEveryone(this.props.isGroup, this.props.friend.userId, this.props.user.userId, Object.keys(this.state.selectedMessage))
-        // }
-        this.props.deleteMessagesByIdForEveryone(this.props.chatInfo.isGroup, this.props.chatInfo.id, this.props.user.userId, Object.keys(this.state.selectedMessage))
-
+        const newChatMessages = this.props.chatMessages.filter(msg => Object.keys(this.state.selectedMessage).indexOf(msg.messageId) === -1)
+        console.log('newChatMessages : ', newChatMessages);
+        if (newChatMessages.length > 0) {
+            this.props.deleteMessagesByIdForEveryone(this.props.chatInfo.isGroup, this.props.chatInfo.id, this.props.user.userId, Object.keys(this.state.selectedMessage), newChatMessages[0])
+        }
+        else {
+            this.props.deleteMessagesByIdForEveryone(this.props.chatInfo.isGroup, this.props.chatInfo.id, this.props.user.userId, Object.keys(this.state.selectedMessage), newChatMessages[0])
+        }
         this.setState({ isVisibleDeleteModal: false, selectedMessage: null })
     }
     onCancelDeleteModal = () => {
@@ -236,7 +245,6 @@ class Chat extends Component {
     render() {
         const { user, chatMessages, totalUnseenMessage, chatData } = this.props;
         const { messageToBeSend, selectedMessage, isVisibleDeleteModal, isVisibleOptionsModal } = this.state;
-        console.log('chatMessage : ', chatMessages);
         return <View style={styles.fill}>
             <View style={APP_COMMON_STYLES.statusBar}>
                 <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColorDark} barStyle="light-content" />
@@ -247,10 +255,9 @@ class Chat extends Component {
                         selectedMessage ?
                             <View style={styles.deleteButtonChatHeader}>
                                 <IconButton titleStyle={{ color: '#fff', fontWeight: 'bold', fontSize: widthPercentageToDP(4) }} iconProps={{ name: 'window-close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }} onPress={this.unSelectAllMessage} />
-                                <View style={{ flex: 1, alignSelf: 'flex-start' }}>
+                                <View style={{ marginLeft: widthPercentageToDP(75), alignSelf: 'flex-end' }}>
                                     <IconButton titleStyle={{ color: '#fff', fontWeight: 'bold', fontSize: widthPercentageToDP(4) }} iconProps={{ name: 'delete', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }} onPress={this.openDeleteModal} />
                                 </View>
-                                {/* <IconButton style={{ marginRight: widthPercentageToDP(3) }} iconProps={{ name: 'md-more', type: 'Ionicons', style: { color: '#fff' } }} onPress={this.showOptionsModal} /> */}
                             </View>
                             :
                             <View style={styles.chatHeader}>
@@ -304,7 +311,7 @@ class Chat extends Component {
 
                                         </View>
                                 }
-                                {/* <IconButton style={{ marginRight: widthPercentageToDP(3) }} iconProps={{ name: 'md-more', type: 'Ionicons', style: { color: '#fff' } }} onPress={this.showOptionsModal} /> */}
+                                <IconButton style={{ marginRight: widthPercentageToDP(3) }} iconProps={{ name: 'md-more', type: 'Ionicons', style: { color: '#fff' } }} onPress={this.showOptionsModal} />
                             </View>
                     }
 
@@ -344,17 +351,17 @@ class Chat extends Component {
                                         message={item.content}
                                         bubbleStyle={styles.friendChatBubble}
                                         bubbleNameStyle={styles.friendName}
-                                        onLongPress={() => this.changeToMessageSelectionMode(item.messageId)}
+                                        onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
                                         selectedMessage={selectedMessage && selectedMessage[item.messageId]}
-                                        onPress={() => this.onSelectMessage(item.messageId)}
+                                        onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
                                     />
                                     : <ChatBubble
                                         bubbleName={item.senderName + ','}
                                         messageTime={this.getDateAndTime(item)}
                                         message={item.content}
-                                        onLongPress={() => this.changeToMessageSelectionMode(item.messageId)}
+                                        onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
                                         selectedMessage={selectedMessage && selectedMessage[item.messageId]}
-                                        onPress={() => this.onSelectMessage(item.messageId)}
+                                        onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
                                     />
                             }}
 
@@ -412,7 +419,7 @@ const mapDispatchToProps = (dispatch) => {
         deleteAllMessages: (id, userId, isGroup) => dispatch(deleteAllMessages(id, userId, isGroup)),
         sendMessage: (isGroup, id, userId, content, userName, userNickname) => dispatch(sendMessgae(isGroup, id, userId, content, userName, userNickname)),
         deleteMessagesById: (isGroup, id, userId, messageToBeDeleted, newChatMessages) => dispatch(deleteMessagesById(isGroup, id, userId, messageToBeDeleted, newChatMessages)),
-        deleteMessagesByIdForEveryone: (isGroup, id, userId, messageToBeDeleted) => dispatch(deleteMessagesByIdForEveryone(isGroup, id, userId, messageToBeDeleted)),
+        deleteMessagesByIdForEveryone: (isGroup, id, userId, messageToBeDeleted, newChatMessages) => dispatch(deleteMessagesByIdForEveryone(isGroup, id, userId, messageToBeDeleted, newChatMessages)),
         resetMessageCount: () => dispatch(resetMessageCountAction({ resetTotalUnseen: true })),
         updateChatData: (chatData) => dispatch(updateChatDatatAction({ chatData: chatData })),
         getPicture: (pictureId) => getPicture(pictureId, (response) => {

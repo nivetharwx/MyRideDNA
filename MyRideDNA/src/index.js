@@ -91,9 +91,15 @@ export default class App extends Component {
 
                 }
                 else {
+
                     if (notification.my_custom_data && notification.my_custom_data.reference && notification.my_custom_data.reference.targetScreen && notification.my_custom_data.reference.targetScreen === 'CHAT') {
 
                         this.redirectToTargetScreen(notification.my_custom_data)
+                    }
+                    else {
+                        if (Actions.currentScene === "chat") {
+                            store.dispatch(replaceChatMessagesAction({ comingFrom: 'fcmDeletForEveryone', notificationBody: JSON.parse(notification.body) }));
+                        }
                     }
                     // if (JSON.parse(notification.body).reference && JSON.parse(notification.body).reference.targetScreen) {
                     //     JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));

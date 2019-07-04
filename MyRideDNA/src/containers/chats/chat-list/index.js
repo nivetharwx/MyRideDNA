@@ -6,7 +6,7 @@ import { widthPercentageToDP, heightPercentageToDP, PageKeys, APP_COMMON_STYLES,
 import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast, Item } from 'native-base';
 import { BasicHeader } from '../../../components/headers';
 import { ShifterButton } from '../../../components/buttons';
-import { getAllChats, getPictureList } from '../../../api';
+import { getAllChats, getPictureList, logoutUser } from '../../../api';
 import { appNavMenuVisibilityAction, replaceChatListAction } from '../../../actions';
 import { getFormattedDateFromISO } from '../../../util';
 import { Actions } from 'react-native-router-flux';
@@ -51,6 +51,9 @@ class ChatList extends Component {
         this.props.getFriendGroups(this.props.user.userId, false, 0, (res) => {
         }, (err) => {
         });
+    }
+    onPressLogout = async () => {
+        this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
 
 
@@ -133,7 +136,7 @@ class ChatList extends Component {
                     <Text style={{ marginTop: heightPercentageToDP(1) }}>{item.message ? item.message.content.length > 25 ? item.message.content.substring(0, 26) + '...' : item.message.content : null}</Text>
                 </Body>
                 <Right style={{ height: heightPercentageToDP(12) }}>
-                    <Text style={{ marginTop: heightPercentageToDP(0.7) }}>{this.getDate(item)}</Text>
+                    <Text style={{ marginTop: heightPercentageToDP(0.7) }}>{item.message ? this.getDate(item) : null}</Text>
                     {
                         item.totalUnseenMessage > 0 ?
                             <View style={styles.messageNumber}>
@@ -236,9 +239,9 @@ class ChatList extends Component {
 }
 
 const mapStateToProps = (state) => {
-    const { user } = state.UserAuth;
+    const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { chatList } = state.ChatList;
-    return { user, chatList };
+    return { user, chatList, userAuthToken, deviceToken };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -253,6 +256,7 @@ const mapDispatchToProps = (dispatch) => {
             console.log('getPictureList getChatListPic error :  ', error)
             // dispatch(updateFriendRequestListAction({ id: id }))
         }),
+        logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(ChatList);
