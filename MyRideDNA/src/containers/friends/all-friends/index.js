@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableHighlight, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableHighlight, Alert, ActivityIndicato, Easing } from 'react-native';
 import { getAllFriends, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend, getAllOnlineFriends, getPicture, getFriendsLocationList } from '../../../api';
 import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, heightPercentageToDP, RELATIONSHIP, PageKeys } from '../../../constants';
 import { BaseModal } from '../../../components/modal';
-import { LinkButton } from '../../../components/buttons';
+import { LinkButton, IconButton } from '../../../components/buttons';
 import { ThumbnailCard } from '../../../components/cards';
 import { openFriendProfileAction, updateFriendInListAction, screenChangeAction, resetCurrentFriendAction } from '../../../actions';
 import { FloatingAction } from 'react-native-floating-action';
@@ -66,7 +66,8 @@ class AllFriendsTab extends Component {
             refreshList: false,
             isLoading: false,
             isLoadingData: false,
-            filteredFriends: []
+            filteredFriends: [],
+            spinValue: new Animated.Value(0),
         }
     }
 
@@ -105,6 +106,21 @@ class AllFriendsTab extends Component {
         //     Keyboard.dismiss();
         //     this.props.searchForFriend(this.props.searchQuery, this.props.user.userId, 0);
         // }
+    }
+
+    retryApiFunction = () => {
+        this.state.spinValue.setValue(0);
+        Animated.timing(this.state.spinValue, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.linear,
+            useNativeDriver: true
+        }).start(() => {
+            if (this.props.hasNetwork === true) {
+                this.props.getAllChats(this.props.user.userId);
+            }
+        });
+
     }
 
     openFriendRideTab = () => {
@@ -387,7 +403,10 @@ class AllFriendsTab extends Component {
     render() {
         const { isRefreshing, isVisibleOptionsModal, friendsFilter } = this.state;
         const { allFriends, searchQuery, searchFriendList, user } = this.props;
-
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         if (friendsFilter === FLOAT_ACTION_IDS.BTN_ALL_FRIENDS) {
             this.state.filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
@@ -411,12 +430,21 @@ class AllFriendsTab extends Component {
                 </BaseModal>
                 {
                     allFriends.length === 0
-                        ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
-                        : this.state.filteredFriends.length === 0
-                            ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage}>
-                                <Text style={{ color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6), fontWeight: 'bold', letterSpacing: 1 }}>{`No friends found`}</Text>
-                            </ImageBackground>
-                            : <FlatList
+                        ?
+                        this.props.hasNetwork === false ?
+                            <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                </Animated.View>
+                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                            </View>
+                            :
+                            <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
+                        :
+                        this.state.filteredFriends.length > 0
+                            ?
+                            <FlatList
                                 style={{ flexDirection: 'column' }}
                                 contentContainerStyle={styles.friendList}
                                 numColumns={2}
@@ -440,6 +468,19 @@ class AllFriendsTab extends Component {
                                 onEndReachedThreshold={0.1}
                                 onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
                             />
+                            :
+                            this.props.hasNetwork
+                                ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage}>
+                                    <Text style={{ color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6), fontWeight: 'bold', letterSpacing: 1 }}>{`No friends found`}</Text>
+                                </ImageBackground>
+                                :
+                                <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                                    <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                        <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                    </Animated.View>
+                                    <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                    <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                </View>
                 }
                 <FloatingAction
                     floatingIcon={<NBIcon name='menu' type='MaterialIcons' style={{ color: '#fff' }} />}
@@ -457,8 +498,8 @@ class AllFriendsTab extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { allFriends, paginationNum, searchFriendList, friendsLocationList } = state.FriendList;
-    const { pageNumber } = state.PageState;
-    return { user, allFriends, paginationNum, searchFriendList, friendsLocationList, pageNumber };
+    const { pageNumber, hasNetwork } = state.PageState;
+    return { user, allFriends, paginationNum, searchFriendList, friendsLocationList, pageNumber, hasNetwork };
 };
 const mapDispatchToProps = (dispatch) => {
     return {

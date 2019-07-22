@@ -24,7 +24,7 @@ class EditProfileForm extends Component {
             user: {
                 ...props.user
             },
-            showLoader:false
+            showLoader: false
         };
         if (!props.user.homeAddress) {
             this.state.user.homeAddress = { address: '', city: '', state: '', country: '', zipCode: '' };
@@ -105,23 +105,23 @@ class EditProfileForm extends Component {
     }
 
     onPressBackButton = () => Actions.pop();
-    hideLoader = () =>{
+    hideLoader = () => {
         this.setState({ showLoader: false });
     }
     onSubmit = () => {
         Keyboard.dismiss();
         this.updatingUser = true;
-        this.setState({showLoader:true})
-        this.props.updateUser(this.state.user,(res) => {
+        this.setState({ showLoader: true })
+        this.props.updateUser(this.state.user, (res) => {
             this.hideLoader()
-          }, (err) => {
-              this.hideLoader()
-          });
+        }, (err) => {
+            this.hideLoader()
+        });
     }
 
     render() {
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
-        const { user,showLoader } = this.state;
+        const { user, showLoader } = this.state;
         console.log('user : ', user)
         return (
             <View style={styles.fill}>

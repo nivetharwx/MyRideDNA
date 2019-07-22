@@ -1,12 +1,12 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
     replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
-    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, replaceChatListAction, resetMessageCountAction
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, replaceChatListAction, resetMessageCountAction, storeUserAction, errorHandlingAction, resetErrorHandlingAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN, RIDE_POINT, CHAT_BASE_URL } from '../constants';
 import axios from 'axios';
 
-import { AsyncStorage } from 'react-native';
+import { AsyncStorage, Alert } from 'react-native';
 
 import Base64 from '../util';
 import { Actions } from 'react-native-router-flux';
@@ -28,30 +28,36 @@ export const getPicture = (pictureId, successCallback, errorCallback) => {
         .then(res => {
             if (res.status === 200) {
                 if (res.data.picture === '') {
-                    errorCallback(res.data);
+                    // errorCallback(res.data);
+                    differentErrors(er, [pictureId, successCallback, errorCallback], getPicture, false);
                 } else {
                     successCallback(res.data);
+                    store.dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             }
         })
         .catch(er => {
             errorCallback(er.response || er);
+            differentErrors(er, [pictureId, successCallback, errorCallback], getPicture, false);
         })
 }
 export const getPictureList = (pictureIdList, successCallback, errorCallback) => {
     axios.put(USER_BASE_URL + `getPictureList`, { pictureIdList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
+            console.log('getPictureList : ', res.data)
             if (res.status === 200) {
                 if (Object.keys(res.data).length === 0) {
-                    errorCallback(res.data);
+                    differentErrors(er, [pictureIdList, successCallback, errorCallback], getPictureList, false);
+                    // errorCallback(res.data);
                 } else {
-
                     successCallback(res.data);
+                    store.dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             }
         })
         .catch(er => {
-            errorCallback(er.response || er);
+            differentErrors(er, [pictureIdList, successCallback, errorCallback], getPictureList, false);
+            // errorCallback(er.response || er);
         })
 }
 
@@ -60,15 +66,17 @@ export const getRidePictureList = (pictureIdList, successCallback, errorCallback
         .then(res => {
             if (res.status === 200) {
                 if (Object.keys(res.data).length === 0) {
-                    errorCallback(res.data);
+                    // errorCallback(res.data);
+                    differentErrors(er, [pictureIdList, successCallback, errorCallback], getRidePictureList, false);
                 } else {
-
                     successCallback(res.data);
+                    store.dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             }
         })
         .catch(er => {
             errorCallback(er.response || er);
+            differentErrors(er, [pictureIdList, successCallback, errorCallback], getRidePictureList, false);
         })
 }
 
@@ -97,45 +105,53 @@ export const pushNotification = (userId) => {
 //             })
 //     }
 // }
-export const getAllNotifications = (userId, pageNumber, date, successCallback, errorCallback) => {
-    console.log('pageNumber redux  : ', pageNumber);
+export const getAllNotifications = (userId, pageNumber, date, comingFrom, successCallback, errorCallback) => {
+    console.log('comingFrom : ', comingFrom)
     return dispatch => {
         // dispatch(isloadingDataAction(true));
         axios.get(NOTIFICATIONS_BASE_URL + `getNotifications?userId=${userId}&pageNumber=${pageNumber}&date=${date}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
+
                 console.log(' getNotifications : ', res.data)
                 if (res.status === 200 && res.data.notification.length > 0) {
                     // dispatch(isloadingDataAction(false));
                     dispatch(resetNotificationListAction(res.data));
                     dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    if (comingFrom === 'notification') {
+                        seenNotification(userId)
+                    }
                     successCallback(res.data)
                 }
                 else if (res.data.notification.length === 0) {
                     dispatch(apiLoaderActions(false));
+                    if (comingFrom === 'notification') {
+                        seenNotification(userId)
+                    }
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     // dispatch(isloadingDataAction(false));
                     successCallback(false)
                 }
             })
             .catch(er => {
                 // dispatch(isloadingDataAction(false));
+                differentErrors(er, [userId, pageNumber, date, successCallback, errorCallback], getAllNotifications, false);
                 errorCallback(er)
                 console.log("getNotifications error: ", er.response || er);
             })
     }
 }
-export const seenNotification = (userId) => {
-    return dispatch => {
-        axios.get(NOTIFICATIONS_BASE_URL + `seenNotification?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
-            .then(res => {
-                if (res.status === 200) {
-                    console.log('seenNotification : ', res.data)
-                    dispatch(resetNotificationCountAction(res.data));
-                }
-            })
-            .catch(er => {
-                console.log("seenNotification error: ", er.response || er);
-            })
-    }
+const seenNotification = (userId) => {
+    axios.get(NOTIFICATIONS_BASE_URL + `seenNotification?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        .then(res => {
+            console.log('seenNotification : ', res.data)
+            if (res.status === 200) {
+                store.dispatch(resetNotificationCountAction(res.data));
+            }
+        })
+        .catch(er => {
+            console.log("seenNotification error: ", er.response || er);
+        })
 }
 export const readNotification = (userId, notificationId) => {
     return dispatch => {
@@ -152,6 +168,7 @@ export const readNotification = (userId, notificationId) => {
     }
 }
 export const deleteNotifications = (notificationIds) => {
+    console.log('deleteNotifications: ', notificationIds)
     return dispatch => {
         dispatch(apiLoaderActions(true))
         axios.put(NOTIFICATIONS_BASE_URL + `deleteNotifications`, { notificationIds: [notificationIds] }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
@@ -159,10 +176,12 @@ export const deleteNotifications = (notificationIds) => {
                 if (res.status === 200) {
                     dispatch(apiLoaderActions(false))
                     console.log("deleteNotifications success: ", res.data || res);
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     dispatch(deleteNotificationsAction({ notificationIds }));
                 }
             })
             .catch(er => {
+                differentErrors(er, [notificationIds], deleteNotifications, true);
                 dispatch(apiLoaderActions(false))
                 console.log("deleteNotifications error: ", er.response || er);
             })
@@ -215,6 +234,7 @@ export const logoutUser = (userId, accessToken, deviceToken) => {
             .then(res => {
                 console.log('logoutUser : ', res.data)
                 if (res.status === 200) {
+
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     // DOC: Updating user active | isLoggedIn with publish event
@@ -226,12 +246,14 @@ export const logoutUser = (userId, accessToken, deviceToken) => {
                     AsyncStorage.removeItem(USER_AUTH_TOKEN).then(() => {
                         Actions.reset(PageKeys.LOGIN);
                     });
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     setTimeout(() => { dispatch(resetStateOnLogout()) }, 1000)
                 }
             })
             .catch(er => {
                 console.log(er.response);
                 dispatch(apiLoaderActions(false))
+                differentErrors(er, [userId, accessToken, deviceToken], logoutUser, true);
                 // TODO: Dispatch error info action
             })
     };
@@ -242,6 +264,7 @@ export const validateEmailOnServer = (email) => {
             .then(res => {
                 if (res.status === 200) {
                     dispatch(updateEmailStatusAction(res.data));
+
                 }
             })
             .catch(er => {
@@ -252,14 +275,31 @@ export const validateEmailOnServer = (email) => {
 }
 export const registerUser = (user) => {
     return dispatch => {
-        axios.post(USER_BASE_URL + 'registerUser', user, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.post(USER_BASE_URL + 'registerUser', user, { cancelToken: axiosSource.token, timeout: 100 })
             .then(res => {
                 if (res.status === 200) {
+                    console.log('registerUser :', res.data)
                     dispatch(updateSignupResultAction(res.data));
                 }
             })
             .catch(error => {
+                console.log('registerUser error : ', error)
                 dispatch(updateSignupResultAction(error.response.data));
+                if ((error.message === 'timeout of 100ms exceeded' || error.message === 'Network Error') && store.getState().PageState.hasNetwork === true) {
+                    Alert.alert(
+                        'Something went wrong ',
+                        '',
+                        [
+                            {
+                                text: 'Retry ', onPress: () => {
+                                    registerUser(user)
+                                }
+                            },
+                            { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+                        ],
+                        { cancelable: false }
+                    )
+                }
                 // TODO: Dispatch error info action
             })
     };
@@ -272,12 +312,14 @@ export const updateUserInfo = (userData, successCallback, errorCallback) => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
                     dispatch(updateUserAction(userData));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     successCallback(false)
                 }
             })
             .catch(er => {
                 errorCallback(false)
                 console.log("updateUserInfo: ", er.response || er);
+                differentErrors(er, [userData, successCallback, errorCallback], updateUserInfo, true);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -294,12 +336,14 @@ export const updatePassword = (passwordInfo) => {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(updatePasswordSuccessAction(res.data));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             })
             .catch(er => {
                 console.log("updatePassword error: ", er.response || er);
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                differentErrors(er, [passwordInfo], updatePassword, true);
                 dispatch(updatePasswordErrorAction(er.response.data));
             })
     };
@@ -314,11 +358,13 @@ export const updateUserSettings = (userSettings) => {
                     console.log("updateUserSettings success: ", res.data);
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     dispatch(updateUserAction(userSettings));
                 }
             })
             .catch(er => {
                 console.log("updateUserSettings error: ", er.response || er);
+                differentErrors(er, [userSettings], updateUserSettings, true);
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
             })
@@ -335,10 +381,12 @@ export const updateShareLocationState = (userId, shareLocState) => {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(updateUserAction({ locationEnable: shareLocState }));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             })
             .catch(er => {
                 console.log("updateShareLocationState: ", er.response || er);
+                differentErrors(er, [userId, shareLocState], updateShareLocationState, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -353,11 +401,13 @@ export const updateProfilePicture = (profilePicStr, mimeType, userId) => {
                 if (res.status === 200) {
                     // dispatch(profileLoaderActions(false))
                     dispatch(updateUserAction({ ...res.data, profilePicture: `data:${mimeType};base64,${profilePicStr}` }));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             })
             .catch(er => {
                 // dispatch(profileLoaderActions(false))
                 console.log(er.response);
+                differentErrors(er, [profilePicStr, mimeType, userId], updateProfilePicture, true);
                 // TODO: Dispatch error info action
             });
 
@@ -384,6 +434,7 @@ export const getAllBuildRides = (userId, toggleLoader, pageNumber, successCallba
                     dispatch(apiLoaderActions(false))
                     dispatch(replaceRideListAction({ rideType: RIDE_TYPE.BUILD_RIDE, rideList: res.data, pageNumber: pageNumber }));
                     dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     successCallback(res.data);
                 }
                 else if (res.data.length === 0) {
@@ -396,6 +447,7 @@ export const getAllBuildRides = (userId, toggleLoader, pageNumber, successCallba
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                differentErrors(er, [userId, toggleLoader, pageNumber, successCallback, errorCallback], getAllBuildRides, false);
                 errorCallback(er)
             })
     };
@@ -412,6 +464,7 @@ export const getAllPublicRides = (userId, toggleLoader, pageNumber, successCallb
                     dispatch(apiLoaderActions(false));
                     dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
                     dispatch(replaceRideListAction({ rideType: RIDE_TYPE.SHARED_RIDE, rideList: res.data, pageNumber: pageNumber }));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     successCallback(res.data);
                 }
                 else if (res.data.length === 0) {
@@ -421,6 +474,7 @@ export const getAllPublicRides = (userId, toggleLoader, pageNumber, successCallb
             })
             .catch(er => {
                 console.log(er.response);
+                differentErrors(er, [userId, toggleLoader, pageNumber, successCallback, errorCallback], getAllPublicRides, false);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
@@ -440,6 +494,7 @@ export const getAllRecordedRides = (userId, toggleLoader, pageNumber, successCal
                     dispatch(apiLoaderActions(false));
                     dispatch(replaceRideListAction({ rideType: RIDE_TYPE.RECORD_RIDE, rideList: res.data, pageNumber: pageNumber }));
                     dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     successCallback(res.data);
                 }
                 else if (res.data.length === 0) {
@@ -449,6 +504,7 @@ export const getAllRecordedRides = (userId, toggleLoader, pageNumber, successCal
             })
             .catch(er => {
                 console.log(er.response);
+                differentErrors(er, [userId, toggleLoader, pageNumber, successCallback, errorCallback], getAllRecordedRides, false);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -468,11 +524,13 @@ export const getFriendsRideList = (friendUserId, relationship) => {
                     dispatch(apiLoaderActions(false))
                     dispatch(updateCurrentFriendAction({ rideList: res.data, userId: friendUserId }));
                     console.log('getFriendRides : ', res)
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             })
             .catch(er => {
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                differentErrors(er, [friendUserId, relationship], getFriendsRideList, false);
                 console.log('friendsRideError : ', er)
             })
     }
@@ -528,10 +586,12 @@ export const copySharedRide = (rideId, name, rideType, userId, date) => {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(updateRideListAction({ rideType, rideList: [res.data] }));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             })
             .catch(er => {
                 console.log(er.response);
+                differentErrors(er, [rideId, name, rideType, userId, date], copySharedRide, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -548,10 +608,12 @@ export const copyRide = (rideId, name, rideType, date) => {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(updateRideListAction({ rideType, rideList: [res.data] }));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             })
             .catch(er => {
                 console.log(er.response);
+                differentErrors(er, [rideId, name, rideType, date], copyRide, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -568,10 +630,12 @@ export const renameRide = (ride, rideType, userId, index) => {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(updateRideListAction({ rideType, rideList: [ride], index }));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             })
             .catch(er => {
                 console.log(er.response);
+                differentErrors(er, [ride, rideType, userId, index], renameRide, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -589,10 +653,12 @@ export const deleteRide = (rideId, index, rideType) => {
                     dispatch(apiLoaderActions(false))
                     dispatch(isRemovedAction(true))
                     dispatch(deleteRideAction({ rideType, index }));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             })
             .catch(er => {
                 console.log(er.response);
+                differentErrors(er, [rideId, index, rideType], deleteRide, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1034,11 +1100,13 @@ export const getRideByRideId = (rideId, rideInfo = {}) => {
                     // dispatch(toggleLoaderAction(false));
                     console.log("getRideByRideId success: ", JSON.parse(JSON.stringify(res.data)));
                     dispatch(apiLoaderActions(false))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     dispatch(updateRideAction({ ...rideInfo, ...res.data }));
                 }
             })
             .catch(er => {
                 console.log(`getRideByRideId: ${RIDE_BASE_URL}getRideByRideId?rideId=${rideId}`, er.response);
+                differentErrors(er, [rideId, rideInfo = {}], getRideByRideId, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1145,6 +1213,7 @@ export const deleteWaypointPicture = (ride, id, pictureIdList) => {
     };
 }
 export const getAllFriends = (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => {
+    console.log('inside getAllFriend');
     return dispatch => {
         toggleLoader && dispatch(apiLoaderActions(true))
         // pageNumber > 0 && dispatch(toggleLoaderAction(true));
@@ -1158,7 +1227,9 @@ export const getAllFriends = (friendType, userId, pageNumber, toggleLoader, succ
                     dispatch(apiLoaderActions(false));
                     dispatch(replaceFriendListAction({ friendList: res.data, pageNumber: pageNumber }))
                     dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     successCallback(res.data);
+
                     // DOC: Calling for getting online friends
                     // dispatch(getAllOnlineFriends(userId));
                     // if (pageNumber === 0) {
@@ -1170,6 +1241,7 @@ export const getAllFriends = (friendType, userId, pageNumber, toggleLoader, succ
                 else if (res.data.length === 0) {
                     dispatch(apiLoaderActions(false));
                     successCallback(false);
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             })
             .catch(er => {
@@ -1177,7 +1249,8 @@ export const getAllFriends = (friendType, userId, pageNumber, toggleLoader, succ
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
-                errorCallback(er);
+                differentErrors(er, [friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback], getAllFriends, false);
+                // errorCallback(er);
             })
     };
 }
@@ -1190,10 +1263,12 @@ export const getUserById = (userId) => {
                     console.log('getUserById : ', res)
                     dispatch(replaceFriendInfooAction(res.data));
                     dispatch(apiLoaderActions(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             })
             .catch(er => {
                 console.log(`getUserById: `, er.response || er);
+                differentErrors(er, [userId], getUserById, false);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
@@ -1223,11 +1298,13 @@ export const searchForFriend = (searchParam, userId, pageNumber) => {
             .then(res => {
                 if (res.status === 200) {
                     // dispatch(toggleLoaderAction(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     return dispatch(replaceSearchFriendListAction(res.data));
                 }
             })
             .catch(er => {
                 console.log(`searchFriend: `, er.response || er);
+                differentErrors(er, [searchParam, userId, pageNumber], searchForFriend, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
             })
@@ -1243,6 +1320,7 @@ export const sendInvitationOrRequest = (requestBody) => {
                     console.log("sendInvitationOrRequest: ", res.data);
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     dispatch(updateInvitationResponseAction(res.data));
                 }
             })
@@ -1251,6 +1329,7 @@ export const sendInvitationOrRequest = (requestBody) => {
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                differentErrors(er, [requestBody], sendInvitationOrRequest, true);
                 dispatch(updateInvitationResponseAction({ error: er.response.data || "Something went wrong" }));
             })
     };
@@ -1265,6 +1344,7 @@ export const sendFriendRequest = (requestBody) => {
                     console.log("sendFriendRequest: ", res.data);
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     dispatch(updateFriendRequestResponseAction(res.data));
                 }
             })
@@ -1273,6 +1353,7 @@ export const sendFriendRequest = (requestBody) => {
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                differentErrors(er, [requestBody], sendFriendRequest, true);
                 dispatch(updateFriendRequestResponseAction({ error: er.response.data || "Something went wrong" }));
             })
     };
@@ -1288,11 +1369,13 @@ export const cancelFriendRequest = (senderId, personId, requestId) => {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(updateFriendRequestListAction({ id: requestId }))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
                 }
             })
             .catch(er => {
                 console.log(`cancelFriendRequest: `, er, er.response);
+                differentErrors(er, [senderId, personId, requestId], cancelFriendRequest, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1308,9 +1391,11 @@ export const getAllFriendRequests = (userId, toggleLoader) => {
                 if (res.status === 200) {
                     dispatch(apiLoaderActions(false))
                     dispatch(replaceFriendRequestListAction(res.data))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             })
             .catch(err => {
+                differentErrors(err, [userId, toggleLoader], getAllFriendRequests, false);
                 dispatch(apiLoaderActions(false))
                 console.log(err)
             })
@@ -1327,11 +1412,13 @@ export const approveFriendRequest = (senderId, personId, actionDate, requestId) 
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(updateFriendRequestListAction({ id: requestId }))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.FRIEND }));
                 }
             })
             .catch(er => {
                 console.log(`approveFriendRequest: `, er, er.response);
+                differentErrors(er, [senderId, personId, actionDate, requestId], getAllFriendRequests, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1350,11 +1437,13 @@ export const rejectFriendRequest = (senderId, personId, requestId) => {
                     dispatch(updateFriendRequestListAction({ id: requestId }))
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
                 }
             })
             .catch(er => {
                 console.log(`rejectFriendRequest error : `, er, er.response);
+                differentErrors(er, [senderId, personId, requestId], rejectFriendRequest, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1371,11 +1460,13 @@ export const doUnfriend = (senderId, personId) => {
                     console.log('unfriend sucess : ', res)
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     return dispatch(doUnfriendAction({ personId }));
                 }
             })
             .catch(er => {
                 console.log(`unfriend: `, er.response || er);
+                differentErrors(er, [senderId, personId], doUnfriend, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1392,11 +1483,13 @@ export const getFriendsLocationList = (userId, friendsIdList) => {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     console.log('getFriendsLocationList sucess : ', res);
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     res.data.length > 0 && dispatch(addFriendsLocationAction(res.data));
                 }
             })
             .catch(er => {
                 console.log(`getFriendLocationList: `, er.response || er);
+                differentErrors(er, [userId, friendsIdList], getFriendsLocationList, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1435,6 +1528,7 @@ export const getFriendGroups = (userId, toggleLoader, pageNumber, successCallbac
                     dispatch(replaceFriendGroupListAction({ groupList: res.data, pageNumber: pageNumber }))
                     dispatch(apiLoaderActions(false))
                     dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     successCallback(res.data)
 
                     // dispatch(toggleLoaderAction(false));
@@ -1443,13 +1537,15 @@ export const getFriendGroups = (userId, toggleLoader, pageNumber, successCallbac
                 }
                 else if (res.data.length === 0) {
                     dispatch(apiLoaderActions(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     successCallback(false)
                 }
             })
             .catch(er => {
-                console.log('getFriendGroups error : ', res.data)
-                errorCallback(er)
+                console.log('getFriendGroups error : ', er)
+                differentErrors(er, [userId, toggleLoader, pageNumber, successCallback, errorCallback], getFriendGroups, false);
                 dispatch(apiLoaderActions(false))
+                errorCallback(er)
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
 
@@ -1467,11 +1563,13 @@ export const createFriendGroup = (newGroupInfo) => {
                     newGroupInfo.groupId = res.data.groupId;
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     return dispatch(createFriendGroupAction(newGroupInfo))
                 }
             })
             .catch(er => {
                 console.log(`createFriendGroup error: `, er.response);
+                differentErrors(er, [newGroupInfo], createFriendGroup, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1488,11 +1586,13 @@ export const exitFriendGroup = (groupId, memberId) => {
                     console.log('exitFriendGroup : ', res.data);
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     return dispatch(removeFriendGroupAction(groupId))
                 }
             })
             .catch(er => {
                 console.log(`exitFriendGroup error: `, er.response);
+                differentErrors(er, [groupId, memberId], exitFriendGroup, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1534,15 +1634,18 @@ export const getGroupMembers = (groupId, userId, groupName, toggleLoader, pageNu
                     dispatch(apiLoaderActions(false))
                     dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
                     dispatch(resetMembersFromCurrentGroupAction({ members: res.data, groupId: groupId, groupName: groupName, pageNumber: pageNumber, userId: userId }))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     successCallback(res.data)
                 }
                 else if (res.data.length === 0) {
                     dispatch(apiLoaderActions(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     successCallback(false)
                 }
             })
             .catch(er => {
                 console.log(`getGroupMembers error: `, er.response ? er.response : er);
+                differentErrors(er, [groupId, userId, groupName, toggleLoader, pageNumber, successCallback, errorCallback], getGroupMembers, false)
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1561,11 +1664,13 @@ export const addMembers = (groupId, memberDetails) => {
                     console.log('addMembers sucess: ', res.data);
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     return dispatch(addMembersToCurrentGroupAction(res.data))
                 }
             })
             .catch(er => {
-                console.log(`addMembers error: `, er.response ? er.response : er);
+                console.log(`addMembers error: `, er)
+                differentErrors(er, [groupId, memberDetails], addMembers, true)
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1582,11 +1687,13 @@ export const makeMemberAsAdmin = (groupId, memberId) => {
                     console.log(res.data);
                     // setTimeout(() => dispatch(toggleLoaderAction(false)), 1000);
                     dispatch(apiLoaderActions(false))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     return dispatch(updateMemberAction({ memberId, updates: { isAdmin: true } }));
                 }
             })
             .catch(er => {
                 console.log(`makeMemberAsAdmin: `, er.response ? er.response : er);
+                differentErrors(er, [groupId, memberId], makeMemberAsAdmin, true)
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1603,11 +1710,13 @@ export const dismissMemberAsAdmin = (groupId, memberId) => {
                     console.log(res.data);
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     return dispatch(updateMemberAction({ memberId, updates: { isAdmin: false } }));
                 }
             })
             .catch(er => {
                 console.log(`dismissMemberAsAdmin: `, er.response ? er.response : er);
+                differentErrors(er, [groupId, memberId], dismissMemberAsAdmin, true)
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1626,11 +1735,13 @@ export const removeMember = (groupId, memberId) => {
                     console.log(res.data);
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     return dispatch(removeMemberAction(memberId));
                 }
             })
             .catch(er => {
                 console.log(`removeMember: `, er.response ? er.response : er);
+                differentErrors(er, [groupId, memberId], removeMember, true)
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1646,12 +1757,14 @@ export const getSpaceList = (userId) => {
                 console.log("getSpaceList success: ", res.data);
                 dispatch(apiLoaderActions(false));
                 // dispatch(toggleLoaderAction(false));
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 dispatch(replaceShortSpaceListAction(res.data))
             })
             .catch(er => {
                 console.log(`getSpaceList: `, er.response);
                 // TODO: Dispatch error info action
                 dispatch(apiLoaderActions(false));
+                differentErrors(er, [userId], getSpaceList, false);
                 // dispatch(toggleLoaderAction(false));
             })
     };
@@ -1673,10 +1786,13 @@ export const getGarageInfo = (userId, successCallback, errorCallback) => {
     // };
     axios.get(USER_BASE_URL + `getGarage/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
+            console.log('getGarage apoi : ', res.data);
             successCallback(res.data);
+            store.dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
         })
         .catch(er => {
             console.log("getGarage error: ", er.response || er);
+            differentErrors(er, [userId, successCallback, errorCallback], getGarageInfo, false);
             errorCallback(er.response || er);
         })
 }
@@ -1688,10 +1804,12 @@ export const updateGarageName = (garageName, garageId) => {
             .then(res => {
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 return dispatch(updateGarageNameAction(garageName))
             })
             .catch(er => {
                 console.log(`updateGarageName: `, er.response);
+                differentErrors(er, [garageName, garageId], updateGarageName, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
@@ -1711,12 +1829,14 @@ export const addBikeToGarage = (userId, bike, pictureList, successCallback, erro
                     bike.pictureList = res.data.pictureList || [];
                     bike.spaceId = res.data.spaceId;
                     dispatch(addToBikeListAction({ bike }));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     successCallback(true)
                 }
             })
             .catch(er => {
                 errorCallback(false)
                 console.log(`addSpace error: `, er.response || er);
+                differentErrors(er, [userId, bike, pictureList, successCallback, errorCallback], addBikeToGarage, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
             })
@@ -1738,8 +1858,10 @@ export const editBike = (userId, bike, pictureList, index, successCallback, erro
                 // dispatch(updateBikeListAction({ index, bike }))
             })
             .catch(er => {
+                differentErrors(er, [userId, bike, pictureList, index, successCallback, errorCallback], editBike, true);
                 errorCallback(false)
                 console.log("updateSpace error: ", er.response || er);
+
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
             })
@@ -1757,9 +1879,11 @@ export const addPictures = (userId, bike, pictureList) => {
                 if (!bike.pictureIdList) bike.pictureIdList = [];
                 bike.pictureIdList = [...bike.pictureIdList, ...res.data.pictureIds];
                 dispatch(updateBikeListAction({ bike }));
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
             })
             .catch(er => {
                 console.log(`addPictures error: `, er.response || er);
+                differentErrors(er, [userId, bike, pictureList], addPictures, true);
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
                 dispatch(updateBikeListAction({}));
@@ -1776,10 +1900,12 @@ export const setBikeAsActive = (userId, spaceId, prevActiveIndex, newActiveIndex
                 console.log("setDefaultSpace success: ", res.data);
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 return dispatch(updateActiveBikeAction({ prevActiveIndex, newActiveIndex }))
             })
             .catch(er => {
                 console.log(`setDefaultSpace: `, er.response || er);
+                differentErrors(er, [userId, spaceId, prevActiveIndex, newActiveIndex], setBikeAsActive, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
@@ -1794,10 +1920,12 @@ export const deleteBike = (userId, bikeId, index) => {
             .then(res => {
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 return dispatch(deleteBikeFromListAction({ index }))
             })
             .catch(er => {
                 console.log(`deleteBike: `, er.response);
+                differentErrors(er, [userId, bikeId, index], deleteBike, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
@@ -1814,9 +1942,11 @@ export const getPassengerList = (userId) => {
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
                 dispatch(replacePassengerListAction(Array.isArray(res.data) ? res.data : []))
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
             })
             .catch(er => {
                 console.log(`getAllPassengersByUserId error: `, er.response || er);
+                differentErrors(er, [userId], getPassengerList, false);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1832,11 +1962,13 @@ export const registerPassenger = (userId, passenger) => {
                 console.log('registerPassenger : ', res.data)
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 passenger.passengerId = res.data.passengerId;
                 dispatch(addToPassengerListAction(passenger))
             })
             .catch(er => {
                 console.log(`registerPassenger error: `, er.response || er);
+                differentErrors(er, [userId, passenger], registerPassenger, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1852,10 +1984,12 @@ export const updatePassengerDetails = (passenger) => {
                 console.log("updatePassengerDetails success: ", res.data);
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 dispatch(updatePassengerInListAction(passenger))
             })
             .catch(er => {
                 console.log(`updatePassengerDetails error: `, er.response || er);
+                differentErrors(er, [passenger], updatePassengerDetails, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1871,10 +2005,12 @@ export const deletePassenger = (passengerId) => {
                 console.log("deletePassenger success: ", res.data);
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 dispatch(removeFromPassengerListAction(passengerId))
             })
             .catch(er => {
                 console.log(`deletePassenger error: `, er.response || er);
+                differentErrors(er, [passengerId], deletePassenger, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1883,17 +2019,24 @@ export const deletePassenger = (passengerId) => {
 }
 
 export const getAllChats = (userId) => {
+    const before = new Date().getTime();
+    console.log('before : ', new Date().getTime())
     return dispatch => {
         axios.get(CHAT_BASE_URL + `getAllChats?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
+                const after = new Date().getTime()
+                console.log('after : ', new Date().getTime())
+                console.log('time after: ', after - before);
                 console.log("getAllChats success: ", res.data);
                 if (res.status === 200) {
                     dispatch(updateChatListAction({ comingFrom: 'getAllChatsApi', chatList: res.data }));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     // dispatch(toggleLoaderAction(false));
                 }
             })
             .catch(er => {
                 console.log(`getAllChats error: `, er.response || er);
+                differentErrors(er, [userId], getAllChats, false);
                 // TODO: Dispatch error info action
             })
     };
@@ -1906,11 +2049,14 @@ export const getAllMessages = (id, userId, isGroup) => {
                 console.log("getAllMessages success: ", res.data);
                 if (res.status === 200) {
                     dispatch(updateChatMessagesAction(res.data));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+
                     // dispatch(toggleLoaderAction(false));
                 }
             })
             .catch(er => {
                 console.log(`getAllMessages error: `, er);
+                differentErrors(er, [id, userId, isGroup], getAllMessages, false);
                 // TODO: Dispatch error info action
             })
     };
@@ -1947,6 +2093,7 @@ export const deleteMessagesById = (isGroup, id, userId, messageToBeDeleted, newC
             .then(res => {
                 console.log('deleteMessagesById : ', res.data)
                 if (res.status === 200) {
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     dispatch(replaceChatMessagesAction({ comingFrom: 'deleteMessage', messageIds: messageToBeDeleted }))
                     if (newChatMessages) {
                         dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: newChatMessages, id: id }));
@@ -1954,6 +2101,7 @@ export const deleteMessagesById = (isGroup, id, userId, messageToBeDeleted, newC
                 }
             })
             .catch(er => {
+                differentErrors(er, [isGroup, id, userId, messageToBeDeleted, newChatMessages], deleteMessagesById, true);
                 console.log('deleteMessagesById  error : ', er);
             })
     };
@@ -1965,12 +2113,14 @@ export const deleteMessagesByIdForEveryone = (isGroup, id, userId, messageToBeDe
                 console.log('deleteMessagesByIdForEveryone  : ', res.data)
                 if (res.status === 200) {
                     dispatch(replaceChatMessagesAction({ comingFrom: 'deleteMessage', messageIds: messageToBeDeleted }))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     if (newChatMessages) {
                         dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: newChatMessages, id: id }));
                     }
                 }
             })
             .catch(er => {
+                differentErrors(er, [isGroup, id, userId, messageToBeDeleted, newChatMessages], deleteMessagesByIdForEveryone, true);
                 console.log('deleteMessagesByIdForEveryone   error : ', er);
             })
     };
@@ -1983,11 +2133,12 @@ export const deleteAllMessages = (id, userId, isGroup) => {
                 console.log("deleteAllMessages success: ", res.data);
                 if (res.status === 200) {
                     dispatch(replaceChatMessagesAction({ comingFrom: 'deleteAllMessages', id: id }))
-
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 }
             })
             .catch(er => {
                 console.log(`deleteAllMessages error: `, er.response || er);
+                differentErrors(er, [isGroup, id, userId, messageToBeDeleted, newChatMessages], deleteAllMessages, true);
                 // TODO: Dispatch error info action
             })
     };
@@ -2009,6 +2160,66 @@ export const seenMessage = (id, userId, isGroup, comingFrom) => {
                 // TODO: Dispatch error info action
             })
     };
+}
+
+// export const errorHandlingApi = (config) => {
+//     console.log('errorHandlingApi : ', config);
+//     if (config.method === 'post') {
+//         return dispatch => {
+//             axios({
+//                 method: config.method,
+//                 url: config.url,
+//                 data: JSON.parse(config.data),
+//                 cancelToken: axiosSource.token,
+//                 timeout: API_TIMEOUT
+//             })
+//                 .then(res => {
+//                     console.log("errorHandlingApi success: ", res.data);
+//                     if (res.status === 200) {
+//                     }
+//                 })
+//                 .catch(er => {
+//                     console.log(`errorHandlingApi error: `, er.response || er);
+//                 })
+//         }
+//     }
+//     else {
+//         return dispatch => {
+//             axios({
+//                 method: config.method,
+//                 url: config.url,
+//                 cancelToken: axiosSource.token,
+//                 timeout: API_TIMEOUT
+//             }).then(res => {
+//                 console.log("errorHandlingApi success: ", res.data);
+//                 if (res.status === 200) {
+
+//                 }
+//             })
+//                 .catch(er => {
+//                     console.log(`errorHandlingApi error: `, er.response || er);
+//                 })
+//         }
+//     }
+// }
+
+const differentErrors = (error, params, api, isTimeout) => {
+    console.log('error.message : ', error.message)
+    if (error.message === 'Network Error' && store.getState().PageState.hasNetwork === false && isTimeout === false) {
+        store.dispatch(errorHandlingAction({ currentScene: Actions.currentScene, config: error.config, params: params, api: api, retryApi: false }));
+
+    }
+    else if (error.message === 'Network Error' && store.getState().PageState.hasNetwork === true) {
+        console.log('service is down')
+        store.dispatch(errorHandlingAction({ currentScene: Actions.currentScene, config: error.config, params: params, api: api, isRetryApi: true }));
+
+    }
+    else if (error.message === 'timeout of 10000ms exceeded') {
+        console.log('request timeout')
+        store.dispatch(errorHandlingAction({ currentScene: Actions.currentScene, config: error.config, params: params, api: api, isRetryApi: true }));
+
+    }
+
 }
 
 

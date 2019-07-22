@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, SafeAreaView, Platform, StatusBar, Alert } from 'react-native';
-import { Icon as NBIcon, Item } from 'native-base';
+import { Icon as NBIcon, Item, Toast } from 'native-base';
 import { Actions } from 'react-native-router-flux';
 import { connect } from 'react-redux';
 
@@ -36,6 +36,7 @@ class Signup extends Component {
     }
 
     componentDidUpdate(prevProps) {
+        console.log('componentDidUpdate signup')
         if (prevProps.emailStatus !== this.props.emailStatus) {
             this.isVerifyingEmail = false;
         }
@@ -52,6 +53,13 @@ class Signup extends Component {
                     }, 100);
                 }
             });
+        }
+
+        if (prevProps.hasNetwork === true && this.props.hasNetwork === false) {
+            Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
+        }
+        if (prevProps.hasNetwork === false && this.props.hasNetwork === true) {
+            Toast.hide()
         }
     }
 
@@ -146,6 +154,7 @@ class Signup extends Component {
     }
 
     onPressBackButton = () => {
+        console.log('action.prop')
         Actions.pop();
     }
 

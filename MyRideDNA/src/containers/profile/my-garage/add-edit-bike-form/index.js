@@ -74,12 +74,12 @@ class AddBikeForm extends Component {
     onChangeYear = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, year: val } }));
 
     onChangeNotes = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, notes: val } }));
-    hideLoader = () =>{
+    hideLoader = () => {
         this.setState({ showLoader: false });
     }
     onSubmit = () => {
         Keyboard.dismiss();
-        const { bike, bikeImages} = this.state;
+        const { bike, bikeImages } = this.state;
         if (!bike.name || bike.name.trim().length === 0) {
             Alert.alert('Field Error', 'Please enter a bike name');
             return;
@@ -88,17 +88,17 @@ class AddBikeForm extends Component {
         if (!bike.spaceId) {
             this.setState({ showLoader: true });
             this.props.addBikeToGarage(this.props.user.userId, bike, pictureList, (res) => {
-              this.hideLoader()
+                this.hideLoader()
             }, (err) => {
                 this.hideLoader()
             });
         } else {
             this.setState({ showLoader: true });
-            this.props.editBike(this.props.user.userId, bike, pictureList, this.props.bikeIndex,(res) => {
+            this.props.editBike(this.props.user.userId, bike, pictureList, this.props.bikeIndex, (res) => {
                 this.hideLoader()
-              }, (err) => {
-                  this.hideLoader()
-              });
+            }, (err) => {
+                this.hideLoader()
+            });
         }
         // if (!bike.spaceId) {
         //     this.props.addBikeToGarage(this.props.user.userId, bike);
@@ -143,7 +143,7 @@ class AddBikeForm extends Component {
                         }
                     </ScrollView>
                     <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
-                    
+
                 </KeyboardAvoidingView>
                 <Loader isVisible={showLoader} />
             </View>

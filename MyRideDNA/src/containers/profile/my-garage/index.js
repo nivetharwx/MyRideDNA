@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, View, Text, FlatList, ImageBackground, Alert } from 'react-native';
+import { StyleSheet, View, Text, FlatList, Animated, ImageBackground, Alert, Easing } from 'react-native';
 import { BasicHeader } from '../../../components/headers';
 import { BasicCard } from '../../../components/cards';
 import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../../constants';
@@ -19,7 +19,8 @@ class MyGarageTab extends Component {
             headerSearchMode: false,
             searchQuery: '',
             isVisibleOptionsModal: false,
-            selectedBike: null
+            selectedBike: null,
+            spinValue: new Animated.Value(0),
         };
     }
 
@@ -62,6 +63,20 @@ class MyGarageTab extends Component {
                 })
             }
         }
+    }
+    retryApiFunction = () => {
+        this.state.spinValue.setValue(0);
+        Animated.timing(this.state.spinValue, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.linear,
+            useNativeDriver: true
+        }).start(() => {
+            if (this.props.hasNetwork === true) {
+                this.props.getGarageInfo(this.props.user.userId);
+            }
+        });
+
     }
 
     onChangeActiveBike = () => {
@@ -136,6 +151,10 @@ class MyGarageTab extends Component {
     render() {
         const { garage, user } = this.props;
         const { headerSearchMode, searchQuery, isVisibleOptionsModal } = this.state;
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         return (
             <View style={styles.fill}>
                 <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
@@ -152,35 +171,50 @@ class MyGarageTab extends Component {
                     onClearSearchValue={() => this.setState({ searchQuery: '' })}
                     hasEditableTitle={true} onSubmitTitleEditing={this.onUpdateGarageName} />
                 <View style={styles.content}>
-                    <FlatList
-                        data={garage.spaceList}
-                        keyExtractor={(item, index) => item.spaceId + ''}
-                        showsVerticalScrollIndicator={false}
-                        extraData={this.state}
-                        ref={elRef => this.spacelistRef = elRef}
-                        renderItem={({ item, index }) => {
-                            return <BasicCard
-                                isActive={false}
-                                // FIXME: Change this based on pictureIdList
-                                media={item.pictureList && item.pictureList[0] ? { uri: item.pictureList[0] } : require('../../../assets/img/bike_placeholder.png')}
-                                mainHeading={item.name}
-                                subHeading={`${item.make ? item.make + '-' : ''}${item.model ? item.model + ',' : ''}${item.year ? item.year : ''}`}
-                                notes={item.notes}
-                                onLongPress={() => this.showOptionsModal(index)}
-                            >
-                                {/* {
+                    {
+                        garage.spaceList.length > 0
+                            ?
+                            <FlatList
+                                data={garage.spaceList}
+                                keyExtractor={(item, index) => item.spaceId + ''}
+                                showsVerticalScrollIndicator={false}
+                                extraData={this.state}
+                                ref={elRef => this.spacelistRef = elRef}
+                                renderItem={({ item, index }) => {
+                                    return <BasicCard
+                                        isActive={false}
+                                        // FIXME: Change this based on pictureIdList
+                                        media={item.pictureList && item.pictureList[0] ? { uri: item.pictureList[0] } : require('../../../assets/img/bike_placeholder.png')}
+                                        mainHeading={item.name}
+                                        subHeading={`${item.make ? item.make + '-' : ''}${item.model ? item.model + ',' : ''}${item.year ? item.year : ''}`}
+                                        notes={item.notes}
+                                        onLongPress={() => this.showOptionsModal(index)}
+                                    >
+                                        {/* {
                                     item.isDefault
                                         ? <NBIcon name='md-star' type='Ionicons' />
                                         : <IconButton iconProps={{ name: 'md-star-outline', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={() => this.onChangeActiveBike(index)} />
                                 }
                                 <IconButton iconProps={{ name: 'edit', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={() => this.openBikeForm(index)} />
                                 <IconButton iconProps={{ name: 'md-trash', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={() => this.onPressDeleteBike(index)} /> */}
-                            </BasicCard>
-                        }}
-                        getItemLayout={(data, index) => (
-                            { length: heightPercentageToDP(60), offset: heightPercentageToDP(60) * index, index }
-                        )}
-                    />
+                                    </BasicCard>
+                                }}
+                                getItemLayout={(data, index) => (
+                                    { length: heightPercentageToDP(60), offset: heightPercentageToDP(60) * index, index }
+                                )}
+                            />
+                            :
+                            this.props.hasNetwork ?
+                                null :
+                                <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                                    <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                        <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                    </Animated.View>
+                                    <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                    <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                </View>
+                    }
+
                 </View>
             </View>
         );
@@ -190,7 +224,8 @@ class MyGarageTab extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
-    return { user, garage };
+    const { hasNetwork } = state.PageState;
+    return { user, garage, hasNetwork };
 }
 const mapDispatchToProps = (dispatch) => {
     return {

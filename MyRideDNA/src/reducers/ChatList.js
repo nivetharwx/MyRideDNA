@@ -70,16 +70,24 @@ export default (state = initialState, action) => {
                 return { ...state, chatMessages: state.chatMessages.filter(msg => action.data.messageIds.indexOf(msg.messageId) === -1) }
             }
             else if (action.data.comingFrom === PageKeys.NOTIFICATIONS) {
-                return {
-                    ...state,
-                    chatMessages: [
-                        action.data.notificationBody,
-                        ...state.chatMessages,
-                    ],
-                    totalUnseenMessage: state.totalUnseenMessage + 1
+                console.log('chatData redux : ', state.chatData);
+                if (state.chatData.id === action.data.notificationBody.id) {
+                    return {
+                        ...state,
+                        chatMessages: [
+                            action.data.notificationBody,
+                            ...state.chatMessages,
+                        ],
+                        totalUnseenMessage: state.totalUnseenMessage + 1
+                    }
                 }
+                else {
+                    return state
+                }
+
             }
             else if (action.data.comingFrom === 'deleteAllMessages') {
+                console.log('deleteAllMessages')
                 const index = state.chatList.findIndex(list => list.id === action.data.id)
                 const { ['message']: deletedKey, ...otherKeys } = state.chatList[index]
                 console.log('otherKeys : ', otherKeys);
