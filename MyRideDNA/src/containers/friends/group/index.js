@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, FlatList, ScrollView, StatusBar, Alert, Keyboard, Animated, TextInput, Text, ActivityIndicator } from 'react-native';
+import { View, FlatList, ScrollView, StatusBar, Alert, Keyboard, Animated, TextInput, Text, ActivityIndicator, Easing } from 'react-native';
 import { connect } from 'react-redux';
 import styles, { CREATE_GROUP_WIDTH } from './styles';
 import { BasicHeader } from '../../../components/headers';
@@ -34,7 +34,8 @@ class Group extends Component {
             searchName: '',
             isLoading: false,
             isLoadingData: false,
-            filteredFriends: null
+            filteredFriends: null,
+            spinValue: new Animated.Value(0),
         };
     }
 
@@ -117,6 +118,21 @@ class Group extends Component {
         // DOC: Remove all keyboard event listeners
         Keyboard.removeListener('keyboardDidShow', this.adjustLayoutOnKeyboardVisibility);
         Keyboard.removeListener('keyboardDidHide', this.adjustLayoutOnKeyboardVisibility);
+    }
+
+    retryApiFunction = () => {
+        this.state.spinValue.setValue(0);
+        Animated.timing(this.state.spinValue, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.linear,
+            useNativeDriver: true
+        }).start(() => {
+            if (this.props.hasNetwork === true) {
+                this.props.getAllChats(this.props.user.userId);
+            }
+        });
+
     }
 
     onPressBackButton = () => {
@@ -378,6 +394,10 @@ class Group extends Component {
             inputRange: [0, 1],
             outputRange: ['0deg', '45deg']
         });
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         return currentGroup === null
             ? <View style={styles.fill} />
             : <View style={styles.fill}>
@@ -453,24 +473,39 @@ class Group extends Component {
                             </View>
                             : null
                     }
-                    <FlatList
-                        keyboardShouldPersistTaps="handled"
-                        contentContainerStyle={[styles.memberList, { paddingBottom: currentGroup.groupMembers.length > 0 ? heightPercentageToDP(8) : 0 }]}
-                        data={currentGroup.groupMembers}
-                        numColumns={2}
-                        keyExtractor={this.memberKeyExtractor}
-                        renderItem={({ item, index }) => (<ThumbnailCard
-                            thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
-                            item={item}
-                            onLongPress={() => this.showOptionsModal(index)}
-                            onPress={() => this.openProfile(item.memberId, FRIEND_TYPE.ALL_FRIENDS)}
-                        />)}
-                        ListFooterComponent={this.renderFooter}
-                        // onTouchStart={this.loadMoreData}
-                        onEndReached={this.loadMoreData}
-                        onEndReachedThreshold={0.1}
-                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
-                    />
+                    {
+                        currentGroup.groupMembers.length > 0
+                            ?
+                            <FlatList
+                                keyboardShouldPersistTaps="handled"
+                                contentContainerStyle={[styles.memberList, { paddingBottom: currentGroup.groupMembers.length > 0 ? heightPercentageToDP(8) : 0 }]}
+                                data={currentGroup.groupMembers}
+                                numColumns={2}
+                                keyExtractor={this.memberKeyExtractor}
+                                renderItem={({ item, index }) => (<ThumbnailCard
+                                    thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
+                                    item={item}
+                                    onLongPress={() => this.showOptionsModal(index)}
+                                    onPress={() => this.openProfile(item.memberId, FRIEND_TYPE.ALL_FRIENDS)}
+                                />)}
+                                ListFooterComponent={this.renderFooter}
+                                // onTouchStart={this.loadMoreData}
+                                onEndReached={this.loadMoreData}
+                                onEndReachedThreshold={0.1}
+                                onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                            />
+                            :
+                            this.props.hasNetwork ?
+                                null
+                                :
+                                <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                                    <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                        <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                    </Animated.View>
+                                    <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                    <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                </View>
+                    }
 
                     {/* <Animated.View style={[styles.floatSecContainer, { bottom: kbdBtmOffset, width: this.floatSecAnim }]}>
                         <Animated.View style={[styles.floatContnetAlign, { backgroundColor: isActiveSearch ? '#fff' : 'transparent', borderWidth: this.borderWidthAnim }]}>
@@ -496,9 +531,9 @@ const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { currentGroup, friendGroupList } = state.FriendGroupList;
     const { allFriends } = state.FriendList;
-    const { showLoader } = state.PageState;
+    const { showLoader, hasNetwork } = state.PageState;
     const { pageNumber } = state.PageState;
-    return { user, currentGroup, allFriends, showLoader, friendGroupList, pageNumber };
+    return { user, currentGroup, allFriends, showLoader, friendGroupList, pageNumber, hasNetwork };
 };
 const mapDispatchToProps = (dispatch) => {
     return {

@@ -2,12 +2,12 @@ import React, { Component } from 'react';
 import {
     SafeAreaView, Text, View, FlatList, ImageBackground,
     TouchableOpacity, Alert, StatusBar, Platform, StyleSheet,
-    AsyncStorage, Image, ActivityIndicator
+    AsyncStorage, Image, ActivityIndicator, Easing, Animated
 } from 'react-native';
 import { connect } from 'react-redux';
 
 import { Tab, TabHeading, Tabs, ScrollableTab, Icon as NBIcon, ListItem, Left, Toast, Card, CardItem, Thumbnail, Body, Button, Right } from "native-base";
-import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, RIDE_TAIL_TAG, JS_SDK_ACCESS_TOKEN, RECORD_RIDE_STATUS, UNSYNCED_RIDE } from '../../constants';
+import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, RIDE_TAIL_TAG, JS_SDK_ACCESS_TOKEN, RECORD_RIDE_STATUS, UNSYNCED_RIDE, heightPercentageToDP } from '../../constants';
 import { ShifterButton, LinkButton, ImageButton, IconButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, screenChangeAction, clearRideAction, updateRidePictureInListAction, updateRideCreatorPictureInListAction, apiLoaderActions, updateRideInListAction, updateRideAction, isRemovedAction, updateRideSyncStatusAction, replaceUnsyncedRidesAction, deleteUnsyncedRideAction } from '../../actions';
 import { BasicHeader } from '../../components/headers';
@@ -95,7 +95,8 @@ export class Rides extends Component {
             isVisibleOptionsModal: false,
             selectedRide: null,
             isLoadingData: false,
-            isLoading: false
+            isLoading: false,
+            spinValue: new Animated.Value(0),
         };
     }
 
@@ -205,6 +206,34 @@ export class Rides extends Component {
                 this.props.getRideCreatorPictureList(sharedPicIdObj.creatorPicIdList, RIDE_TYPE.SHARED_RIDE);
             }
         }
+    }
+    retryApiFunction = () => {
+        this.state.spinValue.setValue(0);
+        Animated.timing(this.state.spinValue, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.linear,
+            useNativeDriver: true
+        }).start(() => {
+            if (this.props.hasNetwork === true) {
+                if (this.state.activeTab === 0) {
+                    this.props.getAllBuildRides(this.props.user.userId, true, 0, (res) => {
+                    }, (err) => {
+                    });
+                }
+                else if (this.state.activeTab === 1) {
+                    this.props.getAllRecordedRides(this.props.user.userId, true, 0, (res) => {
+                    }, (err) => {
+                    });
+                }
+                else {
+                    this.props.getAllPublicRides(this.props.user.userId, true, 0, (res) => {
+                    }, (err) => {
+                    });
+                }
+            }
+        });
+
     }
 
     onPullRefresh = () => {
@@ -664,7 +693,11 @@ export class Rides extends Component {
 
     render() {
         const { activeTab, searchQuery, headerSearchMode, isVisibleRenameModal, isVisibleOptionsModal, isRefreshing } = this.state;
-        const { buildRides, recordedRides, sharedRides, user, showLoader } = this.props;
+        const { buildRides, recordedRides, sharedRides, user, showLoader, hasNetwork } = this.props;
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         return (
             <View style={{ flex: 1 }}>
                 <View style={APP_COMMON_STYLES.statusBar}>
@@ -714,7 +747,17 @@ export class Rides extends Component {
                                             onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
 
                                         />
-                                        : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
+                                        :
+                                        hasNetwork ?
+                                            <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
+                                            :
+                                            <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                                </Animated.View>
+                                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                            </View>
                                 }
                             </View>
                         </Tab>
@@ -740,7 +783,17 @@ export class Rides extends Component {
                                             onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
 
                                         />
-                                        : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
+                                        :
+                                        hasNetwork ?
+                                            <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
+                                            :
+                                            <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                                </Animated.View>
+                                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                            </View>
                                 }
                             </View>
                         </Tab>
@@ -767,14 +820,23 @@ export class Rides extends Component {
                                             onEndReachedThreshold={0.1}
                                             onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
                                         />
-                                        : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
+                                        : hasNetwork ?
+                                            <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
+                                            :
+                                            <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                                </Animated.View>
+                                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                            </View>
                                 }
                             </View>
                         </Tab>
                     </Tabs>
 
                     {/* Shifter: - Brings the app navigation menu */}
-                    <ShifterButton onPress={this.showAppNavMenu} alignLeft={this.props.user.handDominance === 'left'} />
+                    <ShifterButton onPress={this.showAppNavMenu} containerStyles={this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null} alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
                 <Loader title={this.props.ride.unsynced ? 'You have unsynced data. Please wait to finish' : 'Loading...'} isVisible={showLoader} />
             </View>

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StatusBar, Animated, Text, View, FlatList } from 'react-native';
+import { StatusBar, Animated, Text, View, FlatList, Easing } from 'react-native';
 import { BasicHeader } from '../../components/headers';
 import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon, Toast, Thumbnail } from 'native-base';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, USER_AUTH_TOKEN, WindowDimensions, FRIEND_TYPE, PageKeys, RELATIONSHIP } from '../../constants';
@@ -37,6 +37,7 @@ class Friends extends Component {
             friendsActiveTab: 0,
             isVisibleGroupModal: false,
             newGroupName: '',
+            spinValue: new Animated.Value(0),
         };
     }
 
@@ -63,7 +64,6 @@ class Friends extends Component {
         this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
         }, (err) => {
         });
-
     }
 
 
@@ -100,6 +100,7 @@ class Friends extends Component {
         //     })
         // }
         if (prevProps.allFriends !== this.props.allFriends) {
+            console.log('allFriends picture')
             const pictureIdList = [];
             this.props.allFriends.forEach((friend) => {
                 if (!friend.profilePicture && friend.profilePictureId) {
@@ -107,7 +108,7 @@ class Friends extends Component {
                 }
             })
             if (pictureIdList.length > 0) {
-                this.props.getPictureList(pictureIdList)
+                // this.props.getPictureList(pictureIdList)
             }
         }
 
@@ -136,6 +137,22 @@ class Friends extends Component {
             }
         }
     }
+
+    retryApiFunction = () => {
+        this.state.spinValue.setValue(0);
+        Animated.timing(this.state.spinValue, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.linear,
+            useNativeDriver: true
+        }).start(() => {
+            if (this.props.hasNetwork === true) {
+                this.props.getAllChats(this.props.user.userId);
+            }
+        });
+
+    }
+
     onPullRefresh = () => {
         this.setState({ isRefreshing: true });
         this.props.getAllRequest(this.props.user.userId, false);
@@ -251,7 +268,7 @@ class Friends extends Component {
     }
 
     renderFriendRequestList = ({ item, index }) => {
-        console.log('item renderFriendRequestList: ',item)
+        console.log('item renderFriendRequestList: ', item)
         if (item.requestType === "sentRequest") {
             return (
                 <ListItem avatar style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }} >
@@ -335,12 +352,16 @@ class Friends extends Component {
 
     openNotFriendProfile = (index, friendType) => {
         const item = this.props.allFriendRequests[index];
-        console.log('item request: ',item);
-         Actions.push(PageKeys.FRIENDS_PROFILE, { relationshipStatus: RELATIONSHIP.UNKNOWN, person: item, activeTab: 0 });
+        console.log('item request: ', item);
+        Actions.push(PageKeys.FRIENDS_PROFILE, { relationshipStatus: RELATIONSHIP.UNKNOWN, person: item, activeTab: 0 });
 
     }
     render() {
         const { headerSearchMode, searchQuery, activeTab, friendsActiveTab, isRefreshing } = this.state;
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         const activeImageStyle = {
             width: this.dimensions.x,
             height: this.dimensions.y,
@@ -431,13 +452,28 @@ class Friends extends Component {
 
                         </TabHeading>}>
                             <View style={{ backgroundColor: '#fff', flex: 1 }}>
-                                <FlatList
-                                    data={this.props.allFriendRequests}
-                                    refreshing={isRefreshing}
-                                    onRefresh={this.onPullRefresh}
-                                    renderItem={this.renderFriendRequestList}
-                                    keyExtractor={this.requestKeyExtractor}
-                                />
+                                {
+                                    this.props.allFriendRequests.length > 0
+                                        ?
+                                        <FlatList
+                                            data={this.props.allFriendRequests}
+                                            refreshing={isRefreshing}
+                                            onRefresh={this.onPullRefresh}
+                                            renderItem={this.renderFriendRequestList}
+                                            keyExtractor={this.requestKeyExtractor}
+                                        />
+                                        :
+                                        this.props.hasNetwork ?
+                                            null :
+                                            <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                                </Animated.View>
+                                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                            </View>
+                                }
+
                             </View>
                         </Tab>
                     </Tabs>
@@ -446,7 +482,7 @@ class Friends extends Component {
 
                     {/* Shifter: - Brings the app navigation menu */}
                     <ShifterButton onPress={this.toggleAppNavigation}
-                        containerStyles={{ bottom: this.state.selectedPersonImg ? IS_ANDROID ? BOTTOM_TAB_HEIGHT : BOTTOM_TAB_HEIGHT - 8 : 0 }}
+                        containerStyles={[{ bottom: this.state.selectedPersonImg ? IS_ANDROID ? BOTTOM_TAB_HEIGHT : BOTTOM_TAB_HEIGHT - 8 : 0 }, this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null]}
                         alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
                 <Loader isVisible={this.props.showLoader} />
@@ -460,8 +496,8 @@ const mapStateToProps = (state) => {
     const { allFriends, paginationNum, currentFriend } = state.FriendList;
     const { personInfo, oldPosition } = state.PageOverTab;
     const { allFriendRequests } = state.FriendRequest;
-    const { showLoader } = state.PageState;
-    return { user, personInfo, oldPosition, allFriendRequests, allFriends, paginationNum, currentFriend, userAuthToken, deviceToken, showLoader };
+    const { showLoader, hasNetwork } = state.PageState;
+    return { user, personInfo, oldPosition, allFriendRequests, allFriends, paginationNum, currentFriend, userAuthToken, deviceToken, showLoader, hasNetwork };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -480,6 +516,7 @@ const mapDispatchToProps = (dispatch) => {
         //     dispatch(updateFriendInListAction({ userId: friendId }))
         // }),
         getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
+            console.log('getPictureList all friend sucess : ', pictureObj);
             dispatch(updateFriendInListAction({ pictureObj }))
         }, (error) => {
             console.log('getPictureList all friend error : ', error)

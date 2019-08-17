@@ -333,39 +333,43 @@ class Chat extends Component {
                         </View>
                     </BaseModal>
                     <View style={styles.rootContainer}>
-                        <FlatList
-                            ref={'flatList'}
-                            style={styles.chatArea}
-                            contentContainerStyle={{ paddingBottom: 10 }}
-                            data={chatMessages}
-                            keyExtractor={this.chatKeyExtractor}
-                            inverted={true}
-                            onViewableItemsChanged={this.onViewableItemsChanged}
-                            // onContentSizeChange={() => { this.refs.flatList.scrollToEnd({ animated: false }) }}
-                            renderItem={({ item, index }) => {
-                                return item.senderId === user.userId
-                                    ?
-                                    <ChatBubble
-                                        bubbleName='Me,'
-                                        messageTime={this.getDateAndTime(item)}
-                                        message={item.content}
-                                        bubbleStyle={styles.friendChatBubble}
-                                        bubbleNameStyle={styles.friendName}
-                                        onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
-                                        selectedMessage={selectedMessage && selectedMessage[item.messageId]}
-                                        onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
-                                    />
-                                    : <ChatBubble
-                                        bubbleName={item.senderName + ','}
-                                        messageTime={this.getDateAndTime(item)}
-                                        message={item.content}
-                                        onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
-                                        selectedMessage={selectedMessage && selectedMessage[item.messageId]}
-                                        onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
-                                    />
-                            }}
+                        {
+                            chatMessages.length > 0 ?
+                                <FlatList
+                                    ref={'flatList'}
+                                    style={styles.chatArea}
+                                    contentContainerStyle={{ paddingBottom: 10 }}
+                                    data={chatMessages}
+                                    keyExtractor={this.chatKeyExtractor}
+                                    inverted={true}
+                                    onViewableItemsChanged={this.onViewableItemsChanged}
+                                    // onContentSizeChange={() => { this.refs.flatList.scrollToEnd({ animated: false }) }}
+                                    renderItem={({ item, index }) => {
+                                        return item.senderId === user.userId
+                                            ?
+                                            <ChatBubble
+                                                bubbleName='Me,'
+                                                messageTime={this.getDateAndTime(item)}
+                                                message={item.content}
+                                                bubbleStyle={styles.friendChatBubble}
+                                                bubbleNameStyle={styles.friendName}
+                                                onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
+                                                selectedMessage={selectedMessage && selectedMessage[item.messageId]}
+                                                onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
+                                            />
+                                            : <ChatBubble
+                                                bubbleName={item.senderName + ','}
+                                                messageTime={this.getDateAndTime(item)}
+                                                message={item.content}
+                                                onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
+                                                selectedMessage={selectedMessage && selectedMessage[item.messageId]}
+                                                onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
+                                            />
+                                    }}
 
-                        />
+                                />
+                                : null
+                        }
                         {
                             this.state.isNewMessage ?
                                 <View>
@@ -394,7 +398,7 @@ class Chat extends Component {
 
                     </View>
 
-                    <Item style={styles.msgInputBoxContainer}>
+                    <Item style={[styles.msgInputBoxContainer, this.props.hasNetwork === false ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
                         {/* <IconButton style={styles.footerLeftIcon} iconProps={{ name: 'md-attach', type: 'Ionicons' }} /> */}
                         <TextInput value={messageToBeSend} placeholder='Type a message' style={{ flex: 1, marginRight: widthPercentageToDP(1) }} onChangeText={this.OnChangeMessageToBeSend} />
                         <IconButton iconProps={{ name: 'md-send', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={() => this.sendMessage()} />
@@ -409,7 +413,8 @@ class Chat extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { chatMessages, isScroll, totalUnseenMessage, chatData, chatList } = state.ChatList;
-    return { user, chatMessages, isScroll, totalUnseenMessage, chatData, chatList };
+    const { hasNetwork } = state.PageState
+    return { user, chatMessages, isScroll, totalUnseenMessage, chatData, chatList, hasNetwork };
 }
 const mapDispatchToProps = (dispatch) => {
     return {

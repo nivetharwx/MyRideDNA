@@ -23,7 +23,7 @@ class ForgotPassword extends React.Component {
         showLoader: false,
         isVisiblePassword: false,
         isVisibleConfirmPassword: false,
-        isVisibleOTP:false,
+        isVisibleOTP: false,
     };
     cPasswdRef = null;
     constructor(props) {
@@ -68,7 +68,7 @@ class ForgotPassword extends React.Component {
 
     onPressSubmitButton = () => {
         if (this.state.formStep === 1) {
-            this.setState({isVisibleOTP:true})
+            this.setState({ isVisibleOTP: true })
             this.onSubmitEmail(this.state.email);
         } else if (this.state.formStep === 2) {
             this.onSubmitOTP(this.state.otp);
@@ -95,6 +95,21 @@ class ForgotPassword extends React.Component {
                     })
                     .catch(error => {
                         this.setState({ showLoader: false });
+                        if ((error.message === 'timeout of 15000ms exceeded' || error.message === 'Network Error') && this.props.hasNetwork === true) {
+                            Alert.alert(
+                                'Something went wrong ',
+                                '',
+                                [
+                                    {
+                                        text: 'Retry ', onPress: () => {
+                                            this.onSubmitNewPassword()
+                                        }
+                                    },
+                                    { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+                                ],
+                                { cancelable: false }
+                            )
+                        }
                     });
             } else {
                 Alert.alert('Error', 'Please fill the fields');
@@ -117,9 +132,27 @@ class ForgotPassword extends React.Component {
             .catch(error => {
                 console.log(error.response);
                 this.setState({ showLoader: false }, () => {
-                    setTimeout(() => {
-                        Alert.alert('Error', 'Entered OTP is wrong');
-                    }, 100);
+                    if ((error.message === 'timeout of 15000ms exceeded' || error.message === 'Network Error') && this.props.hasNetwork === true) {
+                        Alert.alert(
+                            'Something went wrong ',
+                            '',
+                            [
+                                {
+                                    text: 'Retry ', onPress: () => {
+                                        this.onSubmitOTP()
+                                    }
+                                },
+                                { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+                            ],
+                            { cancelable: false }
+                        )
+                    }
+                    else {
+                        setTimeout(() => {
+                            Alert.alert('Error', 'Entered OTP is wrong');
+                        }, 100);
+                    }
+
                 });
             });
     }
@@ -156,11 +189,29 @@ class ForgotPassword extends React.Component {
                 })
                 .catch(error => {
                     this.setState({ showLoader: false }, () => {
-                        setTimeout(() => {
-                            if (error.response.data.appErrorCode === 400) {
-                                Alert.alert('Error', 'Entered email is not registered in MyRideDNA');
-                            }
-                        }, 100);
+                        if ((error.message === 'timeout of 15000ms exceeded' || error.message === 'Network Error') && this.props.hasNetwork === true) {
+                            Alert.alert(
+                                'Something went wrong ',
+                                '',
+                                [
+                                    {
+                                        text: 'Retry ', onPress: () => {
+                                            this.onSubmitEmail()
+                                        }
+                                    },
+                                    { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+                                ],
+                                { cancelable: false }
+                            )
+                        }
+                        else {
+                            setTimeout(() => {
+                                if (error.response.data.appErrorCode === 400) {
+                                    Alert.alert('Error', 'Entered email is not registered in MyRideDNA');
+                                }
+                            }, 100);
+                        }
+
                     });
                 });
         } else {
@@ -186,9 +237,9 @@ class ForgotPassword extends React.Component {
                         <LabeledInput placeholder='Enter the OTP here' onChange={this.onChangeOTP} onSubmit={this.onSubmitOTP} />
                         {
                             this.state.isVisibleOTP
-                            ?
-                            <Text style={{color:'red',fontSize:13}}>OTP has been sent to your registerd email id</Text>
-                            :null
+                                ?
+                                <Text style={{ color: 'red', fontSize: 13 }}>OTP has been sent to your registerd email id</Text>
+                                : null
                         }
                         <View style={styles.buttonContainer}>
                             <LinkButton title='Cancel' onPress={this.onCloseModal} />

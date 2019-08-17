@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { SafeAreaView, View, Text, Platform, Image, ScrollView, AsyncStorage, StyleSheet, FlatList, StatusBar, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { SafeAreaView, View, Text, Platform, Image, ScrollView, AsyncStorage, StyleSheet, FlatList, StatusBar, TouchableOpacity, ActivityIndicator, Animated, Easing } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 
 import { BasicHeader } from '../../components/headers';
@@ -22,16 +22,17 @@ class Notifications extends Component {
             isLoadingAgain: false,
             onEndReachedCalledDuringMomentum: true,
             isLoadingData: false,
-            isLoading: false
+            isLoading: false,
+            spinValue: new Animated.Value(0),
         }
     }
 
     componentDidMount() {
         // this.props.getAllNotifications(this.props.user.userId);
-        this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString(), (res) => {
+        this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString(), 'notification', (res) => {
         }, (err) => {
         });
-        this.props.seenNotification(this.props.user.userId);
+        // this.props.seenNotification(this.props.user.userId);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -68,6 +69,22 @@ class Notifications extends Component {
                 this.props.getNotificationPic(pictureIdList);
             }
         }
+    }
+    retryApiFunction = () => {
+        this.state.spinValue.setValue(0);
+        Animated.timing(this.state.spinValue, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.linear,
+            useNativeDriver: true
+        }).start(() => {
+            if (this.props.hasNetwork === true) {
+                this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString(), (res) => {
+                }, (err) => {
+                });
+            }
+        });
+
     }
 
     toggleAppNavigation = () => this.props.showAppNavMenu();
@@ -183,7 +200,11 @@ class Notifications extends Component {
     }
 
     render() {
-        const { notificationList, user, showLoader } = this.props;
+        const { notificationList, user, showLoader, hasNetwork } = this.props;
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         return (
             <View style={{ flex: 1 }}>
                 <View style={APP_COMMON_STYLES.statusBar}>
@@ -191,23 +212,36 @@ class Notifications extends Component {
                 </View>
                 <View style={{ flex: 1 }}>
                     <BasicHeader title='Notifications' rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
-                    <View style={[styles.scrollArea, notificationList.notification.length > 0 ? { paddingBottom: heightPercentageToDP(5) } : null]}>
-                        <FlatList
-                            data={notificationList.notification}
-                            keyExtractor={this._keyExtractor}
-                            renderItem={this._renderItem}
-                            ListFooterComponent={this.renderFooter}
-                            // onTouchStart={this.loadMoreData}
-                            onEndReached={this.loadMoreData}
-                            onEndReachedThreshold={0.1}
-                            onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                    {
+                        notificationList.notification.length > 0 ?
+                            <View style={[styles.scrollArea, notificationList.notification.length > 0 ? { paddingBottom: heightPercentageToDP(5) } : null]}>
+                                <FlatList
+                                    data={notificationList.notification}
+                                    keyExtractor={this._keyExtractor}
+                                    renderItem={this._renderItem}
+                                    ListFooterComponent={this.renderFooter}
+                                    // onTouchStart={this.loadMoreData}
+                                    onEndReached={this.loadMoreData}
+                                    onEndReachedThreshold={0.1}
+                                    onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
 
-                        />
-                    </View>
-                    <Image source={require('../../assets/img/notifications-bg.png')} style={styles.bottomImage} />
+                                />
+                            </View>
+                            :
+                            hasNetwork ?
+                                <Image source={require('../../assets/img/notifications-bg.png')} style={styles.bottomImage} />
+                                :
+                                <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(35) }}>
+                                    <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                        <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                    </Animated.View>
+                                    <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                    <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                </View>
+                    }
 
                     {/* Shifter: - Brings the app navigation menu */}
-                    <ShifterButton onPress={this.toggleAppNavigation} alignLeft={user.handDominance === 'left'} />
+                    <ShifterButton onPress={this.toggleAppNavigation} containerStyles={this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null} alignLeft={user.handDominance === 'left'} />
                 </View>
                 <Loader isVisible={showLoader} />
             </View>
@@ -217,8 +251,8 @@ class Notifications extends Component {
 const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { notificationList, isLoading } = state.NotificationList;
-    const { showLoader, pageNumber } = state.PageState;
-    return { user, userAuthToken, deviceToken, notificationList, pageNumber, isLoading, showLoader };
+    const { showLoader, pageNumber, hasNetwork, lastApi } = state.PageState;
+    return { user, userAuthToken, deviceToken, notificationList, pageNumber, isLoading, showLoader, hasNetwork, lastApi };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -226,7 +260,7 @@ const mapDispatchToProps = (dispatch) => {
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
         // getAllNotifications: (userId) => dispatch(getAllNotifications(userId)),
-        getAllNotifications: (userId, pageNumber, date, successCallback, errorCallback) => dispatch(getAllNotifications(userId, pageNumber, date, successCallback, errorCallback)),
+        getAllNotifications: (userId, pageNumber, date, comingFrom, successCallback, errorCallback) => dispatch(getAllNotifications(userId, pageNumber, date, comingFrom, successCallback, errorCallback)),
         seenNotification: (userId) => dispatch(seenNotification(userId)),
         // getNotificationPic: (pictureId, id) => getPicture(pictureId, ({ picture, pictureId }) => {
         //     dispatch(updateNotificationAction({ profilePicture: picture, id: id }))
@@ -240,7 +274,7 @@ const mapDispatchToProps = (dispatch) => {
             // dispatch(updateNotificationAction(pictureObj))
         }),
         deleteNotification: (notificationIds) => dispatch(deleteNotifications(notificationIds)),
-        resetCurrentFriend: () => dispatch(resetCurrentFriendAction({comingFrom:PageKeys.NOTIFICATIONS}))
+        resetCurrentFriend: () => dispatch(resetCurrentFriendAction({ comingFrom: PageKeys.NOTIFICATIONS }))
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Notifications);

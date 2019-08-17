@@ -41,7 +41,9 @@ import {
     REPLACE_UNSYNCED_RIDES,
     ADD_UNSYNCED_RIDE,
     DELETE_UNSYNCED_RIDE,
-    UPDATE_MESSAGE_COUNT
+    UPDATE_MESSAGE_COUNT,
+    ERROR_HANDLING,
+    RESET_ERROR_HANDLING
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -680,6 +682,18 @@ export const updateChatMessagesAction = (data) => (
 export const replaceChatMessagesAction = (data) => (
     {
         type: REPLACE_CHAT_MESSAGES,
+        data: data
+    }
+);
+export const errorHandlingAction = (data) => (
+    {
+        type: ERROR_HANDLING,
+        data: data
+    }
+);
+export const resetErrorHandlingAction = (data) => (
+    {
+        type: RESET_ERROR_HANDLING,
         data: data
     }
 );

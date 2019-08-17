@@ -116,7 +116,7 @@ class MyProfileTab extends Component {
         if (item.title === 'Change profile') {
             this.props.updateMyProfileLastOptions(0)
             return (
-                <View style={styles.rowContent}>
+                <View style={[styles.rowContent, this.props.hasNetwork === false ? { padding: heightPercentageToDP(2) } : { padding: heightPercentageToDP(5) }]}>
                     {
                         item.content.map(props => <IconButton key={props.name} iconProps={props} onPress={props.onPress} />)
                     }
@@ -125,7 +125,7 @@ class MyProfileTab extends Component {
         } else {
             this.props.updateMyProfileLastOptions(1)
             return (
-                <View style={styles.rowContent}>
+                <View style={[styles.rowContent, !this.props.hasNetwork === false ? { padding: heightPercentageToDP(2) } : { padding: heightPercentageToDP(5) }]}>
                     {/* <ScrollView
                         showsHorizontalScrollIndicator={false}
                         horizontal={true}
@@ -248,11 +248,11 @@ class MyProfileTab extends Component {
 
 const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
-    const { profileLastOptions } = state.PageState;
+    const { profileLastOptions, hasNetwork } = state.PageState;
     // const { shortSpaceList } = state.GarageInfo;
     const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
     // return { user, shortSpaceList };
-    return { user, userAuthToken, deviceToken, garage, profileLastOptions };
+    return { user, userAuthToken, deviceToken, garage, profileLastOptions, hasNetwork };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -304,7 +304,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff'
     },
     rowContent: {
-        padding: heightPercentageToDP(5),
         flexDirection: 'row',
         justifyContent: 'space-around',
     },

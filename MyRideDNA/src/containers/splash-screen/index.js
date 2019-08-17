@@ -6,7 +6,7 @@ import {
 import { connect } from 'react-redux';
 import { Actions } from 'react-native-router-flux';
 import { USER_AUTH_TOKEN, PageKeys, WindowDimensions, USER_BASE_URL, DEVICE_TOKEN, UNSYNCED_RIDE } from '../../constants';
-import { Icon as NBIcon } from 'native-base';
+import { Icon as NBIcon, Toast } from 'native-base';
 import { storeUserAction, updateTokenAction, toggleNetworkStatusAction, updateUnsyncedRidesAction, replaceUnsyncedRidesAction } from '../../actions';
 import axios from 'axios';
 
@@ -20,11 +20,12 @@ class SplashScreen extends React.Component {
     }
 
     async componentDidMount() {
+        console.log('componentDidMount splash screen')
         const keys = await AsyncStorage.getAllKeys();
         this.props.updateUnsyncedRides(keys.filter(key => key.indexOf(UNSYNCED_RIDE) === 0));
         const connectionInfo = await NetInfo.getConnectionInfo();
         if (connectionInfo.type === 'none') {
-            Alert.alert('Network Error', 'Failed to connect to internet');
+            Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
         } else {
             this.handleFirstConnectivityChange(connectionInfo)
         }
@@ -51,6 +52,8 @@ class SplashScreen extends React.Component {
     handleFirstConnectivityChange = async (connectionInfo) => {
         if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
             this.props.toggleNetworkStatus(true);
+            console.log('internet connected');
+            Toast.hide();
             if (this.props.user === null || this.props.user.userId === null) {
                 this.doAuthTokenVerfication();
             }
@@ -62,17 +65,25 @@ class SplashScreen extends React.Component {
     async doAuthTokenVerfication() {
         var userAuthToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
         var deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
+        console.log('userAuthToken : ', userAuthToken)
         if (userAuthToken) {
             this.props.updateToken({ userAuthToken, deviceToken });
             axios.post(USER_BASE_URL + 'loginUserUsingAccessToken', { accessToken: userAuthToken, date: new Date().toISOString() }, { timeout: 15000 })
                 .then(res => {
+                    console.log('loginUserUsingAccessToken success : ', res.data);
                     if (res.status === 200) {
                         this.props.storeUser(res.data);
                     }
                 })
                 .catch(error => {
+                    console.log('error: ', error)
+                    if ((error.message === 'Network Error' || error.message === 'timeout of 15000ms exceeded') && store.getState().PageState.hasNetwork === true) {
+                        this.doAuthTokenVerfication()
+                    }
+                    else {
+                        Actions.reset(PageKeys.LOGIN);
+                    }
                     console.log(error.response ? error.response.data : error.response);
-                    Actions.reset(PageKeys.LOGIN);
                 })
         }
         else {

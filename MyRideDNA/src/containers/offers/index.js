@@ -44,7 +44,7 @@ class Offers extends Component {
                         </View>
                     </View>
                     {/* Shifter: - Brings the app navigation menu */}
-                    <ShifterButton onPress={this.toggleAppNavigation} alignLeft={user.handDominance === 'left'} />
+                    <ShifterButton onPress={this.toggleAppNavigation} containerStyles={this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null} alignLeft={user.handDominance === 'left'} />
                 </View>
             </View>
         );
@@ -52,7 +52,8 @@ class Offers extends Component {
 }
 const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
-    return { user, userAuthToken, deviceToken };
+    const { hasNetwork } = state.PageState
+    return { user, userAuthToken, deviceToken, hasNetwork };
 }
 const mapDispatchToProps = (dispatch) => {
     return {

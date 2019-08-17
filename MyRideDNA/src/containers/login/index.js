@@ -14,6 +14,7 @@ import { PageKeys, USER_AUTH_TOKEN, USER_BASE_URL, DEVICE_TOKEN } from '../../co
 import { storeUserAction, toggleNetworkStatusAction, updateTokenAction } from '../../actions';
 import ForgotPassword from '../forgot-password';
 import { Loader } from '../../components/loader'
+import { Toast } from 'native-base';
 
 class Login extends Component {
     constructor(props) {
@@ -29,7 +30,11 @@ class Login extends Component {
     }
 
     async componentWillMount() {
-        NetInfo.getConnectionInfo().then((connectionInfo) => { });
+        NetInfo.getConnectionInfo().then((connectionInfo) => {
+            if (connectionInfo.type === 'none') {
+                Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
+            }
+        });
 
         NetInfo.addEventListener(
             'connectionChange',
@@ -41,7 +46,7 @@ class Login extends Component {
 
     componentDidUpdate(prevProps) {
         if (!this.props.hasNetwork) {
-            this.showNetworkError();
+            // this.showNetworkError();
         }
     }
 
@@ -51,9 +56,12 @@ class Login extends Component {
 
     handleFirstConnectivityChange = (connectionInfo) => {
         if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
+            console.log('internet connected');
+            Toast.hide();
             this.props.toggleNetworkStatus(true);
         } else if (connectionInfo.type === 'none') {
             this.props.toggleNetworkStatus(false);
+            Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
         }
     }
 

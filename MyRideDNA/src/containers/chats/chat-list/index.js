@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, TextInput, Animated, Text, Alert, Keyboard, FlatList, View, ImageBackground, ActivityIndicator, StatusBar, AsyncStorage } from 'react-native';
+import { StyleSheet, TextInput, Animated, Text, Alert, Keyboard, FlatList, View, ImageBackground, ActivityIndicator, StatusBar, AsyncStorage, Easing } from 'react-native';
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { widthPercentageToDP, heightPercentageToDP, PageKeys, APP_COMMON_STYLES, IS_ANDROID } from '../../../constants';
 import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast, Item } from 'native-base';
@@ -22,6 +22,7 @@ class ChatList extends Component {
             isLoading: false,
             isLoadingData: false,
             isVisibleOptionsModal: false,
+            spinValue: new Animated.Value(0),
         };
     }
 
@@ -43,6 +44,20 @@ class ChatList extends Component {
                 this.props.getChatListPic(chatIdList)
             }
         }
+
+    }
+    retryApiFunction = () => {
+        this.state.spinValue.setValue(0);
+        Animated.timing(this.state.spinValue, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.linear,
+            useNativeDriver: true
+        }).start(() => {
+            if (this.props.hasNetwork === true) {
+                this.props.getAllChats(this.props.user.userId);
+            }
+        });
 
     }
     onPullRefresh = () => {
@@ -202,8 +217,12 @@ class ChatList extends Component {
     }
 
     render() {
-        const { chatList, user } = this.props;
+        const { chatList, user, hasNetwork } = this.props;
         const { isVisibleOptionsModal } = this.state;
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         return (
             <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
@@ -226,11 +245,21 @@ class ChatList extends Component {
                                     keyExtractor={this.chatListKeyExtractor}
                                     renderItem={this.renderChatLIst}
                                 />
-                                : <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
+                                :
+                                hasNetwork ?
+                                    <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
+                                    :
+                                    <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                                        <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                            <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                        </Animated.View>
+                                        <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                        <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                    </View>
                         }
                     </View>
 
-                    <ShifterButton onPress={this.showAppNavigation} containerStyles={styles.shifterContainer} alignLeft={this.props.user.handDominance === 'left'} />
+                    <ShifterButton onPress={this.showAppNavigation} containerStyles={this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null} alignLeft={this.props.user.handDominance === 'left'} />
 
                 </View>
             </View>
@@ -241,7 +270,8 @@ class ChatList extends Component {
 const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { chatList } = state.ChatList;
-    return { user, chatList, userAuthToken, deviceToken };
+    const { hasNetwork, lastApi } = state.PageState;
+    return { user, chatList, userAuthToken, deviceToken, hasNetwork, lastApi };
 };
 const mapDispatchToProps = (dispatch) => {
     return {

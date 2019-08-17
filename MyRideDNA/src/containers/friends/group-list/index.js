@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, TextInput, Animated, Text, Alert, Keyboard, FlatList, View, ImageBackground, ActivityIndicator } from 'react-native';
+import { StyleSheet, TextInput, Animated, Text, Alert, Keyboard, FlatList, View, ImageBackground, ActivityIndicator, Easing } from 'react-native';
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { widthPercentageToDP, heightPercentageToDP, PageKeys, APP_COMMON_STYLES } from '../../../constants';
 import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast } from 'native-base';
@@ -30,6 +30,7 @@ class GroupListTab extends Component {
             selectedGroup: null,
             isLoading: false,
             isLoadingData: false,
+            spinValue: new Animated.Value(0),
         };
     }
 
@@ -61,6 +62,20 @@ class GroupListTab extends Component {
         //     }, (err) => {
         //     });
         // }
+    }
+    retryApiFunction = () => {
+        this.state.spinValue.setValue(0);
+        Animated.timing(this.state.spinValue, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.linear,
+            useNativeDriver: true
+        }).start(() => {
+            if (this.props.hasNetwork === true) {
+                this.props.getAllChats(this.props.user.userId);
+            }
+        });
+
     }
     onPullRefresh = () => {
         this.setState({ isRefreshing: true });
@@ -312,6 +327,10 @@ class GroupListTab extends Component {
             inputRange: [0, 1],
             outputRange: ['0deg', '45deg']
         });
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         let filteredGroups = [];
         filteredGroups = searchQuery === '' ? friendGroupList : friendGroupList.filter(group => {
             return (group.groupName.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
@@ -327,12 +346,21 @@ class GroupListTab extends Component {
                 </BaseModal>
                 {
                     friendGroupList.length === 0
-                        ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
-                        : filteredGroups.length === 0
-                            ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage}>
-                                <Text style={{ color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6), fontWeight: 'bold', letterSpacing: 1 }}>{`No Groups found`}</Text>
-                            </ImageBackground>
-                            : <FlatList
+                        ?
+                        this.props.hasNetwork === false
+                            ?
+                            <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                </Animated.View>
+                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                            </View>
+                            :
+                            <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
+                        : filteredGroups.length > 0
+                            ?
+                            <FlatList
                                 data={filteredGroups}
                                 refreshing={isRefreshing}
                                 onRefresh={this.onPullRefresh}
@@ -346,6 +374,19 @@ class GroupListTab extends Component {
                                 onEndReachedThreshold={0.1}
                                 onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
                             />
+                            :
+                            this.props.hasNetwork ?
+                                <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage}>
+                                    <Text style={{ color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6), fontWeight: 'bold', letterSpacing: 1 }}>{`No Groups found`}</Text>
+                                </ImageBackground>
+                                :
+                                <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                                    <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                        <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                    </Animated.View>
+                                    <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                    <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                </View>
                 }
                 {/* <Animated.View style={[styles.createGrpContainer, { bottom: this.state.kbdBtmOffset, width: this.createSecAnim }]}>
                     <Animated.View style={[styles.createGrpActionSec, { backgroundColor: newGroupName === null ? 'transparent' : '#fff', borderWidth: this.borderWidthAnim }]}>
@@ -370,8 +411,8 @@ const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { friendGroupList, currentGroup } = state.FriendGroupList;
     const { allFriends } = state.FriendList;
-    const { pageNumber } = state.PageState;
-    return { user, friendGroupList, allFriends, currentGroup, pageNumber };
+    const { pageNumber, hasNetwork } = state.PageState;
+    return { user, friendGroupList, allFriends, currentGroup, pageNumber, hasNetwork };
 };
 const mapDispatchToProps = (dispatch) => {
     return {

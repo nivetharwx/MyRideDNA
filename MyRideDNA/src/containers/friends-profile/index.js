@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, View, Text, StatusBar, Image, ImageBackground, ScrollView, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, StatusBar, Image, ImageBackground, Animated, ScrollView, FlatList, TouchableOpacity, Alert, Easing } from 'react-native';
 import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG, RELATIONSHIP, PageKeys, MEDIUM_TAIL_TAG, FRIEND_TYPE, RIDE_TAIL_TAG } from '../../constants/index';
 import { ShifterButton, IconButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction, apiLoaderActions, initUndoRedoRideAction, updateFriendsRideSnapshotAction, getNotFriendsInfoAction } from '../../actions';
@@ -29,7 +29,8 @@ class FriendsProfile extends Component {
                 { name: 'account-remove', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.onPressUnfriendIcon() },
                 // { name: 'ios-shirt', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => console.log("Vest pressed") },
             ],
-            totalTabs: 4
+            totalTabs: 4,
+            spinValue: new Animated.Value(0),
         };
     }
 
@@ -130,6 +131,21 @@ class FriendsProfile extends Component {
                 // this.props.getFirendsRideInfo(this.props.currentFriend.userId, RELATIONSHIP.FRIEND)
             }
         }
+    }
+
+    retryApiFunction = () => {
+        this.state.spinValue.setValue(0);
+        Animated.timing(this.state.spinValue, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.linear,
+            useNativeDriver: true
+        }).start(() => {
+            if (this.props.hasNetwork === true) {
+                this.props.getAllChats(this.props.user.userId);
+            }
+        });
+
     }
 
     showFriendsLocation = () => {
@@ -328,13 +344,17 @@ class FriendsProfile extends Component {
         const { user, currentFriend } = this.props;
         const { activeTab, isLoadingProfPic, friendsProfileIcons } = this.state;
         console.log('currentFriend : ', currentFriend)
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         return currentFriend === null
             ? <View style={styles.fill} />
             : <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
-                <View style={{ flex: 1 }}>
+                <View style={[{ flex: 1 }, !this.props.hasNetwork ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
                     <BasicHeader title={<Text style={{
                         fontSize: widthPercentageToDP(5),
                         color: 'white',
@@ -377,26 +397,39 @@ class FriendsProfile extends Component {
                             <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>GARAGE</Text>
                         </TabHeading>}>
                             <View style={{ backgroundColor: '#fff', flex: 1 }}>
-                                {currentFriend.garage ? <View style={styles.content}>
-                                    <FlatList
-                                        data={currentFriend.garage.spaceList}
-                                        keyExtractor={(item, index) => item.spaceId + ''}
-                                        showsVerticalScrollIndicator={false}
-                                        extraData={this.state}
-                                        renderItem={({ item, index }) => {
-                                            return <BasicCard
-                                                isActive={false}
-                                                // FIXME: Change this based on pictureIdList
-                                                media={item.profilePicture ? { uri: item.profilePicture } : require('../../assets/img/bike_placeholder.png')}
-                                                mainHeading={item.name}
-                                                subHeading={`${item.make ? item.make + '-' : ''}${item.model ? item.model + ',' : ''}${item.year ? item.year : ''}`}
-                                                notes={item.notes}
-                                            // onLongPress={() => this.showOptionsModal(index)}
-                                            >
-                                            </BasicCard>
-                                        }}
-                                    />
-                                </View> : null}
+                                {
+                                    currentFriend.garage.spaceList && currentFriend.garage.spaceList.length > 0 ?
+                                        <View style={styles.content}>
+                                            <FlatList
+                                                data={currentFriend.garage.spaceList}
+                                                keyExtractor={(item, index) => item.spaceId + ''}
+                                                showsVerticalScrollIndicator={false}
+                                                extraData={this.state}
+                                                renderItem={({ item, index }) => {
+                                                    return <BasicCard
+                                                        isActive={false}
+                                                        // FIXME: Change this based on pictureIdList
+                                                        media={item.profilePicture ? { uri: item.profilePicture } : require('../../assets/img/bike_placeholder.png')}
+                                                        mainHeading={item.name}
+                                                        subHeading={`${item.make ? item.make + '-' : ''}${item.model ? item.model + ',' : ''}${item.year ? item.year : ''}`}
+                                                        notes={item.notes}
+                                                    // onLongPress={() => this.showOptionsModal(index)}
+                                                    >
+                                                    </BasicCard>
+                                                }}
+                                            />
+                                        </View> :
+                                        this.props.hasNetwork ?
+                                            null
+                                            :
+                                            <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                                </Animated.View>
+                                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                            </View>
+                                }
                             </View>
                         </Tab>
                         <Tab heading={<TabHeading style={[styles.bottomTab, { height: BOTTOM_TAB_HEIGHT, width: widthPercentageToDP(100 / this.state.totalTabs), backgroundColor: activeTab === 2 ? '#0083CA' : '#6C6C6B', borderLeftWidth: 1, borderLeftColor: '#fff', borderRightWidth: 2, borderRightColor: '#fff' }]}>
@@ -411,7 +444,17 @@ class FriendsProfile extends Component {
                                             renderItem={this.renderRides}
                                             keyExtractor={this.rideKeyExtractor}
                                         />
-                                        : <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
+                                        :
+                                        this.props.hasNetwork ?
+                                            <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
+                                            :
+                                            <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                                </Animated.View>
+                                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                            </View>
                                 }
                             </View>
                         </Tab>
@@ -444,8 +487,8 @@ const mapStateToProps = (state) => {
     const { ride } = state.RideInfo.present;
     const { showMenu } = state.TabVisibility;
     const { currentFriend, friendsLocationList } = state.FriendList;
-    const { showLoader } = state.PageState;
-    return { user, showMenu, currentFriend, friendsLocationList, showLoader, ride };
+    const { showLoader, hasNetwork } = state.PageState;
+    return { user, showMenu, currentFriend, friendsLocationList, showLoader, ride, hasNetwork };
 };
 const mapDispatchToProps = (dispatch) => {
     return {

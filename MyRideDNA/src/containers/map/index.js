@@ -21,7 +21,7 @@ import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { Icon as NBIcon, Toast } from 'native-base';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT, UNSYNCED_RIDE } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, addUnsyncedRideAction, deleteUnsyncedRideAction, resetChatMessageAction } from '../../actions';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, addUnsyncedRideAction, deleteUnsyncedRideAction, resetChatMessageAction, resetErrorHandlingAction } from '../../actions';
 import { SearchBox, IconicList } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -464,9 +464,13 @@ export class Map extends Component {
         }
         if (prevProps.hasNetwork === true && this.props.hasNetwork === false) {
             console.log("Network connection lost");
+            // Alert.alert('Network Error', 'Failed to connect to internet');
+            Toast.show({ text: 'Network connection lost', position: 'bottom', duration:0, style:{height:heightPercentageToDP(8.2)}});
         }
         if (prevProps.hasNetwork === false && this.props.hasNetwork === true) {
-            console.log("Connected to network");
+            console.log('internet connected ');
+            Toast.hide()
+            this.retryApiFunc()
         }
         if (prevProps.user.locationEnable !== this.props.user.locationEnable) {
             this.props.user.locationEnable
@@ -614,6 +618,38 @@ export class Map extends Component {
                 this.onPressRecenterMap();
             }
         }
+
+        if(prevProps.isRetryApi === false && this.props.isRetryApi === true){
+            if(Actions.currentScene === this.props.lastApi.currentScene){
+                Alert.alert(
+                    'Something went wrong ',
+                    '',
+                    [
+                        {
+                            text: 'Retry ', onPress: () => {
+                                this.retryApiFunc();
+                                this.props.resetErrorHandling(false)
+                            }
+                        },
+                        { text: 'Cancel', onPress: () => {this.props.resetErrorHandling(false) }, style: 'cancel' },
+                    ],
+                    { cancelable: false }
+                )
+            }
+        }
+    }
+
+    retryApiFunc = () => {
+        console.log('retryApiFunc')
+        console.log('this.props.lastApi : ',this.props.lastApi);
+        if (this.props.lastApi && this.props.lastApi.currentScene === Actions.currentScene) {
+            if(this.props.lastApi.api.name === 'getPictureList' || this.props.lastApi.api.name === 'getGarageInfo' || this.props.lastApi.api.name === 'getRidePictureList'|| this.props.lastApi.api.name === 'getPicture'){   
+                this.props.retryLastApiWithoutDispatch(this.props.lastApi.api, this.props.lastApi.params)
+            }
+            else{
+                this.props.retryLastApi(this.props.lastApi.api, this.props.lastApi.params);
+            } 
+        }
     }
 
     getPlaceNameByReverseGeocode = async (location, successCallback, errorCallback) => {
@@ -739,7 +775,7 @@ export class Map extends Component {
         this.trackpointTick = 0;
         this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId, deviceId: DeviceInfo.getUniqueID() } });
         this.props.pushNotification(this.props.user.userId);
-        this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString(), (res) => {
+        this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString(),'map', (res) => {
         }, (err) => {
         });
         AppState.addEventListener('change', this.handleAppStateChange);
@@ -2841,7 +2877,7 @@ export class Map extends Component {
                 {
                     showCreateRide || this.state.onItinerary
                         ? null
-                        : <ShifterButton onPress={this.toggleAppNavigation} alignLeft={user.handDominance === 'left'} />
+                        : <ShifterButton onPress={this.toggleAppNavigation} containerStyles={this.props.hasNetwork === false?{bottom:heightPercentageToDP(8.5)}:null} alignLeft={user.handDominance === 'left'} />
                 }
                 <Loader isVisible={showLoader} />
             </View>
@@ -2860,8 +2896,8 @@ const mapStateToProps = (state) => {
     // const {showLoader} = state.PageState;
     const { notificationList, pageNumber } = state.NotificationList;
     const { friendsLocationList } = state.FriendList;
-    const { appState, hasNetwork } = state.PageState;
-    return { ride, isLocationOn, user, userAuthToken, deviceToken, showMenu, friendsLocationList, currentScreen, canUndo, canRedo, notificationList, pageNumber, appState, hasNetwork, unsyncedRides };
+    const { appState, hasNetwork, lastApi, isRetryApi } = state.PageState;
+    return { ride, isLocationOn, user, userAuthToken, deviceToken, showMenu, friendsLocationList, currentScreen, canUndo, canRedo, notificationList, pageNumber, appState, hasNetwork, unsyncedRides, lastApi, isRetryApi };
 }
 
 const mapDispatchToProps = (dispatch) => {
@@ -2876,7 +2912,7 @@ const mapDispatchToProps = (dispatch) => {
         publishEvent: (eventBody) => publishEvent(eventBody),
         pushNotification: (userId) => pushNotification(userId),
         updateLocation: (userId, locationInfo) => updateLocation(userId, locationInfo),
-        getAllNotifications: (userId, pageNumber, date, successCallback, errorCallback) => dispatch(getAllNotifications(userId, pageNumber, date, successCallback, errorCallback)),
+        getAllNotifications: (userId, pageNumber, date,comingFrom, successCallback, errorCallback) => dispatch(getAllNotifications(userId, pageNumber, date,comingFrom, successCallback, errorCallback)),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
         deleteNotifications: (notificationIds) => dispatch(deleteNotifications(notificationIds)),
         deleteAllNotifications: (userId) => dispatch(deleteAllNotifications(userId)),
@@ -2925,7 +2961,10 @@ const mapDispatchToProps = (dispatch) => {
         resetStoreToDefault: () => dispatch(resetStateOnLogout()),
         resetChatMessage: () => dispatch(resetChatMessageAction()),
         addUnsyncedRide: (unsyncedRideId) => dispatch(addUnsyncedRideAction(unsyncedRideId)),
-        deleteUnsyncedRide: (unsyncedRideId) => dispatch(deleteUnsyncedRideAction(unsyncedRideId))
+        deleteUnsyncedRide: (unsyncedRideId) => dispatch(deleteUnsyncedRideAction(unsyncedRideId)),
+        retryLastApi: (api, params) => dispatch(api(...params)),
+        retryLastApiWithoutDispatch : (api,params) => api(...params),
+        resetErrorHandling : (state) => dispatch(resetErrorHandlingAction({comingFrom : 'map',isRetryApi : state}))
     }
 }
 
@@ -3016,5 +3055,5 @@ const MapElementStyles = MapboxGL.StyleSheet.create({
         visibility: 'visible',
         lineOpacity: 0.50,
         lineColor: MapboxGL.StyleSheet.identity('lineColor')
-    }
+    },
 });

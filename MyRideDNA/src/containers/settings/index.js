@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { View, StatusBar, Text, ScrollView, AsyncStorage, TouchableOpacity, TextInput, KeyboardAvoidingView, Alert } from 'react-native';
 import { connect } from 'react-redux';
 import styles from './styles';
-import { APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN } from '../../constants';
+import { APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN, heightPercentageToDP } from '../../constants';
 import { BasicHeader } from '../../components/headers';
 import { SwitchIconButton, ShifterButton, LinkButton, IconButton } from '../../components/buttons';
 import { Item, Icon as NBIcon, Accordion, Toast, Input } from 'native-base';
@@ -36,7 +36,7 @@ export class Settings extends Component {
             timeIntervalInSeconds: props.user.timeIntervalInSeconds,
             showCircle: props.user.showCircle,
             showLoader: false,
-            isUpdatedSetting:false
+            isUpdatedSetting: false
         };
     }
 
@@ -59,12 +59,12 @@ export class Settings extends Component {
             this.setState({ currentPasswd: '', newPasswd: '', confirmPasswd: '' });
             this.onPressLogout();
         }
-        if(this.state.isUpdatedSetting){
+        if (this.state.isUpdatedSetting) {
             console.log('updated setting')
             Toast.show({
                 text: 'Setting updated successfully'
             });
-            this.setState({isUpdatedSetting:false})
+            this.setState({ isUpdatedSetting: false })
         }
     }
 
@@ -212,7 +212,7 @@ export class Settings extends Component {
                 locationRadius: parseInt(locationRadiusState), handDominance: handDominanceState,
                 timeIntervalInSeconds, showCircle, locationEnable
             })
-            this.setState({isUpdatedSetting : true})
+            this.setState({ isUpdatedSetting: true })
         } else {
             Toast.show({
                 text: 'fill all field correctly',
@@ -301,7 +301,7 @@ export class Settings extends Component {
 
 
                 {/* Shifter: - Brings the app navigation menu */}
-                <ShifterButton onPress={this.showAppNavMenu} alignLeft={user.handDominance === 'left'} />
+                <ShifterButton onPress={this.showAppNavMenu} containerStyles={this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null} alignLeft={user.handDominance === 'left'} />
                 <Loader isVisible={showLoader} />
             </View>
         );
@@ -310,8 +310,8 @@ export class Settings extends Component {
 
 const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken, updatePasswordError, updatePasswordSuccess } = state.UserAuth;
-    const { showLoader } = state.PageState;
-    return { user, userAuthToken, deviceToken, updatePasswordError, updatePasswordSuccess, showLoader };
+    const { showLoader, hasNetwork } = state.PageState;
+    return { user, userAuthToken, deviceToken, updatePasswordError, updatePasswordSuccess, showLoader, hasNetwork };
 }
 
 const mapDispatchToProps = (dispatch) => {
