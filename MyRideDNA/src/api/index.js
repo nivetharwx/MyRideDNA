@@ -650,6 +650,7 @@ export const completeRecordRide = (endTime, actualPoints, trackpoints, distance,
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
+        console.log(`completeRecordRide: `, { actualPoints, trackpoints, endTime, distance });
         axios.put(RIDE_BASE_URL + `completeRecordRide?rideId=${ride.rideId}&userId=${userId}`,
             { actualPoints: Base64.encode(actualPoints.join()), trackpoints: Base64.encode(trackpoints.join()), endTime, distance }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
@@ -662,11 +663,11 @@ export const completeRecordRide = (endTime, actualPoints, trackpoints, distance,
                     } else {
                         updatedRide.trackpoints = [];
                     }
-                    if (trackpoints.length >= 4) {
-                        updatedRide.trackpoints.push(...[trackpoints.slice(0, trackpoints.length - 4)]);
+                    if (trackpoints.length >= 7) {
+                        updatedRide.trackpoints.push(...[trackpoints.slice(0, trackpoints.length - 7)]);
                     }
-                    const destinationPoint = trackpoints.slice(-4);
-                    if (destinationPoint.length === 4) {
+                    const destinationPoint = trackpoints.slice(-7);
+                    if (destinationPoint.length === 7) {
                         updatedRide.destination = { lng: destinationPoint[1], lat: destinationPoint[0] };
                     }
                     updatedRide = { ...updatedRide, ...res.data, unsynced: false, status: RECORD_RIDE_STATUS.COMPLETED };
@@ -1024,11 +1025,11 @@ export const replaceRide = (rideId, ride, successCallback, errorCallback) => {
             // ToDo handle timeout error seperately for map
         })
 }
-export const getRideByRideId = (rideId, rideInfo = {}) => {
+export const getRideByRideId = (rideId, rideInfo = {}, accuracyFilter = 50) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
-        axios.get(RIDE_BASE_URL + `getRideByRideId?rideId=${rideId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.get(RIDE_BASE_URL + `getRideByRideId?rideId=${rideId}&accuracyFilter=${accuracyFilter}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     // dispatch(toggleLoaderAction(false));
