@@ -226,7 +226,9 @@ class Notifications extends Component {
                                     onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
 
                                 />
-                            </View>
+                            
+                             <Image source={require('../../assets/img/notifications-bg.png')} style={styles.bottomImage} />
+                             </View>
                             :
                             hasNetwork ?
                                 <Image source={require('../../assets/img/notifications-bg.png')} style={styles.bottomImage} />

@@ -13,8 +13,6 @@ target 'MyRideDNA' do
   target 'MyRideDNA-tvOSTests' do
     inherit! :search_paths
     # Pods for testing
-    pod 'RNBackgroundFetch', :path => '../node_modules/react-native-background-fetch'
-
   end
 
   target 'MyRideDNATests' do

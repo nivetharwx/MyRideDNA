@@ -97,8 +97,7 @@ export const RELATIONSHIP = { FRIEND: 'friend', RECIEVED_REQUEST: 'receivedReque
 export const ICON_NAMES = {
     SOURCE_DEFAULT: 'sourceDefault', SOURCE_SELECTED: 'sourceSelected',
     DESTINATION_DEFAULT: 'destinationDefault', DESTINATION_SELECTED: 'destinationSelected',
-    WAYPOINT_DEFAULT: 'waypointDefault', WAYPOINT_SELECTED: 'waypointSelected',
-    NAV_ARROW: 'navArrow'
+    WAYPOINT_DEFAULT: 'waypointDefault', WAYPOINT_SELECTED: 'waypointSelected'
 }
 export const RIDE_POINT = { SOURCE: 'source', DESTINATION: 'destination', WAYPOINT: 'waypoint' }
 

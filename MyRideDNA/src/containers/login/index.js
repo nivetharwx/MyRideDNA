@@ -121,6 +121,7 @@ class Login extends Component {
         axios.post(USER_BASE_URL + 'loginUser', userData)
             .then(res => {
                 if (res.status === 200) {
+                    console.log('login : ',res.data);
                     AsyncStorage.setItem(USER_AUTH_TOKEN, res.data.accessToken);
                     this.props.updateToken({ userAuthToken: res.data.accessToken, deviceToken });
                     console.log("updateToken called: ", { userAuthToken: res.data.accessToken, deviceToken });
@@ -130,6 +131,7 @@ class Login extends Component {
                 }
             })
             .catch(error => {
+                // TODO: Handle network error separately
                 this.setState({ spinner: !this.state.spinner }, () => {
                     setTimeout(() => {
                         Alert.alert('Login failed', error.response.data.userMessage);
