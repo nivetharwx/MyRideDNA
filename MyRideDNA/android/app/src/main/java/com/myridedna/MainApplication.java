@@ -4,8 +4,11 @@ import android.app.Application;
 
 import android.content.IntentFilter;
 import com.facebook.react.ReactApplication;
-import com.evollu.react.fcm.FIRMessagingPackage;
-import com.marianhello.bgloc.react.BackgroundGeolocationPackage;
+import io.invertase.firebase.RNFirebasePackage;
+import io.invertase.firebase.messaging.RNFirebaseMessagingPackage;
+import io.invertase.firebase.notifications.RNFirebaseNotificationsPackage;
+import com.transistorsoft.rnbackgroundfetch.RNBackgroundFetchPackage;
+import com.transistorsoft.rnbackgroundgeolocation.RNBackgroundGeolocation;
 import io.rumors.reactnativesettings.RNSettingsPackage;
 import com.rt2zz.reactnativecontacts.ReactNativeContacts;
 import com.mapbox.rctmgl.RCTMGLPackage;
@@ -13,7 +16,6 @@ import com.mapbox.rctmgl.RCTMGLPackage;
 import com.reactnative.ivpusic.imagepicker.PickerPackage;
 import io.rumors.reactnativesettings.receivers.GpsLocationReceiver;
 import com.learnium.RNDeviceInfo.RNDeviceInfo;
-import org.reactnative.camera.RNCameraPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
@@ -35,14 +37,16 @@ public class MainApplication extends Application implements ReactApplication {
     @Override
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(new MainReactPackage(),
-            new FIRMessagingPackage(),
-            new BackgroundGeolocationPackage(),
+            new RNFirebasePackage(),
+            new RNFirebaseMessagingPackage(),
+            new RNFirebaseNotificationsPackage(),
+            new RNBackgroundFetchPackage(),
+            new RNBackgroundGeolocation(),
             new RNSettingsPackage(),
             new ReactNativeContacts(),
             new RCTMGLPackage(),
             new PickerPackage(),
           new RNDeviceInfo(), 
-          new RNCameraPackage(), 
           new VectorIconsPackage(),
           new RNFusedLocationPackage());
     }

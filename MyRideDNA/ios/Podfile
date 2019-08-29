@@ -13,6 +13,11 @@ target 'MyRideDNA' do
   target 'MyRideDNA-tvOSTests' do
     inherit! :search_paths
     # Pods for testing
+    pod 'RNBackgroundGeolocation', :path => '../node_modules/react-native-background-geolocation'
+
+    pod 'RNBackgroundFetch', :path => '../node_modules/react-native-background-fetch'
+
+
   end
 
   target 'MyRideDNATests' do
