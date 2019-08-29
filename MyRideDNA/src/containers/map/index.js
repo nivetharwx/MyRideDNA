@@ -51,12 +51,14 @@ import Bubble from '../../components/bubble';
 import MenuModal from '../../components/modal';
 import { BasicHeader } from '../../components/headers';
 import { CreateRide } from '../create-ride';
-import BackgroundGeolocation from 'react-native-mauron85-background-geolocation';
+
+import BackgroundGeolocation from 'react-native-background-geolocation';
+
 import axios from 'axios';
 import { BaseModal } from '../../components/modal';
 import { Loader } from '../../components/loader';
 
-import FCM, { NotificationActionType, NotificationType, FCMEvent, RemoteNotificationResult, WillPresentNotificationResult } from "react-native-fcm";
+import firebase from 'react-native-firebase';
 import DeviceInfo from 'react-native-device-info';
 
 import { APP_CONFIGS } from '../../config';
@@ -465,7 +467,7 @@ export class Map extends Component {
         if (prevProps.hasNetwork === true && this.props.hasNetwork === false) {
             console.log("Network connection lost");
             // Alert.alert('Network Error', 'Failed to connect to internet');
-            Toast.show({ text: 'Network connection lost', position: 'bottom', duration:0, style:{height:heightPercentageToDP(8.2)}});
+            Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0, style: { height: heightPercentageToDP(8.2) } });
         }
         if (prevProps.hasNetwork === false && this.props.hasNetwork === true) {
             console.log('internet connected ');
@@ -619,8 +621,8 @@ export class Map extends Component {
             }
         }
 
-        if(prevProps.isRetryApi === false && this.props.isRetryApi === true){
-            if(Actions.currentScene === this.props.lastApi.currentScene){
+        if (prevProps.isRetryApi === false && this.props.isRetryApi === true) {
+            if (Actions.currentScene === this.props.lastApi.currentScene) {
                 Alert.alert(
                     'Something went wrong ',
                     '',
@@ -631,7 +633,7 @@ export class Map extends Component {
                                 this.props.resetErrorHandling(false)
                             }
                         },
-                        { text: 'Cancel', onPress: () => {this.props.resetErrorHandling(false) }, style: 'cancel' },
+                        { text: 'Cancel', onPress: () => { this.props.resetErrorHandling(false) }, style: 'cancel' },
                     ],
                     { cancelable: false }
                 )
@@ -641,14 +643,14 @@ export class Map extends Component {
 
     retryApiFunc = () => {
         console.log('retryApiFunc')
-        console.log('this.props.lastApi : ',this.props.lastApi);
+        console.log('this.props.lastApi : ', this.props.lastApi);
         if (this.props.lastApi && this.props.lastApi.currentScene === Actions.currentScene) {
-            if(this.props.lastApi.api.name === 'getPictureList' || this.props.lastApi.api.name === 'getGarageInfo' || this.props.lastApi.api.name === 'getRidePictureList'|| this.props.lastApi.api.name === 'getPicture'){   
+            if (this.props.lastApi.api.name === 'getPictureList' || this.props.lastApi.api.name === 'getGarageInfo' || this.props.lastApi.api.name === 'getRidePictureList' || this.props.lastApi.api.name === 'getPicture') {
                 this.props.retryLastApiWithoutDispatch(this.props.lastApi.api, this.props.lastApi.params)
             }
-            else{
+            else {
                 this.props.retryLastApi(this.props.lastApi.api, this.props.lastApi.params);
-            } 
+            }
         }
     }
 
@@ -721,99 +723,123 @@ export class Map extends Component {
     }
 
     async componentDidMount() {
-        FCM.getInitialNotification().then(notification => {
+        const notificationOpen = await firebase.notifications().getInitialNotification();
+        if (notificationOpen) {
+            const { notification } = notificationOpen;
             console.log('notification map : ', notification);
             if (notification.body && !notification.local_notification && JSON.parse(notification.body).reference && JSON.parse(notification.body).reference.targetScreen) {
                 console.log('notification body map  :', notification)
-                if (JSON.parse(notification.body).reference.targetScreen === PageKeys.CHAT) {
-
-                }
+                if (JSON.parse(notification.body).reference.targetScreen === PageKeys.CHAT) { }
                 else {
                     JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));
                 }
             }
-        });
-        BackgroundGeolocation.configure({
-            desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
-            stationaryRadius: 50,
+        }
+
+        BackgroundGeolocation.onLocation(this.onLocation, this.onError);
+        BackgroundGeolocation.onMotionChange(this.onMotionChange);
+        BackgroundGeolocation.onActivityChange(this.onActivityChange);
+        BackgroundGeolocation.onProviderChange(this.onProviderChange);
+        BackgroundGeolocation.ready({
+            reset: true,
+            // Geolocation Config
+            desiredAccuracy: BackgroundGeolocation.DESIRED_ACCURACY_HIGH,
             distanceFilter: 10,
-            // notificationTitle: 'Tracking location',
-            // notificationText: '',
-            notificationsEnabled: false,
-            debug: false,
-            startOnBoot: false,
-            stopOnTerminate: true,
-            locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
-            interval: 5000,
-            fastestInterval: 1000,
-            activitiesInterval: 5000,
-            stopOnStillActivity: false,
+            // Activity Recognition
+            stopTimeout: 1,
+            // Application config
+            debug: false, // <-- enable this hear sounds for background-geolocation life-cycle.
+            logLevel: BackgroundGeolocation.LOG_LEVEL_VERBOSE,
+            stopOnTerminate: true,   // <-- Allow the background-service to continue tracking when user closes the app.
+            startOnBoot: false,        // <-- Auto start tracking when device is powered-up.
+            // HTTP / SQLite config
+            // url: 'http://yourserver.com/locations',
+            // batchSync: false,       // <-- [Default: false] Set true to sync locations to server in a single HTTP request.
+            // autoSync: true,         // <-- [Default: true] Set true to sync each location to server as it arrives.
+            // headers: {              // <-- Optional HTTP headers
+            //     "X-FOO": "bar"
+            // },
+            // params: {               // <-- Optional HTTP params
+            //     "auth_token": "maybe_your_server_authenticates_via_token_YES?"
+            // }
+        }, (state) => {
+            console.log("- BackgroundGeolocation is configured and ready: ", state.enabled);
+
+            if (!state.enabled) {
+                ////
+                // 3. Start tracking!
+                //
+                // BackgroundGeolocation.start(function () {
+                //     console.log("- Start success");
+                // });
+                this.startTrackingLocation();
+            }
         });
+
         this.trackpointTick = 0;
         this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId, deviceId: DeviceInfo.getUniqueID() } });
         this.props.pushNotification(this.props.user.userId);
-        this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString(),'map', (res) => {
+        this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString(), 'map', (res) => {
         }, (err) => {
         });
         AppState.addEventListener('change', this.handleAppStateChange);
-        BackgroundGeolocation.on('location', (location) => {
-            if (this.props.user.locationEnable && location.time - this.prevUserTrackTime > (this.props.user.timeIntervalInSeconds * 1000)) {
-                this.prevUserTrackTime = location.time;
-                this.props.updateLocation(this.props.user.userId, { lat: location.latitude, lng: location.longitude });
+        BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPress);
 
-                // TODO: Need to understand about the task
-                // BackgroundGeolocation.startTask(taskKey => {
-                //     BackgroundGeolocation.endTask(taskKey);
-                // });
-            }
-            if (this.props.appState === 'background' && this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
-                if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (location.longitude + '' + location.latitude)) {
-                    this.updateRecordRideCoordinate([location.longitude, location.latitude], this.props.ride.status);
+    }
+
+    onHeartbeat = (event) => {
+        console.log(`[onHeartbeat - ${new Date()}] `, event);
+
+        // You could request a new location if you wish.
+        BackgroundGeolocation.getCurrentPosition({
+            samples: 1,
+            persist: true
+        }).then((location) => {
+            if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
+                if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (location.coords.longitude + '' + location.coords.latitude)) {
+                    this.updateRecordRideCoordinate(location.coords, this.props.ride.status);
                 }
             }
         });
-        BackgroundGeolocation.on('stationary', (stationaryLocation) => {
-            console.log("Got stationary location: ", stationaryLocation);
-        });
-        BackgroundGeolocation.on('error', (error) => {
-            console.log('[ERROR] BackgroundGeolocation error: ', error);
-        });
-        BackgroundGeolocation.on('start', () => {
-            console.log('[INFO] BackgroundGeolocation service has been started');
-        });
-        BackgroundGeolocation.on('stop', () => {
-            console.log('[INFO] BackgroundGeolocation service has been stopped');
-        });
-        BackgroundGeolocation.on('background', () => {
-            if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
-                clearInterval(this.state.watchId);
-                this.startTrackingLocation();
+    }
+
+    onLocation = (location) => {
+        // location.coords.heading
+        // location.coords.accuracy
+        // location.coords.speed
+        // location.is_moving
+        // location.battery: { is_charging, level }
+        const lastFetchTime = new Date(location.timestamp).getTime();
+        if (this.props.user.locationEnable && lastFetchTime - this.prevUserTrackTime > (this.props.user.timeIntervalInSeconds * 1000)) {
+            this.prevUserTrackTime = lastFetchTime;
+            this.props.updateLocation(this.props.user.userId, { lat: location.coords.latitude, lng: location.coords.longitude });
+
+            // TODO: Need to understand about the task
+            // BackgroundGeolocation.startTask(taskKey => {
+            //     BackgroundGeolocation.endTask(taskKey);
+            // });
+        }
+        if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
+            if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (location.coords.longitude + '' + location.coords.latitude)) {
+                this.updateRecordRideCoordinate(location.coords, this.props.ride.status);
             }
-            // this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
-        });
+        }
+    }
 
-        BackgroundGeolocation.on('foreground', () => {
-            if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
-                updatedgpsPointCollection = {};
-                if (this.trackpointTick >= 5) this.trackpointTick = 0;
-                this.watchLocation();
-            }
-            // this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId } });
-        });
-        BackgroundGeolocation.checkStatus(status => {
-            // console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
-            // console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
-            // console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
-            if (!status.isRunning && this.props.user.locationEnable) {
-                this.startTrackingLocation();
-            }
-        });
+    onError = (error) => {
+        console.warn('[location] ERROR -', error);
+    }
 
-        //DOC: Listen for device location settings change
-        // DeviceEventEmitter.addListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent);
+    onActivityChange = (event) => {
+        console.log('[activitychange] -', event);  // eg: 'on_foot', 'still', 'in_vehicle'
+    }
 
-        BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPress);
+    onProviderChange = (provider) => {
+        console.log('[providerchange] -', provider.enabled, provider.status);
+    }
 
+    onMotionChange = (event) => {
+        console.log('[motionchange] -', event.isMoving, event.location);
     }
 
     redirectToTargetScreen(body) {
@@ -853,32 +879,26 @@ export class Map extends Component {
         BackgroundGeolocation.stop();
     }
 
-    handleGPSProviderEvent = (e) => {
-        // FIXME: Remove listener as it is listen twice :(
-        DeviceEventEmitter.removeListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent);
-        if (e[RNSettings.LOCATION_SETTING] === RNSettings.DISABLED) {
-            this.props.updateDeviceLocationState(false);
-        } else if (e[RNSettings.LOCATION_SETTING] === RNSettings.ENABLED) {
-            this.props.updateDeviceLocationState(true);
-        }
-        // FIXME: DeviceEventEmitter listen again with a short delay of 50ms
-        setTimeout(() => DeviceEventEmitter.addListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent), 50);
-    }
-
     getCurrentLocation = async (recenterMap) => {
-        Geolocation.getCurrentPosition(
-            ({ coords }) => {
-                this.setState({ currentLocation: { location: [coords.longitude, coords.latitude], name: '' } }, () => {
-                    if (recenterMap) {
-                        this._mapView.flyTo(this.state.currentLocation.location, 500);
-                    }
-                });
-            },
-            (error) => {
-                console.log(error.code, error.message);
-            },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-        );
+        // Geolocation.getCurrentPosition(
+        //     ({ coords }) => {
+        //         this.setState({ currentLocation: { location: [coords.longitude, coords.latitude], name: '' } }, () => {
+        //             if (recenterMap) {
+        //                 this._mapView.flyTo(this.state.currentLocation.location, 500);
+        //             }
+        //         });
+        //     },
+        //     (error) => {
+        //         console.log(error.code, error.message);
+        //     },
+        //     { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        // );
+        const location = await BackgroundGeolocation.getCurrentPosition({ samples: 1, persist: true });
+        if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
+            if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (location.coords.longitude + '' + location.coords.latitude)) {
+                this.updateRecordRideCoordinate(location.coords, this.props.ride.status);
+            }
+        }
     }
 
     watchLocation = async () => {
@@ -1705,8 +1725,15 @@ export class Map extends Component {
                         }
                     }]
                 }
+                BackgroundGeolocation.onHeartbeat(this.onHeartbeat);
                 this.setState({ gpsPointCollection: updatedCollection, currentLocation: { location: [coords.longitude, coords.latitude], name: '' } }, () => {
-                    this.watchLocation();
+                    // this.watchLocation();
+                    BackgroundGeolocation.setConfig({
+                        preventSuspend: true,
+                        heartbeatInterval: 60
+                    }).then((state) => {
+                        console.log('[setConfig] success: ', state);
+                    })
                 });
             },
             (error) => {
@@ -1718,13 +1745,10 @@ export class Map extends Component {
 
     onPressPauseRide = () => {
         const { ride } = this.props;
-        console.log(this.state.watchId);
-        clearInterval(this.state.watchId);
-        console.log(this.state.watchId);
-        BackgroundGeolocation.checkStatus(status => {
-            if (status.isRunning) {
-                this.stopTrackingLocation();
-            }
+        BackgroundGeolocation.setConfig({
+            preventSuspend: false
+        }, (state) => {
+            BackgroundGeolocation.removeListener('heartbeat', this.onHeartbeat);
         });
         const { gpsPointCollection } = this.state;
         const points = gpsPointCollection.features[0].geometry.coordinates;
@@ -1747,7 +1771,7 @@ export class Map extends Component {
                     let actualPoints = [];
                     let trackpoints = [];
                     actualPoints = this.gpsPoints.reduce((list, item) => {
-                        list.push(item.loc[1], item.loc[0], item.date, item.status);
+                        list.push(item.loc[1], item.loc[0], item.heading, item.accuracy, item.speed, item.date, item.status);
                         return list;
                     }, []);
                     trackpoints = [...actualPoints];
@@ -1767,7 +1791,7 @@ export class Map extends Component {
                 let actualPoints = [];
                 let trackpoints = [];
                 actualPoints = this.gpsPoints.reduce((list, item) => {
-                    list.push(item.loc[1], item.loc[0], item.date, item.status);
+                    list.push(item.loc[1], item.loc[0], item.heading, item.accuracy, item.speed, item.date, item.status);
                     return list;
                 }, []);
                 trackpoints = [...actualPoints];
@@ -1811,11 +1835,10 @@ export class Map extends Component {
 
     onPressStopRide = () => {
         const { ride } = this.props;
-        clearInterval(this.state.watchId);
-        BackgroundGeolocation.checkStatus(status => {
-            if (status.isRunning) {
-                this.stopTrackingLocation();
-            }
+        BackgroundGeolocation.setConfig({
+            preventSuspend: false
+        }, (state) => {
+            BackgroundGeolocation.removeListener('heartbeat', this.onHeartbeat);
         });
         const { gpsPointCollection } = this.state;
         const points = gpsPointCollection.features[0].geometry.coordinates;
@@ -1829,22 +1852,6 @@ export class Map extends Component {
         if (this.gpsPoints.length > 0) this.gpsPoints[this.gpsPoints.length - 1].status = RECORD_RIDE_STATUS.COMPLETED;
         if (this.props.hasNetwork && !this.props.ride.unsynced) {
             this.hasModifiedRide = true;
-            // if (this.gpsPoints.length > 1) {
-            //     this.getCoordsOnRoad(this.gpsPoints, (responseBody, actualPoints, trackpoints, distance) => {
-            //         this.props.completeRecordRide(new Date().toISOString(), actualPoints, trackpoints, distance, ride, this.props.user.userId)
-            //     });
-            //     this.gpsPoints = [];
-            //     return;
-            // }
-            // let actualPoints = [];
-            // let trackpoints = [];
-            // actualPoints = this.gpsPoints.reduce((list, item) => {
-            //     list.push(item.loc[1], item.loc[0], item.date, item.status);
-            //     return list;
-            // }, []);
-            // trackpoints = [...actualPoints];
-            // this.props.completeRecordRide(new Date().toISOString(), actualPoints, trackpoints, 0, ride, this.props.user.userId);
-            // this.gpsPoints = [];
             if (this.gpsPoints.length > 1) {
                 if (APP_CONFIGS.callRoadMapApi) {
                     this.getCoordsOnRoad(this.gpsPoints, (responseBody, actualPoints, trackpoints, distance) => {
@@ -1854,7 +1861,7 @@ export class Map extends Component {
                     let actualPoints = [];
                     let trackpoints = [];
                     actualPoints = this.gpsPoints.reduce((list, item) => {
-                        list.push(item.loc[1], item.loc[0], item.date, item.status);
+                        list.push(item.loc[1], item.loc[0], item.heading, item.accuracy, item.speed, item.date, item.status);
                         return list;
                     }, []);
                     trackpoints = [...actualPoints];
@@ -1873,7 +1880,7 @@ export class Map extends Component {
                 let actualPoints = [];
                 let trackpoints = [];
                 actualPoints = this.gpsPoints.reduce((list, item) => {
-                    list.push(item.loc[1], item.loc[0], item.date, item.status);
+                    list.push(item.loc[1], item.loc[0], item.heading, item.accuracy, item.speed, item.date, item.status);
                     return list;
                 }, []);
                 trackpoints = [...actualPoints];
@@ -1921,11 +1928,6 @@ export class Map extends Component {
                 break;
             case RECORD_RIDE_STATUS.COMPLETED:
                 clearInterval(this.state.watchId);
-                BackgroundGeolocation.checkStatus(status => {
-                    if (status.isRunning) {
-                        this.stopTrackingLocation();
-                    }
-                });
                 this.gpsPoints = [];
                 // TODO: Call our API and show the result on map
                 // this.props.getRideByRideId(this.props.ride.rideId);
@@ -2038,7 +2040,6 @@ export class Map extends Component {
         this.stopTrackingLocation();
         AppState.removeEventListener('change', this.handleAppStateChange);
         BackgroundGeolocation.removeAllListeners();
-        // DeviceEventEmitter.removeListener(RNSettings.GPS_PROVIDER_EVENT, this.handleGPSProviderEvent);
         // this.watchID != null && Geolocation.clearWatch(this.watchID);
         clearInterval(this.state.watchId);
         // this.notificationInterval != null && clearInterval(this.notificationInterval);
@@ -2777,7 +2778,7 @@ export class Map extends Component {
                 {
                     showCreateRide || this.state.onItinerary
                         ? null
-                        : <ShifterButton onPress={this.toggleAppNavigation} containerStyles={this.props.hasNetwork === false?{bottom:heightPercentageToDP(8.5)}:null} alignLeft={user.handDominance === 'left'} />
+                        : <ShifterButton onPress={this.toggleAppNavigation} containerStyles={this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null} alignLeft={user.handDominance === 'left'} />
                 }
                 <Loader isVisible={showLoader} />
             </View>
@@ -2812,7 +2813,7 @@ const mapDispatchToProps = (dispatch) => {
         publishEvent: (eventBody) => publishEvent(eventBody),
         pushNotification: (userId) => pushNotification(userId),
         updateLocation: (userId, locationInfo) => updateLocation(userId, locationInfo),
-        getAllNotifications: (userId, pageNumber, date,comingFrom, successCallback, errorCallback) => dispatch(getAllNotifications(userId, pageNumber, date,comingFrom, successCallback, errorCallback)),
+        getAllNotifications: (userId, pageNumber, date, comingFrom, successCallback, errorCallback) => dispatch(getAllNotifications(userId, pageNumber, date, comingFrom, successCallback, errorCallback)),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
         deleteNotifications: (notificationIds) => dispatch(deleteNotifications(notificationIds)),
         deleteAllNotifications: (userId) => dispatch(deleteAllNotifications(userId)),
@@ -2863,8 +2864,8 @@ const mapDispatchToProps = (dispatch) => {
         addUnsyncedRide: (unsyncedRideId) => dispatch(addUnsyncedRideAction(unsyncedRideId)),
         deleteUnsyncedRide: (unsyncedRideId) => dispatch(deleteUnsyncedRideAction(unsyncedRideId)),
         retryLastApi: (api, params) => dispatch(api(...params)),
-        retryLastApiWithoutDispatch : (api,params) => api(...params),
-        resetErrorHandling : (state) => dispatch(resetErrorHandlingAction({comingFrom : 'map',isRetryApi : state}))
+        retryLastApiWithoutDispatch: (api, params) => api(...params),
+        resetErrorHandling: (state) => dispatch(resetErrorHandlingAction({ comingFrom: 'map', isRetryApi: state }))
     }
 }
 

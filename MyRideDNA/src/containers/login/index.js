@@ -4,7 +4,7 @@ import { Actions } from 'react-native-router-flux';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import Spinner from 'react-native-loading-spinner-overlay';
-import FCM, { NotificationActionType, NotificationType, FCMEvent, RemoteNotificationResult, WillPresentNotificationResult } from "react-native-fcm";
+import firebase from 'react-native-firebase';
 
 import DeviceInfo from 'react-native-device-info'; // DOC: Check https://www.npmjs.com/package/react-native-device-info#usage
 import Md5 from 'react-native-md5'; // DOC: Check https://www.npmjs.com/package/react-native-md5
@@ -93,11 +93,12 @@ class Login extends Component {
         if (this.state.deviceToken === null) {
             const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
             if (deviceToken === null) {
-                FCM.getFCMToken().then(token => {
-                    console.log("TOKEN (getFCMToken) at login", token);
+                const token = await firebase.messaging().getToken();
+                console.log("TOKEN - firebase.messaging().getToken() at login", token);
+                if (token) {
                     AsyncStorage.setItem(DEVICE_TOKEN, token);
                     this.setState({ deviceToken: token }, () => this.doLogin());
-                });
+                }
             }
             else {
                 this.setState({ deviceToken }, () => this.doLogin());
@@ -121,7 +122,7 @@ class Login extends Component {
         axios.post(USER_BASE_URL + 'loginUser', userData)
             .then(res => {
                 if (res.status === 200) {
-                    console.log('login : ',res.data);
+                    console.log('login : ', res.data);
                     AsyncStorage.setItem(USER_AUTH_TOKEN, res.data.accessToken);
                     this.props.updateToken({ userAuthToken: res.data.accessToken, deviceToken });
                     console.log("updateToken called: ", { userAuthToken: res.data.accessToken, deviceToken });

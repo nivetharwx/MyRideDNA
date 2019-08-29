@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { AsyncStorage } from 'react-native';
 import Navigation from './navigation';
-import FCM, { NotificationActionType, NotificationType, FCMEvent, RemoteNotificationResult, WillPresentNotificationResult } from "react-native-fcm";
+import firebase from 'react-native-firebase';
 import { IS_ANDROID, DEVICE_TOKEN, PageKeys } from './constants';
 import store from './store';
 import { screenChangeAction, resetCurrentFriendAction, replaceChatMessagesAction, updateNotificationCountAction, updateMessageCountAction, updateChatListAction } from './actions';
@@ -9,122 +9,89 @@ import { Actions } from 'react-native-router-flux';
 import { Root } from "native-base";
 import { seenMessage } from './api';
 
-
-// this shall be called regardless of app state: running, background or not running. Won't be called when app is killed by user in iOS
-// FCM.on(FCMEvent.Notification, (notif) => {
-//     console.log("FCM.on(FCMEvent.Notification): ", notif);
-//     // there are two parts of notif. notif.notification contains the notification payload, notif.data contains data payload
-//     if (notif.local_notification) {
-//         //this is a local notification
-
-//         console.log('what i got from   local notif ', notif)
-//     }
-
-
-//     if (notif.opened_from_tray) {
-//         //iOS: app is open/resumed because user clicked banner
-//         //Android: app is open/resumed because user clicked banner or tapped app icon
-//         console.log("FCM.on(FCMEvent.Notification) opened_from_tray");
-//     }
-
-// });
-
-// FCM.on(FCMEvent.RefreshToken, (token) => {
-//     console.log(token)
-//     // fcm token may not be available on first load, catch it here
-//     if (token) {
-//         AsyncStorage.setItem(DEVICE_TOKEN, token);
-//     }
-// });
 export default class App extends Component {
-
+    notificationListener = null;
+    notificationOpenedListener = null;
     async componentDidMount() {
-        //FCM.createNotificationChannel is mandatory for Android targeting >=8. Otherwise you won't see any notification
-        FCM.createNotificationChannel({
-            id: 'default',
-            name: 'Default',
-            description: 'used for example',
-            priority: 'high'
-        })
-        FCM.getInitialNotification().then(notif => {
-            console.log("InitialNotification received: ", notif);
-        });
+        const channel = new firebase.notifications.Android.Channel('default', 'Default', firebase.notifications.Android.Importance.Max)
+            .setDescription('MyRideDNA default channel')
+            .enableLights(true);
+        firebase.notifications().android.createChannel(channel);
 
-        try {
-            let result = await FCM.requestPermissions({
-                badge: false,
-                sound: true,
-                alert: true
-            });
-        } catch (e) {
-            console.error(e);
+        const notificationOpen = await firebase.notifications().getInitialNotification();
+        if (notificationOpen) {
+            console.log("InitialNotification received: ", notificationOpen.notification);
         }
 
-        this.notificationListener = FCM.on(FCMEvent.Notification, (notification) => {
-            console.log('notification in index: ', notification)
-            if (notification.body) {
-                if (!notification.local_notification && JSON.parse(notification.body).reference && JSON.parse(notification.body).reference.targetScreen) {
-                    if (JSON.parse(notification.body).reference.targetScreen === "CHAT" && JSON.parse(notification.body).senderId !== store.getState().UserAuth.user.userId) {
-                        console.log('JSON.parse(notification.body) : ', JSON.parse(notification.body))
-                        if (store.getState().PageState.appState === 'background') {
-                            this.localNotification(notification)
-                        }
-                        else {
-                            if (Actions.currentScene === "chatList") {
-                                store.dispatch(updateMessageCountAction({ id: JSON.parse(notification.body).id }));
-                            }
-                            else {
-                                store.dispatch(seenMessage(JSON.parse(notification.body).id, store.getState().UserAuth.user.userId, JSON.parse(notification.body).isGroup, PageKeys.NOTIFICATIONS));
-                                store.dispatch(replaceChatMessagesAction({ comingFrom: PageKeys.NOTIFICATIONS, notificationBody: JSON.parse(notification.body) }));
-                            }
-                            store.dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: JSON.parse(notification.body), id: JSON.parse(notification.body).id }));
-                        }
-
-                    }
-                    else {
-                        if (!JSON.parse(notification.body).content) {
-                            store.dispatch(updateNotificationCountAction())
-                        }
-
-                        this.redirectToTargetScreen(JSON.parse(notification.body));
-                    }
-
-                }
-                else {
-
-                    if (notification.my_custom_data && notification.my_custom_data.reference && notification.my_custom_data.reference.targetScreen && notification.my_custom_data.reference.targetScreen === 'CHAT') {
-
-                        this.redirectToTargetScreen(notification.my_custom_data)
-                    }
-                    else {
-                        if (Actions.currentScene === "chat") {
-                            store.dispatch(replaceChatMessagesAction({ comingFrom: 'fcmDeletForEveryone', notificationBody: JSON.parse(notification.body) }));
-                        }
-                    }
-                    // if (JSON.parse(notification.body).reference && JSON.parse(notification.body).reference.targetScreen) {
-                    //     JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));
-                    // }
-
-                }
+        if (!await firebase.messaging().hasPermission()) {
+            try {
+                await firebase.messaging().requestPermission();
+            } catch (e) {
+                alert("Failed to grant permission")
             }
-        });
-
-        FCM.getFCMToken().then(token => {
-            console.log("TOKEN (getFCMToken)", token);
-            if (token) {
-                AsyncStorage.setItem(DEVICE_TOKEN, token);
-            }
-        });
-
-        if (!IS_ANDROID) {
-            FCM.getAPNSToken().then(token => {
-                console.log("APNS TOKEN (getFCMToken)", token);
-            });
         }
+
+        this.notificationListener = firebase.notifications().onNotification(notification => {
+            firebase.notifications().displayNotification(notification);
+        });
+
+        this.notificationOpenedListener = firebase.notifications().onNotificationOpened(this.onNotificationOpened);
+
+        const token = await firebase.messaging().getToken();
+        console.log("TOKEN - firebase.messaging().getToken()", token);
+        if (token) {
+            AsyncStorage.setItem(DEVICE_TOKEN, token);
+        }
+
+        // Didn't find anything specific to iOS on react-native-firebase
+        // if (!IS_ANDROID) {
+        //     FCM.getAPNSToken().then(token => {
+        //         console.log("APNS TOKEN (getFCMToken)", token);
+        //     });
+        // }
 
         // topic example
-        // FCM.subscribeToTopic('sometopic')
-        // FCM.unsubscribeFromTopic('sometopic')
+        // firebase.messaging().subscribeToTopic('sometopic');
+        // firebase.messaging().unsubscribeFromTopic('sometopic');
+    }
+
+    onNotificationOpened = async (notification) => {
+        if (notification.body) {
+            if (!notification.local_notification && JSON.parse(notification.body).reference && JSON.parse(notification.body).reference.targetScreen) {
+                if (JSON.parse(notification.body).reference.targetScreen === "CHAT" && JSON.parse(notification.body).senderId !== store.getState().UserAuth.user.userId) {
+                    console.log('JSON.parse(notification.body) : ', JSON.parse(notification.body))
+                    if (store.getState().PageState.appState === 'background') {
+                        this.showLocalNotification(notification)
+                    }
+                    else {
+                        if (Actions.currentScene === "chatList") {
+                            store.dispatch(updateMessageCountAction({ id: JSON.parse(notification.body).id }));
+                        }
+                        else {
+                            store.dispatch(seenMessage(JSON.parse(notification.body).id, store.getState().UserAuth.user.userId, JSON.parse(notification.body).isGroup, PageKeys.NOTIFICATIONS));
+                            store.dispatch(replaceChatMessagesAction({ comingFrom: PageKeys.NOTIFICATIONS, notificationBody: JSON.parse(notification.body) }));
+                        }
+                        store.dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: JSON.parse(notification.body), id: JSON.parse(notification.body).id }));
+                    }
+                }
+                else {
+                    if (!JSON.parse(notification.body).content) {
+                        store.dispatch(updateNotificationCountAction())
+                    }
+                    this.redirectToTargetScreen(JSON.parse(notification.body));
+                }
+            }
+            else {
+                if (notification.my_custom_data && notification.my_custom_data.reference && notification.my_custom_data.reference.targetScreen && notification.my_custom_data.reference.targetScreen === 'CHAT') {
+                    this.redirectToTargetScreen(notification.my_custom_data)
+                }
+                else {
+                    if (Actions.currentScene === "chat") {
+                        store.dispatch(replaceChatMessagesAction({ comingFrom: 'fcmDeletForEveryone', notificationBody: JSON.parse(notification.body) }));
+                    }
+                }
+            }
+        }
     }
 
     redirectToTargetScreen(body) {
@@ -174,55 +141,44 @@ export default class App extends Component {
         }
     }
 
-    localNotification(notification) {
+    showLocalNotification(notification) {
         console.log('notification local notification : ', JSON.parse(notification.body));
-        var notificationBody = JSON.parse(notification.body)
+        var notificationBody = JSON.parse(notification.body);
         if (!notification.local_notification) {
-            if (notificationBody.groupName) {
-                FCM.presentLocalNotification({
-                    channel: 'default',
-                    id: new Date().valueOf().toString(),
-                    title: notificationBody.groupName,
-                    body: notificationBody.content,
-                    sound: "bell.mp3",
-                    priority: "high",
-                    ticker: "My Notification Ticker",
-                    auto_cancel: true,
-                    icon: "@drawable/myridedna_notif_icon",
-                    big_text: notificationBody.content,
-                    color: "black",
-                    vibrate: 300,
-                    wake_screen: true,
-                    my_custom_data: notificationBody,
-                    lights: true,
-                    show_in_foreground: true,
-                });
-            }
-            else {
-                FCM.presentLocalNotification({
-                    channel: 'default',
-                    id: new Date().valueOf().toString(),
-                    title: notificationBody.senderName,
-                    body: notificationBody.content,
-                    sound: "bell.mp3",
-                    priority: "high",
-                    ticker: "My Notification Ticker",
-                    auto_cancel: true,
-                    icon: "@drawable/myridedna_notif_icon",
-                    big_text: notificationBody.content,
-                    color: "black",
-                    vibrate: 300,
-                    wake_screen: true,
-                    my_custom_data: notificationBody,
-                    lights: true,
-                    show_in_foreground: true,
-                });
-            }
+            let notification = new firebase.notifications.Notification();
+            notification = notification.setNotificationId(new Date().valueOf().toString())
+                .setTitle(notificationBody.groupName || notificationBody.senderName)
+                .setBody(notificationBody.content)
+                .setSound("bell.mp3");
+            // DOC: Android notification options
+            notification.android.setPriority(firebase.notifications.Android.Priority.High);
+            notification.android.setTicker("My Notification Ticker");
+            notification.android.setAutoCancel(true);
+            notification.android.setSmallIcon("@drawable/myridedna_notif_icon");
+            notification.android.setBigText(notificationBody.content);
+            notification.android.setColor("black");
+            notification.android.setColorized(true);
+            notification.android.setVibrate([300]);
+            notification.android.set([300]);
+            notification.android.setChannelId("default")
+
+            // DOC: iOS notification options
+            notification.ios.badge = 10;
+
+            // Couldn't find matching options in react-native-firebase
+            // FCM.presentLocalNotification({
+            //     wake_screen: true,
+            //     my_custom_data: notificationBody,
+            //     show_in_foreground: true,
+            // });
+
+            firebase.notifications().displayNotification(notification)
         }
     }
 
     componentWillUnmount() {
-        this.notificationListener.remove();
+        // TODO: Need to find removing listeners in react-native-firebase
+        // this.notificationListener.remove();
     }
 
     render() {

@@ -11,7 +11,6 @@ import { sendMessgae, getAllMessages, deleteMessagesById, deleteMessagesByIdForE
 import { getFormattedDateFromISO } from '../../util';
 import { BaseModal } from '../../components/modal';
 import { ActionConst, Actions } from 'react-native-router-flux';
-import FCM from 'react-native-fcm';
 
 class Chat extends Component {
     CHAT_OPTIONS = [{ text: 'Clear Chat', id: 'clearAll', handler: () => this.clearChat() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
