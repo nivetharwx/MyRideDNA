@@ -6,8 +6,6 @@ import {
     AppState, ActivityIndicator, FlatList,
 } from 'react-native';
 import { connect } from 'react-redux';
-
-import RNSettings from 'react-native-settings';
 import Geolocation from 'react-native-geolocation-service';
 
 import MapboxGL from '@mapbox/react-native-mapbox-gl';
@@ -723,6 +721,9 @@ export class Map extends Component {
     }
 
     async componentDidMount() {
+        if(this.props.user.isNewUser){
+            this.props.changeScreen({name:PageKeys.PROFILE})
+        }
         const notificationOpen = await firebase.notifications().getInitialNotification();
         if (notificationOpen) {
             const { notification } = notificationOpen;

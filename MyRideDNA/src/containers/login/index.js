@@ -15,7 +15,8 @@ import { storeUserAction, toggleNetworkStatusAction, updateTokenAction } from '.
 import ForgotPassword from '../forgot-password';
 import { Loader } from '../../components/loader'
 import { Toast } from 'native-base';
-
+import { GoogleSignin } from 'react-native-google-signin';
+GoogleSignin.configure();
 class Login extends Component {
     constructor(props) {
         super(props);
@@ -153,6 +154,66 @@ class Login extends Component {
         this.setState(prevState => ({ isVisiblePassword: !prevState.isVisiblePassword }));
     }
 
+
+    fetchingDeviceToken = async (user) =>{
+        if (!this.props.hasNetwork) {
+            this.showNetworkError();
+            return;
+        }
+        if (this.state.deviceToken === null) {
+            const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
+            if (deviceToken === null) {
+                FCM.getFCMToken().then(token => {
+                    console.log("TOKEN (getFCMToken) at login", token);
+                    AsyncStorage.setItem(DEVICE_TOKEN, token);
+                    this.setState({ deviceToken: token }, () => this.thirdPartyLogin(user));
+                });
+            }
+            else {
+                this.setState({ deviceToken }, () => this.thirdPartyLogin(user));
+            }
+        } else {
+            this.thirdPartyLogin(user);
+        }
+    }
+
+    thirdPartyLogin = (user) => {
+        console.log('user : ', user);
+        console.log('resgistartion : ',this.state.deviceToken);
+        console.log('device id : ',DeviceInfo.getUniqueID())
+        axios.post(USER_BASE_URL + 'loginUserUsingThirdParty', {email: user.email, name: user.name, signUpSource:user.signupSource,date:new Date().toISOString(), registrationToken: this.state.deviceToken, deviceId: DeviceInfo.getUniqueID()})
+            .then(res => {
+                console.log('loginUserUsingThirdParty success: ', res)
+                AsyncStorage.setItem(USER_AUTH_TOKEN, res.data.accessToken);
+                this.props.updateToken({ userAuthToken: res.data.accessToken, deviceToken:this.state.deviceToken });
+                console.log("updateToken called: ", { userAuthToken: res.data.accessToken, deviceToken:this.state.deviceToken});
+                res.data.user.isNewUser = res.data.isNewUser
+                this.props.storeUser(res.data.user);
+                console.log('newUser : ',res.data.user)
+                if (res.data.isNewUser) {
+                    Actions.reset(PageKeys.MAP);
+                }
+                else {
+                    Actions.reset(PageKeys.MAP);
+                }
+            })
+            .catch(error => {
+                console.log('loginUserUsingThirdParty error : ', error)
+            })
+    }
+    doGoogleLogin = async () =>{
+        console.log('googleLogin working')
+        try {
+            await GoogleSignin.hasPlayServices();
+            const userInfo = await GoogleSignin.signIn();
+            console.log('userinfo google : ',userInfo)
+            userInfo.user.signUpSource='google'
+            this.fetchingDeviceToken(userInfo.user)
+          } catch (error) {
+              console.log('error google : ',error)
+          }
+    }
+
     render() {
         return (
             <View style={{ flex: 1 }}>
@@ -175,6 +236,7 @@ class Login extends Component {
                     onSubmit={this.onSubmit} onSignupPress={this.onSignupPress}
                     onForgotPasswordPress={this.toggleForgotPasswordForm}
                     isVisiblePassword={this.state.isVisiblePassword}
+                    doGoogleLogin={this.doGoogleLogin}
                 />
             </View>
         );

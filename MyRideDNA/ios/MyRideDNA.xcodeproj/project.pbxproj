@@ -79,7 +79,6 @@
 		C2A76034CCEF4862BD121C0C /* Octicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3E5A56930BB24FE9A71C870D /* Octicons.ttf */; };
 		C6195EED1406470590A5CE8E /* Zocial.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B8F127CE1B744313B17CF557 /* Zocial.ttf */; };
 		C68C5ADF995C4C67A62A8C3A /* libRCTContacts.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F88526D4D154C709AD0BBC4 /* libRCTContacts.a */; };
-		CB310A9FEF9A45E9B6813A9C /* libRNSettings.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D94E6BA1CE64E3A915EF7B3 /* libRNSettings.a */; };
 		CC5D5D2DA3AC44AFB3DA1CED /* FontAwesome5_Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7496A7A3B4F84D878C228107 /* FontAwesome5_Regular.ttf */; };
 		D268362817B545DDBA707F87 /* Ionicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6A53981BE5B7427CBD529EF2 /* Ionicons.ttf */; };
 		D47EC836AA404B0DA678E837 /* AntDesign.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 21645B36B1F14D12B94081BF /* AntDesign.ttf */; };
@@ -382,13 +381,6 @@
 			remoteGlobalIDString = E72EC1401F7ABB5A0001BC90;
 			remoteInfo = "RNDeviceInfo-tvOS";
 		};
-		6312ACC322007D310051DE01 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 84194AF3364F4A349FA31A3E /* RNSettings.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 134814201AA4EA6300B7C361;
-			remoteInfo = RNSettings;
-		};
 		6312ACDB22007E5D0051DE01 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 6312ACD722007E5D0051DE01 /* RCTMGL.xcodeproj */;
@@ -514,10 +506,8 @@
 		7F9640010B434E119CA6815A /* Foundation.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Foundation.ttf; path = "../node_modules/native-base/Fonts/Foundation.ttf"; sourceTree = "<group>"; };
 		832341B01AAA6A8300B99B32 /* RCTText.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTText.xcodeproj; path = "../node_modules/react-native/Libraries/Text/RCTText.xcodeproj"; sourceTree = "<group>"; };
 		83516B17E72122AB0ED4E66A /* libPods-MyRideDNATests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MyRideDNATests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		84194AF3364F4A349FA31A3E /* RNSettings.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = RNSettings.xcodeproj; path = "../node_modules/react-native-settings/ios/RNSettings.xcodeproj"; sourceTree = "<group>"; };
 		8674168B221A4B379A8C550B /* Foundation.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Foundation.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Foundation.ttf"; sourceTree = "<group>"; };
 		8912D1BD134248A7BC4170DC /* libRNDeviceInfo-tvOS.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = "libRNDeviceInfo-tvOS.a"; sourceTree = "<group>"; };
-		8D94E6BA1CE64E3A915EF7B3 /* libRNSettings.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRNSettings.a; sourceTree = "<group>"; };
 		8E7BFE78270B49D59CD0963E /* Octicons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Octicons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Octicons.ttf"; sourceTree = "<group>"; };
 		A2A83485653A3AE30FA86E99 /* Pods-MyRideDNA-tvOSTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MyRideDNA-tvOSTests.release.xcconfig"; path = "Target Support Files/Pods-MyRideDNA-tvOSTests/Pods-MyRideDNA-tvOSTests.release.xcconfig"; sourceTree = "<group>"; };
 		A86D4A6B344C405ABAFCB0E5 /* RCTContacts.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = RCTContacts.xcodeproj; path = "../node_modules/react-native-contacts/ios/RCTContacts.xcodeproj"; sourceTree = "<group>"; };
@@ -576,7 +566,6 @@
 				E320BE126F0F4FE38B76E979 /* libRNVectorIcons.a in Frameworks */,
 				700134E7DE0740D98339334B /* libReactNativePermissions.a in Frameworks */,
 				FC8B64B681614F3D9E403386 /* libRNDeviceInfo.a in Frameworks */,
-				CB310A9FEF9A45E9B6813A9C /* libRNSettings.a in Frameworks */,
 				0068BD2B5BB14CDC9A0DB5AF /* libimageCropPicker.a in Frameworks */,
 				6312ACD422007DCC0051DE01 /* Mapbox.framework in Frameworks */,
 				C68C5ADF995C4C67A62A8C3A /* libRCTContacts.a in Frameworks */,
@@ -788,14 +777,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		6312AC8722007D310051DE01 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				6312ACC422007D310051DE01 /* libRNSettings.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		6312AC8922007D310051DE01 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -867,7 +848,6 @@
 				4E4555F0038D49549D461B24 /* RNVectorIcons.xcodeproj */,
 				527F8DB815444FC2BBB6B967 /* ReactNativePermissions.xcodeproj */,
 				1B1FB7C94BD342DB85FF321F /* RNDeviceInfo.xcodeproj */,
-				84194AF3364F4A349FA31A3E /* RNSettings.xcodeproj */,
 				E1E6817CC43141AEB7EDCA0E /* imageCropPicker.xcodeproj */,
 				A86D4A6B344C405ABAFCB0E5 /* RCTContacts.xcodeproj */,
 				96AD40E695AB434887464B6F /* Lumberjack.xcodeproj */,
@@ -1172,10 +1152,6 @@
 					ProjectRef = 1B1FB7C94BD342DB85FF321F /* RNDeviceInfo.xcodeproj */;
 				},
 				{
-					ProductGroup = 6312AC8722007D310051DE01 /* Products */;
-					ProjectRef = 84194AF3364F4A349FA31A3E /* RNSettings.xcodeproj */;
-				},
-				{
 					ProductGroup = 638007F8218867A100CC3BD8 /* Products */;
 					ProjectRef = 4E4555F0038D49549D461B24 /* RNVectorIcons.xcodeproj */;
 				},
@@ -1462,13 +1438,6 @@
 			fileType = archive.ar;
 			path = "libRNDeviceInfo-tvOS.a";
 			remoteRef = 6312ACBD22007D310051DE01 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6312ACC422007D310051DE01 /* libRNSettings.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libRNSettings.a;
-			remoteRef = 6312ACC322007D310051DE01 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		6312ACDC22007E5D0051DE01 /* libRCTMGL.a */ = {
@@ -1783,7 +1752,6 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -1825,7 +1793,6 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -2011,7 +1978,6 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -2060,7 +2026,6 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -2109,7 +2074,6 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -2158,7 +2122,6 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				OTHER_LDFLAGS = (
 					"-ObjC",

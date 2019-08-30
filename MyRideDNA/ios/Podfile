@@ -18,6 +18,8 @@ target 'MyRideDNA' do
     pod 'RNBackgroundFetch', :path => '../node_modules/react-native-background-fetch'
 
 
+    pod 'RNGoogleSignin', :path => '../node_modules/react-native-google-signin'
+
   end
 
   target 'MyRideDNATests' do

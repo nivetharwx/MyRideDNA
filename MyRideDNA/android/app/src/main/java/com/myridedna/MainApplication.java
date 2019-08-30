@@ -4,17 +4,18 @@ import android.app.Application;
 
 import android.content.IntentFilter;
 import com.facebook.react.ReactApplication;
+import co.apptailor.googlesignin.RNGoogleSigninPackage;
 import io.invertase.firebase.RNFirebasePackage;
 import io.invertase.firebase.messaging.RNFirebaseMessagingPackage;
 import io.invertase.firebase.notifications.RNFirebaseNotificationsPackage;
 import com.transistorsoft.rnbackgroundfetch.RNBackgroundFetchPackage;
 import com.transistorsoft.rnbackgroundgeolocation.RNBackgroundGeolocation;
-import io.rumors.reactnativesettings.RNSettingsPackage;
+
 import com.rt2zz.reactnativecontacts.ReactNativeContacts;
 import com.mapbox.rctmgl.RCTMGLPackage;
 
 import com.reactnative.ivpusic.imagepicker.PickerPackage;
-import io.rumors.reactnativesettings.receivers.GpsLocationReceiver;
+// import io.rumors.reactnativesettings.receivers.GpsLocationReceiver;
 import com.learnium.RNDeviceInfo.RNDeviceInfo;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.facebook.react.ReactNativeHost;
@@ -37,12 +38,12 @@ public class MainApplication extends Application implements ReactApplication {
     @Override
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(new MainReactPackage(),
+            new RNGoogleSigninPackage(),
             new RNFirebasePackage(),
             new RNFirebaseMessagingPackage(),
             new RNFirebaseNotificationsPackage(),
             new RNBackgroundFetchPackage(),
             new RNBackgroundGeolocation(),
-            new RNSettingsPackage(),
             new ReactNativeContacts(),
             new RCTMGLPackage(),
             new PickerPackage(),
@@ -66,6 +67,6 @@ public class MainApplication extends Application implements ReactApplication {
   public void onCreate() {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
-    registerReceiver(new GpsLocationReceiver(), new IntentFilter("android.location.PROVIDERS_CHANGED"));
+    // registerReceiver(new GpsLocationReceiver(), new IntentFilter("android.location.PROVIDERS_CHANGED"));
   }
 }
