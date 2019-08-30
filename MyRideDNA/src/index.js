@@ -10,12 +10,14 @@ import { Root } from "native-base";
 import { seenMessage } from './api';
 
 export default class App extends Component {
-    notificationListener = null;
-    notificationOpenedListener = null;
+    removeNotificationListener = null;
+    removeNotificationOpenedListener = null;
     async componentDidMount() {
-        const channel = new firebase.notifications.Android.Channel('default', 'Default', firebase.notifications.Android.Importance.Max)
+        const channel = new firebase.notifications.Android.Channel('default', 'Default', firebase.notifications.Android.Importance.High)
             .setDescription('MyRideDNA default channel')
-            .enableLights(true);
+            .enableLights(true)
+            .enableVibration(true)
+            .setSound("bell.mp3");
         firebase.notifications().android.createChannel(channel);
 
         const notificationOpen = await firebase.notifications().getInitialNotification();
@@ -31,11 +33,19 @@ export default class App extends Component {
             }
         }
 
-        this.notificationListener = firebase.notifications().onNotification(notification => {
+        this.removeNotificationListener = firebase.notifications().onNotification(notification => {
+            console.log("From onNotification: ", notification);
             firebase.notifications().displayNotification(notification);
         });
+        this.messageListener = firebase.messaging().onMessage(notification => {
+            console.log("From onMessage: ", notification);
+            firebase.notifications().displayNotification(notification);
+        });
+        this.removeNotificationDisplayedListener = firebase.notifications().onNotificationDisplayed(notification => {
+            console.log("From onNotificationDisplayed: ", notification);
+        });
 
-        this.notificationOpenedListener = firebase.notifications().onNotificationOpened(this.onNotificationOpened);
+        this.removeNotificationOpenedListener = firebase.notifications().onNotificationOpened(this.onNotificationOpened);
 
         const token = await firebase.messaging().getToken();
         console.log("TOKEN - firebase.messaging().getToken()", token);
@@ -56,6 +66,7 @@ export default class App extends Component {
     }
 
     onNotificationOpened = async (notification) => {
+        console.log("From onNotificationOpened: ", notification);
         if (notification.body) {
             if (!notification.local_notification && JSON.parse(notification.body).reference && JSON.parse(notification.body).reference.targetScreen) {
                 if (JSON.parse(notification.body).reference.targetScreen === "CHAT" && JSON.parse(notification.body).senderId !== store.getState().UserAuth.user.userId) {
@@ -177,8 +188,8 @@ export default class App extends Component {
     }
 
     componentWillUnmount() {
-        // TODO: Need to find removing listeners in react-native-firebase
-        // this.notificationListener.remove();
+        this.removeNotificationListener();
+        this.removeNotificationOpenedListener();
     }
 
     render() {
