@@ -56,7 +56,6 @@ import axios from 'axios';
 import { BaseModal } from '../../components/modal';
 import { Loader } from '../../components/loader';
 
-import firebase from 'react-native-firebase';
 import DeviceInfo from 'react-native-device-info';
 
 import { APP_CONFIGS } from '../../config';
@@ -724,19 +723,6 @@ export class Map extends Component {
         if(this.props.user.isNewUser){
             this.props.changeScreen({name:PageKeys.PROFILE})
         }
-        const notificationOpen = await firebase.notifications().getInitialNotification();
-        if (notificationOpen) {
-            const { notification } = notificationOpen;
-            console.log('notification map : ', notification);
-            if (notification.body && !notification.local_notification && JSON.parse(notification.body).reference && JSON.parse(notification.body).reference.targetScreen) {
-                console.log('notification body map  :', notification)
-                if (JSON.parse(notification.body).reference.targetScreen === PageKeys.CHAT) { }
-                else {
-                    JSON.parse(notification.body).reference.targetScreen && this.redirectToTargetScreen(JSON.parse(notification.body));
-                }
-            }
-        }
-
         BackgroundGeolocation.onLocation(this.onLocation, this.onError);
         BackgroundGeolocation.onMotionChange(this.onMotionChange);
         BackgroundGeolocation.onActivityChange(this.onActivityChange);
@@ -841,26 +827,6 @@ export class Map extends Component {
 
     onMotionChange = (event) => {
         console.log('[motionchange] -', event.isMoving, event.location);
-    }
-
-    redirectToTargetScreen(body) {
-        if (Object.keys(PageKeys).indexOf(body.reference.targetScreen) === -1) {
-            if (body.reference.targetScreen === 'REQUESTS') {
-                this.props.changeScreen({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: body.reference.targetScreen, notificationBody: body } });
-            }
-            return;
-        }
-        if (body.reference.targetScreen === "FRIENDS_PROFILE") {
-            store.dispatch(resetCurrentFriendAction({ comingFrom: PageKeys.NOTIFICATIONS }))
-            store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
-        }
-        if (body.reference.targetScreen === "CHAT") {
-            store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, chatInfo: body } }));
-        }
-
-        else {
-            store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
-        }
     }
 
     handleAppStateChange = (nextAppState) => {
