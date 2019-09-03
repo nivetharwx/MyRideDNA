@@ -153,7 +153,6 @@ android {
 }
 
 dependencies {
-    implementation project(':react-native-google-signin')
     implementation project(':react-native-firebase')
     implementation project(':react-native-background-fetch')
     implementation project(':react-native-background-geolocation')
