@@ -111,7 +111,7 @@ class Friends extends Component {
                 }
             })
             if (pictureIdList.length > 0) {
-                // this.props.getPictureList(pictureIdList)
+                this.props.getPictureList(pictureIdList)
             }
         }
 
