@@ -41,7 +41,7 @@ class MyProfileTab extends Component {
         if (this.props.garage.garageId === null) {
             this.props.getGarageInfo(this.props.user.userId);
         }
-        if (!this.props.user.profilePicture) {
+        if (this.props.user.profilePictureId && !this.props.user.profilePicture) {
             this.profilePicture = await AsyncStorage.getItem('profilePicture');
             if (this.profilePicture) {
                 this.profilePicture = JSON.parse(this.profilePicture);
@@ -65,7 +65,9 @@ class MyProfileTab extends Component {
                     return;
                 }
             }
-            this.props.getUserProfilePicture(this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
+            if (this.props.user.profilePictureId) {
+                this.props.getUserProfilePicture(this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
+            }
         } else if (prevState.isLoadingProfPic) {
             if (this.props.user.profilePicture) {
                 this.profilePicture = {};

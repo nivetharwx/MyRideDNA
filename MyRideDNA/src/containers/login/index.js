@@ -15,6 +15,7 @@ import { storeUserAction, toggleNetworkStatusAction, updateTokenAction } from '.
 import ForgotPassword from '../forgot-password';
 import { Loader } from '../../components/loader'
 import { Toast } from 'native-base';
+import { LoginButton, AccessToken, LoginManager } from 'react-native-fbsdk';
 // import { GoogleSignin } from 'react-native-google-signin';
 
 // GoogleSignin.configure();
@@ -199,6 +200,38 @@ class Login extends Component {
                 console.log('loginUserUsingThirdParty error : ', error)
             })
     }
+
+    doFacebookLogin = () => {
+        console.log('facebook login')
+        LoginManager.logInWithPermissions(["public_profile", "email"]).then((result) => {
+            console.log('login data : ', result)
+            if (result.isCancelled) {
+                console.log("Login cancelled");
+            } else {
+                AccessToken.getCurrentAccessToken().then((data) => {
+                    console.log('data : ', data);
+                    const { accessToken } = data;
+                    axios.get('https://graph.facebook.com/v2.5/me?fields=email,name,friends,picture&access_token=' + accessToken)
+                        .then((res) => {
+                            var user = {};
+                            console.log('res : ', res)
+                            user.name = res.data.name
+                            user.id = res.data.id
+                            user.email = res.data.email
+                            user.signupSource = 'facebook'
+                            this.fetchingDeviceToken(user)
+                        })
+                        .catch((error) => {
+                            console.log('error : ', error)
+                        })
+                })
+            }
+        })
+            .catch(error => {
+                console.log("Login fail with error: " + error);
+            })
+    }
+
     // doGoogleLogin = async () =>{
     //     console.log('googleLogin working')
     //     try {
@@ -234,7 +267,8 @@ class Login extends Component {
                     onSubmit={this.onSubmit} onSignupPress={this.onSignupPress}
                     onForgotPasswordPress={this.toggleForgotPasswordForm}
                     isVisiblePassword={this.state.isVisiblePassword}
-                // doGoogleLogin={this.doGoogleLogin}
+                    // doGoogleLogin={this.doGoogleLogin}
+                    doFacebookLogin={this.doFacebookLogin}
                 />
             </View>
         );

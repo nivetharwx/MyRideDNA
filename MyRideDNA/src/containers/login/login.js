@@ -53,7 +53,7 @@ export const LoginScreen = (props) => (
             </View>
             <ImageBackground style={{ width: '100%', flex: 1 }} source={require('../../assets/img/login-bottom.png')}>
                 <View style={{ backgroundColor: 'rgba(62, 62, 61, 0.7)', paddingTop: 100, height: '100%', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' }}>
-                    <IconButton onPress={() => { }} style={{ paddingHorizontal: 0 }} iconProps={{ name: 'facebook', type: 'MaterialCommunityIcons', style: { backgroundColor: '#fff', fontSize: 60, borderRadius: 5 } }} />
+                    <IconButton onPress={props.doFacebookLogin} style={{ paddingHorizontal: 0 }} iconProps={{ name: 'facebook', type: 'MaterialCommunityIcons', style: { backgroundColor: '#fff', fontSize: 60, borderRadius: 5 } }} />
                     <IconButton onPress={props.doGoogleLogin} style={{ paddingHorizontal: 0 }} iconProps={{ name: 'google-', type: 'Entypo', style: { backgroundColor: '#fff', fontSize: 60, borderRadius: 5 } }} />
                 </View>
             </ImageBackground>
