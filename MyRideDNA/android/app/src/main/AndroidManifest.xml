@@ -15,17 +15,29 @@
       android:allowBackup="false"
       android:theme="@style/AppTheme">
       
-      <meta-data android:name="com.myridedna" android:value="7cd9bca8620b6bf083d02b9ae189c423d48be8d555e34eb61eb3771d24748b8e" />
-
       <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/myridedna_notif_icon"/>
       <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="my_default_channel"/>
 
-      <service android:name="io.invertase.firebase.messaging.RNFirebaseMessagingService">
+      <service android:name="com.evollu.react.fcm.MessagingService" android:enabled="true" android:exported="true">
         <intent-filter>
-          <action android:name="com.google.firebase.MESSAGING_EVENT" />
+          <action android:name="com.google.firebase.MESSAGING_EVENT"/>
         </intent-filter>
       </service>
-  
+
+      <service android:name="com.evollu.react.fcm.InstanceIdService" android:exported="false">
+        <intent-filter>
+          <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+        </intent-filter>
+      </service>
+     <receiver android:name="com.evollu.react.fcm.FIRLocalMessagingPublisher"/>
+     <receiver android:enabled="true" android:exported="true"  android:name="com.evollu.react.fcm.FIRSystemBootEventReceiver">
+          <intent-filter>
+              <action android:name="android.intent.action.BOOT_COMPLETED"/>
+              <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+              <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+              <category android:name="android.intent.category.DEFAULT" />
+          </intent-filter>
+      </receiver>
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"

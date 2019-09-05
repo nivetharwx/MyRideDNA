@@ -17,8 +17,6 @@ target 'MyRideDNA' do
 
     pod 'RNBackgroundFetch', :path => '../node_modules/react-native-background-fetch'
 
-
-
   end
 
   target 'MyRideDNATests' do

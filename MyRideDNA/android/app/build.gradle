@@ -94,7 +94,6 @@ def enableSeparateBuildPerCPUArchitecture = false
 def enableProguardInReleaseBuilds = false
 
 android {
-	purgeBackgroundGeolocationDebugResources(applicationVariants)
     compileSdkVersion rootProject.ext.compileSdkVersion
     // buildToolsVersion rootProject.ext.buildToolsVersion
 
@@ -158,8 +157,10 @@ dependencies {
     implementation project(':react-native-background-geolocation')
     implementation 'com.google.firebase:firebase-core'
     implementation 'com.google.firebase:firebase-messaging'
+    compile project(':react-native-settings')
     compile project(':react-native-contacts')
     compile project(':react-native-image-crop-picker')
+    implementation project(':react-native-settings')
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'androidx.appcompat:appcompat:1.0.0'
     implementation "com.facebook.react:react-native:+"  // From node_modules
@@ -173,8 +174,6 @@ dependencies {
     }
     // compile 'com.google.android.gms:play-services:11.8.0'
     // compile "com.google.android.gms:play-services-gcm:8.1.0"
-    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
-    implementation 'com.google.android.gms:play-services-auth:17.0.0'
 }
 
 // Run this once to be able to run the application with BUCK
@@ -183,18 +182,4 @@ task copyDownloadableDepsToLibs(type: Copy) {
     from configurations.compile
     into 'libs'
 }
-apply plugin: 'com.google.gms.google-services'
-// [Added by react-native-background-geolocation] Purge debug sounds from release build.
-def purgeBackgroundGeolocationDebugResources(applicationVariants) {
-    if ((rootProject.ext.has("removeBackgroundGeolocationDebugSoundsInRelease")) && (rootProject.ext.removeBackgroundGeolocationDebugSoundsInRelease == false)) return
-    applicationVariants.all { variant ->
-        if (variant.buildType.name == "release") {
-            println("[react-native-background-geolocation] Purging debug resources in release build")
-            variant.mergeResources.doLast {
-                delete(fileTree(dir: variant.mergeResources.outputDir, includes: ["raw_tslocationmanager*"]))
-            }
-        }
-    }
-}
-
 apply plugin: 'com.google.gms.google-services'
