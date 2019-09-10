@@ -12,6 +12,7 @@ import { seenMessage } from './api';
 export default class App extends Component {
     removeNotificationListener = null;
     removeNotificationOpenedListener = null;
+    removeNotificationDisplayedListener = null;
     async componentDidMount() {
         const channel = new firebase.notifications.Android.Channel('default', 'Default', firebase.notifications.Android.Importance.High)
             .setDescription('MyRideDNA default channel')
@@ -23,6 +24,8 @@ export default class App extends Component {
         const notificationOpen = await firebase.notifications().getInitialNotification();
         if (notificationOpen) {
             console.log("InitialNotification received: ", notificationOpen.notification);
+            // this.onNotificationOpened(notificationOpen.notification._data, true)
+            // this.redirectToTargetScreen(JSON.parse(notificationOpen.notification._data.reference).targetScreen,notificationOpen.notification._data)
         }
 
         if (!await firebase.messaging().hasPermission()) {
@@ -33,19 +36,44 @@ export default class App extends Component {
             }
         }
 
-        this.removeNotificationListener = firebase.notifications().onNotification(notification => {
-            console.log("From onNotification: ", notification);
-            firebase.notifications().displayNotification(notification);
-        });
+        // this.removeNotificationListener = firebase.notifications().onNotification(notification => {
+        //     console.log("From onNotification: ", notification);
+        //     notification.android.setChannelId("default")
+        //     notification.android.setAutoCancel(true);
+        //     firebase.notifications().displayNotification(notification);
+        // });
         this.messageListener = firebase.messaging().onMessage(notification => {
             console.log("From onMessage: ", notification);
-            firebase.notifications().displayNotification(notification);
+                if(!notification._data.reference) return ;
+                if(notification._data.reference.targetScreen === PageKeys.CHAT){
+                    if(Actions.currentScene === PageKeys.CHAT){
+                        if(store.getState().ChatList.chatData.id === notification._data.id) return;
+                    }
+                    this.showLocalNotification(notification._data);
+                    return;
+                }
+                if(notification._data.reference.targetScreen !== Actions.currentScene){
+                    this.showLocalNotification(notification._data);
+                    return;
+                }
+            if(!IS_ANDROID){
+                this.updatePageContent(notification._data)
+            }
+
         });
         this.removeNotificationDisplayedListener = firebase.notifications().onNotificationDisplayed(notification => {
-            console.log("From onNotificationDisplayed: ", notification);
+            console.log('from onNotificationDisplayed :', notification);
+            if(IS_ANDROID){
+                this.updatePageContent(notification._data)
+            }
         });
 
-        this.removeNotificationOpenedListener = firebase.notifications().onNotificationOpened(this.onNotificationOpened);
+        this.removeNotificationOpenedListener = firebase.notifications().onNotificationOpened(({notification}) => {
+            console.log('removeNotificationOpenedListener : ', notification);
+            if(notification._data.reference){
+                this.redirectToTargetScreen(JSON.parse(notification._data.reference).targetScreen, notification._data)
+            }
+        });
 
         const token = await firebase.messaging().getToken();
         console.log("TOKEN - firebase.messaging().getToken()", token);
@@ -65,101 +93,120 @@ export default class App extends Component {
         // firebase.messaging().unsubscribeFromTopic('sometopic');
     }
 
-    onNotificationOpened = async (notification) => {
-        console.log("From onNotificationOpened: ", notification);
-        if (notification.body) {
-            if (!notification.local_notification && JSON.parse(notification.body).reference && JSON.parse(notification.body).reference.targetScreen) {
-                if (JSON.parse(notification.body).reference.targetScreen === "CHAT" && JSON.parse(notification.body).senderId !== store.getState().UserAuth.user.userId) {
-                    console.log('JSON.parse(notification.body) : ', JSON.parse(notification.body))
-                    if (store.getState().PageState.appState === 'background') {
-                        this.showLocalNotification(notification)
-                    }
-                    else {
-                        if (Actions.currentScene === "chatList") {
-                            store.dispatch(updateMessageCountAction({ id: JSON.parse(notification.body).id }));
-                        }
-                        else {
-                            store.dispatch(seenMessage(JSON.parse(notification.body).id, store.getState().UserAuth.user.userId, JSON.parse(notification.body).isGroup, PageKeys.NOTIFICATIONS));
-                            store.dispatch(replaceChatMessagesAction({ comingFrom: PageKeys.NOTIFICATIONS, notificationBody: JSON.parse(notification.body) }));
-                        }
-                        store.dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: JSON.parse(notification.body), id: JSON.parse(notification.body).id }));
-                    }
-                }
-                else {
-                    if (!JSON.parse(notification.body).content) {
-                        store.dispatch(updateNotificationCountAction())
-                    }
-                    this.redirectToTargetScreen(JSON.parse(notification.body));
-                }
+    onNotificationOpened = async (notifBody) => {
+        console.log("From onNotificationOpened: ", notifBody);
+        if (notifBody) {
+            if (notifBody.reference) {
+                notifBody.reference = JSON.parse(notifBody.reference);
+                // if (notifBody.reference.targetScreen === "CHAT" && notifBody.senderId !== store.getState().UserAuth.user.userId) {
+                //     if (store.getState().PageState.appState === 'background') {
+                //         this.redirectToTargetScreen(notifBody)
+                //         return;
+                //     }
+                //     if (Actions.currentScene === "chatList") {
+                //         store.dispatch(updateMessageCountAction({ id: notifBody.id }));
+                //     }
+                //     else {
+                //         store.dispatch(seenMessage(notifBody.id, store.getState().UserAuth.user.userId, notifBody.isGroup, PageKeys.NOTIFICATIONS));
+                //         store.dispatch(replaceChatMessagesAction({ comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifBody }));
+                //     }
+                //     store.dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: notifBody, id: notifBody.id }));
+                // }
+                // else {
+                //     console.log('else part of not chat target screen')
+                //     if (!notifBody.content) {
+                //         store.dispatch(updateNotificationCountAction())
+                //     }
+                //     this.redirectToTargetScreen(notifBody);
+                // }
             }
-            else {
-                if (notification.my_custom_data && notification.my_custom_data.reference && notification.my_custom_data.reference.targetScreen && notification.my_custom_data.reference.targetScreen === 'CHAT') {
-                    this.redirectToTargetScreen(notification.my_custom_data)
-                }
-                else {
-                    if (Actions.currentScene === "chat") {
-                        store.dispatch(replaceChatMessagesAction({ comingFrom: 'fcmDeletForEveryone', notificationBody: JSON.parse(notification.body) }));
-                    }
-                }
-            }
+            // else {
+            //     if (notification.my_custom_data && notification.my_custom_data.reference && notification.my_custom_data.reference.targetScreen && notification.my_custom_data.reference.targetScreen === 'CHAT') {
+            //         this.redirectToTargetScreen(notification.my_custom_data)
+            //     }
+            //     else {
+            //         if (Actions.currentScene === "chat") {
+            //             store.dispatch(replaceChatMessagesAction({ comingFrom: 'fcmDeletForEveryone', notificationBody: notifBody }));
+            //         }
+            //     }
+            // }
         }
     }
 
-    redirectToTargetScreen(body) {
-        if (store.getState().PageState.appState === 'background') {
-            if (Object.keys(PageKeys).indexOf(body.reference.targetScreen) === -1) {
-                if (body.reference.targetScreen === 'REQUESTS') {
+    updatePageContent = (notifBody) => {
+        if (notifBody.reference.targetScreen === "CHAT" && notifBody.senderId !== store.getState().UserAuth.user.userId) {
+            if (store.getState().TabVisibility.currentScreen.name === PageKeys.CHAT) {
+                store.dispatch(seenMessage(notifBody.id, store.getState().UserAuth.user.userId, notifBody.isGroup, PageKeys.NOTIFICATIONS));
+                store.dispatch(replaceChatMessagesAction({ comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifBody }));
+                
+            }
+            else if (store.getState().TabVisibility.currentScreen.name === PageKeys.CHAT_LIST) {
+                store.dispatch(updateMessageCountAction({ id: notifBody.id }));
+            }
+            store.dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: notifBody, id: notifBody.id }));
+            return;
+        }
+        if(notifBody.reference.targetScreen === Actions.currentScene){
+            Actions.refresh();
+        }
+        
+        // if (body.reference.targetScreen === "CHAT") {
+        //     if (store.getState().TabVisibility.currentScreen.name !== PageKeys.CHAT) {
+        //         console.log('other than CHAT')
+        //         if (Actions.prevState.routes[Actions.prevState.routes.length - 1].routeName === "chat" && (Actions.prevState.routes[Actions.prevState.routes.length - 2].routeName === "chatList" || Actions.prevState.routes[Actions.prevState.routes.length - 2].routeName === "friends")) {
+        //             console.log('other than CHAT if')
+        //             store.dispatch(replaceChatMessagesAction({ comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body }));
+        //             Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, chatInfo: body });
+        //         }
+        //         else {
+        //             console.log('other than CHAT else')
+        //             // store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, chatInfo: body } }));
+        //         }
+        //     }
+        //     else {
+        //         console.log("currentScreen.name is CHAT");
+        //         if (Actions.prevState.routes.length === 1 && Actions.prevState.routes[0].routeName === "map") {
+        //             console.log("currentScreen.name is CHAT if");
+        //             store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, chatInfo: body } }));
+        //         }
+        //         else {
+        //             console.log("currentScreen.name is CHAT else");
+        //             store.dispatch(replaceChatMessagesAction({ comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body }));
+        //             Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, chatInfo: body });
+        //         }
+        //     }
+        // }  
+    }
+
+    redirectToTargetScreen(targetScreen, notifData) {
+        console.log('redirectToTargetScreen  targetScreen : ',targetScreen)
+        console.log('redirectToTargetScreen  notifData : ',notifData)
+            if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
+                if (targetScreen === 'REQUESTS') {
+                    console.log('store.getState().TabVisibility.currentScreen.name : ', store.getState().TabVisibility.currentScreen.name)
                     store.getState().TabVisibility.currentScreen.name !== PageKeys.FRIENDS
-                        ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: body.reference.targetScreen, notificationBody: body } }))
-                        : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: body.reference.targetScreen, notificationBody: body });
+                        ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData } }))
+                        : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData });
                 }
                 return;
             }
-            if (body.reference.targetScreen === "FRIENDS_PROFILE") {
+            if (targetScreen === "FRIENDS_PROFILE") {
                 store.dispatch(resetCurrentFriendAction({ comingFrom: PageKeys.NOTIFICATIONS }))
-                store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
-            }
-            else if (body.reference.targetScreen === "CHAT") {
-                console.log(Actions.prevState)
-                if (store.getState().TabVisibility.currentScreen.name !== PageKeys.CHAT) {
-                    console.log('other than CHAT')
-                    if (Actions.prevState.routes[Actions.prevState.routes.length - 1].routeName === "chat" && (Actions.prevState.routes[Actions.prevState.routes.length - 2].routeName === "chatList" || Actions.prevState.routes[Actions.prevState.routes.length - 2].routeName === "friends")) {
-                        console.log('other than CHAT if')
-                        store.dispatch(replaceChatMessagesAction({ comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body }));
-                        Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, chatInfo: body });
-                    }
-                    else {
-                        console.log('other than CHAT else')
-                        store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, chatInfo: body } }));
-                    }
-                }
-                else {
-                    console.log("currentScreen.name is CHAT");
-                    if (Actions.prevState.routes.length === 1 && Actions.prevState.routes[0].routeName === "map") {
-                        console.log("currentScreen.name is CHAT if");
-                        store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, chatInfo: body } }));
-                    }
-                    else {
-                        console.log("currentScreen.name is CHAT else");
-                        store.dispatch(replaceChatMessagesAction({ comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body }));
-                        Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, chatInfo: body });
-                    }
-                }
+                store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));
             }
             else {
-                store.dispatch(screenChangeAction({ name: PageKeys[body.reference.targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: body } }));
+                store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));
             }
-        }
+
     }
 
-    showLocalNotification(notification) {
-        console.log('notification local notification : ', JSON.parse(notification.body));
-        var notificationBody = JSON.parse(notification.body);
-        if (!notification.local_notification) {
+    showLocalNotification(notificationBody) {
+        console.log('notification local notification : ', notificationBody);
             let notification = new firebase.notifications.Notification();
             notification = notification.setNotificationId(new Date().valueOf().toString())
-                .setTitle(notificationBody.groupName || notificationBody.senderName)
-                .setBody(notificationBody.content)
+                .setTitle(notificationBody.groupName || notificationBody.senderName || notificationBody.fromUserName)
+                .setBody(notificationBody.content || notificationBody.message)
+                .setData(notificationBody)
                 .setSound("bell.mp3");
             // DOC: Android notification options
             notification.android.setPriority(firebase.notifications.Android.Priority.High);
@@ -170,7 +217,6 @@ export default class App extends Component {
             notification.android.setColor("black");
             notification.android.setColorized(true);
             notification.android.setVibrate([300]);
-            notification.android.set([300]);
             notification.android.setChannelId("default")
 
             // DOC: iOS notification options
@@ -184,12 +230,13 @@ export default class App extends Component {
             // });
 
             firebase.notifications().displayNotification(notification)
-        }
     }
 
     componentWillUnmount() {
         this.removeNotificationListener();
         this.removeNotificationOpenedListener();
+        this.removeNotificationDisplayedListener();
+        this.messageListener();
     }
 
     render() {

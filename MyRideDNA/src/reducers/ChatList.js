@@ -19,7 +19,7 @@ export default (state = initialState, action) => {
                     chatList: action.data.chatList
                 }
             }
-            else if (action.data.comingFrom === 'sendMessgaeApi') {
+            else if (action.data.comingFrom === 'sendMessgaeApi' && state.chatList.length > 0) {
                 const index = state.chatList.findIndex(list => list.id === action.data.id)
                 if (index > -1) {
                     const newChatList = state.chatList[index];

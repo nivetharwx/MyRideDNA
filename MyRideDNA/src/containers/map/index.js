@@ -60,6 +60,8 @@ import DeviceInfo from 'react-native-device-info';
 
 import { APP_CONFIGS } from '../../config';
 
+import firebase from 'react-native-firebase';
+
 MapboxGL.setAccessToken(MAP_ACCESS_TOKEN);
 // DOC: JS mapbox library to make direction api calls
 const mbxDirections = require('@mapbox/mapbox-sdk/services/directions');
@@ -445,6 +447,8 @@ export class Map extends Component {
         });
     }
 
+
+
     componentDidUpdate(prevProps, prevState) {
         if (this.props.ride.rideId) {
             if (prevProps.ride.unsynced === true && this.props.ride.unsynced === false) {
@@ -723,6 +727,11 @@ export class Map extends Component {
         if(this.props.user.isNewUser){
             this.props.changeScreen({name:PageKeys.PROFILE})
         }
+        const notificationOpen = await firebase.notifications().getInitialNotification();
+        if (notificationOpen) {
+            console.log("InitialNotification received map: ", notificationOpen.notification);
+            this.redirectToTargetScreen(JSON.parse(notificationOpen.notification._data.reference).targetScreen,notificationOpen.notification._data)
+        }
         BackgroundGeolocation.onLocation(this.onLocation, this.onError);
         BackgroundGeolocation.onMotionChange(this.onMotionChange);
         BackgroundGeolocation.onActivityChange(this.onActivityChange);
@@ -827,6 +836,28 @@ export class Map extends Component {
 
     onMotionChange = (event) => {
         console.log('[motionchange] -', event.isMoving, event.location);
+    }
+
+    redirectToTargetScreen(targetScreen, notifData) {
+        console.log('redirectToTargetScreen  targetScreen : ',targetScreen)
+        console.log('redirectToTargetScreen  notifData : ',notifData)
+            if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
+                if (targetScreen === 'REQUESTS') {
+                    console.log('store.getState().TabVisibility.currentScreen.name : ', store.getState().TabVisibility.currentScreen.name)
+                    store.getState().TabVisibility.currentScreen.name !== PageKeys.FRIENDS
+                        ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData } }))
+                        : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData });
+                }
+                return;
+            }
+            if (targetScreen === "FRIENDS_PROFILE") {
+                store.dispatch(resetCurrentFriendAction({ comingFrom: PageKeys.NOTIFICATIONS }))
+                store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));
+            }
+            else {
+                store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));
+            }
+
     }
 
     handleAppStateChange = (nextAppState) => {
@@ -1038,7 +1069,9 @@ export class Map extends Component {
     }
 
     onBackButtonPress = () => {
+        console.log('onBackButtonPress')
         if (Actions.state.index !== 0) {
+            console.log('Actions.state.index !== 0 : ',Actions.currentScene)
             if (Actions.currentScene === PageKeys.FRIENDS_PROFILE) {
                 Actions.pop();
                 this.props.resetCurrentFriend()
