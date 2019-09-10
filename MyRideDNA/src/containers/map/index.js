@@ -847,25 +847,26 @@ export class Map extends Component {
     }
 
     getCurrentLocation = async (recenterMap) => {
-        // Geolocation.getCurrentPosition(
-        //     ({ coords }) => {
-        //         this.setState({ currentLocation: { location: [coords.longitude, coords.latitude], name: '' } }, () => {
-        //             if (recenterMap) {
-        //                 this._mapView.flyTo(this.state.currentLocation.location, 500);
-        //             }
-        //         });
-        //     },
-        //     (error) => {
-        //         console.log(error.code, error.message);
-        //     },
-        //     { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-        // );
-        const location = await BackgroundGeolocation.getCurrentPosition({ samples: 1, persist: true });
-        if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
-            if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (location.coords.longitude + '' + location.coords.latitude)) {
-                this.updateRecordRideCoordinate(location.coords, this.props.ride.status);
-            }
-        }
+        console.log("getCurrentLocation");
+        Geolocation.getCurrentPosition(
+            ({ coords }) => {
+                this.setState({ currentLocation: { location: [coords.longitude, coords.latitude], name: '' } }, () => {
+                    if (recenterMap) {
+                        this._mapView.flyTo(this.state.currentLocation.location, 500);
+                    }
+                });
+            },
+            (error) => {
+                console.log(error.code, error.message);
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        );
+        // const location = await BackgroundGeolocation.getCurrentPosition({ samples: 1, persist: true });
+        // if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
+        //     if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (location.coords.longitude + '' + location.coords.latitude)) {
+        //         this.updateRecordRideCoordinate(location.coords, this.props.ride.status);
+        //     }
+        // }
     }
 
     watchLocation = async () => {
