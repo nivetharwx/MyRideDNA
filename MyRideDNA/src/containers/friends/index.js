@@ -111,7 +111,7 @@ class Friends extends Component {
                 }
             })
             if (pictureIdList.length > 0) {
-                this.props.getPictureList(pictureIdList)
+                // this.props.getPictureList(pictureIdList)
             }
         }
 
@@ -401,7 +401,7 @@ class Friends extends Component {
                     this.state.selectedPersonImg
                         ? null
                         : <View style={APP_COMMON_STYLES.statusBar}>
-                            <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                            <StatusBar translucent backgroundColor='black' barStyle="light-content" />
                         </View>
                 }
 

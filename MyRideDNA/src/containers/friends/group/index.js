@@ -40,7 +40,12 @@ class Group extends Component {
     }
 
     componentDidMount() {
-        if (this.props.comingFrom === PageKeys.NOTIFICATIONS || this.props.comingFrom === 'notificationPage') {
+        if(this.props.comingFrom === PageKeys.NOTIFICATIONS){
+            this.props.getGroupMembers(JSON.parse(this.props.notificationBody.reference).groupId, this.props.notificationBody.notifiedUserId, JSON.parse(this.props.notificationBody.reference).groupName, true, 0, (res) => {
+            }, (err) => {
+            });
+        }
+        else if (this.props.comingFrom === 'notificationPage') {
             this.props.getGroupMembers(this.props.notificationBody.reference.groupId, this.props.notificationBody.notifiedUserId, this.props.notificationBody.reference.groupName, true, 0, (res) => {
             }, (err) => {
             });
@@ -402,7 +407,7 @@ class Group extends Component {
             ? <View style={styles.fill} />
             : <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                <StatusBar translucent backgroundColor='black' barStyle="light-content" />
                 </View>
                 <View style={styles.fill}>
                     <BasicHeader

@@ -27,6 +27,7 @@ class ChatList extends Component {
     }
 
     componentDidMount() {
+        console.log('Actions chatlist : ',Actions);
         this.props.getAllChats(this.props.user.userId);
     }
 
@@ -60,13 +61,7 @@ class ChatList extends Component {
         });
 
     }
-    onPullRefresh = () => {
-        this.setState({ isRefreshing: true });
-        // this.props.getFriendGroups(this.props.user.userId, false);
-        this.props.getFriendGroups(this.props.user.userId, false, 0, (res) => {
-        }, (err) => {
-        });
-    }
+ 
     onPressLogout = async () => {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
@@ -76,7 +71,7 @@ class ChatList extends Component {
     }
 
     deleteFromChatList = () => {
-
+        
     }
 
     getDate = (item) => {
@@ -164,33 +159,6 @@ class ChatList extends Component {
 
     }
 
-    loadMoreData = () => {
-        if (this.state.isLoadingData && this.state.isLoading === false) {
-            this.setState({ isLoading: true, isLoadingData: false })
-            this.props.getFriendGroups(this.props.user.userId, false, this.props.pageNumber, (res) => {
-                this.setState({ isLoading: false })
-            }, (err) => {
-                this.setState({ isLoading: false })
-            });
-        }
-    }
-
-    renderFooter = () => {
-        if (this.state.isLoading) {
-            return (
-                <View
-                    style={{
-                        paddingVertical: 20,
-                        borderTopWidth: 1,
-                        borderColor: "#CED0CE"
-                    }}
-                >
-                    <ActivityIndicator animating size="large" />
-                </View>
-            );
-        }
-        return null
-    }
 
     chatListKeyExtractor = (item) => item.id;
 
@@ -219,14 +187,10 @@ class ChatList extends Component {
     render() {
         const { chatList, user, hasNetwork } = this.props;
         const { isVisibleOptionsModal } = this.state;
-        const spin = this.state.spinValue.interpolate({
-            inputRange: [0, 1],
-            outputRange: ['0deg', '360deg']
-        });
         return (
             <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                    <StatusBar translucent backgroundColor='black' barStyle="light-content" />
                 </View>
                 <View style={{ flex: 1 }}>
                     <BasicHeader title='Chat' rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
@@ -280,11 +244,9 @@ const mapDispatchToProps = (dispatch) => {
         getAllChats: (userId) => dispatch(getAllChats(userId)),
         getChatListPic: (chatIdList) => getPictureList(chatIdList, (pictureObj) => {
             console.log('getPictureList getChatListPic sucess :', pictureObj)
-            // dispatch(updateFriendRequestListAction({ pictureObj }))
             dispatch(replaceChatListAction({ pictureObj }))
         }, (error) => {
             console.log('getPictureList getChatListPic error :  ', error)
-            // dispatch(updateFriendRequestListAction({ id: id }))
         }),
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
     };
@@ -300,32 +262,7 @@ const styles = StyleSheet.create({
         marginTop: heightPercentageToDP(8),
         marginLeft: 0
     },
-    createGrpContainer: {
-        position: 'absolute',
-        // bottom: widthPercentageToDP(20),
-        marginRight: widthPercentageToDP(20),
-        marginLeft: widthPercentageToDP(12.5),
-        width: 0,
-    },
-    createGrpActionSec: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    createGroupIcon: {
-        marginLeft: -CREATE_GROUP_WIDTH / 2,
-        backgroundColor: '#81BB41',
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    createGrpChildSize: {
-        width: CREATE_GROUP_WIDTH,
-        height: CREATE_GROUP_WIDTH,
-        borderRadius: CREATE_GROUP_WIDTH / 2,
-    },
-    memberList: {
-        marginHorizontal: widthPercentageToDP(5),
-        paddingTop: widthPercentageToDP(5)
-    },
+
     backgroundImage: {
         height: null,
         width: null,
@@ -354,21 +291,3 @@ const styles = StyleSheet.create({
         borderRadius: widthPercentageToDP(5)
     }
 });
-
-
-{/* <ListItem avatar>
-                <Left>
-                    {
-                        item.groupProfilePictureThumbnail
-                            ? < Thumbnail source={{ uri: 'Image URL' }} />
-                            : <NBIcon active name="group" type='FontAwesome' />
-                    }
-                </Left>
-                <Body>
-                    <Text>{item.groupName}</Text>
-                    <Text note></Text>
-                </Body>
-                <Right>
-                    <Text note>3</Text>
-                </Right>
-            </ListItem> */}

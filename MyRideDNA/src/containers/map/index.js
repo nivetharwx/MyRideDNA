@@ -724,13 +724,13 @@ export class Map extends Component {
     }
 
     async componentDidMount() {
-        if(this.props.user.isNewUser){
-            this.props.changeScreen({name:PageKeys.PROFILE})
+        if (this.props.user.isNewUser) {
+            this.props.changeScreen({ name: PageKeys.PROFILE })
         }
         const notificationOpen = await firebase.notifications().getInitialNotification();
         if (notificationOpen) {
             console.log("InitialNotification received map: ", notificationOpen.notification);
-            this.redirectToTargetScreen(JSON.parse(notificationOpen.notification._data.reference).targetScreen,notificationOpen.notification._data)
+            this.redirectToTargetScreen(JSON.parse(notificationOpen.notification._data.reference).targetScreen, notificationOpen.notification._data)
         }
         BackgroundGeolocation.onLocation(this.onLocation, this.onError);
         BackgroundGeolocation.onMotionChange(this.onMotionChange);
@@ -838,25 +838,27 @@ export class Map extends Component {
         console.log('[motionchange] -', event.isMoving, event.location);
     }
 
-    redirectToTargetScreen(targetScreen, notifData) {
-        console.log('redirectToTargetScreen  targetScreen : ',targetScreen)
-        console.log('redirectToTargetScreen  notifData : ',notifData)
-            if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
-                if (targetScreen === 'REQUESTS') {
-                    console.log('store.getState().TabVisibility.currentScreen.name : ', store.getState().TabVisibility.currentScreen.name)
-                    store.getState().TabVisibility.currentScreen.name !== PageKeys.FRIENDS
-                        ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData } }))
-                        : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData });
-                }
-                return;
+    redirectToTargetScreen(targetScreen, notifData) {onBack
+        if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
+            if (targetScreen === 'REQUESTS') {
+                console.log('store.getState().TabVisibility.currentScreen.name : ', store.getState().TabVisibility.currentScreen.name)
+                store.getState().TabVisibility.currentScreen.name !== PageKeys.FRIENDS
+                    ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData } }))
+                    : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData });
             }
-            if (targetScreen === "FRIENDS_PROFILE") {
-                store.dispatch(resetCurrentFriendAction({ comingFrom: PageKeys.NOTIFICATIONS }))
-                store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));
-            }
-            else {
-                store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));
-            }
+            return;
+        }
+        if (targetScreen === "FRIENDS_PROFILE") {
+            store.dispatch(resetCurrentFriendAction({ comingFrom: PageKeys.NOTIFICATIONS }))
+            store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));
+        }
+        else if (targetScreen === "CHAT") {
+            notifData['isGroup'] = JSON.parse(notifData.isGroup)
+            store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, chatInfo: notifData } }));
+        }
+        else {
+            store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));
+        }
 
     }
 
@@ -1070,9 +1072,7 @@ export class Map extends Component {
     }
 
     onBackButtonPress = () => {
-        console.log('onBackButtonPress')
         if (Actions.state.index !== 0) {
-            console.log('Actions.state.index !== 0 : ',Actions.currentScene)
             if (Actions.currentScene === PageKeys.FRIENDS_PROFILE) {
                 Actions.pop();
                 this.props.resetCurrentFriend()

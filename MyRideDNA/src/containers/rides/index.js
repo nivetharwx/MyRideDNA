@@ -701,7 +701,7 @@ export class Rides extends Component {
         return (
             <View style={{ flex: 1 }}>
                 <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                <StatusBar translucent backgroundColor='black' barStyle="light-content" />
                 </View>
                 <View style={{ flex: 1 }}>
                     <BaseModal alignCenter={true} isVisible={isVisibleRenameModal} onCancel={this.onCancelRenameForm} onPressOutside={this.onCancelRenameForm}>

@@ -76,7 +76,8 @@ class SplashScreen extends React.Component {
                     }
                 })
                 .catch(error => {
-                    console.log('error: ', error)
+                    console.log('error: ', error);
+                    console.log('error: ', error.message);
                     if ((error.message === 'Network Error' || error.message === 'timeout of 15000ms exceeded') && store.getState().PageState.hasNetwork === true) {
                         this.doAuthTokenVerfication()
                     }

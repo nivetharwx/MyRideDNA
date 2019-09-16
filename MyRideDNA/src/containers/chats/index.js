@@ -46,12 +46,13 @@ class Chat extends Component {
             this.props.seenMessage(this.props.chatInfo.id, this.props.user.userId, this.props.isGroup, 'chatList')
         }
         else {
-            this.props.seenMessage(this.props.chatInfo.id, this.props.user.userId, this.props.isGroup, 'chatPage')
+            this.props.seenMessage(this.props.chatInfo.id, this.props.user.userId, this.props.chatInfo.isGroup, 'chatPage')
         }
     }
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.chatData !== this.props.chatData) {
             if (this.props.chatData === null) {
+                console.log('chat page actions.pop : ',Actions);
                 Actions.pop();
             }
             else if (this.props.chatData.profilePictureId && !this.props.chatData.profilePicture) {
@@ -246,7 +247,7 @@ class Chat extends Component {
         const { messageToBeSend, selectedMessage, isVisibleDeleteModal, isVisibleOptionsModal } = this.state;
         return <View style={styles.fill}>
             <View style={APP_COMMON_STYLES.statusBar}>
-                <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColorDark} barStyle="light-content" />
+            <StatusBar translucent backgroundColor='black' barStyle="light-content" />
             </View>
             <View style={styles.fill}>
                 <ImageBackground style={styles.chatBackgroundImage} source={require('../../assets/img/chat-bg.jpg')}>
@@ -272,6 +273,8 @@ class Chat extends Component {
                                     </TouchableOpacity>
                                 </View>
                                 {
+                                    
+                                    
                                     chatData !== null ?
                                         chatData.profilePicture ?
                                             <Thumbnail style={styles.thumbnail} source={{ uri: chatData.profilePicture }} />
