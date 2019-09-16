@@ -20,6 +20,7 @@ export default (state = initialState, action) => {
                 }
             }
             else if (action.data.comingFrom === 'sendMessgaeApi' && state.chatList.length > 0) {
+                console.log('action.data.comingFrom === sendMessgaeApi && state.chatList.length > 0')
                 const index = state.chatList.findIndex(list => list.id === action.data.id)
                 if (index > -1) {
                     const newChatList = state.chatList[index];
@@ -33,13 +34,11 @@ export default (state = initialState, action) => {
                         ]
                     }
                 }
-                else {
-                    return {
-                        ...state,
-                    }
-                }
-
             }
+            return {
+                ...state,
+            }
+
 
         case REPLACE_CHAT_LIST:
             if (action.data.pictureObj) {
@@ -54,6 +53,7 @@ export default (state = initialState, action) => {
             }
 
         case UPDATE_CHAT_MESSAGES:
+            console.log('UPDATE_CHAT_MESSAGES')
             return {
                 ...state,
                 chatMessages: action.data
@@ -70,7 +70,6 @@ export default (state = initialState, action) => {
                 return { ...state, chatMessages: state.chatMessages.filter(msg => action.data.messageIds.indexOf(msg.messageId) === -1) }
             }
             else if (action.data.comingFrom === PageKeys.NOTIFICATIONS) {
-                console.log('chatData redux : ', state.chatData);
                 if (state.chatData.id === action.data.notificationBody.id) {
                     return {
                         ...state,
@@ -208,8 +207,9 @@ export default (state = initialState, action) => {
         //         }
         //     }
         case UPDATE_CHAT_DATA_LIST:
-            console.log('UPDATE_CHAT_DATA_LIST  : ', action.data)
+            console.log('UPDATE_CHAT_DATA_LIST  : ', action.data);
             if (action.data.chatData && !action.data.chatData.profilePictureId && action.data.chatData.isGroup === false) {
+                console.log('inside UPDATE_CHAT_DATA_LIST if block')
                 action.data.chatData['profilePictureId'] = action.data.chatData.id + '_thumb'
                 return {
                     ...state,

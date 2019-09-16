@@ -10,7 +10,7 @@ import { Root } from "native-base";
 import { seenMessage } from './api';
 
 export default class App extends Component {
-    removeNotificationListener = null;
+    // removeNotificationListener = null;
     removeNotificationOpenedListener = null;
     removeNotificationDisplayedListener = null;
     async componentDidMount() {
@@ -44,33 +44,54 @@ export default class App extends Component {
         // });
         this.messageListener = firebase.messaging().onMessage(notification => {
             console.log("From onMessage: ", notification);
-                if(!notification._data.reference) return ;
-                if(notification._data.reference.targetScreen === PageKeys.CHAT){
-                    if(Actions.currentScene === PageKeys.CHAT){
-                        if(store.getState().ChatList.chatData.id === notification._data.id) return;
+            // for checking reference is present or not
+            if (!notification._data.reference) return;
+            // checking targetscreen in notification is chat 
+            // then if current screen is chat and if you are on same chat then update content only else open local notification
+            if (JSON.parse(notification._data.reference).targetScreen === "CHAT") {
+                if (Actions.currentScene === PageKeys.CHAT) {
+                    if (store.getState().ChatList.chatData.id === notification._data.id) {
+                        this.updatePageContent(JSON.parse(notification._data.reference).targetScreen, notification._data)
+                        return;
                     }
-                    this.showLocalNotification(notification._data);
-                    return;
                 }
-                if(notification._data.reference.targetScreen !== Actions.currentScene){
-                    this.showLocalNotification(notification._data);
-                    return;
+                notification._data['isGroup'] = JSON.parse(notification._data.isGroup)
+                this.showLocalNotification(notification._data);
+                return;
+            }
+            // checking targetscreen in notification is Request
+            // if user current screen is friends then just updated content else open local notification
+            if (JSON.parse(notification._data.reference).targetScreen === 'REQUESTS') {
+                if (Actions.currentScene === PageKeys.FRIENDS) {
+                    this.updatePageContent(JSON.parse(notification._data.reference).targetScreen, notification._data)
                 }
-            if(!IS_ANDROID){
-                this.updatePageContent(notification._data)
+                else {
+                    this.showLocalNotification(notification._data);
+                }
+                return;
+            }
+            // if target screen is not same as above two then open local notification 
+            if (JSON.parse(notification._data.reference).targetScreen !== Actions.currentScene) {
+                this.showLocalNotification(notification._data);
+                return;
+            }
+            // if platform is ios then updatepage content here only because onNotificationDisplayed will not be called
+            if (!IS_ANDROID) {
+                this.updatePageContent(JSON.parse(notification._data.reference).targetScreen, notification._data)
             }
 
         });
         this.removeNotificationDisplayedListener = firebase.notifications().onNotificationDisplayed(notification => {
             console.log('from onNotificationDisplayed :', notification);
-            if(IS_ANDROID){
-                this.updatePageContent(notification._data)
+            if (IS_ANDROID) {
+                this.updatePageContent(JSON.parse(notification._data.reference).targetScreen, notification._data)
             }
         });
 
-        this.removeNotificationOpenedListener = firebase.notifications().onNotificationOpened(({notification}) => {
+        this.removeNotificationOpenedListener = firebase.notifications().onNotificationOpened(({ notification }) => {
             console.log('removeNotificationOpenedListener : ', notification);
-            if(notification._data.reference){
+            if (notification._data.reference) {
+                // if user is background and notification comes, user click on notification to get redirect to screen mentioned in target screen 
                 this.redirectToTargetScreen(JSON.parse(notification._data.reference).targetScreen, notification._data)
             }
         });
@@ -133,23 +154,37 @@ export default class App extends Component {
         }
     }
 
-    updatePageContent = (notifBody) => {
-        if (notifBody.reference.targetScreen === "CHAT" && notifBody.senderId !== store.getState().UserAuth.user.userId) {
-            if (store.getState().TabVisibility.currentScreen.name === PageKeys.CHAT) {
-                store.dispatch(seenMessage(notifBody.id, store.getState().UserAuth.user.userId, notifBody.isGroup, PageKeys.NOTIFICATIONS));
-                store.dispatch(replaceChatMessagesAction({ comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifBody }));
-                
+    updatePageContent = (targetScreen, notifBody) => {
+        console.log('store.getState().TabVisibility.currentScreen.name : ', store.getState().TabVisibility.currentScreen.name)
+        //  checking target screen as chat and message is not send by you
+        //  if user is on chat then update chatmessage redux and call seenMessage api 
+        if (targetScreen === "CHAT") {
+            if (Actions.currentScene === PageKeys.CHAT) {
+                if (notifBody.senderId && notifBody.senderId !== store.getState().UserAuth.user.userId) {
+                    store.dispatch(seenMessage(notifBody.id, store.getState().UserAuth.user.userId, notifBody.isGroup, PageKeys.NOTIFICATIONS));
+                    store.dispatch(replaceChatMessagesAction({ comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifBody }));
+                    store.dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: notifBody, id: notifBody.id }));
+                }
+                else if(notifBody.messageIdList){
+                    store.dispatch(replaceChatMessagesAction({ comingFrom: 'fcmDeletForEveryone', notificationBody: notifBody }));
+                }
             }
-            else if (store.getState().TabVisibility.currentScreen.name === PageKeys.CHAT_LIST) {
+            // if user is on chatlist page then update chatList count and chatlist last message
+            else if (Actions.currentScene === PageKeys.CHAT_LIST) {
                 store.dispatch(updateMessageCountAction({ id: notifBody.id }));
+                store.dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: notifBody, id: notifBody.id }));
             }
-            store.dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: notifBody, id: notifBody.id }));
             return;
         }
-        if(notifBody.reference.targetScreen === Actions.currentScene){
+        // if user is on request tab then refresh the page to call all api related to request
+        if (targetScreen === "REQUESTS" && Actions.currentScene === PageKeys.FRIENDS) {
+            console.log('actions.refresh');
+            Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, isRefresh: true });
+        }
+        if (targetScreen === Actions.currentScene) {
             Actions.refresh();
         }
-        
+
         // if (body.reference.targetScreen === "CHAT") {
         //     if (store.getState().TabVisibility.currentScreen.name !== PageKeys.CHAT) {
         //         console.log('other than CHAT')
@@ -179,61 +214,65 @@ export default class App extends Component {
     }
 
     redirectToTargetScreen(targetScreen, notifData) {
-        console.log('redirectToTargetScreen  targetScreen : ',targetScreen)
-        console.log('redirectToTargetScreen  notifData : ',notifData)
-            if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
-                if (targetScreen === 'REQUESTS') {
-                    console.log('store.getState().TabVisibility.currentScreen.name : ', store.getState().TabVisibility.currentScreen.name)
-                    store.getState().TabVisibility.currentScreen.name !== PageKeys.FRIENDS
-                        ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData } }))
-                        : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData });
-                }
-                return;
+        if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
+            if (targetScreen === 'REQUESTS') {
+                console.log('store.getState().TabVisibility.currentScreen.name : ', store.getState().TabVisibility.currentScreen.name)
+                store.getState().TabVisibility.currentScreen.name !== PageKeys.FRIENDS
+                    ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData } }))
+                    : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData });
             }
-            if (targetScreen === "FRIENDS_PROFILE") {
-                store.dispatch(resetCurrentFriendAction({ comingFrom: PageKeys.NOTIFICATIONS }))
-                store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));
-            }
-            else {
-                store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));
-            }
+            return;
+        }
+
+        if (targetScreen === "FRIENDS_PROFILE") {
+            store.dispatch(resetCurrentFriendAction({ comingFrom: PageKeys.NOTIFICATIONS }))
+            store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));
+        }
+        else if (targetScreen === "CHAT") {
+            notifData['isGroup'] = JSON.parse(notifData.isGroup);
+            console.log('notifData redirectScreen : ', notifData)
+            store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, chatInfo: notifData } }));
+        }
+        else {
+            store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));
+        }
 
     }
 
     showLocalNotification(notificationBody) {
         console.log('notification local notification : ', notificationBody);
-            let notification = new firebase.notifications.Notification();
-            notification = notification.setNotificationId(new Date().valueOf().toString())
-                .setTitle(notificationBody.groupName || notificationBody.senderName || notificationBody.fromUserName)
-                .setBody(notificationBody.content || notificationBody.message)
-                .setData(notificationBody)
-                .setSound("bell.mp3");
-            // DOC: Android notification options
-            notification.android.setPriority(firebase.notifications.Android.Priority.High);
-            notification.android.setTicker("My Notification Ticker");
-            notification.android.setAutoCancel(true);
-            notification.android.setSmallIcon("@drawable/myridedna_notif_icon");
-            notification.android.setBigText(notificationBody.content);
-            notification.android.setColor("black");
-            notification.android.setColorized(true);
-            notification.android.setVibrate([300]);
-            notification.android.setChannelId("default")
+        let notification = new firebase.notifications.Notification();
+        notification = notification.setNotificationId(new Date().valueOf().toString())
+            .setTitle(notificationBody.name)
+            .setBody(notificationBody.content)
+            .setData(notificationBody)
+            .setSound("bell.mp3");
+        // DOC: Android notification options
+        notification.android.setPriority(firebase.notifications.Android.Priority.High);
+        notification.android.setTicker("My Notification Ticker");
+        notification.android.setAutoCancel(true);
+        notification.android.setSmallIcon("@drawable/myridedna_notif_icon");
+        notification.android.setBigText(notificationBody.content);
+        notification.android.setColor("black");
+        notification.android.setColorized(true);
+        notification.android.setVibrate([300]);
+        notification.android.setChannelId("default")
 
-            // DOC: iOS notification options
-            notification.ios.badge = 10;
+        // DOC: iOS notification options
+        notification.ios.badge = 10;
 
-            // Couldn't find matching options in react-native-firebase
-            // FCM.presentLocalNotification({
-            //     wake_screen: true,
-            //     my_custom_data: notificationBody,
-            //     show_in_foreground: true,
-            // });
+        // Couldn't find matching options in react-native-firebase
+        // FCM.presentLocalNotification({
+        //     wake_screen: true,
+        //     my_custom_data: notificationBody,
+        //     show_in_foreground: true,
+        // });
 
-            firebase.notifications().displayNotification(notification)
+        firebase.notifications().displayNotification(notification)
     }
 
     componentWillUnmount() {
-        this.removeNotificationListener();
+        // this.removeNotificationListener();
         this.removeNotificationOpenedListener();
         this.removeNotificationDisplayedListener();
         this.messageListener();

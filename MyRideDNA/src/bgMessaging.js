@@ -1,10 +1,10 @@
 import firebase from 'react-native-firebase';
 
 export default async (message) => {
-    console.log('handled message : ',message);
+    console.log('handled message : ', message);
     let notification = new firebase.notifications.Notification();
     notification = notification.setNotificationId(new Date().valueOf().toString())
-        .setTitle(message.data.groupName || message.data.senderName || message.data.fromUserName)
+        .setTitle(message.data.name)
         .setBody(message.data.content)
         .setData(message.data)
         .setSound("bell.mp3");
