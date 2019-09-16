@@ -838,7 +838,7 @@ export class Map extends Component {
         console.log('[motionchange] -', event.isMoving, event.location);
     }
 
-    redirectToTargetScreen(targetScreen, notifData) {onBack
+    redirectToTargetScreen(targetScreen, notifData) {
         if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
             if (targetScreen === 'REQUESTS') {
                 console.log('store.getState().TabVisibility.currentScreen.name : ', store.getState().TabVisibility.currentScreen.name)

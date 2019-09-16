@@ -27,7 +27,6 @@ class ChatList extends Component {
     }
 
     componentDidMount() {
-        console.log('Actions chatlist : ',Actions);
         this.props.getAllChats(this.props.user.userId);
     }
 

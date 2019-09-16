@@ -2062,14 +2062,10 @@ export const deletePassenger = (passengerId) => {
 }
 
 export const getAllChats = (userId) => {
-    const before = new Date().getTime();
-    console.log('before : ', new Date().getTime())
+    console.log('user id getAllChat : ',userId)
     return dispatch => {
         axios.get(CHAT_BASE_URL + `getAllChats?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                const after = new Date().getTime()
-                console.log('after : ', new Date().getTime())
-                console.log('time after: ', after - before);
                 console.log("getAllChats success: ", res.data);
                 if (res.status === 200) {
                     dispatch(updateChatListAction({ comingFrom: 'getAllChatsApi', chatList: res.data }));

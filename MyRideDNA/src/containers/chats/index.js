@@ -52,7 +52,6 @@ class Chat extends Component {
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.chatData !== this.props.chatData) {
             if (this.props.chatData === null) {
-                console.log('chat page actions.pop : ',Actions);
                 Actions.pop();
             }
             else if (this.props.chatData.profilePictureId && !this.props.chatData.profilePicture) {
