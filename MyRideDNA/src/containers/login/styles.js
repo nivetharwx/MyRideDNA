@@ -18,7 +18,7 @@ export const LoginStyles = {
         backgroundColor: 'white',
         height: heightPercentageToDP(30),
         justifyContent: 'space-around',
-        paddingBottom: heightPercentageToDP(5)
+        paddingBottom: heightPercentageToDP(7)
     },
     loginButtonContainer: {
         marginTop: -(LOGIN_BUTTON_HEIGHT / 2),
@@ -29,8 +29,8 @@ export const LoginStyles = {
     loginButton: {
         backgroundColor: '#EB861E',
         alignSelf: 'center',
-        width: 100,
-        height: 100,
+        width: 70,
+        height: 70,
         borderRadius: 100,
         alignItems: 'center',
         justifyContent: 'center',
