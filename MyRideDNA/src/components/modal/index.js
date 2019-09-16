@@ -22,14 +22,10 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                 visible={isVisible}
                 onRequestClose={onClose}>
                 <View style={{ flex: 1, paddingVertical: 20, backgroundColor: 'rgba(0,0,0,0.7)' }}>
-                    {
-                        alignCloseIconLeft
-                            ? <BasicHeader style={[{ backgroundColor: 'transparent' }, IS_ANDROID ? null : { marginTop: 20 }]} headerHeight={heightPercentageToDP(8.5)}
-                                leftIconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: 'white' }, onPress: hideAppNavMenu }} />
-                            : <BasicHeader style={[{ backgroundColor: 'transparent' }, IS_ANDROID ? null : { marginTop: 20 }]} headerHeight={heightPercentageToDP(8.5)}
-                                rightIconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: 'white' }, onPress: hideAppNavMenu }} />
-                    }
-                    <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: heightPercentageToDP(8.5), padding: widthPercentageToDP(10) }}>
+                    <BasicHeader style={[{}, IS_ANDROID ? null : { marginTop: 20 }]} headerHeight={heightPercentageToDP(8.5)}
+                        leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: hideAppNavMenu }} />
+
+                    <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', marginTop: heightPercentageToDP(3), padding: widthPercentageToDP(8) }}>
                         <ImageButton imageSrc={require('../../assets/img/menu-rides.png')} styles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.RIDES)} />
                         <ImageButton imageSrc={require('../../assets/img/menu-map.png')} styles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.MAP)} />
                         <ImageButton imageSrc={require('../../assets/img/menu-friends.png')} styles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.FRIENDS)} />
@@ -40,10 +36,10 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                                     {
                                         notificationCount > 0
                                             ? <View style={{
-                                                position: 'absolute', width: widthPercentageToDP(12), height: widthPercentageToDP(12), borderRadius: widthPercentageToDP(6),
-                                                backgroundColor: '#0076B5', top: 5, right: 5, borderWidth: widthPercentageToDP(1), borderColor: '#fff', justifyContent: 'center', alignItems: 'center'
+                                                position: 'absolute', width: widthPercentageToDP(7), height: widthPercentageToDP(7), borderRadius: widthPercentageToDP(6),
+                                                backgroundColor: '#0076B5', top: 11, right: 10, borderWidth: widthPercentageToDP(1), borderColor: '#fff', justifyContent: 'center', alignItems: 'center'
                                             }}>
-                                                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: widthPercentageToDP(4) }}>{notificationCount}</Text>
+                                                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: widthPercentageToDP(3) }}>{notificationCount}</Text>
                                             </View>
                                             : null
                                     }
