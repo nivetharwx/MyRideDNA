@@ -758,6 +758,13 @@ export class Map extends Component {
             // params: {               // <-- Optional HTTP params
             //     "auth_token": "maybe_your_server_authenticates_via_token_YES?"
             // }
+            notification: {
+                channelName: "Default",
+                color: "black",
+                smallIcon: "@drawable/myridedna_notif_icon",
+                text: "Location Service activated",
+                title: "MyRideDNA"
+            }
         }, (state) => {
             console.log("- BackgroundGeolocation is configured and ready: ", state.enabled);
 
@@ -880,7 +887,6 @@ export class Map extends Component {
     }
 
     getCurrentLocation = async (recenterMap) => {
-        console.log("getCurrentLocation");
         Geolocation.getCurrentPosition(
             ({ coords }) => {
                 this.setState({ currentLocation: { location: [coords.longitude, coords.latitude], name: '' } }, () => {
@@ -894,30 +900,24 @@ export class Map extends Component {
             },
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
         );
-        // const location = await BackgroundGeolocation.getCurrentPosition({ samples: 1, persist: true });
-        // if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
-        //     if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (location.coords.longitude + '' + location.coords.latitude)) {
-        //         this.updateRecordRideCoordinate(location.coords, this.props.ride.status);
-        //     }
-        // }
     }
 
     watchLocation = async () => {
-        this.stopTrackingLocation();
-        let watchId = setInterval(() => {
-            Geolocation.getCurrentPosition(
-                ({ coords }) => {
-                    if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (coords.longitude + '' + coords.latitude)) {
-                        this.updateRecordRideCoordinate([coords.longitude, coords.latitude], this.props.ride.status);
-                    }
-                },
-                (error) => {
-                    console.log(error.code, error.message);
-                },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-            );
-        }, APP_CONFIGS.trackGPSInterval);
-        this.setState({ watchId });
+        //     this.stopTrackingLocation();
+        //     let watchId = setInterval(() => {
+        //         Geolocation.getCurrentPosition(
+        //             ({ coords }) => {
+        //                 if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (coords.longitude + '' + coords.latitude)) {
+        //                     this.updateRecordRideCoordinate([coords.longitude, coords.latitude], this.props.ride.status);
+        //                 }
+        //             },
+        //             (error) => {
+        //                 console.log(error.code, error.message);
+        //             },
+        //             { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        //         );
+        //     }, APP_CONFIGS.trackGPSInterval);
+        //     this.setState({ watchId });
     }
 
     getRouteMatrixInfo = async (source = null, destination = null, callback) => {
@@ -947,7 +947,7 @@ export class Map extends Component {
         const actualPoints = [];
         const gpsPoints = gpsPointTimestamps.reduce((list, item) => {
             list.push(item.loc);
-            actualPoints.push(item.loc[1], item.loc[0], item.date, item.status);
+            actualPoints.push(item.loc[1], item.loc[0], item.heading, item.accuracy, item.speed, item.date, item.status);
             return list;
         }, []);
         let locPathParam = gpsPoints.reduce((param, coord) => param + coord.join(',') + ';', "");
@@ -978,9 +978,9 @@ export class Map extends Component {
             const trackpoints = matchings[0].geometry.coordinates.reduce((arr, coord, index) => {
                 if (!gpsPointTimestamps[index] || (index === matchings[0].geometry.coordinates.length - 1 && gpsPointTimestamps[index + 1])) {
                     const lastPoint = gpsPointTimestamps[gpsPointTimestamps.length - 1];
-                    arr.push(coord[1], coord[0], lastPoint.date, lastPoint.status);
+                    arr.push(coord[1], coord[0], lastPoint.heading, lastPoint.accuracy, lastPoint.speed, lastPoint.date, lastPoint.status);
                 } else {
-                    arr.push(coord[1], coord[0], gpsPointTimestamps[index].date, gpsPointTimestamps[index].status);
+                    arr.push(coord[1], coord[0], gpsPointTimestamps[index].heading, gpsPointTimestamps[index].accuracy, gpsPointTimestamps[index].speed, gpsPointTimestamps[index].date, gpsPointTimestamps[index].status);
                 }
                 return arr;
             }, []);
@@ -990,7 +990,8 @@ export class Map extends Component {
         }
     }
 
-    async updateRecordRideCoordinate(location, status) {
+    async updateRecordRideCoordinate(coords, status) {
+        const location = [coords.longitude, coords.latitude];
         // DOC: Updating collection collection in the state
         this.trackpointTick++;
         const { gpsPointCollection } = this.state;
@@ -1009,7 +1010,7 @@ export class Map extends Component {
             console.log("gpsPointCollection coordinates count: ", this.state.gpsPointCollection.features[0].geometry.coordinates.length);
             if (APP_CONFIGS.callRoadMapApi === false || this.trackpointTick === 5) {
                 this.trackpointTick = 0;
-                this.gpsPoints.push({ loc: location, date: new Date().toISOString(), status });
+                this.gpsPoints.push({ loc: location, heading: coords.heading, accuracy: coords.accuracy, speed: coords.speed, date: new Date().toISOString(), status });
                 // const currentZoomLevel = await this._mapView.getZoom();
                 const options = {
                     // zoom: currentZoomLevel,
@@ -1030,7 +1031,7 @@ export class Map extends Component {
                             });
                         } else {
                             const actualPoints = gpsPoints.reduce((list, item) => {
-                                list.push(item.loc[1], item.loc[0], item.date, item.status);
+                                list.push(item.loc[1], item.loc[0], item.heading, item.accuracy, item.speed, item.date, item.status);
                                 return list;
                             }, []);
                             const trackpoints = [...actualPoints];
@@ -1923,7 +1924,7 @@ export class Map extends Component {
         switch (newStatus) {
             case RECORD_RIDE_STATUS.RUNNING:
                 this.trackpointTick = 0;
-                this.watchLocation();
+                // this.watchLocation();
                 break;
             case RECORD_RIDE_STATUS.PAUSED:
                 break;
