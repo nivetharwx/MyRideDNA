@@ -8,7 +8,7 @@ import {
     ImageBackground,
     TouchableOpacity,
     TextInput,
-    StatusBar 
+    StatusBar
 } from 'react-native';
 
 import { IconicInput } from '../../components/inputs';
@@ -23,9 +23,9 @@ import { Item, Icon as NBIcon } from 'native-base';
 export const LoginScreen = (props) => (
     <ScrollView style={{ flex: 1 }}>
         <StatusBar translucent backgroundColor='black' barStyle="light-content" />
-        <Animatable.View  iterationCount={1} style={{ flex: 1, height:heightPercentageToDP(25)}}>
-            <Image source={require('../../assets/img/logo.png')} style={{width:WindowDimensions.width,height:heightPercentageToDP(29)}}
-    resizeMode="contain"></Image>
+        <Animatable.View iterationCount={1} style={{ flex: 1, height: heightPercentageToDP(25) }}>
+            <Image source={require('../../assets/img/logo.png')} style={{ width: WindowDimensions.width, height: heightPercentageToDP(29) }}
+                resizeMode="contain"></Image>
         </Animatable.View>
         <View style={LoginStyles.loginForm}>
             <Item style={{ marginLeft: widthPercentageToDP(5), marginRight: widthPercentageToDP(5) }}>
@@ -34,23 +34,23 @@ export const LoginScreen = (props) => (
             </Item>
             <Item style={{ marginLeft: widthPercentageToDP(5), marginRight: widthPercentageToDP(5) }}>
                 <NBIcon name='vpn-key' type='MaterialIcons' style={{ color: '#0083CA' }} />
-                <TextInput style={{ flex: 1 }} secureTextEntry={!props.isVisiblePassword} textContentType='password' keyboardType='default' placeholder='Password' onChangeText={props.onPasswordChange} />
+                <TextInput style={{ flex: 1 }} secureTextEntry={!props.isVisiblePassword} textContentType='password' keyboardType='default' placeholder='Password' onChangeText={props.onPasswordChange} onSubmitEditing={props.onSubmit} />
                 <IconButton onPress={props.togglePasswordVisibility} style={{ backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(6), height: widthPercentageToDP(6), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: props.isVisiblePassword ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(4), paddingRight: 0, color: 'white' } }} />
             </Item>
         </View>
         <View style={{ width: WindowDimensions.width, height: heightPercentageToDP(47) }}>
             <View style={LoginStyles.loginButtonContainer}>
                 <View style={{ backgroundColor: '#fff', width: 90, alignSelf: 'center', padding: 10, borderRadius: 120 }}>
-                    <TouchableOpacity style={LoginStyles.loginButton} onPress={props.onSubmit} activeOpacity={0.9}><Text style={{ color: 'white',letterSpacing:4,fontWeight:'bold' }}>LOGIN</Text></TouchableOpacity>
+                    <TouchableOpacity style={LoginStyles.loginButton} onPress={props.onSubmit} activeOpacity={0.9}><Text style={{ color: 'white', letterSpacing: 4, fontWeight: 'bold' }}>LOGIN</Text></TouchableOpacity>
                 </View>
             </View>
             <View style={{ position: 'absolute', zIndex: 8, width: WindowDimensions.width, backgroundColor: 'rgba(182,86,26,0.7)', height: heightPercentageToDP(13.5), paddingTop: 15 }}>
                 <View style={{ marginTop: 18, flexDirection: 'row', justifyContent: 'space-between' }}>
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                        <LinkButton title={`Forgot Password`} titleStyle={{ color: 'white', fontSize: 14, fontWeight:'bold' }} onPress={props.onForgotPasswordPress} />
+                        <LinkButton title={`Forgot Password`} titleStyle={{ color: 'white', fontSize: 14, fontWeight: 'bold' }} onPress={props.onForgotPasswordPress} />
                     </View>
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                        <LinkButton title='Sign up' titleStyle={{ color: 'white', fontSize: 14, fontWeight:'bold'}} onPress={props.onSignupPress} />
+                        <LinkButton title='Sign up' titleStyle={{ color: 'white', fontSize: 14, fontWeight: 'bold' }} onPress={props.onSignupPress} />
                     </View>
                 </View>
             </View>
