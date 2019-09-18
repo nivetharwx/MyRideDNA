@@ -35,6 +35,24 @@ export default (state = initialState, action) => {
                     }
                 }
             }
+            else{
+                if(action.data.comingFrom === PageKeys.NOTIFICATIONS){
+                    console.log('coming from pagekey notification')
+                    const index = state.chatList.findIndex(list => list.id === action.data.id)
+                    if (index > -1) {
+                        const newChatList = state.chatList[index];
+                        newChatList.message = action.data.newMessage
+                        return {
+                            ...state,
+                            chatList: [
+                                newChatList,
+                                ...state.chatList.slice(0, index),
+                                ...state.chatList.slice(index + 1)
+                            ]
+                        }
+                    }
+                }
+            }
             return {
                 ...state,
             }

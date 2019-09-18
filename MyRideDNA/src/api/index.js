@@ -2156,6 +2156,9 @@ export const deleteMessagesByIdForEveryone = (isGroup, id, userId, messageToBeDe
                     if (newChatMessages) {
                         dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: newChatMessages, id: id }));
                     }
+                    else{
+                        dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage:'', id: id }));
+                    }
                 }
             })
             .catch(er => {

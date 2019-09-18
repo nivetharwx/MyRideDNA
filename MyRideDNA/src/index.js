@@ -49,6 +49,7 @@ export default class App extends Component {
             // checking targetscreen in notification is chat 
             // then if current screen is chat and if you are on same chat then update content only else open local notification
             if (JSON.parse(notification._data.reference).targetScreen === "CHAT") {
+                if (notification._data.senderId && notification._data.senderId === store.getState().UserAuth.user.userId) return;
                 if (Actions.currentScene === PageKeys.CHAT) {
                     if (store.getState().ChatList.chatData.id === notification._data.id) {
                         this.updatePageContent(JSON.parse(notification._data.reference).targetScreen, notification._data)
@@ -163,16 +164,16 @@ export default class App extends Component {
                 if (notifBody.senderId && notifBody.senderId !== store.getState().UserAuth.user.userId) {
                     store.dispatch(seenMessage(notifBody.id, store.getState().UserAuth.user.userId, notifBody.isGroup, PageKeys.NOTIFICATIONS));
                     store.dispatch(replaceChatMessagesAction({ comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifBody }));
-                    store.dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: notifBody, id: notifBody.id }));
+                    store.dispatch(updateChatListAction({ comingFrom: PageKeys.NOTIFICATIONS, newMessage: notifBody, id: notifBody.id }));
                 }
-                else if(notifBody.messageIdList){
+                else if (notifBody.messageIdList) {
                     store.dispatch(replaceChatMessagesAction({ comingFrom: 'fcmDeletForEveryone', notificationBody: notifBody }));
                 }
             }
             // if user is on chatlist page then update chatList count and chatlist last message
             else if (Actions.currentScene === PageKeys.CHAT_LIST) {
                 store.dispatch(updateMessageCountAction({ id: notifBody.id }));
-                store.dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: notifBody, id: notifBody.id }));
+                store.dispatch(updateChatListAction({ comingFrom: PageKeys.NOTIFICATIONS, newMessage: notifBody, id: notifBody.id }));
             }
             return;
         }
@@ -216,8 +217,7 @@ export default class App extends Component {
     redirectToTargetScreen(targetScreen, notifData) {
         if (Object.keys(PageKeys).indexOf(targetScreen) === -1) {
             if (targetScreen === 'REQUESTS') {
-                console.log('store.getState().TabVisibility.currentScreen.name : ', store.getState().TabVisibility.currentScreen.name)
-                store.getState().TabVisibility.currentScreen.name !== PageKeys.FRIENDS
+                Actions.currentScene !== PageKeys.FRIENDS
                     ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData } }))
                     : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData });
             }
