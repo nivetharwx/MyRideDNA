@@ -2,9 +2,11 @@ import React, { Component } from 'react';
 import {
     SafeAreaView, View, TouchableOpacity, Alert,
     Keyboard, Image, BackHandler, Animated,
-    DeviceEventEmitter, Text, TextInput, AsyncStorage, StatusBar,
+    DeviceEventEmitter, Text, TextInput, StatusBar,
     AppState, ActivityIndicator, FlatList,
 } from 'react-native';
+import NetInfo from "@react-native-community/netinfo";
+import AsyncStorage from '@react-native-community/async-storage';
 import { connect } from 'react-redux';
 import Geolocation from 'react-native-geolocation-service';
 
@@ -21,7 +23,7 @@ import { Icon as NBIcon, Toast } from 'native-base';
 // import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT } from '../../constants';
 // import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, resetChatMessageAction } from '../../actions';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT, UNSYNCED_RIDE } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, addUnsyncedRideAction, deleteUnsyncedRideAction, resetChatMessageAction, resetErrorHandlingAction } from '../../actions';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, addUnsyncedRideAction, deleteUnsyncedRideAction, resetChatMessageAction, resetErrorHandlingAction, toggleNetworkStatusAction } from '../../actions';
 import { SearchBox, IconicList } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -86,6 +88,7 @@ const DEFAULT_ZOOM_DIFFERENCE = 1;
 const DEFAULT_ZOOM_LEVEL = 15;
 
 export class Map extends Component {
+    unregisterNetworkListener = null;
     prevUserTrackTime = 0;
     _mapView = null;
     _hiddenMapView = null;
@@ -724,6 +727,7 @@ export class Map extends Component {
     }
 
     async componentDidMount() {
+        this.unregisterNetworkListener = NetInfo.addEventListener(this.handleNetworkConnectivityChange);
         if (this.props.user.isNewUser) {
             this.props.changeScreen({ name: PageKeys.PROFILE })
         }
@@ -733,31 +737,18 @@ export class Map extends Component {
             this.redirectToTargetScreen(JSON.parse(notificationOpen.notification._data.reference).targetScreen, notificationOpen.notification._data)
         }
         BackgroundGeolocation.onLocation(this.onLocation, this.onError);
-        BackgroundGeolocation.onMotionChange(this.onMotionChange);
-        BackgroundGeolocation.onActivityChange(this.onActivityChange);
-        BackgroundGeolocation.onProviderChange(this.onProviderChange);
+        // BackgroundGeolocation.onMotionChange(this.onMotionChange);
+        // BackgroundGeolocation.onActivityChange(this.onActivityChange);
+        // BackgroundGeolocation.onProviderChange(this.onProviderChange);
         BackgroundGeolocation.ready({
             reset: true,
-            // Geolocation Config
             desiredAccuracy: BackgroundGeolocation.DESIRED_ACCURACY_HIGH,
             distanceFilter: 10,
-            // Activity Recognition
             stopTimeout: 1,
-            // Application config
-            debug: false, // <-- enable this hear sounds for background-geolocation life-cycle.
+            debug: false,
             logLevel: BackgroundGeolocation.LOG_LEVEL_VERBOSE,
-            stopOnTerminate: true,   // <-- Allow the background-service to continue tracking when user closes the app.
-            startOnBoot: false,        // <-- Auto start tracking when device is powered-up.
-            // HTTP / SQLite config
-            // url: 'http://yourserver.com/locations',
-            // batchSync: false,       // <-- [Default: false] Set true to sync locations to server in a single HTTP request.
-            // autoSync: true,         // <-- [Default: true] Set true to sync each location to server as it arrives.
-            // headers: {              // <-- Optional HTTP headers
-            //     "X-FOO": "bar"
-            // },
-            // params: {               // <-- Optional HTTP params
-            //     "auth_token": "maybe_your_server_authenticates_via_token_YES?"
-            // }
+            stopOnTerminate: true,
+            startOnBoot: false,
             notification: {
                 channelName: "Default",
                 color: "black",
@@ -769,18 +760,12 @@ export class Map extends Component {
             console.log("- BackgroundGeolocation is configured and ready: ", state.enabled);
 
             if (!state.enabled) {
-                ////
-                // 3. Start tracking!
-                //
-                // BackgroundGeolocation.start(function () {
-                //     console.log("- Start success");
-                // });
                 this.startTrackingLocation();
             }
         });
 
         this.trackpointTick = 0;
-        this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId, deviceId: DeviceInfo.getUniqueID() } });
+        this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.ACTIVE, eventParam: { isLoggedIn: true, userId: this.props.user.userId, deviceId: await DeviceInfo.getUniqueId() } });
         this.props.pushNotification(this.props.user.userId);
         this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString(), 'map', (res) => {
         }, (err) => {
@@ -833,16 +818,24 @@ export class Map extends Component {
         console.warn('[location] ERROR -', error);
     }
 
-    onActivityChange = (event) => {
-        console.log('[activitychange] -', event);  // eg: 'on_foot', 'still', 'in_vehicle'
-    }
+    // onActivityChange = (event) => {
+    //     console.log('[activitychange] -', event);  // eg: 'on_foot', 'still', 'in_vehicle'
+    // }
 
-    onProviderChange = (provider) => {
-        console.log('[providerchange] -', provider.enabled, provider.status);
-    }
+    // onProviderChange = (provider) => {
+    //     console.log('[providerchange] -', provider.enabled, provider.status);
+    // }
 
-    onMotionChange = (event) => {
-        console.log('[motionchange] -', event.isMoving, event.location);
+    // onMotionChange = (event) => {
+    //     console.log('[motionchange] -', event.isMoving, event.location);
+    // }
+
+    handleNetworkConnectivityChange = (connectionInfo) => {
+        if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
+            this.props.toggleNetworkStatus(true);
+        } else if (connectionInfo.type === 'none') {
+            this.props.toggleNetworkStatus(false);
+        }
     }
 
     redirectToTargetScreen(targetScreen, notifData) {
@@ -2037,8 +2030,9 @@ export class Map extends Component {
         }
     }
 
-    componentWillUnmount() {
+    async componentWillUnmount() {
         console.log("Map unmounted");
+        this.unregisterNetworkListener();
         this.stopTrackingLocation();
         AppState.removeEventListener('change', this.handleAppStateChange);
         BackgroundGeolocation.removeAllListeners();
@@ -2046,7 +2040,7 @@ export class Map extends Component {
         clearInterval(this.state.watchId);
         // this.notificationInterval != null && clearInterval(this.notificationInterval);
         BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPress);
-        this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: false, userId: this.props.user.userId, deviceId: DeviceInfo.getUniqueID() } });
+        this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: false, userId: this.props.user.userId, deviceId: await DeviceInfo.getUniqueId() } });
         this.props.resetStoreToDefault();
     }
 
@@ -2805,6 +2799,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        toggleNetworkStatus: (status) => dispatch(toggleNetworkStatusAction(status)),
         updateDeviceLocationState: (locationState) => dispatch(deviceLocationStateAction(locationState)),
         hideAppNavMenu: () => dispatch(appNavMenuVisibilityAction(false)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),

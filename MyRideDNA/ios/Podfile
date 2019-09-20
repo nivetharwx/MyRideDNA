@@ -19,6 +19,10 @@ target 'MyRideDNA' do
 
     pod 'react-native-fbsdk', :path => '../node_modules/react-native-fbsdk'
 
+    pod 'RNCAsyncStorage', :path => '../node_modules/@react-native-community/async-storage'
+
+    pod 'react-native-netinfo', :path => '../node_modules/@react-native-community/netinfo'
+
   end
 
   target 'MyRideDNATests' do

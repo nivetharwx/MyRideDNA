@@ -1,8 +1,10 @@
 import React from 'react';
 import {
-    View, AsyncStorage, NetInfo, Alert, StyleSheet, Text,
+    View, Alert, StyleSheet, Text,
     Image, ImageBackground, StatusBar, Animated, Easing
 } from 'react-native';
+import NetInfo from "@react-native-community/netinfo";
+import AsyncStorage from '@react-native-community/async-storage';
 import { connect } from 'react-redux';
 import { Actions } from 'react-native-router-flux';
 import { USER_AUTH_TOKEN, PageKeys, WindowDimensions, USER_BASE_URL, DEVICE_TOKEN, UNSYNCED_RIDE } from '../../constants';
@@ -11,6 +13,7 @@ import { storeUserAction, updateTokenAction, toggleNetworkStatusAction, updateUn
 import axios from 'axios';
 
 class SplashScreen extends React.Component {
+    unregisterNetworkListener = null;
     constructor(props) {
         super(props);
         this.state = {
@@ -23,17 +26,14 @@ class SplashScreen extends React.Component {
         console.log('componentDidMount splash screen')
         const keys = await AsyncStorage.getAllKeys();
         this.props.updateUnsyncedRides(keys.filter(key => key.indexOf(UNSYNCED_RIDE) === 0));
-        const connectionInfo = await NetInfo.getConnectionInfo();
+        const connectionInfo = await NetInfo.fetch();
         if (connectionInfo.type === 'none') {
             Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
         } else {
             this.handleFirstConnectivityChange(connectionInfo)
         }
         this.doAnimateLoader();
-        NetInfo.addEventListener(
-            'connectionChange',
-            this.handleFirstConnectivityChange
-        );
+        this.unregisterNetworkListener = NetInfo.addEventListener(this.handleFirstConnectivityChange);
     }
 
 
@@ -51,14 +51,11 @@ class SplashScreen extends React.Component {
     }
     handleFirstConnectivityChange = async (connectionInfo) => {
         if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
-            this.props.toggleNetworkStatus(true);
             console.log('internet connected');
             Toast.hide();
             if (this.props.user === null || this.props.user.userId === null) {
                 this.doAuthTokenVerfication();
             }
-        } else {
-            this.props.toggleNetworkStatus(false);
         }
     }
 
@@ -100,6 +97,10 @@ class SplashScreen extends React.Component {
             easing: Easing.linear,
             useNativeDriver: true
         }).start(() => this.doAnimateLoader());
+    }
+
+    componentWillUnmount() {
+        this.unregisterNetworkListener && this.unregisterNetworkListener();
     }
 
     render() {
@@ -149,7 +150,6 @@ const mapDispatchToProps = (dispatch) => {
     return {
         updateToken: (token) => dispatch(updateTokenAction(token)),
         storeUser: (userInfo) => dispatch(storeUserAction(userInfo)),
-        toggleNetworkStatus: (netStatus) => dispatch(toggleNetworkStatusAction(netStatus)),
         updateUnsyncedRides: (unsyncedRides) => dispatch(replaceUnsyncedRidesAction(unsyncedRides))
     };
 }

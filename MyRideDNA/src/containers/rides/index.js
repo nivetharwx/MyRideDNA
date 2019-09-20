@@ -2,8 +2,9 @@ import React, { Component } from 'react';
 import {
     SafeAreaView, Text, View, FlatList, ImageBackground,
     TouchableOpacity, Alert, StatusBar, Platform, StyleSheet,
-    AsyncStorage, Image, ActivityIndicator, Easing, Animated
+    Image, ActivityIndicator, Easing, Animated
 } from 'react-native';
+import AsyncStorage from '@react-native-community/async-storage';
 import { connect } from 'react-redux';
 
 import { Tab, TabHeading, Tabs, ScrollableTab, Icon as NBIcon, ListItem, Left, Toast, Card, CardItem, Thumbnail, Body, Button, Right } from "native-base";

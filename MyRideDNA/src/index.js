@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { AsyncStorage } from 'react-native';
+import AsyncStorage from '@react-native-community/async-storage';
 import Navigation from './navigation';
 import firebase from 'react-native-firebase';
 import { IS_ANDROID, DEVICE_TOKEN, PageKeys } from './constants';

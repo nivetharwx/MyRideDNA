@@ -6,7 +6,8 @@ import {
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN, RIDE_POINT, CHAT_BASE_URL } from '../constants';
 import axios from 'axios';
 
-import { AsyncStorage, Alert } from 'react-native';
+import { Alert } from 'react-native';
+import AsyncStorage from '@react-native-community/async-storage';
 
 import Base64 from '../util';
 import { Actions } from 'react-native-router-flux';
@@ -227,10 +228,10 @@ export const updateLocation = (userId, locationInfo) => {
         })
 }
 export const logoutUser = (userId, accessToken, deviceToken) => {
-    return dispatch => {
+    return async (dispatch) => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
-        axios.post(USER_BASE_URL + `logoutUser`, { userId, accessToken, registrationToken: deviceToken, deviceId: DeviceInfo.getUniqueID() }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.post(USER_BASE_URL + `logoutUser`, { userId, accessToken, registrationToken: deviceToken, deviceId: await DeviceInfo.getUniqueId() }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log('logoutUser : ', res.data)
                 if (res.status === 200) {

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, StatusBar, Text, ScrollView, AsyncStorage, TouchableOpacity, TextInput, KeyboardAvoidingView, Alert } from 'react-native';
+import { View, StatusBar, Text, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Alert } from 'react-native';
 import { connect } from 'react-redux';
 import styles from './styles';
 import { APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN, heightPercentageToDP } from '../../constants';

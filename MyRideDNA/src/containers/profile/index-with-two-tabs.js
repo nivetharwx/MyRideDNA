@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, SafeAreaView, View, Text, ImageBackground, Image, StatusBar, ScrollView, AsyncStorage } from 'react-native';
+import { StyleSheet, SafeAreaView, View, Text, ImageBackground, Image, StatusBar, ScrollView } from 'react-native';
+import AsyncStorage from '@react-native-community/async-storage';
 import { Actions } from 'react-native-router-flux';
 import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN } from '../../constants/index';
 import { ShifterButton, IconButton } from '../../components/buttons';

@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
-import { SafeAreaView, View, AsyncStorage, StatusBar, NetInfo, Alert } from 'react-native';
+import { SafeAreaView, View, StatusBar, Alert } from 'react-native';
+import AsyncStorage from '@react-native-community/async-storage';
+import NetInfo from "@react-native-community/netinfo";
 import { Actions } from 'react-native-router-flux';
 import { connect } from 'react-redux';
 import axios from 'axios';
@@ -21,6 +23,7 @@ import { LoginButton, AccessToken, LoginManager } from 'react-native-fbsdk';
 // GoogleSignin.configure();
 
 class Login extends Component {
+    unregisterNetworkListener = null;
     constructor(props) {
         super(props);
         this.state = {
@@ -34,28 +37,14 @@ class Login extends Component {
     }
 
     async componentWillMount() {
-        NetInfo.getConnectionInfo().then((connectionInfo) => {
-            if (connectionInfo.type === 'none') {
-                Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
-            }
-        });
+        this.unregisterNetworkListener = NetInfo.addEventListener(this.handleFirstConnectivityChange);
 
-        NetInfo.addEventListener(
-            'connectionChange',
-            this.handleFirstConnectivityChange
-        );
+        if (!this.props.hasNetwork) {
+            Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
+        }
+        
         const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
         this.setState({ deviceToken });
-    }
-
-    componentDidUpdate(prevProps) {
-        if (!this.props.hasNetwork) {
-            // this.showNetworkError();
-        }
-    }
-
-    showNetworkError() {
-        Alert.alert('Network Info', "Please connect to a network to continue", undefined, { cancelable: false });
     }
 
     handleFirstConnectivityChange = (connectionInfo) => {
@@ -70,10 +59,7 @@ class Login extends Component {
     }
 
     componentWillUnmount() {
-        NetInfo.removeEventListener(
-            'connectionChange',
-            this.handleFirstConnectivityChange
-        );
+        this.unregisterNetworkListener && this.unregisterNetworkListener();
     }
 
     onEmailChange = (username) => {
@@ -90,10 +76,6 @@ class Login extends Component {
     }
 
     onSubmit = async () => {
-        if (!this.props.hasNetwork) {
-            this.showNetworkError();
-            return;
-        }
         if (this.state.deviceToken === null) {
             const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
             if (deviceToken === null) {
@@ -112,12 +94,12 @@ class Login extends Component {
         }
     }
 
-    doLogin = () => {
+    doLogin = async () => {
         const { username, password, deviceToken } = this.state;
         const userData = {};
 
         userData.registrationToken = deviceToken;
-        userData.deviceId = DeviceInfo.getUniqueID();
+        userData.deviceId = await DeviceInfo.getUniqueId();
         userData.date = new Date().toISOString();
         userData.email = username;//'madhavan.v@reactiveworks.in'; // FIXME: Remove static value
         userData.password = Md5.hex_md5(password + '');//Md5.hex_md5(890 + ''); // FIXME: Remove static value
@@ -159,10 +141,6 @@ class Login extends Component {
 
 
     fetchingDeviceToken = async (user) => {
-        if (!this.props.hasNetwork) {
-            this.showNetworkError();
-            return;
-        }
         if (this.state.deviceToken === null) {
             const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
             if (deviceToken === null) {
@@ -179,8 +157,8 @@ class Login extends Component {
         }
     }
 
-    thirdPartyLogin = (user) => {
-        axios.post(USER_BASE_URL + 'loginUserUsingThirdParty', { email: user.email, name: user.name, signUpSource: user.signupSource, date: new Date().toISOString(), registrationToken: this.state.deviceToken, deviceId: DeviceInfo.getUniqueID() })
+    thirdPartyLogin = async (user) => {
+        axios.post(USER_BASE_URL + 'loginUserUsingThirdParty', { email: user.email, name: user.name, signUpSource: user.signupSource, date: new Date().toISOString(), registrationToken: this.state.deviceToken, deviceId: await DeviceInfo.getUniqueId() })
             .then(res => {
                 console.log('loginUserUsingThirdParty success: ', res)
                 AsyncStorage.setItem(USER_AUTH_TOKEN, res.data.accessToken);

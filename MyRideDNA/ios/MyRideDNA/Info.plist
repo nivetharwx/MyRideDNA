@@ -21,7 +21,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>26.5</string>
+	<string>26.6</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -39,10 +39,10 @@
 	</dict>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>NSAppleMusicUsageDescription</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>MyRideDNA wants to access your location on background</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>NSBluetoothPeripheralUsageDescription </string>
-  <key>NSBluetoothAlwaysUsageDescription</key>
-  <string>MyRideDNA wants to access your location on background</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>NSCalendarsUsageDescription</string>
 	<key>NSCameraUsageDescription</key>

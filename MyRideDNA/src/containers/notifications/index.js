@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { SafeAreaView, View, Text, Platform, Image, ScrollView, AsyncStorage, StyleSheet, FlatList, StatusBar, TouchableOpacity, ActivityIndicator, Animated, Easing } from 'react-native';
+import { SafeAreaView, View, Text, Platform, Image, ScrollView, StyleSheet, FlatList, StatusBar, TouchableOpacity, ActivityIndicator, Animated, Easing } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 
 import { BasicHeader } from '../../components/headers';

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, AsyncStorage, StyleSheet, StatusBar, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, ImageBackground } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 
 import { BasicHeader } from '../../components/headers';
