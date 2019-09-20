@@ -50,6 +50,11 @@ class Chat extends Component {
         }
     }
     componentDidUpdate(prevProps, prevState) {
+        if (!prevProps.chatInfo || prevProps.chatInfo.id !== this.props.chatInfo.id) {
+            this.props.getAllMessages(this.props.chatInfo.id, this.props.user.userId, this.props.chatInfo.isGroup)
+            this.props.updateChatData(this.props.chatInfo)
+            this.props.seenMessage(this.props.chatInfo.id, this.props.user.userId, this.props.chatInfo.isGroup, 'chatPage')
+        }
         if (prevProps.chatData !== this.props.chatData) {
             if (this.props.chatData === null) {
                 Actions.pop();
@@ -212,7 +217,8 @@ class Chat extends Component {
     }
 
     getDateAndTime = (item) => {
-        return new Date(item.date).toLocaleDateString() + ', ' + new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        var dateFormat = { day: 'numeric', year: '2-digit', month: 'short' };
+        return new Date(item.date).toLocaleDateString('en-IN',dateFormat) + ', ' + new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
 
     onPressBackButton = () => {
@@ -246,7 +252,7 @@ class Chat extends Component {
         const { messageToBeSend, selectedMessage, isVisibleDeleteModal, isVisibleOptionsModal } = this.state;
         return <View style={styles.fill}>
             <View style={APP_COMMON_STYLES.statusBar}>
-            <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+                <StatusBar translucent backgroundColor='black' barStyle="light-content" />
             </View>
             <View style={styles.fill}>
                 <ImageBackground style={styles.chatBackgroundImage} source={require('../../assets/img/chat-bg.jpg')}>
@@ -272,8 +278,8 @@ class Chat extends Component {
                                     </TouchableOpacity>
                                 </View>
                                 {
-                                    
-                                    
+
+
                                     chatData !== null ?
                                         chatData.profilePicture ?
                                             <Thumbnail style={styles.thumbnail} source={{ uri: chatData.profilePicture }} />

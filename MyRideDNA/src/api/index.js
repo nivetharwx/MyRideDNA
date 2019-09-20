@@ -1264,7 +1264,7 @@ export const getAllFriends1 = (friendType, userId, pageNumber, toggleLoader, suc
         // pageNumber > 0 && dispatch(toggleLoaderAction(true));
         // pageNumber > 0 && dispatch(apiLoaderActions(true));
         // axios.get(FRIENDS_BASE_URL + `getFriendList?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
-        axios.get(GRAPH_BASE_URL + `getFriendList1?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.get(GRAPH_BASE_URL + `getFriendList?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log('getFriendList1 : ', res.data);
                 if (res.status === 200 && res.data.friendList.length > 0) {

@@ -67,19 +67,23 @@ export default class App extends Component {
                     this.updatePageContent(JSON.parse(notification._data.reference).targetScreen, notification._data)
                 }
                 else {
+                    store.dispatch(updateNotificationCountAction())
                     this.showLocalNotification(notification._data);
                 }
                 return;
             }
             // if target screen is not same as above two then open local notification 
             if (JSON.parse(notification._data.reference).targetScreen !== Actions.currentScene) {
+                store.dispatch(updateNotificationCountAction())
                 this.showLocalNotification(notification._data);
+                // if platform is ios then updatepage content here only because onNotificationDisplayed will not be called
+                if (!IS_ANDROID) {
+                    this.updatePageContent(JSON.parse(notification._data.reference).targetScreen, notification._data)
+                }
                 return;
             }
-            // if platform is ios then updatepage content here only because onNotificationDisplayed will not be called
-            if (!IS_ANDROID) {
-                this.updatePageContent(JSON.parse(notification._data.reference).targetScreen, notification._data)
-            }
+
+
 
         });
         this.removeNotificationDisplayedListener = firebase.notifications().onNotificationDisplayed(notification => {
@@ -180,7 +184,7 @@ export default class App extends Component {
         // if user is on request tab then refresh the page to call all api related to request
         if (targetScreen === "REQUESTS" && Actions.currentScene === PageKeys.FRIENDS) {
             console.log('actions.refresh');
-            Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, isRefresh: true });
+            Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifBody, isRefresh: false });
         }
         if (targetScreen === Actions.currentScene) {
             Actions.refresh();
@@ -219,7 +223,7 @@ export default class App extends Component {
             if (targetScreen === 'REQUESTS') {
                 Actions.currentScene !== PageKeys.FRIENDS
                     ? store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData } }))
-                    : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData });
+                    : Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, notificationBody: notifData, isRefresh: true });
             }
             return;
         }
@@ -231,7 +235,10 @@ export default class App extends Component {
         else if (targetScreen === "CHAT") {
             notifData['isGroup'] = JSON.parse(notifData.isGroup);
             console.log('notifData redirectScreen : ', notifData)
-            store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, chatInfo: notifData } }));
+            //  if user is chatiing with one person and message came for another person then moving to another person chat
+            Actions.currentScene === PageKeys.CHAT
+                ? Actions.refresh({ comingFrom: PageKeys.NOTIFICATIONS, goTo: targetScreen, chatInfo: notifData })
+                : store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, chatInfo: notifData } }));
         }
         else {
             store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));

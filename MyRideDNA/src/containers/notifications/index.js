@@ -129,6 +129,10 @@ class Notifications extends Component {
     deleteNotification = (item, index) => {
         this.props.deleteNotification(item.id);
     }
+    getDateAndTime = (item) => {
+        var dateFormat = { day: 'numeric', year: '2-digit', month: 'short' };
+        return new Date(item.date).toLocaleDateString('en-IN',dateFormat);
+    }
 
     _renderItem = ({ item, index }) => {
         return (
@@ -159,7 +163,7 @@ class Notifications extends Component {
                 </Left>
                 <Body style={[styles.noBorderTB, styles.itemBody]}>
                     <Text style={[styles.name, { fontWeight: 'bold', fontSize: 17 }]}>{item.fromUserName + ' '}<Text style={styles.message}>{item.message}</Text></Text>
-                    <Text>{getFormattedDateFromISO(item.date, '/')}</Text>
+                    <Text>{this.getDateAndTime(item)}</Text>
                 </Body>
                 <Right>
                     <IconButton iconProps={{ name: 'close', type: 'MaterialIcons', style: { fontSize: 25, color: '#6B7663' } }} onPress={() => this.deleteNotification(item, index)} />

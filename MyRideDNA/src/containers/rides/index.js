@@ -543,7 +543,13 @@ export class Rides extends Component {
         }
     }
 
+    getDateAndTime = (item) => {
+        var dateFormat = { day: 'numeric', year: '2-digit', month: 'short' };
+        return new Date(item.date).toLocaleDateString('en-IN',dateFormat) + ', ' + new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+
     renderRides = ({ item, index }) => {
+        console.log('item rides :',item);
         return <Card>
             <CardItem bordered>
                 <Left>
@@ -555,7 +561,7 @@ export class Rides extends Component {
                     <Body>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                             <View>
-                                <Text style={{ fontWeight: 'bold', fontSize: widthPercentageToDP(3.8) }}>{item.name}</Text>
+                                <Text style={{ fontWeight: 'bold', fontSize: widthPercentageToDP(3.8) }}>{item.isRecorded?this.getDateAndTime(item):item.name}</Text>
                                 <Text note></Text>
                             </View>
                             {
