@@ -75,7 +75,8 @@ class Friends extends Component {
             if (!prevProps.notificationBody || prevProps.notificationBody.id !== this.props.notificationBody.id) {
                 switch (this.props.goTo) {
                     case 'REQUESTS':
-                        this.state.activeTab !== 2 && this.tabsRef.props.goToPage(2);
+                        this.props.isRefresh && this.state.activeTab !== 2 && this.tabsRef.props.goToPage(2);
+                        this.props.getAllRequest(this.props.user.userId, true);
                         break;
                     case 'GROUP':
                         this.state.activeTab !== 1 && this.tabsRef.props.goToPage(1);

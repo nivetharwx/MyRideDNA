@@ -60,7 +60,7 @@ class ChatList extends Component {
         });
 
     }
- 
+
     onPressLogout = async () => {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
@@ -70,10 +70,11 @@ class ChatList extends Component {
     }
 
     deleteFromChatList = () => {
-        
+
     }
 
     getDate = (item) => {
+        console.log('newDate chatList : ', new Date(item.date).toTimeString());
         const itemDate = new Date(item.message.date).toString().substr(4, 12).split(' ')[1];
         if (new Date().getDate() == itemDate) {
             return new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -82,7 +83,7 @@ class ChatList extends Component {
             return 'yesterday'
         }
         else {
-            return new Date(item.date).toLocaleDateString()
+            return new Date(item.date).toLocaleDateString('en-IN', { day: 'numeric', year: '2-digit', month: 'short' })
         }
 
     }
