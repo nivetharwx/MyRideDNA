@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    View, Alert, StyleSheet, Text,
+    View, StyleSheet,
     Image, ImageBackground, StatusBar, Animated, Easing
 } from 'react-native';
 import NetInfo from "@react-native-community/netinfo";
@@ -9,7 +9,7 @@ import { connect } from 'react-redux';
 import { Actions } from 'react-native-router-flux';
 import { USER_AUTH_TOKEN, PageKeys, WindowDimensions, USER_BASE_URL, DEVICE_TOKEN, UNSYNCED_RIDE } from '../../constants';
 import { Icon as NBIcon, Toast } from 'native-base';
-import { storeUserAction, updateTokenAction, toggleNetworkStatusAction, updateUnsyncedRidesAction, replaceUnsyncedRidesAction } from '../../actions';
+import { storeUserAction, updateTokenAction, replaceUnsyncedRidesAction } from '../../actions';
 import axios from 'axios';
 
 class SplashScreen extends React.Component {
@@ -26,14 +26,8 @@ class SplashScreen extends React.Component {
         console.log('componentDidMount splash screen')
         const keys = await AsyncStorage.getAllKeys();
         this.props.updateUnsyncedRides(keys.filter(key => key.indexOf(UNSYNCED_RIDE) === 0));
-        const connectionInfo = await NetInfo.fetch();
-        if (connectionInfo.type === 'none') {
-            Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
-        } else {
-            this.handleFirstConnectivityChange(connectionInfo)
-        }
-        this.doAnimateLoader();
         this.unregisterNetworkListener = NetInfo.addEventListener(this.handleFirstConnectivityChange);
+        this.doAnimateLoader();
     }
 
 
@@ -41,21 +35,18 @@ class SplashScreen extends React.Component {
         if (prevProps.user !== this.props.user) {
             if (this.props.user.userId) {
                 Actions.reset(PageKeys.MAP);
-                // Animated.timing(this.state.pageOpacity, {
-                //     toValue: 0,
-                //     duration: 1500,
-                //     easing: Easing.linear
-                // }).start(() => setTimeout(() => Actions.reset(PageKeys.MAP), 100));
             }
         }
     }
+
     handleFirstConnectivityChange = async (connectionInfo) => {
         if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
-            console.log('internet connected');
             Toast.hide();
             if (this.props.user === null || this.props.user.userId === null) {
                 this.doAuthTokenVerfication();
             }
+        } else {
+            Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
         }
     }
 
@@ -125,21 +116,6 @@ class SplashScreen extends React.Component {
         );
     }
 }
-
-
-{/* <Animated.View style={[styles.fill, { opacity: this.state.pageOpacity }]}>
-                <StatusBar
-                    backgroundColor="black"
-                    barStyle="default"
-                />
-                <ImageBackground source={require('../../assets/img/logo-sky-bg.jpg')}
-                    style={styles.splashBackground} resizeMode='cover'>
-                    <Image source={require('../../assets/img/logo-high-res.png')} style={styles.logo} resizeMode='center' />
-                </ImageBackground>
-                <Animated.View style={[styles.loader, { transform: [{ rotate: spin }] }]}>
-                    <NBIcon name='spinner' type='EvilIcons' style={{ fontSize: 100, color: '#EB861E' }} />
-                </Animated.View>
-            </Animated.View> */}
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;

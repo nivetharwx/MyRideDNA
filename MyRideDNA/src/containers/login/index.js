@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
-import { SafeAreaView, View, StatusBar, Alert } from 'react-native';
+import { View, StatusBar, Alert } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import NetInfo from "@react-native-community/netinfo";
 import { Actions } from 'react-native-router-flux';
 import { connect } from 'react-redux';
 import axios from 'axios';
-import Spinner from 'react-native-loading-spinner-overlay';
 import firebase from 'react-native-firebase';
 
 import DeviceInfo from 'react-native-device-info'; // DOC: Check https://www.npmjs.com/package/react-native-device-info#usage
@@ -17,7 +16,7 @@ import { storeUserAction, toggleNetworkStatusAction, updateTokenAction } from '.
 import ForgotPassword from '../forgot-password';
 import { Loader } from '../../components/loader'
 import { Toast } from 'native-base';
-import { LoginButton, AccessToken, LoginManager } from 'react-native-fbsdk';
+import { AccessToken, LoginManager } from 'react-native-fbsdk';
 // import { GoogleSignin } from 'react-native-google-signin';
 
 // GoogleSignin.configure();
@@ -36,20 +35,19 @@ class Login extends Component {
         };
     }
 
-    async componentWillMount() {
-        this.unregisterNetworkListener = NetInfo.addEventListener(this.handleFirstConnectivityChange);
-
+    async componentDidMount() {
         if (!this.props.hasNetwork) {
             Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
         }
         
         const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
         this.setState({ deviceToken });
+
+        this.unregisterNetworkListener = NetInfo.addEventListener(this.handleFirstConnectivityChange);
     }
 
     handleFirstConnectivityChange = (connectionInfo) => {
         if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
-            console.log('internet connected');
             Toast.hide();
             this.props.toggleNetworkStatus(true);
         } else if (connectionInfo.type === 'none') {
