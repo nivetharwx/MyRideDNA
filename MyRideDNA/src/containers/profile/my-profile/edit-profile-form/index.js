@@ -4,8 +4,8 @@ import { StyleSheet, KeyboardAvoidingView, StatusBar, Platform, ScrollView, View
 import { BasicHeader } from '../../../../components/headers';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
-import { LabeledInput, IconicList, IconicDatePicker, IconicInput } from '../../../../components/inputs';
-import { BasicButton } from '../../../../components/buttons';
+import { LabeledInput, IconicList, IconicDatePicker, IconicInput, LabeledInputPlaceholder } from '../../../../components/inputs';
+import { BasicButton, IconButton } from '../../../../components/buttons';
 import { Thumbnail } from '../../../../components/images';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import { addBikeToGarage, editBike, updateUserInfo } from '../../../../api';
@@ -128,7 +128,7 @@ class EditProfileForm extends Component {
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
-                <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
+                {/* <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
                     <BasicHeader title='Edit Profile' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
                     <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
                         <LabeledInput containerStyle={{ marginHorizontal: widthPercentageToDP(2) }} inputValue={user.email} editable={false} />
@@ -149,6 +149,61 @@ class EditProfileForm extends Component {
                         </View>
                     </ScrollView>
                     <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
+                </KeyboardAvoidingView> */}
+                <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
+                    <BasicHeader title='Edit Profile' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
+                    <ScrollView >
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: heightPercentageToDP(13) }}>
+                            <View style={{ alignSelf: 'center' }}>
+                                <IconButton Button iconProps={{ name: 'camera', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(9), color: '#f69039' } }}
+                                    style={{}} />
+                                <Text style={{ letterSpacing: 2, marginTop: heightPercentageToDP(1), fontWeight: '500', color: '#000' }}>{' TAKE \nPHOTO'}</Text>
+                            </View>
+                            <View style={{ alignSelf: 'center' }}>
+                                <IconButton Button iconProps={{ name: 'md-photos', type: 'Ionicons', style: { fontSize: widthPercentageToDP(9), color: '#f69039' } }}
+                                    style={{}} />
+                                <Text style={{ letterSpacing: 2, marginTop: heightPercentageToDP(1), fontWeight: '500', color: '#000' }}>{'UPLOAD \n PHOTO'}</Text>
+                            </View>
+                        </View>
+                        <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(2) }}>
+
+                            {/* <LabeledInputPlaceholder containerStyle={{ }} inputValue={user.homeAddress.country} inputRef={elRef => this.fieldRefs[5] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} /> */}
+                            <LabeledInputPlaceholder
+                                inputValue={user.name} inputStyle={{ paddingBottom: 0 }}
+                                inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next'
+                                onChange={this.onChangeName} label='NAME' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[0].focus()} hideKeyboardOnSubmit={false} />
+
+                            <LabeledInputPlaceholder
+                                inputValue={user.nickname} inputStyle={{ paddingBottom: 0 }}
+                                inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next'
+                                onChange={this.onChangeNickName} label='NICKNAME' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
+
+                            <IconicDatePicker
+                                selectedDate={user.dob} datePickerStyle={{ paddingLeft: 0, paddingBottom: 1, fontSize: heightPercentageToDP(2.3) }}
+                                onChange={this.onChangeDOB} label='DATE OF BIRTH' labelStyle={styles.labelStyle} />
+
+                            <IconicList
+                                selectedValue={user.gender} values={GENDER_LIST} labelPlaceHolder='GENDER'
+                                labelPlaceHolderStyle={[styles.labelStyle, { marginTop: heightPercentageToDP(1) }]}
+                                innerContainerStyle={{ borderBottomWidth: 1 }} onChange={this.onChangeGender} />
+
+                            <LabeledInputPlaceholder
+                                inputValue='2019' inputStyle={{ paddingBottom: 0 }}
+                                inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next'
+                                onChange={this.onChangeNickName} label='RIDING SINCE' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
+
+                            <LabeledInputPlaceholder
+                                inputValue='2' inputStyle={{ paddingBottom: 0 }}
+                                inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next'
+                                onChange={this.onChangeNickName} label='CLUB(s)' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
+
+                        </View>
+                    </ScrollView>
+                    <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2.7, fontSize: heightPercentageToDP(3.5) }} onPress={this.onSubmit} />
                 </KeyboardAvoidingView>
                 <Loader isVisible={showLoader} />
             </View>
@@ -182,6 +237,7 @@ const styles = StyleSheet.create({
     },
     submitBtn: {
         height: heightPercentageToDP(8.5),
+        backgroundColor: '#f69039',
     },
     formFieldIcon: {
         color: '#999999'
@@ -190,5 +246,11 @@ const styles = StyleSheet.create({
         width: '48%',
         borderBottomColor: '#D4D4D4',
         borderBottomWidth: 1
+    },
+    labelStyle: {
+        color: '#000',
+        fontSize: heightPercentageToDP(1.6),
+        fontWeight: '600',
+        letterSpacing: 2
     }
 });

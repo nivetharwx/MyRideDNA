@@ -3,16 +3,20 @@ import { connect } from 'react-redux';
 import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import { Actions } from 'react-native-router-flux';
-import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../../constants/index';
-import { IconButton } from '../../../components/buttons';
+import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions } from '../../../constants/index';
+import { BasicHeader } from '../../../components/headers';
+import { IconButton, LinkButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
 import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions } from '../../../actions';
 import { Accordion } from 'native-base';
 import ImagePicker from 'react-native-image-crop-picker';
 import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo } from '../../../api';
 import { ImageLoader } from '../../../components/loader';
+import { SmallCard } from '../../../components/cards';
 
 const hasIOSAbove10 = parseInt(Platform.Version) > 10;
+const clubDummyData = [{ name: 'Black Rebel Motorcycle Club', id: "1" }, { name: 'Hell’s Angels', id: "2" }, { name: 'Milwaukee Outlaws', id: "3" }]
+const roadbuddiesDummyData = [{ name: 'person1', id: '1' }, { name: 'person2', id: '2' }, { name: 'person3', id: '3' }, { name: 'person4', id: '4' }]
 class MyProfileTab extends Component {
     // DOC: Icon format is for Icon component from NativeBase Library
     PROFILE_ICONS = {
@@ -204,45 +208,185 @@ class MyProfileTab extends Component {
     onPressLogout = async () => {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
+    clubsKeyExtractor = (item) => item.id;
+    roadBuddiesKeyExtractor = (item) => item.id;
 
     render() {
         const { user } = this.props;
         const { isLoadingProfPic } = this.state;
+        // return (
+        //     <View style={styles.fill}>
+        //         {
+        //             // IS_ANDROID
+        //             //     ? null
+        //             //     : <View style={APP_COMMON_STYLES.appBar} />
+        //         }
+        //         <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
+        //             <View style={styles.profilePic}>
+        //                 <ImageBackground source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}>
+        //                     {
+        //                         isLoadingProfPic
+        //                             ? <ImageLoader show={isLoadingProfPic} />
+        //                             : null
+        //                     }
+        //                 </ImageBackground>
+        //             </View>
+        //             <View style={styles.profileHeader}>
+        //                 <IconButton iconProps={{ name: 'bell', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(5) } }}
+        //                     style={[styles.headerIcon, { marginLeft: widthPercentageToDP(1) }]} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
+        //                 <Text style={styles.title}
+        //                     renderToHardwareTextureAndroid collapsable={false}>
+        //                     {user.name}
+        //                     <Text style={{ color: APP_COMMON_STYLES.infoColor, fontWeight: 'bold' }}>
+        //                         {'  '}{user.nickname}
+        //                     </Text>
+        //                 </Text>
+        //                 <IconButton iconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: APP_COMMON_STYLES.infoColor } }}
+        //                     style={[styles.headerIcon, { backgroundColor: 'transparent' }]} onPress={this.onPressLogout} />
+        //             </View>
+        //         </ImageBackground>
+        //         <ScrollView styles={styles.scrollBottom} contentContainerStyle={styles.scrollBottomContent}>
+        //             <Accordion expanded={this.props.profileLastOptions} dataArray={[{ title: 'Change profile', content: [this.PROFILE_ICONS.gallery, this.PROFILE_ICONS.camera, this.PROFILE_ICONS.passengers, this.PROFILE_ICONS.edit] },
+        //             { title: 'Change bike', content: [] }]}
+        //                 renderContent={this.renderAccordionItem} headerStyle={styles.accordionHeader} />
+        //         </ScrollView>
+        //     </View>
+        // );
         return (
             <View style={styles.fill}>
-                {
-                    // IS_ANDROID
-                    //     ? null
-                    //     : <View style={APP_COMMON_STYLES.appBar} />
-                }
-                <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
-                    <View style={styles.profilePic}>
-                        <ImageBackground source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}>
-                            {
-                                isLoadingProfPic
-                                    ? <ImageLoader show={isLoadingProfPic} />
-                                    : null
-                            }
-                        </ImageBackground>
-                    </View>
-                    <View style={styles.profileHeader}>
-                        <IconButton iconProps={{ name: 'bell', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(5) } }}
-                            style={[styles.headerIcon, { marginLeft: widthPercentageToDP(1) }]} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
-                        <Text style={styles.title}
-                            renderToHardwareTextureAndroid collapsable={false}>
+                <View style={styles.mapHeader}>
+                    <IconButton iconProps={{ name: 'bell', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(5) } }}
+                        style={[styles.headerIcon, { marginLeft: widthPercentageToDP(6), marginTop: heightPercentageToDP(2.1) }]} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
+                    <View style={{ flexDirection: 'column' }}>
+                        <Text style={styles.title}>
                             {user.name}
-                            <Text style={{ color: APP_COMMON_STYLES.infoColor, fontWeight: 'bold' }}>
-                                {'  '}{user.nickname}
-                            </Text>
                         </Text>
-                        <IconButton iconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: APP_COMMON_STYLES.infoColor } }}
-                            style={[styles.headerIcon, { backgroundColor: 'transparent' }]} onPress={this.onPressLogout} />
+                        {
+                            user.nickname ?
+                                <Text style={{ color: 'rgba(189, 195, 199, 1)', fontWeight: 'bold', alignSelf: 'center' }}>
+                                    {'  '}{user.nickname.toUpperCase()}
+                                </Text>
+                                : null
+                        }
+
                     </View>
-                </ImageBackground>
-                <ScrollView styles={styles.scrollBottom} contentContainerStyle={styles.scrollBottomContent}>
-                    <Accordion expanded={this.props.profileLastOptions} dataArray={[{ title: 'Change profile', content: [this.PROFILE_ICONS.gallery, this.PROFILE_ICONS.camera, this.PROFILE_ICONS.passengers, this.PROFILE_ICONS.edit] },
-                    { title: 'Change bike', content: [] }]}
-                        renderContent={this.renderAccordionItem} headerStyle={styles.accordionHeader} />
+                </View>
+                {/* <BasicHeader style={[{}, IS_ANDROID ? {height:heightPercentageToDP(10)} : { marginTop: 20 }]} headerHeight={heightPercentageToDP(14.5)}
+                        leftIconProps={{ reverse: true, name: 'bell', type: 'FontAwesome'}} /> */}
+                <ScrollView>
+                    <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
+                        <View style={styles.profilePic}>
+                            <ImageBackground source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}>
+                                {/* <ImageBackground source={require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}> */}
+                                {
+                                    isLoadingProfPic
+                                        ? <ImageLoader show={isLoadingProfPic} />
+                                        : null
+                                }
+                            </ImageBackground>
+                        </View>
+                    </ImageBackground>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <View style={{ flexDirection: 'column', marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(3) }}>
+                            <Text style={{ letterSpacing: 3, fontSize: 11, color: '#a8a8a8', fontWeight: '600' }}>LOCATION</Text>
+                            <Text style={{ fontWeight: 'bold', color: '#000' }}>Bengaluru, IN</Text>
+                        </View>
+                        <IconButton iconProps={{ name: 'account-edit', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#f69039' } }}
+                            style={{ marginRight: widthPercentageToDP(6), marginTop: heightPercentageToDP(1.5) }} onPress={() => Actions.push(PageKeys.EDIT_PROFILE_FORM)} />
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderColor: '#0090b1', marginLeft: widthPercentageToDP(8), marginRight: widthPercentageToDP(11.22), marginTop: heightPercentageToDP(2) }}>
+                        <View style={{ width: widthPercentageToDP(18) }}>
+                            <Text style={{ fontSize: 11, marginTop: heightPercentageToDP(1), color: '#a8a8a8', fontWeight: '600' }}>DOB</Text>
+                            <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7) }}>14/03/91</Text>
+                        </View>
+                        <View style={{ borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#0090b1', width: widthPercentageToDP(28), alignItems: 'center' }}>
+                            <Text style={{ fontSize: 10, marginTop: heightPercentageToDP(1), letterSpacing: 1.5, color: '#a8a8a8', fontWeight: '600' }}>YEARS RIDING</Text>
+                            <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7) }}>24</Text>
+                        </View>
+                        <View style={{ borderRightWidth: 1, borderColor: '#0090b1', width: widthPercentageToDP(28), alignItems: 'flex-start' }}>
+                            <Text style={{ fontSize: 10, marginTop: heightPercentageToDP(1), letterSpacing: 1.5, color: '#a8a8a8', fontWeight: '600' }}>MEMBER SINCE</Text>
+                            <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7), alignSelf: 'center' }}>2019</Text>
+                        </View>
+                    </View>
+                    <View style={{ flexDirection: 'column', marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(4) }}   >
+                        <Text style={{ letterSpacing: 3, fontSize: 11, color: '#a8a8a8', fontWeight: '600' }}>CLUBS</Text>
+                        <FlatList
+                            data={clubDummyData}
+                            contentContainerStyle={styles.clubList}
+                            keyExtractor={this.clubsKeyExtractor}
+                            renderItem={({ item, index }) => (
+                                <View style={{ flexDirection: 'column', paddingVertical: heightPercentageToDP(0.5) }}>
+                                    <Text style={{ color: '#000', fontWeight: '600' }}>{item.name}</Text>
+                                </View>
+                            )}
+                        />
+                    </View>
+                    <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(5), borderTopWidth: 1, marginRight: widthPercentageToDP(7) }}>
+                        <View style={{ flexDirection: 'row', marginTop: heightPercentageToDP(3) }}>
+                            <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Road Buddies</Text>
+                            <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16 }} />
+                            <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#a8a8a8', marginLeft: widthPercentageToDP(16) }}>
+                                <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} />
+                            </View>
+                        </View>
+                        {/* <View style={{flexDirection:'row',justifyContent:'space-between'}}>
+                            <SmallCard />
+                            <SmallCard />
+                            <SmallCard />
+                            <SmallCard />
+                        </View> */}
+                        <View style={{ borderTopWidth: 15, borderTopColor: '#DCDCDE' }}>
+                            <FlatList
+                                style={{ flexDirection: 'column' }}
+                                numColumns={4}
+                                data={roadbuddiesDummyData}
+                                keyExtractor={this.roadBuddiesKeyExtractor}
+                                renderItem={({ item, index }) => (
+                                    <View style={{ marginRight: widthPercentageToDP(1.5) }}>
+                                        <SmallCard
+                                            smallardPlaceholder={require('../../../assets/img/profile-pic.png')}
+                                        />
+                                    </View>
+                                )}
+                            />
+                        </View>
+                    </View>
+                    <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(3), marginRight: widthPercentageToDP(7) }}>
+                        <View style={{ flexDirection: 'row', marginTop: heightPercentageToDP(3) }}>
+                            <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Passengers</Text>
+                            <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16 }} />
+                            <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#a8a8a8', marginLeft: widthPercentageToDP(21) }}>
+                                <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} />
+                            </View>
+                        </View>
+                        <View style={{ borderTopWidth: 15, borderTopColor: '#DCDCDE' }}>
+                            <FlatList
+                                style={{ flexDirection: 'column' }}
+                                numColumns={4}
+                                data={roadbuddiesDummyData}
+                                keyExtractor={this.roadBuddiesKeyExtractor}
+                                renderItem={({ item, index }) => (
+                                    <View style={{ marginRight: widthPercentageToDP(1.5) }}>
+                                        <SmallCard
+                                            smallardPlaceholder={require('../../../assets/img/profile-pic.png')}
+                                        />
+                                    </View>
+                                )}
+                            />
+                        </View>
+                    </View>
+                    <View style={styles.usersExtraDetailContainer}>
+                        <ImageBackground source={require('../../../assets/img/my-wallet.png')} style={styles.usersExtraDetail}></ImageBackground>
+                    </View>
+                    <View style={styles.usersExtraDetailContainer}>
+                        <ImageBackground source={require('../../../assets/img/my-journal.png')} style={styles.usersExtraDetail}></ImageBackground>
+                    </View>
+                    <View style={styles.usersExtraDetailContainer}>
+                        <ImageBackground source={require('../../../assets/img/my-vest.png')} style={styles.usersExtraDetail}></ImageBackground>
+                    </View>
+                    <View style={styles.usersExtraDetailContainer}>
+                        <ImageBackground source={require('../../../assets/img/my-photos.png')} style={styles.usersExtraDetail}></ImageBackground>
+                    </View>
                 </ScrollView>
             </View>
         );
@@ -328,25 +472,21 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     title: {
-        flex: 1,
-        marginLeft: widthPercentageToDP(3),
-        alignSelf: 'center',
-        fontSize: widthPercentageToDP(5),
+        marginLeft: widthPercentageToDP(6),
+        marginTop: widthPercentageToDP(1),
+        fontSize: widthPercentageToDP(6),
         color: 'white',
-        alignItems: 'flex-start',
         fontWeight: 'bold',
         backgroundColor: 'transparent',
     },
     profileBG: {
         width: '100%',
-        height: heightPercentageToDP(55),
+        height: heightPercentageToDP(40),
         paddingTop: IS_ANDROID ? 0 : hasIOSAbove10 ? heightPercentageToDP(1.5) : 0
     },
     profilePic: {
-        height: widthPercentageToDP(65),
-        width: widthPercentageToDP(65),
-        alignSelf: 'center',
-        marginTop: heightPercentageToDP(10),
+        height: heightPercentageToDP(37),
+        width: WindowDimensions.width,
         borderWidth: 1,
     },
     scrollBottomContent: {
@@ -363,4 +503,26 @@ const styles = StyleSheet.create({
         alignContent: 'center',
         alignItems: 'center',
     },
+
+    //  new Design styles
+    mapHeader: {
+        height: 60,
+        backgroundColor: APP_COMMON_STYLES.headerColor,
+        flexDirection: 'row',
+        elevation: 30,
+    },
+    clubList: {
+        marginHorizontal: widthPercentageToDP(1),
+        paddingTop: widthPercentageToDP(1),
+    },
+    usersExtraDetail: {
+        width: WindowDimensions.width,
+        height: heightPercentageToDP(30),
+    },
+    usersExtraDetailContainer: {
+        marginTop: heightPercentageToDP(8),
+        borderTopWidth: 9,
+        borderTopColor: '#f69039',
+        elevation: 20,
+    }
 });
