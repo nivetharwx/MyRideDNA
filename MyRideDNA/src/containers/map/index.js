@@ -737,25 +737,23 @@ export class Map extends Component {
             this.redirectToTargetScreen(JSON.parse(notificationOpen.notification._data.reference).targetScreen, notificationOpen.notification._data)
         }
         BackgroundGeolocation.onLocation(this.onLocation, this.onError);
-        // BackgroundGeolocation.onMotionChange(this.onMotionChange);
-        // BackgroundGeolocation.onActivityChange(this.onActivityChange);
-        // BackgroundGeolocation.onProviderChange(this.onProviderChange);
+        BackgroundGeolocation.onMotionChange(this.onMotionChange);
+        BackgroundGeolocation.onActivityChange(this.onActivityChange);
+        BackgroundGeolocation.onProviderChange(this.onProviderChange);
+        BackgroundGeolocation.onHeartbeat(this.onHeartbeat);
         BackgroundGeolocation.ready({
-            reset: true,
+            reset: false,
+            foregroundService: true,
             desiredAccuracy: BackgroundGeolocation.DESIRED_ACCURACY_HIGH,
             distanceFilter: 10,
-            stopTimeout: 1,
-            debug: false,
-            logLevel: BackgroundGeolocation.LOG_LEVEL_VERBOSE,
-            stopOnTerminate: true,
-            startOnBoot: false,
             notification: {
                 channelName: "Default",
                 color: "black",
                 smallIcon: "@drawable/myridedna_notif_icon",
                 text: "Location Service activated",
                 title: "MyRideDNA"
-            }
+            },
+            heartbeatInterval: 60
         }, (state) => {
             console.log("- BackgroundGeolocation is configured and ready: ", state.enabled);
 
@@ -818,17 +816,17 @@ export class Map extends Component {
         console.warn('[location] ERROR -', error);
     }
 
-    // onActivityChange = (event) => {
-    //     console.log('[activitychange] -', event);  // eg: 'on_foot', 'still', 'in_vehicle'
-    // }
+    onActivityChange = async (event) => {
+        console.log('[activitychange] -', event);  // eg: 'on_foot', 'still', 'in_vehicle'
+    }
 
-    // onProviderChange = (provider) => {
-    //     console.log('[providerchange] -', provider.enabled, provider.status);
-    // }
+    onProviderChange = (provider) => {
+        console.log('[providerchange] -', provider.enabled, provider.status);
+    }
 
-    // onMotionChange = (event) => {
-    //     console.log('[motionchange] -', event.isMoving, event.location);
-    // }
+    onMotionChange = (event) => {
+        console.log('[motionchange] -', event.isMoving, event.location);
+    }
 
     handleNetworkConnectivityChange = (connectionInfo) => {
         if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
@@ -871,7 +869,7 @@ export class Map extends Component {
     }
 
     startTrackingLocation = () => {
-        BackgroundGeolocation.start()
+        BackgroundGeolocation.start();
     }
 
     stopTrackingLocation = () => {
@@ -1720,12 +1718,11 @@ export class Map extends Component {
                         }
                     }]
                 }
-                BackgroundGeolocation.onHeartbeat(this.onHeartbeat);
                 this.setState({ gpsPointCollection: updatedCollection, currentLocation: { location: [coords.longitude, coords.latitude], name: '' } }, () => {
                     // this.watchLocation();
                     BackgroundGeolocation.setConfig({
                         preventSuspend: true,
-                        heartbeatInterval: 60
+                        isMoving: true
                     }).then((state) => {
                         console.log('[setConfig] success: ', state);
                     })
@@ -1741,9 +1738,11 @@ export class Map extends Component {
     onPressPauseRide = () => {
         const { ride } = this.props;
         BackgroundGeolocation.setConfig({
-            preventSuspend: false
+            preventSuspend: false,
+            isMoving: false
         }, (state) => {
-            BackgroundGeolocation.removeListener('heartbeat', this.onHeartbeat);
+            // BackgroundGeolocation.removeListener('heartbeat', this.onHeartbeat);
+            this.stopTrackingLocation();
         });
         const { gpsPointCollection } = this.state;
         const points = gpsPointCollection.features[0].geometry.coordinates;
@@ -1824,16 +1823,20 @@ export class Map extends Component {
     }
 
     onPressContinueRide = () => {
-        const { ride } = this.props;
-        this.props.continueRecordRide(new Date().toISOString(), ride, this.props.user.userId);
+        BackgroundGeolocation.start(state => {
+            const { ride } = this.props;
+            this.props.continueRecordRide(new Date().toISOString(), ride, this.props.user.userId);
+        });
     }
 
     onPressStopRide = () => {
         const { ride } = this.props;
         BackgroundGeolocation.setConfig({
-            preventSuspend: false
+            preventSuspend: false,
+            isMoving: false
         }, (state) => {
-            BackgroundGeolocation.removeListener('heartbeat', this.onHeartbeat);
+            // BackgroundGeolocation.removeListener('heartbeat', this.onHeartbeat);
+            this.stopTrackingLocation();
         });
         const { gpsPointCollection } = this.state;
         const points = gpsPointCollection.features[0].geometry.coordinates;
@@ -1934,7 +1937,7 @@ export class Map extends Component {
         let actualPoints = [];
         let trackpoints = [];
         actualPoints = unsyncedPoints.reduce((list, item) => {
-            list.push(item.loc[1], item.loc[0], item.date, item.status);
+            list.push(item.loc[1], item.loc[0], item.heading, item.accuracy, item.speed, item.date, item.status);
             return list;
         }, []);
         trackpoints = [...actualPoints];
@@ -2821,7 +2824,7 @@ const mapDispatchToProps = (dispatch) => {
         addWaypoint: (waypoint, index) => dispatch(addWaypointAction({ index, waypoint })),
         updateWaypoint: (waypoint, index) => dispatch(updateWaypointAction({ index, updates: waypoint })),
         deleteWaypoint: (ride, index) => dispatch(deleteWaypointAction({ index })),
-        updateDestination: (waypoint, ride) => dispatch(updateDestination(waypoint, ride)),
+        updateDestination: (waypoint) => dispatch(updateRideAction({ destination: waypoint })),
         deleteDestination: (ride) => dispatch(updateRideAction({ destination: null })),
         makeWaypointAsSource: (ride, index) => dispatch(updateRideAction({
             waypoints: [...ride.waypoints.slice(index + 1)],
@@ -2853,9 +2856,7 @@ const mapDispatchToProps = (dispatch) => {
         updateSourceOrDestination: (identifier, locationName) => dispatch(updateSourceOrDestinationAction({ identifier, updates: { name: locationName } })),
         updateWaypointName: (waypointId, locationName) => dispatch(updateWaypointNameAction({ waypointId, locationName })),
         hideFriendsLocation: () => dispatch(hideFriendsLocationAction()),
-        updateAppState: (appState) => {
-            dispatch(updateAppStateAction({ appState }))
-        },
+        updateAppState: (appState) => dispatch(updateAppStateAction({ appState })),
         resetStoreToDefault: () => dispatch(resetStateOnLogout()),
         resetChatMessage: () => dispatch(resetChatMessageAction()),
         addUnsyncedRide: (unsyncedRideId) => dispatch(addUnsyncedRideAction(unsyncedRideId)),

@@ -374,7 +374,7 @@ export class Rides extends Component {
         let actualPoints = [];
         let trackpoints = [];
         actualPoints = unsyncedPoints.reduce((list, item) => {
-            list.push(item.loc[1], item.loc[0], item.date, item.status);
+            list.push(item.loc[1], item.loc[0], item.heading, item.accuracy, item.speed, item.date, item.status);
             return list;
         }, []);
         trackpoints = [...actualPoints];
@@ -549,7 +549,6 @@ export class Rides extends Component {
     }
 
     renderRides = ({ item, index }) => {
-        console.log('item rides :',item);
         return <Card>
             <CardItem bordered>
                 <Left>
