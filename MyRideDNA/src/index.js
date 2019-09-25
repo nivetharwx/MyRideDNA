@@ -36,12 +36,11 @@ export default class App extends Component {
             }
         }
 
-        // this.removeNotificationListener = firebase.notifications().onNotification(notification => {
-        //     console.log("From onNotification: ", notification);
-        //     notification.android.setChannelId("default")
-        //     notification.android.setAutoCancel(true);
-        //     firebase.notifications().displayNotification(notification);
-        // });
+        // DOC: This listener will execute in foreground
+        this.removeNotificationListener = firebase.notifications().onNotification(notification => {
+            this.showLocalNotification(notification._data);
+        });
+
         this.messageListener = firebase.messaging().onMessage(notification => {
             console.log("From onMessage: ", notification);
             // for checking reference is present or not
@@ -86,6 +85,7 @@ export default class App extends Component {
 
 
         });
+
         this.removeNotificationDisplayedListener = firebase.notifications().onNotificationDisplayed(notification => {
             console.log('from onNotificationDisplayed :', notification);
             if (IS_ANDROID) {
@@ -247,13 +247,13 @@ export default class App extends Component {
     }
 
     showLocalNotification(notificationBody) {
-        console.log('notification local notification : ', notificationBody);
         let notification = new firebase.notifications.Notification();
         notification = notification.setNotificationId(new Date().valueOf().toString())
             .setTitle(notificationBody.name)
             .setBody(notificationBody.content)
             .setData(notificationBody)
             .setSound("bell.mp3");
+
         // DOC: Android notification options
         notification.android.setPriority(firebase.notifications.Android.Priority.High);
         notification.android.setTicker("My Notification Ticker");
@@ -268,7 +268,7 @@ export default class App extends Component {
         // DOC: iOS notification options
         notification.ios.badge = 10;
 
-        // Couldn't find matching options in react-native-firebase
+        // DOC: Couldn't find matching options in react-native-firebase
         // FCM.presentLocalNotification({
         //     wake_screen: true,
         //     my_custom_data: notificationBody,
