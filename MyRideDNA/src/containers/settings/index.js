@@ -231,7 +231,7 @@ export class Settings extends Component {
             <View style={styles.fill}>
                 <ForgotPassword isVisible={this.state.showForgotPasswordModal} onCancel={this.toggleForgotPasswordForm} onPressOutside={this.toggleForgotPasswordForm} />
                 <View style={APP_COMMON_STYLES.statusBar}>
-                <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+                    <StatusBar translucent backgroundColor='black' barStyle="light-content" />
                 </View>
                 <View style={styles.fill}>
                     <BasicHeader title='Settings' rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
@@ -258,7 +258,7 @@ export class Settings extends Component {
                                 </Item>
                                 <IconicList
                                     selectedValue={this.state.measurementDistanceUnit} style={styles.distanceMeasurementUnit}
-                                    placeholder='Distance measurement unit' values={MEASUREMENT_UNITS}
+                                    placeholder='Distance measurement unit' values={MEASUREMENT_UNITS} containerStyle={{ paddingLeft: 10 }}
                                     onChange={this.onChangedistanceUnit}
                                 />
                                 <Item style={styles.containerItem}>
@@ -277,7 +277,7 @@ export class Settings extends Component {
                                 </Item>
                                 <IconicList
                                     selectedValue={this.state.handDominanceState}
-                                    placeholder='User hand dominance' values={HAND_DOMINANCE}
+                                    placeholder='User hand dominance' values={HAND_DOMINANCE} containerStyle={{ paddingLeft: 10 }}
                                     onChange={this.onChangeHandDominance}
                                 />
 

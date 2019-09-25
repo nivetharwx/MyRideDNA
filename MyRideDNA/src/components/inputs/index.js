@@ -8,7 +8,7 @@ import {
     TouchableOpacity
 } from 'react-native';
 import { Icon as NBIcon, Picker, DatePicker } from 'native-base';
-import { WindowDimensions, ShortMonthNames } from '../../constants';
+import { WindowDimensions, ShortMonthNames, heightPercentageToDP } from '../../constants';
 import { getFormattedDateFromISO } from '../../util';
 
 const getKeyboardTypeForContentType = (contentType) => {
@@ -30,6 +30,17 @@ export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle,
             placeholderTextColor={placeholderColor} placeholder={placeholder} textContentType={inputType} keyboardType={getKeyboardTypeForContentType(inputType)}
             onChangeText={onChange && onChange} onSubmitEditing={({ nativeEvent }) => onSubmit && onSubmit(nativeEvent.text)}
             returnKeyType={returnKeyType || 'done'} returnKeyLabel={returnKeyLabel} ref={(el) => inputRef && inputRef(el)} />
+    </View>
+);
+export const LabeledInputPlaceholder = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder, placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus, onBlur, editable, placeHolderStyle }) => (
+    <View>
+        <View style={[{ flexDirection: 'row', marginBottom: 3 }, containerStyle]}>
+            <TextInput editable={editable} onFocus={onFocus && onFocus} onBlur={onBlur && onBlur} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ flex: 1, borderBottomWidth: 1, borderBottomColor: '#000' }, inputStyle]}
+                textContentType={inputType} keyboardType={getKeyboardTypeForContentType(inputType)}
+                onChangeText={onChange && onChange} onSubmitEditing={({ nativeEvent }) => onSubmit && onSubmit(nativeEvent.text)}
+                returnKeyType={returnKeyType || 'done'} returnKeyLabel={returnKeyLabel} ref={(el) => inputRef && inputRef(el)} />
+        </View>
+        <Text style={[labelStyle]}>{label}</Text>
     </View>
 );
 export const IconicInput = ({ inputColor, containerStyle, iconProps, placeholder, value, inputType, onChange, iconEnd, onFocusout }) => (
@@ -54,31 +65,40 @@ export const IconicInput = ({ inputColor, containerStyle, iconProps, placeholder
 );
 
 // DOC: Controlled component, caller have to pass onValueChange function to persist the user selection
-export const IconicList = ({ iconProps, values, selectedValue, placeholder, onChange, containerStyle, style }) => {
+export const IconicList = ({ iconProps, values, selectedValue, placeholder, onChange, containerStyle, style, innerContainerStyle, labelPlaceHolder, labelPlaceHolderStyle, pickerStyle }) => {
     let options = selectedValue ? values : [{ label: placeholder || 'Select any', value: '' }, ...values];
     return (
-        <View style={[{ flexDirection: 'row', paddingLeft: 10 }, containerStyle]}>
+        <View>
+            <View style={[{ flexDirection: 'row' }, containerStyle]}>
+                {
+                    iconProps
+                        ? <View style={{ paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
+                            <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, iconProps.style]} />
+                        </View>
+                        : null
+                }
+                <View style={[innerContainerStyle]}>
+                    <Picker
+                        mode="dropdown"
+                        iosIcon={<NBIcon name="ios-arrow-down-outline" />}
+                        placeholder={placeholder}
+                        placeholderStyle={{ color: "#a9a9a9", marginLeft: 0, paddingLeft: 0 }}
+                        placeholderIconColor="#a9a9a9"
+                        style={[{ width: iconProps ? WindowDimensions.width - 30 : WindowDimensions.width, borderBottomWidth: 1, borderBottomColor: '#000' }, pickerStyle]}
+                        selectedValue={selectedValue}
+                        onValueChange={onChange && onChange}
+                    >
+                        {
+                            options.map((option, index) => <Picker.Item key={option.value} label={option.label} value={option.value} />)
+                        }
+                    </Picker>
+                </View>
+            </View>
             {
-                iconProps
-                    ? <View style={{ paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
-                        <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, iconProps.style]} />
-                    </View>
+                labelPlaceHolder ?
+                    <Text style={[labelPlaceHolderStyle]}>{labelPlaceHolder}</Text>
                     : null
             }
-            <Picker
-                mode="dropdown"
-                iosIcon={<NBIcon name="ios-arrow-down-outline" />}
-                placeholder={placeholder}
-                placeholderStyle={{ color: "#a9a9a9", marginLeft: 0, paddingLeft: 0 }}
-                placeholderIconColor="#a9a9a9"
-                style={[{ width: iconProps ? WindowDimensions.width - 30 : WindowDimensions.width, borderBottomWidth: 1, borderBottomColor: '#a9a9a9' }, style]}
-                selectedValue={selectedValue}
-                onValueChange={onChange && onChange}
-            >
-                {
-                    options.map((option, index) => <Picker.Item key={option.value} label={option.label} value={option.value} />)
-                }
-            </Picker>
         </View>
     );
 }
@@ -96,11 +116,11 @@ export const IconicSwitch = ({ iconProps, label, selectedValue, onChange }) => (
 );
 
 // DOC: Controlled component, caller have to pass onValueChange function to persist the user selection
-export const IconicDatePicker = ({ iconProps, selectedDate, selectedDateString, minDate, maxDate, placeholder, onChange }) => {
+export const IconicDatePicker = ({ iconProps, selectedDate, datePickerStyle, selectedDateString, minDate, maxDate, placeholder, onChange, label, labelStyle }) => {
     let currentDate = new Date();
     return (
         <View>
-            <View style={{ flexDirection: 'row', marginVertical: 10 }}>
+            <View style={{ flexDirection: 'row', marginVertical: 4 }}>
                 {
                     iconProps
                         ? <View style={{ paddingLeft: 10, paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
@@ -117,12 +137,17 @@ export const IconicDatePicker = ({ iconProps, selectedDate, selectedDateString, 
                     modalTransparent={false}
                     animationType={"fade"}
                     androidMode={"default"}
-                    placeHolderText={selectedDate ? getFormattedDateFromISO(new Date(selectedDate).toISOString(), '/') : placeholder ? placeholder : 'Select date'}
-                    textStyle={styles.datePickerDefaultStyles}
+                    // placeHolderText={selectedDate ? getFormattedDateFromISO(new Date(selectedDate).toISOString(), '/') : placeholder ? placeholder : 'Select date'}
+                    textStyle={[styles.datePickerDefaultStyles, datePickerStyle]}
                     placeHolderTextStyle={[styles.datePickerDefaultStyles, { color: selectedDate ? "black" : "#a9a9a9" }]}
                     onDateChange={onChange && onChange}
                 />
             </View>
+            {
+                label ?
+                    <Text style={[labelStyle]}>{label}</Text>
+                    : null
+            }
         </View>
     )
 }
@@ -149,9 +174,8 @@ const styles = StyleSheet.create({
         color: '#999999'
     },
     datePickerDefaultStyles: {
-        marginLeft: 5,
         width: WindowDimensions.width,
-        borderBottomColor: '#a9a9a9',
+        borderBottomColor: '#000',
         borderBottomWidth: 1,
         color: 'black'
     },

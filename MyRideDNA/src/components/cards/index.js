@@ -101,7 +101,7 @@ export const ThumbnailCard = ({ item, thumbnailPlaceholder, onPress, onLongPress
                     ? <View style={{ backgroundColor: '#37B603', position: 'absolute', zIndex: 100, alignSelf: 'flex-start', bottom: '70%', left: '20%', width: widthPercentageToDP(6), height: widthPercentageToDP(6), borderRadius: widthPercentageToDP(3), elevation: 10 }} />
                     : null
             }
-            <View style={{flexDirection:'row'}}>
+            <View style={{ flexDirection: 'row' }}>
                 {
                     item.isAdmin
                         ? <IconButton iconProps={{ name: 'verified-user', type: 'MaterialIcons', style: { fontSize: widthPercentageToDP(6), color: APP_COMMON_STYLES.headerColor } }} />
@@ -139,6 +139,23 @@ export const ThumbnailCard = ({ item, thumbnailPlaceholder, onPress, onLongPress
                 </View>
                 : null
         }
+    </View>
+);
+
+export const SmallCard = ({ item, smallardPlaceholder, onPress, onLongPress, actions, thumbnailRef }) => (
+    <View>
+        <TouchableOpacity onPress={() => onPress ? onPress() : null} style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center'
+        }}>
+            <View style={{ height: widthPercentageToDP(20), width: widthPercentageToDP(20), backgroundColor: '#000' }}>
+                {/* <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : thumbnailPlaceholder}
+                    style={{ width: null, height: null, flex: 1 }} /> */}
+                <Image source={smallardPlaceholder}
+                    style={{ width: null, height: null, flex: 1 }} />
+            </View>
+        </TouchableOpacity>
     </View>
 );
 

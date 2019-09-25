@@ -50,18 +50,18 @@ class Profile extends Component {
                             : null
                 }
                 <View style={[{ flex: 1 }, !this.props.hasNetwork ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
-                    <Tabs locked={activeTab === 0} onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B', height: BOTTOM_TAB_HEIGHT }} underlineStyle={{ height: 0 }} />}>
-                        <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 0 ? '#0083CA' : '#6C6C6B' }]}>
+                    <Tabs onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B', height: BOTTOM_TAB_HEIGHT }} underlineStyle={{ height: 0 }} />}>
+                        <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 0 ? 'rgba(0, 0, 0, 0.5)' : '#0083CA' }]}>
                             <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>MY PROFILE</Text>
                         </TabHeading>}>
                             <MyProfileTab />
                         </Tab>
-                        <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 1 ? '#0083CA' : '#6C6C6B', borderLeftWidth: 2, borderLeftColor: '#fff', borderRightWidth: 2, borderRightColor: '#fff' }]}>
+                        <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 1 ? 'rgba(0, 0, 0, 0.5)' : '#0083CA', borderLeftWidth: 2, borderLeftColor: '#fff', borderRightWidth: 2, borderRightColor: '#fff' }]}>
                             <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>MY GARAGE</Text>
                         </TabHeading>}>
                             <MyGarageTab />
                         </Tab>
-                        <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 2 ? '#0083CA' : '#6C6C6B' }]}>
+                        {/* <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 2 ? '#0083CA' : '#6C6C6B' }]}>
                             <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>MY VEST</Text>
                         </TabHeading>}>
                             <View style={{ backgroundColor: 'rgba(149, 165, 166, 1)', flex: 1, }}>
@@ -71,7 +71,7 @@ class Profile extends Component {
 
                             </View>
 
-                        </Tab>
+                        </Tab> */}
                     </Tabs>
 
                     {/* Shifter: - Brings the app navigation menu */}
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
         height: BOTTOM_TAB_HEIGHT,
         alignItems: 'center',
         justifyContent: 'center',
-        width: widthPercentageToDP(33.3),
+        width: widthPercentageToDP(50),
 
     }
 });
