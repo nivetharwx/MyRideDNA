@@ -122,7 +122,7 @@ export class Map extends Component {
             isUpdatingWaypoint: false,
             searchResults: [],
             searchQuery: '',
-            isEditable: false,
+            isEditableRide: false,
             undoActions: [],
             redoActions: [],
             snapshot: null,
@@ -175,7 +175,8 @@ export class Map extends Component {
                 { label: 'Gas Stations', value: 'fuel', icon: { name: 'local-gas-station', type: 'MaterialIcons' } },
                 { label: 'Restaurants', value: 'restaurant', icon: { name: 'restaurant', type: 'MaterialIcons' } },
             ],
-            watchId: null
+            watchId: null,
+            isEditableMap: true
         };
     }
 
@@ -196,9 +197,9 @@ export class Map extends Component {
                 updatedState.activeMarkerIndex = -1;
                 this.closeRidePressed = false;
                 if (ride.isRecorded === false && ride.userId === this.props.user.userId) {
-                    updatedState.isEditable = true;
+                    updatedState.isEditableRide = true;
                 } else {
-                    updatedState.isEditable = false;
+                    updatedState.isEditableRide = false;
                 }
                 this.hasModifiedRide = false;
                 this.locationProximity = null;
@@ -472,11 +473,19 @@ export class Map extends Component {
             console.log("Network connection lost");
             // Alert.alert('Network Error', 'Failed to connect to internet');
             Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0, style: { height: heightPercentageToDP(8.2) } });
+
+            // DOC: Show specific alert, if user is planning ride
+            this.setState({ isEditableMap: false }, () => {
+                if (!this.props.ride.isRecorded && (this.props.ride.userId === this.props.user.userId)) {
+                    Alert.alert('Network connection lost', 'Your changes will not save. Please try after connecting to internet')
+                }
+            });
         }
         if (prevProps.hasNetwork === false && this.props.hasNetwork === true) {
             console.log('internet connected ');
-            Toast.hide()
-            this.retryApiFunc()
+            this.setState({ isEditableMap: true });
+            Toast.hide();
+            this.retryApiFunc();
         }
         if (prevProps.user.locationEnable !== this.props.user.locationEnable) {
             this.props.user.locationEnable
@@ -646,8 +655,6 @@ export class Map extends Component {
     }
 
     retryApiFunc = () => {
-        console.log('retryApiFunc')
-        console.log('this.props.lastApi : ', this.props.lastApi);
         if (this.props.lastApi && this.props.lastApi.currentScene === Actions.currentScene) {
             if (this.props.lastApi.api.name === 'getPictureList' || this.props.lastApi.api.name === 'getGarageInfo' || this.props.lastApi.api.name === 'getRidePictureList' || this.props.lastApi.api.name === 'getPicture') {
                 this.props.retryLastApiWithoutDispatch(this.props.lastApi.api, this.props.lastApi.params)
@@ -757,7 +764,8 @@ export class Map extends Component {
         }, (state) => {
             console.log("- BackgroundGeolocation is configured and ready: ", state.enabled);
 
-            if (!state.enabled) {
+            // DOC: Start location tracking only if user has enabled location sharing
+            if (!state.enabled && this.props.user.locationEnable) {
                 this.startTrackingLocation();
             }
         });
@@ -776,7 +784,7 @@ export class Map extends Component {
     onHeartbeat = (event) => {
         console.log(`[onHeartbeat - ${new Date()}] `, event);
 
-        // You could request a new location if you wish.
+        // DOC: Fetching new location
         BackgroundGeolocation.getCurrentPosition({
             samples: 1,
             persist: true
@@ -799,11 +807,6 @@ export class Map extends Component {
         if (this.props.user.locationEnable && lastFetchTime - this.prevUserTrackTime > (this.props.user.timeIntervalInSeconds * 1000)) {
             this.prevUserTrackTime = lastFetchTime;
             this.props.updateLocation(this.props.user.userId, { lat: location.coords.latitude, lng: location.coords.longitude });
-
-            // TODO: Need to understand about the task
-            // BackgroundGeolocation.startTask(taskKey => {
-            //     BackgroundGeolocation.endTask(taskKey);
-            // });
         }
         if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING && this.props.ride.isRecorded) {
             if (this.state.currentLocation === null || this.state.currentLocation.location.join('') != (location.coords.longitude + '' + location.coords.latitude)) {
@@ -1364,7 +1367,7 @@ export class Map extends Component {
     }
 
     onBullseyePress = async () => {
-        if (this.state.showCreateRide === true) return;
+        if (this.state.showCreateRide === true || !this.state.isEditableMap) return;
         const mapCenter = await this._mapView.getCenter();
         const { ride } = this.props;
         let nextWaypointIndex = this.state.markerCollection.features.length;
@@ -1675,6 +1678,9 @@ export class Map extends Component {
     }
 
     createRide = () => {
+        // DOC: Process action ony if network is availbale
+        if (!this.props.hasNetwork) return;
+
         this.state.controlsBarLeftAnim.__getValue() === 0 && this.hideMapControls();
         this.hideWaypointList();
         Geolocation.getCurrentPosition(
@@ -1689,6 +1695,9 @@ export class Map extends Component {
     }
 
     onPressRecordRide = () => {
+        // DOC: Process action ony if network is availbale
+        if (!this.props.hasNetwork) return;
+
         this.state.controlsBarLeftAnim.__getValue() === 0 && this.hideMapControls();
         this.trackpointTick = 0;
         const dateTime = new Date().toISOString();
@@ -1725,6 +1734,7 @@ export class Map extends Component {
                         isMoving: true
                     }).then((state) => {
                         console.log('[setConfig] success: ', state);
+                        if (!state.enabled) this.startTrackingLocation();
                     })
                 });
             },
@@ -1737,6 +1747,8 @@ export class Map extends Component {
 
     onPressPauseRide = () => {
         const { ride } = this.props;
+        // DOC: Don't stop tracking location if user has enbled location sharing
+        if (!this.props.user.locationEnable) this.stopTrackingLocation();
         BackgroundGeolocation.setConfig({
             preventSuspend: false,
             isMoving: false
@@ -1824,6 +1836,7 @@ export class Map extends Component {
 
     onPressContinueRide = () => {
         BackgroundGeolocation.start(state => {
+            if (!state.enabled) this.startTrackingLocation();
             const { ride } = this.props;
             this.props.continueRecordRide(new Date().toISOString(), ride, this.props.user.userId);
         });
@@ -1835,8 +1848,8 @@ export class Map extends Component {
             preventSuspend: false,
             isMoving: false
         }, (state) => {
-            // BackgroundGeolocation.removeListener('heartbeat', this.onHeartbeat);
-            this.stopTrackingLocation();
+            // DOC: Don't stop tracking location if user has enbled location sharing
+            if (!this.props.user.locationEnable) this.stopTrackingLocation();
         });
         const { gpsPointCollection } = this.state;
         const points = gpsPointCollection.features[0].geometry.coordinates;
@@ -2326,6 +2339,9 @@ export class Map extends Component {
     }
 
     onPressLogout = async () => {
+        // DOC: Process action ony if network is availbale
+        if (!this.props.hasNetwork) return;
+
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
 
@@ -2450,10 +2466,10 @@ export class Map extends Component {
     }
 
     render() {
-        const { mapViewHeight, directions, markerCollection, activeMarkerIndex, gpsPointCollection, controlsBarLeftAnim, waypointListLeftAnim, showCreateRide, currentLocation,
-            searchResults, searchQuery, isEditable, snapshot, hideRoute, optionsBarRightAnim, isUpdatingWaypoint, mapRadiusCircle, showLoader, searchbarAnim, isSearchHeader } = this.state;
+        const { isEditableMap, mapViewHeight, directions, markerCollection, activeMarkerIndex, gpsPointCollection, controlsBarLeftAnim, waypointListLeftAnim, showCreateRide, currentLocation,
+            searchResults, searchQuery, isEditableRide, snapshot, hideRoute, optionsBarRightAnim, isUpdatingWaypoint, mapRadiusCircle, showLoader, searchbarAnim, isSearchHeader } = this.state;
         const { notificationList, ride, showMenu, user, canUndo, canRedo } = this.props;
-        const MAP_VIEW_TOP_OFFSET = showCreateRide ? (CREATE_RIDE_CONTAINER_HEIGHT - WINDOW_HALF_HEIGHT) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2) : (isEditable ? 130 : 60) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2);
+        const MAP_VIEW_TOP_OFFSET = showCreateRide ? (CREATE_RIDE_CONTAINER_HEIGHT - WINDOW_HALF_HEIGHT) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2) : (isEditableRide ? 130 : 60) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2);
         const searchCancelAnim = searchbarAnim.interpolate({
             inputRange: [-widthPercentageToDP(100), 0],
             outputRange: [0, 1]
@@ -2479,15 +2495,16 @@ export class Map extends Component {
                                     searchResults.length === 0
                                         ? ride.rideId === null
                                             ? <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                                <View style={{ flexDirection: 'row' }}>
-                                                    <LinkButton style={{ paddingVertical: 20 }} title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
-                                                    <LinkButton style={{ paddingVertical: 20 }} title='RECORD RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
-                                                    {
-                                                        this.props.friendsLocationList
-                                                            ? <LinkButton style={{ paddingVertical: 20 }} title='HIDE FRIENDS' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.props.hideFriendsLocation} />
-                                                            : null
-                                                    }
-                                                </View>
+                                                {
+                                                    this.props.friendsLocationList
+                                                        ? <View style={{ flexDirection: 'row' }}>
+                                                            <LinkButton style={{ paddingVertical: 20 }} title='HIDE FRIENDS' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.props.hideFriendsLocation} />
+                                                        </View>
+                                                        : <View style={{ flexDirection: 'row' }}>
+                                                            <LinkButton style={{ paddingVertical: 20 }} title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
+                                                            <LinkButton style={{ paddingVertical: 20 }} title='RECORD RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
+                                                        </View>
+                                                }
                                                 <IconButton iconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }}
                                                     style={styles.logoutIcon} onPress={this.onPressLogout} />
                                             </View>
@@ -2516,7 +2533,7 @@ export class Map extends Component {
                                         </View>
                                 }
                                 {
-                                    isEditable
+                                    isEditableRide
                                         ? <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-around' }}>
                                             <IconButton iconProps={{ name: 'restaurant', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.infoColor } }} />
                                             <IconButton iconProps={{ name: 'gas-station', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.infoColor } }} />
@@ -2524,7 +2541,7 @@ export class Map extends Component {
                                             <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={this.showSearchbar} />
                                         </View>
                                         : null
-                                    // isEditable
+                                    // isEditableRide
                                     //     ? <SearchBox value={searchQuery} onPressClear={this.onPressClear}
                                     //         onTextChange={this.onSearchPlace} style={{ marginHorizontal: 5, justifyContent: 'center' }} />
                                     //     : null
@@ -2613,10 +2630,10 @@ export class Map extends Component {
                             height != this.state.mapViewHeight && this.setState({ mapViewHeight: height })
                         }}
                         surfaceView={true}
-                        zoomEnabled={!showCreateRide}
-                        scrollEnabled={!showCreateRide}
-                        pitchEnabled={!showCreateRide}
-                        rotateEnabled={!showCreateRide}
+                        zoomEnabled={isEditableMap && !showCreateRide}
+                        scrollEnabled={isEditableMap && !showCreateRide}
+                        pitchEnabled={isEditableMap && !showCreateRide}
+                        rotateEnabled={isEditableMap && !showCreateRide}
                     >
                         {
                             currentLocation ? this.renderCurrentLocation(currentLocation) : null
@@ -2676,7 +2693,7 @@ export class Map extends Component {
 
                     </MapboxGL.MapView>
                     {
-                        showCreateRide || (isEditable && searchResults.length === 0) ?
+                        showCreateRide || (isEditableRide && searchResults.length === 0) ?
                             <TouchableOpacity style={[styles.bullseye, { marginTop: MAP_VIEW_TOP_OFFSET }]} onPress={this.onBullseyePress}>
                                 <NBIcon name='target' type='MaterialCommunityIcons' style={{ fontSize: BULLSEYE_SIZE, color: '#2890FB' }} />
                             </TouchableOpacity>
@@ -2691,12 +2708,16 @@ export class Map extends Component {
                             }}
                         />
                     </Animated.View> */}
-                    <View style={{ position: 'absolute', zIndex: 100, left: 5, top: 140, width: 55 }}>
-                        {/* <IconButton style={[styles.mapControlButton, { backgroundColor: 'transparent' }]} iconProps={{ name: 'controller-play', type: 'Entypo', style: { fontSize: 40, elevation: 10 } }} onPress={this.showMapControls} /> */}
-                        <TouchableOpacity style={{ width: widthPercentageToDP(10), height: widthPercentageToDP(15) }} onPress={this.showMapControls}>
-                            <Image source={require('../../assets/img/arrow-right.png')} style={{ flex: 1, width: null, height: null }} />
-                        </TouchableOpacity>
-                    </View>
+                    {
+                        isEditableMap
+                            ? <View style={{ position: 'absolute', zIndex: 100, left: 5, top: 140, width: 55 }}>
+                                {/* <IconButton style={[styles.mapControlButton, { backgroundColor: 'transparent' }]} iconProps={{ name: 'controller-play', type: 'Entypo', style: { fontSize: 40, elevation: 10 } }} onPress={this.showMapControls} /> */}
+                                <TouchableOpacity style={{ width: widthPercentageToDP(10), height: widthPercentageToDP(15) }} onPress={this.showMapControls}>
+                                    <Image source={require('../../assets/img/arrow-right.png')} style={{ flex: 1, width: null, height: null }} />
+                                </TouchableOpacity>
+                            </View>
+                            : null
+                    }
                     <Animated.View style={[{ left: 5, elevation: 10, position: 'absolute', zIndex: 100, top: 140, width: 55 }, { transform: [{ translateX: controlsBarLeftAnim }] }]}>
                         {/* <IconButton style={styles.mapControlButton} iconProps={{ name: 'controller-play', type: 'Entypo', style: { fontSize: 40, elevation: 10, transform: [{ rotate: '180deg' }] } }} onPress={this.hideMapControls} /> */}
                         <TouchableOpacity style={{ backgroundColor: '#fff', flex: 1, height: widthPercentageToDP(15) }} onPress={this.hideMapControls}>
