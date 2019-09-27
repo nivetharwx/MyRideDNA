@@ -38,11 +38,47 @@ export default class App extends Component {
 
         // DOC: This listener will execute in foreground
         this.removeNotificationListener = firebase.notifications().onNotification(notification => {
-            this.showLocalNotification(notification._data);
+            console.log('onNotification called : ', notification);
+            // this.showLocalNotification(notification._data);
+            this.handlingNotification(notification)
         });
 
         this.messageListener = firebase.messaging().onMessage(notification => {
-            console.log("From onMessage: ", notification);
+            this.handlingNotification(notification)
+        });
+
+        this.removeNotificationDisplayedListener = firebase.notifications().onNotificationDisplayed(notification => {
+            console.log('from onNotificationDisplayed :', notification);
+            this.updatePageContent(JSON.parse(notification._data.reference).targetScreen, notification._data)
+        });
+
+        this.removeNotificationOpenedListener = firebase.notifications().onNotificationOpened(({ notification }) => {
+            console.log('removeNotificationOpenedListener : ', notification);
+            if (notification._data.reference) {
+                // if user is background and notification comes, user click on notification to get redirect to screen mentioned in target screen 
+                this.redirectToTargetScreen(JSON.parse(notification._data.reference).targetScreen, notification._data)
+            }
+        });
+
+        const token = await firebase.messaging().getToken();
+        console.log("TOKEN - firebase.messaging().getToken()", token);
+        if (token) {
+            AsyncStorage.setItem(DEVICE_TOKEN, token);
+        }
+
+        // Didn't find anything specific to iOS on react-native-firebase
+        // if (!IS_ANDROID) {
+        //     FCM.getAPNSToken().then(token => {
+        //         console.log("APNS TOKEN (getFCMToken)", token);
+        //     });
+        // }
+
+        // topic example
+        // firebase.messaging().subscribeToTopic('sometopic');
+        // firebase.messaging().unsubscribeFromTopic('sometopic');
+    }
+    
+    handlingNotification = (notification)=>{
             // for checking reference is present or not
             if (!notification._data.reference) return;
             // checking targetscreen in notification is chat 
@@ -75,48 +111,8 @@ export default class App extends Component {
             if (JSON.parse(notification._data.reference).targetScreen !== Actions.currentScene) {
                 store.dispatch(updateNotificationCountAction())
                 this.showLocalNotification(notification._data);
-                // if platform is ios then updatepage content here only because onNotificationDisplayed will not be called
-                if (!IS_ANDROID) {
-                    this.updatePageContent(JSON.parse(notification._data.reference).targetScreen, notification._data)
-                }
                 return;
             }
-
-
-
-        });
-
-        this.removeNotificationDisplayedListener = firebase.notifications().onNotificationDisplayed(notification => {
-            console.log('from onNotificationDisplayed :', notification);
-            if (IS_ANDROID) {
-                this.updatePageContent(JSON.parse(notification._data.reference).targetScreen, notification._data)
-            }
-        });
-
-        this.removeNotificationOpenedListener = firebase.notifications().onNotificationOpened(({ notification }) => {
-            console.log('removeNotificationOpenedListener : ', notification);
-            if (notification._data.reference) {
-                // if user is background and notification comes, user click on notification to get redirect to screen mentioned in target screen 
-                this.redirectToTargetScreen(JSON.parse(notification._data.reference).targetScreen, notification._data)
-            }
-        });
-
-        const token = await firebase.messaging().getToken();
-        console.log("TOKEN - firebase.messaging().getToken()", token);
-        if (token) {
-            AsyncStorage.setItem(DEVICE_TOKEN, token);
-        }
-
-        // Didn't find anything specific to iOS on react-native-firebase
-        // if (!IS_ANDROID) {
-        //     FCM.getAPNSToken().then(token => {
-        //         console.log("APNS TOKEN (getFCMToken)", token);
-        //     });
-        // }
-
-        // topic example
-        // firebase.messaging().subscribeToTopic('sometopic');
-        // firebase.messaging().unsubscribeFromTopic('sometopic');
     }
 
     onNotificationOpened = async (notifBody) => {

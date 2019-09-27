@@ -78,6 +78,7 @@ class FriendsProfile extends Component {
                     }, (err) => {
                     });
                 }
+                Actions.pop();
                 return;
             }
             if (this.state.activeTab === 0) {
@@ -197,7 +198,6 @@ class FriendsProfile extends Component {
     rideKeyExtractor = (item) => item.rideId;
 
     onPressBackButton = () => {
-        Actions.pop();
         this.props.resetCurrentFriend()
     }
 
