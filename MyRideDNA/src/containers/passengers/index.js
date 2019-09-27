@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, KeyboardAvoidingView, StatusBar, FlatList, ScrollView, View, Keyboard, Alert, TextInput, Text } from 'react-native';
+import { StyleSheet, TouchableWithoutFeedback, StatusBar, FlatList, ScrollView, View, Keyboard, Alert, TextInput, Text } from 'react-native';
 import { BasicHeader } from '../../components/headers';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, PageKeys } from '../../constants';
 import { Actions } from 'react-native-router-flux';
@@ -89,22 +89,24 @@ class Passengers extends Component {
 
     renderPassenger = ({ item, index }) => {
         return (
-            <ListItem style={{ marginTop: 20 }} avatar onLongPress={() => this.showOptionsModal(index)}>
-                <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
-                    {
-                        item.groupProfilePictureThumbnail
-                            ? <Thumbnail source={{ uri: 'Image URL' }} />
-                            : <NBIcon active name="person" type='MaterialIcons' style={{ width: widthPercentageToDP(7) }} />
-                    }
-                </Left>
-                <Body>
-                    <Text>{item.name}</Text>
-                    {/* <Text note></Text> */}
-                </Body>
-                <Right>
-                    {/* <Text note></Text> */}
-                </Right>
-            </ListItem>
+            // DOC: Removed native-base ListItem as TouchableNativeFeedback is not working in react-native 0.59.0
+            <TouchableWithoutFeedback style={{ width: widthPercentageToDP(100), marginTop: 20 }} onLongPress={() => this.showOptionsModal(index)}>
+                <View style={{ flex: 1, flexDirection: 'row', height: heightPercentageToDP(10) }}>
+                    <View style={{ width: widthPercentageToDP(15), alignItems: 'center', justifyContent: 'center' }}>
+                        {
+                            item.groupProfilePictureThumbnail
+                                ? <Thumbnail source={{ uri: 'Image URL' }} />
+                                : <NBIcon active name="person" type='MaterialIcons' style={{ width: widthPercentageToDP(7) }} />
+                        }
+                    </View>
+                    <View style={{ flex: 1, justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.1)' }}>
+                        <Text>{item.name}</Text>
+                    </View>
+                    <View>
+                        <Text note></Text>
+                    </View>
+                </View>
+            </TouchableWithoutFeedback>
         );
     }
 
@@ -121,7 +123,7 @@ class Passengers extends Component {
                     </View>
                 </BaseModal>
                 <View style={APP_COMMON_STYLES.statusBar}>
-                <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+                    <StatusBar translucent backgroundColor='black' barStyle="light-content" />
                 </View>
                 <View style={styles.fill}>
                     <BasicHeader

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, TextInput, Animated, Text, Alert, Keyboard, FlatList, View, ImageBackground, ActivityIndicator, Easing } from 'react-native';
+import { StyleSheet, TouchableWithoutFeedback, Animated, Text, Alert, Keyboard, FlatList, View, ImageBackground, ActivityIndicator, Easing } from 'react-native';
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { widthPercentageToDP, heightPercentageToDP, PageKeys, APP_COMMON_STYLES } from '../../../constants';
 import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast } from 'native-base';
@@ -201,22 +201,24 @@ class GroupListTab extends Component {
 
     renderGroup = ({ item, index }) => {
         return (
-            <ListItem style={{ marginTop: 20 }} avatar onLongPress={() => this.showOptionsModal(index)} onPress={() => this.openGroupInfo(index)}>
-                <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
-                    {
-                        item.groupProfilePictureThumbnail
-                            ? <Thumbnail source={{ uri: 'Image URL' }} />
-                            : <NBIcon active name="group" type='FontAwesome' style={{ width: widthPercentageToDP(6) }} />
-                    }
-                </Left>
-                <Body>
-                    <Text>{item.groupName}</Text>
-                    <Text note></Text>
-                </Body>
-                <Right>
-                    <Text note></Text>
-                </Right>
-            </ListItem>
+            // DOC: Removed native-base ListItem as TouchableNativeFeedback is not working in react-native 0.59.0
+            <TouchableWithoutFeedback style={{ width: widthPercentageToDP(100), marginTop: 20 }} onLongPress={() => this.showOptionsModal(index)} onPress={() => this.openGroupInfo(index)}>
+                <View style={{ flex: 1, flexDirection: 'row', height: heightPercentageToDP(10) }}>
+                    <View style={{ width: widthPercentageToDP(15), alignItems: 'center', justifyContent: 'center' }}>
+                        {
+                            item.groupProfilePictureThumbnail
+                                ? <Thumbnail source={{ uri: 'Image URL' }} />
+                                : <NBIcon active name="group" type='FontAwesome' style={{ width: '50%', alignSelf: 'center' }} />
+                        }
+                    </View>
+                    <View style={{ flex: 1, justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.1)' }}>
+                        <Text>{item.groupName}</Text>
+                    </View>
+                    <View>
+                        <Text note></Text>
+                    </View>
+                </View>
+            </TouchableWithoutFeedback>
         );
     }
 
