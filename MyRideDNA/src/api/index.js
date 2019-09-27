@@ -306,7 +306,7 @@ export const registerUser = (user) => {
     };
 }
 export const updateUserInfo = (userData, successCallback, errorCallback) => {
-console.log('userData : ',userData);
+    console.log('userData : ', userData);
     return dispatch => {
         dispatch(toggleLoaderAction(true));
         axios.put(USER_BASE_URL + 'updateUserDetails', userData, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
@@ -1793,6 +1793,22 @@ export const removeMember = (groupId, memberId) => {
             })
     };
 }
+export const getAllMembersLocation = (groupId, userId) => {
+    return dispatch => {
+        dispatch(apiLoaderActions(true));
+        axios.get(GRAPH_BASE_URL + `getAllMembersLocation?userId=${userId}&groupId=${groupId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("getAllMembersLocation success: ", res.data);
+                dispatch(apiLoaderActions(false));
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+            })
+            .catch(er => {
+                console.log(`getAllMembersLocation error: `, er.response || er);
+                dispatch(apiLoaderActions(false));
+                differentErrors(er, [userId], getAllMembersLocation, false);
+            })
+    }
+}
 export const getSpaceList = (userId) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
@@ -2064,7 +2080,7 @@ export const deletePassenger = (passengerId) => {
 }
 
 export const getAllChats = (userId) => {
-    console.log('user id getAllChat : ',userId)
+    console.log('user id getAllChat : ', userId)
     return dispatch => {
         axios.get(CHAT_BASE_URL + `getAllChats?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
@@ -2158,8 +2174,8 @@ export const deleteMessagesByIdForEveryone = (isGroup, id, userId, messageToBeDe
                     if (newChatMessages) {
                         dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: newChatMessages, id: id }));
                     }
-                    else{
-                        dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage:'', id: id }));
+                    else {
+                        dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: '', id: id }));
                     }
                 }
             })

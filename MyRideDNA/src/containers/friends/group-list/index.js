@@ -5,7 +5,7 @@ import { IconButton, LinkButton } from '../../../components/buttons';
 import { widthPercentageToDP, heightPercentageToDP, PageKeys, APP_COMMON_STYLES } from '../../../constants';
 import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast } from 'native-base';
 import { ThumbnailCard } from '../../../components/cards';
-import { createFriendGroup, getFriendGroups, addMembers, getAllGroupMembers, exitFriendGroup, getAllGroups } from '../../../api';
+import { createFriendGroup, getFriendGroups, addMembers, getAllGroupMembers, exitFriendGroup, getAllGroups, getAllMembersLocation } from '../../../api';
 import { Actions } from 'react-native-router-flux';
 import { BaseModal } from '../../../components/modal';
 
@@ -157,6 +157,14 @@ class GroupListTab extends Component {
         });
     }
 
+    toggleMembersLocation = (index = -1) => {
+        index === -1
+            ? this.props.getAllMembersLocation(this.state.selectedGroup.groupId, this.props.user.userId)
+            : this.setState({ isVisibleOptionsModal: false }, () => {
+                this.props.hideAllMembersLocation([this.props.membersLocationList[index]]);
+            });
+    }
+
     showOptionsModal = (index) => {
         this.setState({ selectedGroup: this.props.friendGroupList[index], isVisibleOptionsModal: true });
     }
@@ -164,7 +172,13 @@ class GroupListTab extends Component {
     renderMenuOptions = () => {
         if (this.state.selectedGroup === null) return;
         const index = this.props.friendGroupList.findIndex(item => item.groupId === this.state.selectedGroup.groupId);
-        const options = [{ text: 'Open group', id: 'openGroup', handler: () => this.openGroupInfo(index) }, { text: 'Chat', id: 'openChat', handler: () => this.openChatPage(index) }, { text: 'Exit group', id: 'exitGroup', handler: () => this.showExitGroupConfirmation() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
+        const options = [{ text: 'Open group', id: 'openGroup', handler: () => this.openGroupInfo(index) }, { text: 'Chat', id: 'openChat', handler: () => this.openChatPage(index) }, { text: 'Exit group', id: 'exitGroup', handler: () => this.showExitGroupConfirmation() }];
+        let locInfoIdx = -1;
+        if (this.props.membersLocationList) {
+            locInfoIdx = this.props.membersLocationList.findIndex(g => g.id === this.state.selectedGroup.groupId);
+        }
+        options.push({ text: locInfoIdx > -1 ? `Hide\nlocation` : `Show\nlocation`, id: 'location', handler: () => this.toggleMembersLocation(locInfoIdx) });
+        options.push({ text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() });
         return (
             options.map(option => (
                 <LinkButton
@@ -324,7 +338,7 @@ class GroupListTab extends Component {
 
     render() {
         const { newGroupName, isVisibleOptionsModal, isRefreshing } = this.state;
-        const { friendGroupList, user, searchQuery } = this.props;
+        const { friendGroupList, user, searchQuery, membersLocationList } = this.props;
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '45deg']
@@ -411,7 +425,7 @@ class GroupListTab extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { friendGroupList, currentGroup } = state.FriendGroupList;
+    const { friendGroupList, currentGroup, membersLocationList } = state.FriendGroupList;
     const { allFriends } = state.FriendList;
     const { pageNumber, hasNetwork } = state.PageState;
     return { user, friendGroupList, allFriends, currentGroup, pageNumber, hasNetwork };
@@ -424,6 +438,7 @@ const mapDispatchToProps = (dispatch) => {
         exitFriendGroup: (groupId, memberId) => dispatch(exitFriendGroup(groupId, memberId)),
         addMembers: (groupId, memberDetails) => dispatch(addMembers(groupId, memberDetails)),
         getAllGroupMembers: (groupId, userId) => dispatch(getAllGroupMembers(groupId, userId)),
+        getAllMembersLocation: (groupId, userId) => dispatch(getAllMembersLocation(groupId, userId)),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(GroupListTab);

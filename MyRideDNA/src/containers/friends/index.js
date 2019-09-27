@@ -104,7 +104,6 @@ class Friends extends Component {
         //     })
         // }
         if (prevProps.allFriends !== this.props.allFriends) {
-            console.log('allFriends picture')
             const pictureIdList = [];
             this.props.allFriends.forEach((friend) => {
                 if (!friend.profilePicture && friend.profilePictureId) {
@@ -112,7 +111,7 @@ class Friends extends Component {
                 }
             })
             if (pictureIdList.length > 0) {
-                // this.props.getPictureList(pictureIdList)
+                this.props.getPictureList(pictureIdList);
             }
         }
 

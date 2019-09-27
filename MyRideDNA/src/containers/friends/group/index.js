@@ -40,7 +40,7 @@ class Group extends Component {
     }
 
     componentDidMount() {
-        if(this.props.comingFrom === PageKeys.NOTIFICATIONS){
+        if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
             this.props.getGroupMembers(JSON.parse(this.props.notificationBody.reference).groupId, this.props.notificationBody.notifiedUserId, JSON.parse(this.props.notificationBody.reference).groupName, true, 0, (res) => {
             }, (err) => {
             });
@@ -392,7 +392,7 @@ class Group extends Component {
 
     render() {
         const { kbdBtmOffset, isActiveSearch, selectedMember, selectedFriendList, searchFriendList, isVisibleOptionsModal, isVisibleSearchModal, searchName } = this.state;
-        const { user, currentGroup, friendGroupList } = this.props;
+        const { user, currentGroup, friendGroupList, friendsLocationList } = this.props;
         console.log('selectedMemeber : ', selectedMember)
         console.log('currentGroup.groupMembers : ', currentGroup.groupMembers)
         const spinAnim = this.borderWidthAnim.interpolate({
@@ -407,7 +407,7 @@ class Group extends Component {
             ? <View style={styles.fill} />
             : <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
-                <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+                    <StatusBar translucent backgroundColor='black' barStyle="light-content" />
                 </View>
                 <View style={styles.fill}>
                     <BasicHeader
@@ -487,12 +487,27 @@ class Group extends Component {
                                 data={currentGroup.groupMembers}
                                 numColumns={2}
                                 keyExtractor={this.memberKeyExtractor}
-                                renderItem={({ item, index }) => (<ThumbnailCard
-                                    thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
-                                    item={item}
-                                    onLongPress={() => this.showOptionsModal(index)}
-                                    onPress={() => this.openProfile(item.memberId, FRIEND_TYPE.ALL_FRIENDS)}
-                                />)}
+                                renderItem={({ item, index }) => (
+                                    <View style={{ flex: 1, maxWidth: widthPercentageToDP(50) }}>
+                                        <View style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', width: '80%', height: widthPercentageToDP(15), position: 'absolute', zIndex: 100, justifyContent: 'space-between' }}>
+                                            {
+                                                item.isOnline
+                                                    ? <View style={{ backgroundColor: '#37B603', width: widthPercentageToDP(6), height: widthPercentageToDP(6), borderRadius: widthPercentageToDP(3), elevation: 10 }} />
+                                                    : null
+                                            }
+                                            {
+                                                item.isOnline && item.locationEnable
+                                                    ? <IconButton iconProps={{ name: 'location-on', type: 'MaterialIcons', style: { color: friendsLocationList && friendsLocationList.findIndex(f => f.id === item.userId) > -1 ? APP_COMMON_STYLES.headerColor : '#ACACAC', fontSize: widthPercentageToDP(7) } }} />
+                                                    : null
+                                            }
+                                        </View>
+                                        <ThumbnailCard
+                                            thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
+                                            item={item}
+                                            onLongPress={() => this.showOptionsModal(index)}
+                                            onPress={() => this.openProfile(item.memberId, FRIEND_TYPE.ALL_FRIENDS)}
+                                        />
+                                    </View>)}
                                 ListFooterComponent={this.renderFooter}
                                 // onTouchStart={this.loadMoreData}
                                 onEndReached={this.loadMoreData}

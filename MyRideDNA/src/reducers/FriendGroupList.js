@@ -1,9 +1,10 @@
-import { REPLACE_FRIEND_GROUP_LIST, ADD_FRIEND_GROUP_TO_LIST, ADD_MEMBERS_TO_CURRENT_GROUP, UPDATE_MEMBER_IN_CURRENT_GROUP, UPDATE_CURRENT_GROUP, RESET_CURRENT_GROUP, RESET_MEMBERS_FROM_CURRENT_GROUP, RESET_MEMBERS_IN_CURRENT_GROUP, GET_GROUP_INFO, REMOVE_MEMBER_FROM_CURRENT_GROUP, REMOVE_FRIEND_GROUP_FROM_LIST } from "../actions/actionConstants";
+import { REPLACE_FRIEND_GROUP_LIST, ADD_FRIEND_GROUP_TO_LIST, ADD_MEMBERS_TO_CURRENT_GROUP, UPDATE_MEMBER_IN_CURRENT_GROUP, UPDATE_CURRENT_GROUP, RESET_CURRENT_GROUP, RESET_MEMBERS_FROM_CURRENT_GROUP, RESET_MEMBERS_IN_CURRENT_GROUP, GET_GROUP_INFO, REMOVE_MEMBER_FROM_CURRENT_GROUP, REMOVE_FRIEND_GROUP_FROM_LIST, HIDE_MEMBERS_LOCATION, ADD_MEMBERS_LOCATION } from "../actions/actionConstants";
 
 const initialState = {
     friendGroupList: [],
     // currentGroup: null,
     currentGroup: { groupMembers: [] },
+    membersLocationList: null
 };
 
 export default (state = initialState, action) => {
@@ -156,8 +157,36 @@ export default (state = initialState, action) => {
                     }
                 }
             }
-
             return state
+
+        case ADD_MEMBERS_LOCATION:
+            const updatedLocList = state.membersLocationList ? [...state.membersLocationList] : [];
+            return {
+                ...state,
+                membersLocationList: action.data.reduce((list, locInfo) => {
+                    locInfo.isVisible = true;
+                    list.push(locInfo);
+                    return list;
+                }, updatedLocList)
+            }
+
+        case HIDE_MEMBERS_LOCATION:
+            const updatedList = [...state.membersLocationList];
+            if (!action.data) {
+                return {
+                    ...state,
+                    membersLocationList: null
+                }
+            }
+            action.data.forEach(locInfo => {
+                const idx = updatedList.findIndex(info => info.userId === locInfo.userId);
+                updatedList[idx] = { ...updatedList[idx], isVisible: false };
+            });
+            return {
+                ...state,
+                membersLocationList: action.data.length === updatedList.length ? null : updatedList
+            }
+
         case GET_GROUP_INFO:
             return {
                 ...state,

@@ -9,7 +9,7 @@ import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { ImageLoader, Loader } from '../../components/loader';
 import styles from './styles';
-import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend, getFriendsLocationList, getUserById, getAllFriends,getAllFriends1, readNotification, getPictureList, getRidePictureList } from '../../api';
+import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend, getFriendsLocationList, getUserById, getAllFriends, getAllFriends1, readNotification, getPictureList, getRidePictureList } from '../../api';
 import { BasicCard } from '../../components/cards';
 import { IconLabelPair } from '../../components/labels';
 
@@ -152,7 +152,9 @@ class FriendsProfile extends Component {
     }
 
     showFriendsLocation = () => {
-        this.props.getFriendsLocationList(this.props.user.userId, [this.props.currentFriend.userId]);
+        this.props.friendsLocationList && this.props.friendsLocationList.findIndex(f => f.id === this.props.currentFriend.userId) > -1
+            ? this.props.changeScreen({ name: PageKeys.MAP })
+            : this.props.getFriendsLocationList(this.props.user.userId, [this.props.currentFriend.userId]);
     }
 
     onPressChatIcon = () => {
@@ -355,7 +357,7 @@ class FriendsProfile extends Component {
             ? <View style={styles.fill} />
             : <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
-                <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+                    <StatusBar translucent backgroundColor='black' barStyle="light-content" />
                 </View>
                 <View style={[{ flex: 1 }, !this.props.hasNetwork ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
                     <BasicHeader title={<Text style={{

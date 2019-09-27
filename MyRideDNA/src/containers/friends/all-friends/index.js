@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableHighlight, Alert, ActivityIndicator, Easing } from 'react-native';
-import { getAllFriends,getAllFriends1, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend, getAllOnlineFriends, getPicture, getFriendsLocationList } from '../../../api';
+import { getAllFriends, getAllFriends1, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend, getAllOnlineFriends, getPicture, getFriendsLocationList } from '../../../api';
 import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, heightPercentageToDP, RELATIONSHIP, PageKeys } from '../../../constants';
 import { BaseModal } from '../../../components/modal';
 import { LinkButton, IconButton } from '../../../components/buttons';
 import { ThumbnailCard } from '../../../components/cards';
-import { openFriendProfileAction, updateFriendInListAction, screenChangeAction, resetCurrentFriendAction } from '../../../actions';
+import { openFriendProfileAction, updateFriendInListAction, screenChangeAction, resetCurrentFriendAction, hideFriendsLocationAction } from '../../../actions';
 import { FloatingAction } from 'react-native-floating-action';
 import { Icon as NBIcon, Thumbnail } from 'native-base';
 import { Actions } from 'react-native-router-flux';
@@ -237,17 +237,27 @@ class AllFriendsTab extends Component {
 
     onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false, selectedPerson: null })
 
-    showFriendsLocation = () => {
-        this.props.getFriendsLocationList(this.props.user.userId, [this.state.selectedPerson.userId]);
+    toggleFriendsLocation = (index = -1) => {
+        index === -1
+            ? this.props.getFriendsLocationList(this.props.user.userId, [this.state.selectedPerson.userId])
+            : this.setState({ isVisibleOptionsModal: false }, () => {
+                this.props.hideFriendsLocation([this.props.friendsLocationList[index]]);
+            });
     }
 
     renderMenuOptions = () => {
         if (this.state.selectedPerson === null) return;
         let options = null;
+        let locInfoIdx = -1;
+        if (this.props.friendsLocationList) {
+            locInfoIdx = this.props.friendsLocationList.findIndex(f => f.id === this.state.selectedPerson.userId);
+        }
         if (this.state.selectedPerson.isOnline && this.state.selectedPerson.locationEnable) {
             options = [
                 ...this.FRIEND_OPTIONS.slice(0, 3),
-                { text: `Show\nlocation`, id: 'location', handler: () => this.showFriendsLocation() },
+                {
+                    text: locInfoIdx > -1 ? `Hide\nlocation` : `Show\nlocation`, id: 'location', handler: () => this.toggleFriendsLocation(locInfoIdx)
+                },
                 ...this.FRIEND_OPTIONS.slice(3),
             ]
         } else {
@@ -410,7 +420,7 @@ class AllFriendsTab extends Component {
 
     render() {
         const { isRefreshing, isVisibleOptionsModal, friendsFilter } = this.state;
-        const { allFriends, searchQuery, searchFriendList, user } = this.props;
+        const { allFriends, searchQuery, searchFriendList, user, friendsLocationList } = this.props;
         const spin = this.state.spinValue.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
@@ -462,14 +472,27 @@ class AllFriendsTab extends Component {
                                 keyExtractor={this.friendKeyExtractor}
                                 extraData={this.state}
                                 renderItem={({ item, index }) => (
-                                    // <Thumbnail source={item.profilePicture ? { uri: item.profilePicture } : require('../../../assets/img/friend-profile-pic.png')} />
-                                    <ThumbnailCard
-                                        thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
-                                        item={item}
-                                        thumbnailRef={imgRef => this.friendsImageRef[index] = imgRef}
-                                        onLongPress={() => this.showOptionsModal(item.userId)}
-                                        onPress={() => this.openProfile(item.userId, FRIEND_TYPE.ALL_FRIENDS)}
-                                    />
+                                    <View style={{ flex: 1, maxWidth: widthPercentageToDP(50) }}>
+                                        <View style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', width: '80%', height: widthPercentageToDP(15), position: 'absolute', zIndex: 100, justifyContent: 'space-between' }}>
+                                            {
+                                                item.isOnline
+                                                    ? <View style={{ backgroundColor: '#37B603', width: widthPercentageToDP(6), height: widthPercentageToDP(6), borderRadius: widthPercentageToDP(3), elevation: 10 }} />
+                                                    : null
+                                            }
+                                            {
+                                                item.isOnline && item.locationEnable
+                                                    ? <IconButton iconProps={{ name: 'location-on', type: 'MaterialIcons', style: { color: friendsLocationList && friendsLocationList.findIndex(f => f.id === item.userId) > -1 ? APP_COMMON_STYLES.headerColor : '#ACACAC', fontSize: widthPercentageToDP(7) } }} />
+                                                    : null
+                                            }
+                                        </View>
+                                        <ThumbnailCard
+                                            thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
+                                            item={item}
+                                            thumbnailRef={imgRef => this.friendsImageRef[index] = imgRef}
+                                            onLongPress={() => this.showOptionsModal(item.userId)}
+                                            onPress={() => this.openProfile(item.userId, FRIEND_TYPE.ALL_FRIENDS)}
+                                        />
+                                    </View>
                                 )}
                                 ListFooterComponent={this.renderFooter}
                                 onEndReached={this.loadMoreData}
@@ -529,6 +552,7 @@ const mapDispatchToProps = (dispatch) => {
         changeScreen: (screenProps) => dispatch(screenChangeAction(screenProps)),
         getFriendsLocationList: (userId, friendsIdList) => dispatch(getFriendsLocationList(userId, friendsIdList)),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
+        hideFriendsLocation: (list) => dispatch(hideFriendsLocationAction(list)),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(AllFriendsTab);
