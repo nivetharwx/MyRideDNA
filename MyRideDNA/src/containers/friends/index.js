@@ -43,7 +43,7 @@ class Friends extends Component {
 
     componentDidMount() {
         setTimeout(() => {
-            if (this.props.comingFrom === PageKeys.NOTIFICATIONS || this.props.comingFrom === 'notificationPage') {
+            if (this.props.comingFrom === PageKeys.NOTIFICATIONS || this.props.comingFrom === 'notificationPage' || this.props.comingFrom === PageKeys.FRIENDS) {
                 switch (this.props.goTo) {
                     case 'REQUESTS':
                         this.tabsRef.props.goToPage(2);

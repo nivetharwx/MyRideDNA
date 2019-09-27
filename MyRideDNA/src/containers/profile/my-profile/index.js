@@ -7,7 +7,7 @@ import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES,
 import { BasicHeader } from '../../../components/headers';
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
-import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions } from '../../../actions';
+import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction } from '../../../actions';
 import { Accordion } from 'native-base';
 import ImagePicker from 'react-native-image-crop-picker';
 import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo } from '../../../api';
@@ -173,43 +173,48 @@ class MyProfileTab extends Component {
         }
     }
 
-    onPressGalleryIcon = async () => {
-        this.setState({ isLoadingProfPic: true });
-        try {
-            const imageObj = await ImagePicker.openPicker({
-                width: 300,
-                height: 300,
-                cropping: false,
-                includeBase64: true,
-            });
-            this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
-        } catch (er) {
-            this.setState({ isLoadingProfPic: false });
-            console.log("Error occurd: ", er);
-        }
-    }
+    // onPressGalleryIcon = async () => {
+    //     this.setState({ isLoadingProfPic: true });
+    //     try {
+    //         const imageObj = await ImagePicker.openPicker({
+    //             width: 300,
+    //             height: 300,
+    //             cropping: false,
+    //             includeBase64: true,
+    //         });
+    //         this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
+    //     } catch (er) {
+    //         this.setState({ isLoadingProfPic: false });
+    //         console.log("Error occurd: ", er);
+    //     }
+    // }
 
-    onPressCameraIcon = async () => {
-        this.setState({ isLoadingProfPic: true });
-        try {
-            const imageObj = await ImagePicker.openCamera({
-                width: 300,
-                height: 300,
-                includeBase64: true,
-                cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
-            });
-            this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
-        } catch (er) {
-            this.setState({ isLoadingProfPic: false });
-            console.log("Error occurd: ", er);
-        }
-    }
+    // onPressCameraIcon = async () => {
+    //     this.setState({ isLoadingProfPic: true });
+    //     try {
+    //         const imageObj = await ImagePicker.openCamera({
+    //             width: 300,
+    //             height: 300,
+    //             includeBase64: true,
+    //             cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
+    //         });
+    //         this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
+    //     } catch (er) {
+    //         this.setState({ isLoadingProfPic: false });
+    //         console.log("Error occurd: ", er);
+    //     }
+    // }
 
     onPressLogout = async () => {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
     clubsKeyExtractor = (item) => item.id;
     roadBuddiesKeyExtractor = (item) => item.id;
+
+    onPressFriendsPage = () =>{
+        console.log('onPressFriendsPage')
+        store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: {comingFrom: PageKeys.PROFILE} }));
+    }
 
     render() {
         const { user } = this.props;
@@ -324,9 +329,9 @@ class MyProfileTab extends Component {
                     <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(5), borderTopWidth: 1, marginRight: widthPercentageToDP(7) }}>
                         <View style={{ flexDirection: 'row', marginTop: heightPercentageToDP(3) }}>
                             <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Road Buddies</Text>
-                            <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16 }} />
+                            <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16 }} onPress={this.onPressFriendsPage}/>
                             <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#a8a8a8', marginLeft: widthPercentageToDP(16) }}>
-                                <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} />
+                                <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)} />
                             </View>
                         </View>
                         {/* <View style={{flexDirection:'row',justifyContent:'space-between'}}>
