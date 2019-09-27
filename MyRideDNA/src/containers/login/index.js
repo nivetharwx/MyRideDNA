@@ -11,7 +11,7 @@ import DeviceInfo from 'react-native-device-info'; // DOC: Check https://www.npm
 import Md5 from 'react-native-md5'; // DOC: Check https://www.npmjs.com/package/react-native-md5
 
 import { LoginScreen } from './login';
-import { PageKeys, USER_AUTH_TOKEN, USER_BASE_URL, DEVICE_TOKEN } from '../../constants';
+import { PageKeys, USER_AUTH_TOKEN, USER_BASE_URL, DEVICE_TOKEN, IS_ANDROID } from '../../constants';
 import { storeUserAction, toggleNetworkStatusAction, updateTokenAction } from '../../actions';
 import ForgotPassword from '../forgot-password';
 import { Loader } from '../../components/loader'
@@ -95,7 +95,8 @@ class Login extends Component {
     doLogin = async () => {
         const { username, password, deviceToken } = this.state;
         const userData = {};
-
+        // DOC: Newly added for the working of notification based on platform
+        userData.platform = IS_ANDROID ? 'android' : 'ios';
         userData.registrationToken = deviceToken;
         userData.deviceId = await DeviceInfo.getUniqueId();
         userData.date = new Date().toISOString();
@@ -156,7 +157,7 @@ class Login extends Component {
     }
 
     thirdPartyLogin = async (user) => {
-        axios.post(USER_BASE_URL + 'loginUserUsingThirdParty', { email: user.email, name: user.name, signUpSource: user.signupSource, date: new Date().toISOString(), registrationToken: this.state.deviceToken, deviceId: await DeviceInfo.getUniqueId() })
+        axios.post(USER_BASE_URL + 'loginUserUsingThirdParty', { ...user, platform: IS_ANDROID ? 'android' : 'ios', date: new Date().toISOString(), registrationToken: this.state.deviceToken, deviceId: await DeviceInfo.getUniqueId() })
             .then(res => {
                 console.log('loginUserUsingThirdParty success: ', res)
                 AsyncStorage.setItem(USER_AUTH_TOKEN, res.data.accessToken);
@@ -191,11 +192,10 @@ class Login extends Component {
                         .then((res) => {
                             var user = {};
                             console.log('res : ', res)
-                            user.name = res.data.name
-                            user.id = res.data.id
-                            user.email = res.data.email
-                            user.signupSource = 'facebook'
-                            this.fetchingDeviceToken(user)
+                            user.name = res.data.name;
+                            user.email = res.data.email;
+                            user.signupSource = 'facebook';
+                            this.fetchingDeviceToken(user);
                         })
                         .catch((error) => {
                             console.log('error : ', error)
