@@ -8,10 +8,11 @@ import { LabeledInput, IconicList, IconicDatePicker, IconicInput, LabeledInputPl
 import { BasicButton, IconButton } from '../../../../components/buttons';
 import { Thumbnail } from '../../../../components/images';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import { addBikeToGarage, editBike, updateUserInfo } from '../../../../api';
+import { addBikeToGarage, editBike, updateUserInfo, updateProfilePicture } from '../../../../api';
 import { toggleLoaderAction } from '../../../../actions';
 import { DatePicker, Icon as NBIcon, Toast } from 'native-base';
 import { Loader } from '../../../../components/loader';
+import ImagePicker from 'react-native-image-crop-picker';
 
 class EditProfileForm extends Component {
     fieldRefs = [];
@@ -24,7 +25,8 @@ class EditProfileForm extends Component {
             user: {
                 ...props.user
             },
-            showLoader: false
+            showLoader: false,
+            isLoadingProfPic: false,
         };
         if (!props.user.homeAddress) {
             this.state.user.homeAddress = { address: '', city: '', state: '', country: '', zipCode: '' };
@@ -119,6 +121,41 @@ class EditProfileForm extends Component {
         });
     }
 
+    onPressGalleryIcon = async () => {
+        console.log('onPressGalleryIcon')
+        this.setState({ isLoadingProfPic: true });
+        try {
+           const imageObj = await ImagePicker.openPicker({
+                width: 300,
+                height: 300,
+                cropping: false,
+                includeBase64: true,
+            });
+            this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
+        } catch (er) {
+            this.setState({ isLoadingProfPic: false });
+            console.log("Error occurd: ", er);
+        }
+    }
+
+    onPressCameraIcon = async () => {
+        console.log('onPressCameraIcon')
+        this.setState({ isLoadingProfPic: true });
+        try {
+            const imageObj = await ImagePicker.openCamera({
+                width: 300,
+                height: 300,
+                includeBase64: true,
+                cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
+            });
+            this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
+        } catch (er) {
+            this.setState({ isLoadingProfPic: false });
+            console.log("Error occurd: ", er);
+        }
+        
+    }
+
     render() {
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
         const { user, showLoader } = this.state;
@@ -156,12 +193,12 @@ class EditProfileForm extends Component {
                         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: heightPercentageToDP(13) }}>
                             <View style={{ alignSelf: 'center' }}>
                                 <IconButton Button iconProps={{ name: 'camera', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(9), color: '#f69039' } }}
-                                    style={{}} />
+                                    style={{}} onPress={this.onPressCameraIcon}/>
                                 <Text style={{ letterSpacing: 2, marginTop: heightPercentageToDP(1), fontWeight: '500', color: '#000' }}>{' TAKE \nPHOTO'}</Text>
                             </View>
                             <View style={{ alignSelf: 'center' }}>
                                 <IconButton Button iconProps={{ name: 'md-photos', type: 'Ionicons', style: { fontSize: widthPercentageToDP(9), color: '#f69039' } }}
-                                    style={{}} />
+                                    style={{}} onPress={this.onPressGalleryIcon}/>
                                 <Text style={{ letterSpacing: 2, marginTop: heightPercentageToDP(1), fontWeight: '500', color: '#000' }}>{'UPLOAD \n PHOTO'}</Text>
                             </View>
                         </View>
@@ -218,6 +255,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         updateUser: (userInfo, successCallback, errorCallback) => dispatch(updateUserInfo(userInfo, successCallback, errorCallback)),
+        updateProfilePicture: (profilePicStr, mimeType, userId) => dispatch(updateProfilePicture(profilePicStr, mimeType, userId)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(EditProfileForm);
