@@ -1,7 +1,7 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
     replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
-    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, replaceChatListAction, resetMessageCountAction, storeUserAction, errorHandlingAction, resetErrorHandlingAction, addMembersLocationAction
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, replaceChatListAction, resetMessageCountAction, storeUserAction, errorHandlingAction, resetErrorHandlingAction, addMembersLocationAction, storeUserMyWalletAction, updateUserMyWalletAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN, RIDE_POINT, CHAT_BASE_URL } from '../constants';
 import axios from 'axios';
@@ -327,6 +327,73 @@ export const updateUserInfo = (userData, successCallback, errorCallback) => {
             })
     };
 }
+export const addClubs = (userId, clubName, clubs) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.patch(USER_BASE_URL + 'addClubs', { userId, clubName }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log('addClubs : ', res.data)
+                    dispatch(toggleLoaderAction(false));
+                    dispatch(updateUserAction({ clubs: [...clubs, res.data] }))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                }
+            })
+            .catch(er => {
+                console.log("addClubs: ", er.response || er);
+                differentErrors(er, [userId, clubName], addClubs, true);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+export const updateClubs = (userId, clubName, clubId, clubs) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.patch(USER_BASE_URL + `updateClubs/${userId}`, { clubId, clubName }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log('updateClubs : ', res.data)
+                    dispatch(toggleLoaderAction(false));
+                    const index = clubs.findIndex(item => item.clubId === clubId);
+                    clubs[index].clubName = clubName
+                    console.log('updateClubs clubs: ', clubs);
+                    dispatch(updateUserAction({ clubs }))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                }
+            })
+            .catch(er => {
+                console.log("updateClubs: ", er.response || er);
+                differentErrors(er, [userId, clubName, clubId], updateClubs, true);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+
+export const removeClubs = (userId, clubId, clubs) => {
+    return dispatch => {
+        dispatch(toggleLoaderAction(true));
+        axios.patch(USER_BASE_URL + 'removeClubs', { userId, clubId }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log('removeClubs : ', res.data)
+                    dispatch(toggleLoaderAction(false));
+                    const index = clubs.findIndex(item => item.clubId === clubId);
+                    dispatch(updateUserAction({ clubs: [...clubs.slice(0, index), ...clubs.slice(index + 1)] }))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                }
+            })
+            .catch(er => {
+                console.log("removeClubs: ", er.response || er);
+                differentErrors(er, [userId, clubName], addClubs, true);
+                // TODO: Dispatch error info action
+                dispatch(toggleLoaderAction(false));
+            })
+    };
+}
+
+
 export const updatePassword = (passwordInfo) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
@@ -1994,6 +2061,74 @@ export const deleteBike = (userId, bikeId, index) => {
             })
     };
 }
+
+export const getRoadBuddies = (userId) => {
+    return dispatch => {
+        // dispatch(toggleLoaderAction(true));
+        dispatch(apiLoaderActions(true))
+        axios.get(GRAPH_BASE_URL + `getRoadBuddies?userId=${userId}&pageNumber=${0}&preference=${4}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("getRoadBuddies success: ", res.data);
+                dispatch(replaceFriendListAction({ friendList: res.data.friendList, pageNumber: 0 }))
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+            })
+            .catch(er => {
+                console.log(`getRoadBuddies error: `, er.response || er);
+                differentErrors(er, [userId], getRoadBuddies, false);
+                // TODO: Dispatch error info action
+                // dispatch(toggleLoaderAction(false));
+                dispatch(apiLoaderActions(false))
+            })
+    };
+}
+
+
+export const updateMyWallet = (userId, insurance, roadsideAssistance, successCallback, errorCallback) => {
+    return dispatch => {
+        // dispatch(toggleLoaderAction(true));
+        dispatch(apiLoaderActions(true))
+        axios.put(USER_BASE_URL + `updateMyWallet/${userId}`, { insurance, roadsideAssistance }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("updateMyWallet success: ", res.data);
+                // dispatch(toggleLoaderAction(false));
+                dispatch(apiLoaderActions(false));
+                dispatch(updateUserMyWalletAction(res.data));
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                successCallback(false)
+            })
+            .catch(er => {
+                console.log(`updateMyWallet error: `, er.response || er);
+                differentErrors(er, [userId, insurance, roadsideAssistance, successCallback, errorCallback], updateMyWallet, true);
+                // TODO: Dispatch error info action
+                // dispatch(toggleLoaderAction(false));
+                dispatch(apiLoaderActions(false))
+                errorCallback(false)
+            })
+    };
+}
+export const getMyWallet = (userId) => {
+    return dispatch => {
+        // dispatch(toggleLoaderAction(true));
+        dispatch(apiLoaderActions(true))
+        axios.get(USER_BASE_URL + `getMyWallet/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("getMyWallet success: ", res.data);
+                // dispatch(toggleLoaderAction(false));
+                dispatch(apiLoaderActions(false));
+                dispatch(storeUserMyWalletAction(res.data))
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+            })
+            .catch(er => {
+                console.log(`getMyWallet error: `, er.response || er);
+                differentErrors(er, [userId], getMyWallet, false);
+                // TODO: Dispatch error info action
+                // dispatch(toggleLoaderAction(false));
+                dispatch(apiLoaderActions(false))
+            })
+    };
+}
+
+// GET http://104.43.254.82:5051/getAllPassengersByUserId?userId=&pageNumber=&preference=
 export const getPassengerList = (userId) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
@@ -2267,7 +2402,7 @@ export const seenMessage = (id, userId, isGroup, comingFrom) => {
 const differentErrors = (error, params, api, isTimeout) => {
     console.log('error.message : ', error.message)
     if (error.message === 'Network Error' && store.getState().PageState.hasNetwork === false && isTimeout === false) {
-        store.dispatch(errorHandlingAction({ currentScene: Actions.currentScene, config: error.config, params: params, api: api, retryApi: false }));
+        store.dispatch(errorHandlingAction({ currentScene: Actions.currentScene, config: error.config, params: params, api: api, isRetryApi: false }));
 
     }
     else if (error.message === 'Network Error' && store.getState().PageState.hasNetwork === true) {

@@ -28,6 +28,7 @@ import ContactsSection from '../containers/contacts-section';
 import CreateRide from '../containers/create-ride';
 import AddBikeForm from '../containers/profile/my-garage/add-edit-bike-form';
 import EditProfileForm from '../containers/profile/my-profile/edit-profile-form';
+import MyWalletForm from '../containers/profile/my-profile/my-wallet-form';   
 import Settings from '../containers/settings';
 import Offers from '../containers/offers';
 import ChatList from '../containers/chats/chat-list';
@@ -49,6 +50,7 @@ export default class Navigation extends Component {
                             <Scene gesturesEnabled={false} key={PageKeys.PROFILE} component={Profile} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.SETTINGS} component={Settings} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.EDIT_PROFILE_FORM} component={EditProfileForm} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.MY_WALLET_FORM} component={MyWalletForm} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.ADD_BIKE_FORM} component={AddBikeForm} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.MAP} component={Map} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.WAYPOINTLIST} component={WaypointList} hideNavBar></Scene>

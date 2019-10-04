@@ -75,10 +75,10 @@ export class BasicHeader extends React.Component {
                         ? <View style={{ flex: 1, flexDirection: 'row' }}>
                             {
                                 leftIconProps
-                                    ? <View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
+                                    ? <View style={{ marginHorizontal: 17, alignItems: 'center', justifyContent: 'center' }}>
                                         <TouchableOpacity style={leftIconProps.reverse ? styles.iconPadding : null} onPress={leftIconProps.onPress}>
                                             <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
-                                                fontSize: 25,
+                                                fontSize: 27,
                                                 color: leftIconProps.reverse ? 'black' : 'white'
                                             }, leftIconProps.style]} />
                                         </TouchableOpacity>
@@ -90,12 +90,12 @@ export class BasicHeader extends React.Component {
                                     titleEditingMode === false
                                         ? hasEditableTitle
                                             ? <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
+                                                <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing:0.2}}>
                                                     {title}
                                                 </Text>
                                                 <IconButton style={{ paddingHorizontal: 0 }} onPress={this.toggleTitleEditingMode} iconProps={{ name: 'edit', type: 'MaterialIcons', style: { color: '#fff' } }} />
                                             </View>
-                                            : <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
+                                            : <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing:0.2 }}>
                                                 {title}
                                             </Text>
                                         : <View style={{ flexDirection: 'row', marginRight: rightIconProps ? 20 : 0, justifyContent: 'space-between', alignItems: 'center' }}>
@@ -205,8 +205,8 @@ const styles = StyleSheet.create({
         padding: 5,
         backgroundColor: 'white',
         borderRadius: 19,
-        height: 38,
-        width: 38,
+        height: 33,
+        width: 33,
         alignItems: 'center',
         justifyContent: 'center'
     },

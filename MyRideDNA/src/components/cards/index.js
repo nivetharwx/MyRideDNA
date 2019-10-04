@@ -143,11 +143,11 @@ export const SmallCard = ({ item, smallardPlaceholder, onPress, onLongPress, act
             alignItems: 'center',
             justifyContent: 'center'
         }}>
-            <View style={{ height: widthPercentageToDP(20), width: widthPercentageToDP(20), backgroundColor: '#000' }}>
-                {/* <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : thumbnailPlaceholder}
-                    style={{ width: null, height: null, flex: 1 }} /> */}
-                <Image source={smallardPlaceholder}
+            <View style={{ height: widthPercentageToDP(20), width: widthPercentageToDP(20), backgroundColor: '#A9A9A9' }}>
+                <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : smallardPlaceholder}
                     style={{ width: null, height: null, flex: 1 }} />
+                {/* <Image source={smallardPlaceholder}
+                    style={{ width: null, height: null, flex: 1 }} /> */}
             </View>
         </TouchableOpacity>
     </View>

@@ -60,6 +60,10 @@ class SplashScreen extends React.Component {
                 .then(res => {
                     console.log('loginUserUsingAccessToken success : ', res.data);
                     if (res.status === 200) {
+                        if(!res.data.clubs){
+                            console.log('clubs not existing')
+                            res.data.clubs = [];
+                        }
                         this.props.storeUser(res.data);
                     }
                 })

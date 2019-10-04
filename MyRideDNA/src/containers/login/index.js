@@ -108,6 +108,10 @@ class Login extends Component {
             .then(res => {
                 if (res.status === 200) {
                     console.log('login : ', res.data);
+                    if(!res.data.clubs){
+                        console.log('clubs not existing')
+                        res.data.clubs = [];
+                    }
                     AsyncStorage.setItem(USER_AUTH_TOKEN, res.data.accessToken);
                     this.props.updateToken({ userAuthToken: res.data.accessToken, deviceToken });
                     console.log("updateToken called: ", { userAuthToken: res.data.accessToken, deviceToken });

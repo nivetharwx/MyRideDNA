@@ -1,16 +1,16 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView } from 'react-native';
+import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import { Actions } from 'react-native-router-flux';
 import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions } from '../../../constants/index';
 import { BasicHeader } from '../../../components/headers';
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
-import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction } from '../../../actions';
+import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction, updateFriendInListAction } from '../../../actions';
 import { Accordion } from 'native-base';
 import ImagePicker from 'react-native-image-crop-picker';
-import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo } from '../../../api';
+import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo, getRoadBuddies, getPictureList, getMyWallet } from '../../../api';
 import { ImageLoader } from '../../../components/loader';
 import { SmallCard } from '../../../components/cards';
 
@@ -39,6 +39,8 @@ class MyProfileTab extends Component {
 
     componentWillMount() {
         StatusBar.setBarStyle('light-content');
+        this.props.getRoadBuddies(this.props.user.userId);
+        this.props.getMyWallet(this.props.user.userId);
     }
 
     async componentDidMount() {
@@ -60,6 +62,8 @@ class MyProfileTab extends Component {
                 this.props.getUserProfilePicture(this.props.user.profilePictureId);
             }
         }
+
+
     }
 
     async componentDidUpdate(prevProps, prevState) {
@@ -101,6 +105,18 @@ class MyProfileTab extends Component {
                     });
                 }
             })
+        }
+
+        if (prevProps.allFriends !== this.props.allFriends) {
+            const pictureIdList = [];
+            this.props.allFriends.forEach((friend) => {
+                if (!friend.profilePicture && friend.profilePictureId) {
+                    pictureIdList.push(friend.profilePictureId);
+                }
+            })
+            if (pictureIdList.length > 0) {
+                this.props.getPictureList(pictureIdList);
+            }
         }
     }
 
@@ -208,16 +224,16 @@ class MyProfileTab extends Component {
     onPressLogout = async () => {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
-    clubsKeyExtractor = (item) => item.id;
-    roadBuddiesKeyExtractor = (item) => item.id;
+    clubsKeyExtractor = (item) => item.clubId;
+    roadBuddiesKeyExtractor = (item) => item.userId;
 
-    onPressFriendsPage = () =>{
+    onPressFriendsPage = () => {
         console.log('onPressFriendsPage')
-        store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: {comingFrom: PageKeys.PROFILE} }));
+        store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.PROFILE } }));
     }
 
     render() {
-        const { user } = this.props;
+        const { user, allFriends } = this.props;
         const { isLoadingProfPic } = this.state;
         // return (
         //     <View style={styles.fill}>
@@ -294,7 +310,7 @@ class MyProfileTab extends Component {
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                         <View style={{ flexDirection: 'column', marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(3) }}>
                             <Text style={{ letterSpacing: 3, fontSize: 11, color: '#a8a8a8', fontWeight: '600' }}>LOCATION</Text>
-                            <Text style={{ fontWeight: 'bold', color: '#000' }}>Bengaluru, IN</Text>
+                            <Text style={{ fontWeight: 'bold', color: '#000' }}>{user.homeAddress.city}, {user.homeAddress.state}</Text>
                         </View>
                         <IconButton iconProps={{ name: 'account-edit', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#f69039' } }}
                             style={{ marginRight: widthPercentageToDP(6), marginTop: heightPercentageToDP(1.5) }} onPress={() => Actions.push(PageKeys.EDIT_PROFILE_FORM)} />
@@ -302,34 +318,39 @@ class MyProfileTab extends Component {
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderColor: '#0090b1', marginLeft: widthPercentageToDP(8), marginRight: widthPercentageToDP(11.22), marginTop: heightPercentageToDP(2) }}>
                         <View style={{ width: widthPercentageToDP(18) }}>
                             <Text style={{ fontSize: 11, marginTop: heightPercentageToDP(1), color: '#a8a8a8', fontWeight: '600' }}>DOB</Text>
-                            <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7) }}>14/03/91</Text>
+                            <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7) }}>{new Date(user.dob).toLocaleDateString('en-IN', { day: 'numeric', year: '2-digit', month: 'short' })}</Text>
                         </View>
                         <View style={{ borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#0090b1', width: widthPercentageToDP(28), alignItems: 'center' }}>
                             <Text style={{ fontSize: 10, marginTop: heightPercentageToDP(1), letterSpacing: 1.5, color: '#a8a8a8', fontWeight: '600' }}>YEARS RIDING</Text>
-                            <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7) }}>24</Text>
+                            <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7) }}>{user.ridingSince ? new Date().getFullYear() - user.ridingSince : 0}</Text>
                         </View>
                         <View style={{ borderRightWidth: 1, borderColor: '#0090b1', width: widthPercentageToDP(28), alignItems: 'flex-start' }}>
                             <Text style={{ fontSize: 10, marginTop: heightPercentageToDP(1), letterSpacing: 1.5, color: '#a8a8a8', fontWeight: '600' }}>MEMBER SINCE</Text>
-                            <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7), alignSelf: 'center' }}>2019</Text>
+                            <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7), alignSelf: 'center' }}>{new Date(user.dateOfRegistration).getFullYear()}</Text>
                         </View>
                     </View>
-                    <View style={{ flexDirection: 'column', marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(4) }}   >
+                    <View style={{ flexDirection: 'column', marginHorizontal: widthPercentageToDP(8), marginTop: heightPercentageToDP(4), borderBottomWidth: 1 }}   >
                         <Text style={{ letterSpacing: 3, fontSize: 11, color: '#a8a8a8', fontWeight: '600' }}>CLUBS</Text>
-                        <FlatList
-                            data={clubDummyData}
-                            contentContainerStyle={styles.clubList}
-                            keyExtractor={this.clubsKeyExtractor}
-                            renderItem={({ item, index }) => (
-                                <View style={{ flexDirection: 'column', paddingVertical: heightPercentageToDP(0.5) }}>
-                                    <Text style={{ color: '#000', fontWeight: '600' }}>{item.name}</Text>
-                                </View>
-                            )}
-                        />
+                        {
+                            user.clubs ?
+                                <FlatList
+                                    style={{ marginBottom: heightPercentageToDP(3) }}
+                                    data={user.clubs}
+                                    contentContainerStyle={styles.clubList}
+                                    keyExtractor={this.clubsKeyExtractor}
+                                    renderItem={({ item, index }) => (
+                                        <View style={{ flexDirection: 'column', paddingVertical: heightPercentageToDP(0.5) }}>
+                                            <Text style={{ color: '#000', fontWeight: '600' }}>{item.clubName}</Text>
+                                        </View>
+                                    )}
+                                />
+                                : null
+                        }
                     </View>
-                    <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(5), borderTopWidth: 1, marginRight: widthPercentageToDP(7) }}>
+                    <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(2), marginRight: widthPercentageToDP(7) }}>
                         <View style={{ flexDirection: 'row', marginTop: heightPercentageToDP(3) }}>
                             <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Road Buddies</Text>
-                            <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16 }} onPress={this.onPressFriendsPage}/>
+                            <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16 }} onPress={this.onPressFriendsPage} />
                             <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#a8a8a8', marginLeft: widthPercentageToDP(16) }}>
                                 <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)} />
                             </View>
@@ -344,16 +365,18 @@ class MyProfileTab extends Component {
                             <FlatList
                                 style={{ flexDirection: 'column' }}
                                 numColumns={4}
-                                data={roadbuddiesDummyData}
+                                data={allFriends}
                                 keyExtractor={this.roadBuddiesKeyExtractor}
                                 renderItem={({ item, index }) => (
                                     <View style={{ marginRight: widthPercentageToDP(1.5) }}>
                                         <SmallCard
                                             smallardPlaceholder={require('../../../assets/img/profile-pic.png')}
+                                            item={item}
                                         />
                                     </View>
                                 )}
                             />
+
                         </View>
                     </View>
                     <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(3), marginRight: widthPercentageToDP(7) }}>
@@ -361,7 +384,7 @@ class MyProfileTab extends Component {
                             <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Passengers</Text>
                             <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16 }} />
                             <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#a8a8a8', marginLeft: widthPercentageToDP(21) }}>
-                                <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} />
+                                <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: -1 })} />
                             </View>
                         </View>
                         <View style={{ borderTopWidth: 15, borderTopColor: '#DCDCDE' }}>
@@ -374,15 +397,16 @@ class MyProfileTab extends Component {
                                     <View style={{ marginRight: widthPercentageToDP(1.5) }}>
                                         <SmallCard
                                             smallardPlaceholder={require('../../../assets/img/profile-pic.png')}
+                                            item={item}
                                         />
                                     </View>
                                 )}
                             />
                         </View>
                     </View>
-                    <View style={styles.usersExtraDetailContainer}>
+                    <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.MY_WALLET_FORM)}>
                         <ImageBackground source={require('../../../assets/img/my-wallet.png')} style={styles.usersExtraDetail}></ImageBackground>
-                    </View>
+                    </TouchableOpacity >
                     <View style={styles.usersExtraDetailContainer}>
                         <ImageBackground source={require('../../../assets/img/my-journal.png')} style={styles.usersExtraDetail}></ImageBackground>
                     </View>
@@ -401,10 +425,11 @@ class MyProfileTab extends Component {
 const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { profileLastOptions, hasNetwork } = state.PageState;
+    const { allFriends } = state.FriendList;
     // const { shortSpaceList } = state.GarageInfo;
     const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
     // return { user, shortSpaceList };
-    return { user, userAuthToken, deviceToken, garage, profileLastOptions, hasNetwork };
+    return { user, userAuthToken, deviceToken, garage, profileLastOptions, hasNetwork, allFriends };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -445,7 +470,16 @@ const mapDispatchToProps = (dispatch) => {
                 console.log(`getGarage error: `, error);
             })
         },
-        updateMyProfileLastOptions: (expanded) => dispatch(updateMyProfileLastOptionsAction({ expanded }))
+        updateMyProfileLastOptions: (expanded) => dispatch(updateMyProfileLastOptionsAction({ expanded })),
+        getRoadBuddies: (userId) => dispatch(getRoadBuddies(userId)),
+        getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
+            console.log('getPictureList all friend sucess : ', pictureObj);
+            dispatch(updateFriendInListAction({ pictureObj }))
+        }, (error) => {
+            console.log('getPictureList all friend error : ', error)
+            // dispatch(updateFriendInListAction({ userId: friendId }))
+        }),
+        getMyWallet: (userId) => dispatch(getMyWallet(userId)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MyProfileTab);

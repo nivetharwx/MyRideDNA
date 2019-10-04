@@ -45,7 +45,9 @@ import {
     ERROR_HANDLING,
     RESET_ERROR_HANDLING,
     ADD_MEMBERS_LOCATION,
-    HIDE_MEMBERS_LOCATION
+    HIDE_MEMBERS_LOCATION,
+    CURRENT_USER_MY_WALLET,
+    UPDATE_USER_MY_WALLET
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -99,6 +101,18 @@ export const updateEmailStatusAction = (data) => (
 export const updateUserAction = (data) => (
     {
         type: UPDATE_USER,
+        data: data
+    }
+);
+export const storeUserMyWalletAction = (data) => (
+    {
+        type: CURRENT_USER_MY_WALLET,
+        data: data
+    }
+);
+export const updateUserMyWalletAction = (data) => (
+    {
+        type: UPDATE_USER_MY_WALLET,
         data: data
     }
 );

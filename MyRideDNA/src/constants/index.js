@@ -16,7 +16,7 @@ export const heightPercentageToDP = (percentage) => {
 
 export const IS_ANDROID = Platform.OS === 'android';
 
-const APP_HEADER_HEIGHT = IS_ANDROID ? heightPercentageToDP(8.5) : heightPercentageToDP(10);
+const APP_HEADER_HEIGHT = IS_ANDROID ? heightPercentageToDP(10) : heightPercentageToDP(10);
 
 export const DEVICE_LOCATION_STATE = { ON: 'on', OFF: 'off' };
 
@@ -67,6 +67,7 @@ export const PageKeys = {
     COMMENT_SECTION: 'commentSection',
     CREATE_RIDE: 'createRide',
     OFFERS: 'offers',
+    MY_WALLET_FORM: 'myWalletForm',
 };
 
 export const MAP_ACCESS_TOKEN = 'pk.eyJ1IjoibWFkaGF2YW4tcmVhY3RpdmV3b3JrcyIsImEiOiJjam9qbXJybzQwNmE4M3BvODY4dXhhdGUyIn0.oPQRig3knqF_oYXrRSca7w';
@@ -101,7 +102,7 @@ export const ICON_NAMES = {
 }
 export const RIDE_POINT = { SOURCE: 'source', DESTINATION: 'destination', WAYPOINT: 'waypoint' }
 
-const HEADER_COLOR = '#0076B5';
+const HEADER_COLOR = '#2B77B4';
 const STATUS_BAR_COLOR = '#006297';
 
 export const APP_COMMON_STYLES = {
