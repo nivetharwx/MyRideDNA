@@ -35,7 +35,7 @@ export const MapControlPair = ({ firstIcon, secondIcon, containerStyle }) => (
 );
 
 export const BasicButton = ({ title, titleStyle, onPress, style }) => (
-    <TouchableOpacity activeOpacity={0.6} style={[{ backgroundColor: '#0076B5', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} onPress={onPress}>
+    <TouchableOpacity activeOpacity={0.6} style={[{ backgroundColor: '#F5891F', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} onPress={onPress}>
         <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={[{ color: '#fff', fontSize: 15, fontWeight: 'bold' }, titleStyle]}>{title}</Text>
         </View>

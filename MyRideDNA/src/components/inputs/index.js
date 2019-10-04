@@ -8,7 +8,7 @@ import {
     TouchableOpacity
 } from 'react-native';
 import { Icon as NBIcon, Picker, DatePicker } from 'native-base';
-import { WindowDimensions, ShortMonthNames, heightPercentageToDP } from '../../constants';
+import { WindowDimensions, ShortMonthNames, heightPercentageToDP, widthPercentageToDP } from '../../constants';
 import { getFormattedDateFromISO } from '../../util';
 
 const getKeyboardTypeForContentType = (contentType) => {
@@ -32,15 +32,28 @@ export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle,
             returnKeyType={returnKeyType || 'done'} returnKeyLabel={returnKeyLabel} ref={(el) => inputRef && inputRef(el)} />
     </View>
 );
-export const LabeledInputPlaceholder = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder, placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus, onBlur, editable, placeHolderStyle }) => (
+export const LabeledInputPlaceholder = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder, placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus, onBlur, editable, placeHolderStyle, secondLabelStyle, secondLabel }) => (
     <View>
         <View style={[{ flexDirection: 'row', marginBottom: 3 }, containerStyle]}>
-            <TextInput editable={editable} onFocus={onFocus && onFocus} onBlur={onBlur && onBlur} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ flex: 1, borderBottomWidth: 1, borderBottomColor: '#000' }, inputStyle]}
+            <TextInput editable={editable} onFocus={onFocus && onFocus} onBlur={onBlur && onBlur} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ borderBottomWidth: 1, borderBottomColor: '#000', width:WindowDimensions.width }, inputStyle]}
                 textContentType={inputType} keyboardType={getKeyboardTypeForContentType(inputType)}
                 onChangeText={onChange && onChange} onSubmitEditing={({ nativeEvent }) => onSubmit && onSubmit(nativeEvent.text)}
                 returnKeyType={returnKeyType || 'done'} returnKeyLabel={returnKeyLabel} ref={(el) => inputRef && inputRef(el)} />
         </View>
-        <Text style={[labelStyle]}>{label}</Text>
+        {
+            label ?
+
+                <View style={{ flexDirection: 'row' }}>
+                    <Text style={[labelStyle]}>{label}</Text>
+                    {
+                        secondLabel ?
+                            <Text style={[secondLabelStyle]}>{secondLabel}</Text>
+                            : null
+                    }
+                </View>
+                :
+                null
+        }
     </View>
 );
 export const IconicInput = ({ inputColor, containerStyle, iconProps, placeholder, value, inputType, onChange, iconEnd, onFocusout }) => (

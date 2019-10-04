@@ -1,4 +1,4 @@
-import { LOGIN_RESPONSE, CURRENT_USER, UPDATE_USER, UPDATE_EMAIL_STATUS, UPDATE_SIGNUP_RESULT, UPDATE_PASSWORD_SUCCESS, UPDATE_PASSWORD_ERROR, RESET_PASSWORD_ERROR, UPDATE_TOKEN } from "../actions/actionConstants";
+import { LOGIN_RESPONSE, CURRENT_USER, UPDATE_USER, UPDATE_EMAIL_STATUS, UPDATE_SIGNUP_RESULT, UPDATE_PASSWORD_SUCCESS, UPDATE_PASSWORD_ERROR, RESET_PASSWORD_ERROR, UPDATE_TOKEN, CURRENT_USER_MY_WALLET, UPDATE_USER_MY_WALLET } from "../actions/actionConstants";
 
 const initialState = {
     // loginResponse: null
@@ -8,7 +8,11 @@ const initialState = {
     updatePasswordError: '',
     updatePasswordSuccess: '',
     deviceToken: null,
-    userAuthToken: null
+    userAuthToken: null,
+    userMyWallet: {
+        insurance: null,
+        roadsideAssistance: null,
+    },
 };
 
 export default (state = initialState, action) => {
@@ -37,6 +41,7 @@ export default (state = initialState, action) => {
                 user: action.data
             }
         case UPDATE_USER:
+            console.log('UPDATE_USER : ', action.data)
             return {
                 ...state,
                 user: {
@@ -58,6 +63,23 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 updatePasswordError: null
+            }
+        case CURRENT_USER_MY_WALLET:
+            console.log('CURRENT_USER_MY_WALLET : ', action.data)
+            return {
+                ...state,
+                userMyWallet: {
+                    insurance: action.data.insurance ? action.data.insurance : null,
+                    roadsideAssistance: action.data.roadsideAssistance ? action.data.roadsideAssistance : null,
+                }
+            }
+        case UPDATE_USER_MY_WALLET:
+            return {
+                ...state,
+                userMyWallet: {
+                    insurance: action.data.insurance ? action.data.insurance : null,
+                    roadsideAssistance: action.data.roadsideAssistance ? action.data.roadsideAssistance : null,
+                }
             }
         default: return state
     }

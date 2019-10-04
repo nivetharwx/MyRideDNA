@@ -43,7 +43,9 @@ import {
     DELETE_UNSYNCED_RIDE,
     UPDATE_MESSAGE_COUNT,
     ERROR_HANDLING,
-    RESET_ERROR_HANDLING
+    RESET_ERROR_HANDLING,
+    CURRENT_USER_MY_WALLET,
+    UPDATE_USER_MY_WALLET
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -97,6 +99,18 @@ export const updateEmailStatusAction = (data) => (
 export const updateUserAction = (data) => (
     {
         type: UPDATE_USER,
+        data: data
+    }
+);
+export const storeUserMyWalletAction = (data) => (
+    {
+        type: CURRENT_USER_MY_WALLET,
+        data: data
+    }
+);
+export const updateUserMyWalletAction = (data) => (
+    {
+        type: UPDATE_USER_MY_WALLET,
         data: data
     }
 );
