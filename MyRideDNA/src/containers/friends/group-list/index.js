@@ -8,6 +8,7 @@ import { ThumbnailCard } from '../../../components/cards';
 import { createFriendGroup, getFriendGroups, addMembers, getAllGroupMembers, exitFriendGroup, getAllGroups, getAllMembersLocation } from '../../../api';
 import { Actions } from 'react-native-router-flux';
 import { BaseModal } from '../../../components/modal';
+import { hideMembersLocationAction, screenChangeAction } from '../../../actions';
 
 const CREATE_GROUP_WIDTH = widthPercentageToDP(9);
 class GroupListTab extends Component {
@@ -55,6 +56,11 @@ class GroupListTab extends Component {
                  *  this.props.friendGroupList[this.props.friendGroupList.length - 1]
                  **/
             }
+        }
+        if (this.props.membersLocationList && (Object.keys(this.props.membersLocationList).length > Object.keys(prevProps.membersLocationList || {}).length)) {
+            this.setState({ isVisibleOptionsModal: false }, () => {
+                this.props.changeScreen({ name: PageKeys.MAP });
+            });
         }
         // if (this.props.refreshContent === true && prevProps.refreshContent === false) {
         //     // this.props.getFriendGroups(this.props.user.userId, true);
@@ -157,12 +163,12 @@ class GroupListTab extends Component {
         });
     }
 
-    toggleMembersLocation = (index = -1) => {
-        index === -1
-            ? this.props.getAllMembersLocation(this.state.selectedGroup.groupId, this.props.user.userId)
-            : this.setState({ isVisibleOptionsModal: false }, () => {
-                this.props.hideAllMembersLocation([this.props.membersLocationList[index]]);
-            });
+    toggleMembersLocation = (isVisible) => {
+        isVisible
+            ? this.setState({ isVisibleOptionsModal: false }, () => {
+                this.props.hideMembersLocation(this.state.selectedGroup.groupId);
+            })
+            : this.props.getAllMembersLocation(this.state.selectedGroup.groupId, this.props.user.userId)
     }
 
     showOptionsModal = (index) => {
@@ -173,11 +179,8 @@ class GroupListTab extends Component {
         if (this.state.selectedGroup === null) return;
         const index = this.props.friendGroupList.findIndex(item => item.groupId === this.state.selectedGroup.groupId);
         const options = [{ text: 'Open group', id: 'openGroup', handler: () => this.openGroupInfo(index) }, { text: 'Chat', id: 'openChat', handler: () => this.openChatPage(index) }, { text: 'Exit group', id: 'exitGroup', handler: () => this.showExitGroupConfirmation() }];
-        let locInfoIdx = -1;
-        if (this.props.membersLocationList) {
-            locInfoIdx = this.props.membersLocationList.findIndex(g => g.id === this.state.selectedGroup.groupId);
-        }
-        options.push({ text: locInfoIdx > -1 ? `Hide\nlocation` : `Show\nlocation`, id: 'location', handler: () => this.toggleMembersLocation(locInfoIdx) });
+        const isVisible = this.props.membersLocationList !== null && this.props.membersLocationList[this.state.selectedGroup.groupId] !== undefined && this.props.membersLocationList[this.state.selectedGroup.groupId].filter(f => !f.isVisible).length === 0;
+        options.push({ text: isVisible === false ? `Show\nlocation` : `Hide\nlocation`, id: 'location', handler: () => this.toggleMembersLocation(isVisible) });
         options.push({ text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() });
         return (
             options.map(option => (
@@ -428,7 +431,7 @@ const mapStateToProps = (state) => {
     const { friendGroupList, currentGroup, membersLocationList } = state.FriendGroupList;
     const { allFriends } = state.FriendList;
     const { pageNumber, hasNetwork } = state.PageState;
-    return { user, friendGroupList, allFriends, currentGroup, pageNumber, hasNetwork };
+    return { user, friendGroupList, allFriends, currentGroup, pageNumber, hasNetwork, membersLocationList };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -439,6 +442,8 @@ const mapDispatchToProps = (dispatch) => {
         addMembers: (groupId, memberDetails) => dispatch(addMembers(groupId, memberDetails)),
         getAllGroupMembers: (groupId, userId) => dispatch(getAllGroupMembers(groupId, userId)),
         getAllMembersLocation: (groupId, userId) => dispatch(getAllMembersLocation(groupId, userId)),
+        hideMembersLocation: (groupId) => dispatch(hideMembersLocationAction(groupId)),
+        changeScreen: (screenProps) => dispatch(screenChangeAction(screenProps)),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(GroupListTab);

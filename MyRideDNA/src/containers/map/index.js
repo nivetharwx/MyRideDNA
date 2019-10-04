@@ -19,11 +19,11 @@ import { default as turfCircle } from '@turf/circle';
 import { default as turfDistance } from '@turf/distance';
 import { default as turfTransformRotate } from '@turf/transform-rotate';
 import Spinner from 'react-native-loading-spinner-overlay';
-import { Icon as NBIcon, Toast } from 'native-base';
+import { Icon as NBIcon, Toast, ListItem, Left, Body, Right, CheckBox } from 'native-base';
 // import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT } from '../../constants';
 // import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, resetChatMessageAction } from '../../actions';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT, UNSYNCED_RIDE } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, addUnsyncedRideAction, deleteUnsyncedRideAction, resetChatMessageAction, resetErrorHandlingAction, toggleNetworkStatusAction } from '../../actions';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, addUnsyncedRideAction, deleteUnsyncedRideAction, resetChatMessageAction, resetErrorHandlingAction, toggleNetworkStatusAction, hideMembersLocationAction } from '../../actions';
 import { SearchBox, IconicList } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -45,7 +45,7 @@ import DEFAULT_DESTINATION_ICON from '../../assets/img/destination-pin-red.png';
 import SELECTED_DESTINATION_ICON from '../../assets/img/destination-pin-green.png';
 import FRIENDS_LOCATION_ICON from '../../assets/img/friends-location.png';
 
-import { createRecordRide, pauseRecordRide, updateDestination, continueRecordRide, addTrackpoints, completeRecordRide, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser, updateLocation } from '../../api';
+import { createRecordRide, pauseRecordRide, updateDestination, continueRecordRide, addTrackpoints, completeRecordRide, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser, updateLocation, getFriendsLocationList, getAllMembersLocation } from '../../api';
 
 import Bubble from '../../components/bubble';
 import MenuModal from '../../components/modal';
@@ -169,14 +169,15 @@ export class Map extends Component {
             onWaypointList: false,
             onItinerary: false,
             isSearchHeader: false,
-            activeSearch: this.defaultSearch,
+            // activeSearch: this.defaultSearch,
             searchTypes: [
                 { label: 'Parking', value: 'parking', icon: { name: 'local-parking', type: 'MaterialIcons' } },
                 { label: 'Gas Stations', value: 'fuel', icon: { name: 'local-gas-station', type: 'MaterialIcons' } },
                 { label: 'Restaurants', value: 'restaurant', icon: { name: 'restaurant', type: 'MaterialIcons' } },
             ],
             watchId: null,
-            isEditableMap: true
+            isEditableMap: true,
+            isVisibleList: false
         };
     }
 
@@ -492,24 +493,28 @@ export class Map extends Component {
                 ? this.startTrackingLocation()
                 : this.stopTrackingLocation();
         }
-        if (prevProps.friendsLocationList !== this.props.friendsLocationList) {
-            if (this.props.friendsLocationList === null) {
-                this.setState({
-                    friendsLocationCollection: {
-                        type: 'FeatureCollection',
-                        features: []
-                    }
-                });
-                return;
-            }
+        if ((prevProps.friendsLocationList !== this.props.friendsLocationList) && Object.keys(this.props.friendsLocationList).length > 1) {
+            const features = [...this.state.friendsLocationCollection.features];
             // let friendsImage = {};
-            const features = this.props.friendsLocationList.map(locInfo => {
+            Object.keys(this.props.friendsLocationList).forEach(k => {
+                if (k === 'activeLength') return;
+                const locInfo = this.props.friendsLocationList[k];
                 // locInfo.profilePicture
                 //     ? friendsImage[locInfo.userId] = { uri: 'http://104.43.254.82:5051/getPictureById/5ca43ade33db83341960ee1b_thumb.jpeg' }
                 //     // ? friendsImage[locInfo.userId] = { uri: locInfo.profilePicture }
                 //     : friendsImage[locInfo.userId] = DEFAULT_WAYPOINT_ICON;
                 // friendsImage[locInfo.userId + ''] = { uri:  };
-                return this.createFriendsLocationMarker(locInfo);
+                const idx = features.findIndex(oldF => oldF.id === locInfo.id);
+                if (idx > -1) {
+                    if (locInfo.isVisible === false) {
+                        features.splice(idx, 1);
+                    } else {
+                        features[idx].properties.isVisible = true;
+                        features[idx].geometry.coordinates = [locInfo.lng, locInfo.lat];
+                    }
+                } else {
+                    features.push(this.createFriendsLocationMarker(locInfo, locInfo.id));
+                }
             });
             this.setState({
                 friendsLocationCollection: {
@@ -518,8 +523,43 @@ export class Map extends Component {
                 },
                 // friendsImage: friendsImage
             }, () => {
-                const newFriendLocation = this.props.friendsLocationList[this.props.friendsLocationList.length - 1];
-                this.onPressRecenterMap([newFriendLocation.lng, newFriendLocation.lat]);
+                console.log(this.state.friendsLocationCollection.features);
+                this.onPressRecenterMap();
+            });
+        }
+        if ((prevProps.membersLocationList !== this.props.membersLocationList) && Object.keys(this.props.membersLocationList).length > 1) {
+            const features = [...this.state.friendsLocationCollection.features];
+            Object.keys(this.props.membersLocationList).forEach(k => {
+                if (k === 'activeLength') return;
+                this.props.membersLocationList[k].forEach(locInfo => {
+                    const idx = features.findIndex(oldF => oldF.id === locInfo.id);
+                    if (idx > -1) {
+                        if (locInfo.isVisible === false) {
+                            features.splice(idx, 1);
+                        } else {
+                            features[idx].properties.isVisible = true;
+                            features[idx].geometry.coordinates = [locInfo.lng, locInfo.lat];
+                        }
+                    } else {
+                        features.push(this.createFriendsLocationMarker(locInfo, locInfo.id));
+                    }
+                });
+            });
+            this.setState({
+                friendsLocationCollection: {
+                    ...prevState.friendsLocationCollection,
+                    features: features
+                },
+            }, () => {
+                this.onPressRecenterMap();
+            });
+        }
+        if ((prevProps.friendsLocationList.activeLength > 0 || prevProps.membersLocationList.activeLength > 0) && (this.props.friendsLocationList.activeLength === 0 && this.props.membersLocationList.activeLength === 0)) {
+            this.setState({
+                friendsLocationCollection: {
+                    type: 'FeatureCollection',
+                    features: []
+                }
             });
         }
         const prevRide = prevProps.ride;
@@ -1645,9 +1685,9 @@ export class Map extends Component {
         if (this.locationProximity || this.state.currentLocation) {
             config.proximity = this.locationProximity || this.state.currentLocation.location;
         }
-        if (this.state.activeSearch.value !== 'all') {
-            config.types = [`poi.${this.state.activeSearch.value}`];
-        }
+        // if (this.state.activeSearch.value !== 'all') {
+        //     config.types = [`poi.${this.state.activeSearch.value}`];
+        // }
         try {
             const response = await geocodingClient.forwardGeocode(config).send();
             this.setState({ searchResults: response.body.features });
@@ -2344,17 +2384,19 @@ export class Map extends Component {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
 
-    createFriendsLocationMarker = (locInfo) => {
+    createFriendsLocationMarker = (locInfo, id) => {
         return {
             type: 'Feature',
-            id: locInfo.userId,
+            id: id,
             geometry: {
                 type: 'Point',
                 coordinates: [locInfo.lng, locInfo.lat],
             },
             properties: {
                 // icon: locInfo.userId + ''
-                name: locInfo.name
+                name: locInfo.name,
+                id: id,
+                isVisible: locInfo.isVisible
             },
         };
     }
@@ -2377,32 +2419,42 @@ export class Map extends Component {
         }).start(() => this.setState({ isSearchHeader: false }));
     }
 
-    openDropdown = () => {
-        if (this.state.dropdownAnim.__getValue() !== 0) {
-            this.closeDropdown();
+    openTrackingList = () => {
+        if (Object.keys({ ...this.props.friendsLocationList, ...this.props.membersLocationList }).length === 1) {
+            Alert.alert('No recent tracking', `You don't have any recent location trackings`);
+            return;
+        }
+        if (this.state.isVisibleList) {
+            this.closeTrackingList();
             return;
         }
         Animated.timing(this.state.dropdownAnim, {
             toValue: heightPercentageToDP(18),
             duration: 0,
-            // useNativeDriver: true
-        }).start();
+        }).start(() => {
+            this.setState({ isVisibleList: true });
+        });
     }
 
-    closeDropdown = (itemIdx) => {
+    closeTrackingList = (id, turnOn, isGroup) => {
         Animated.timing(this.state.dropdownAnim, {
             toValue: 0,
             duration: 0,
-            // useNativeDriver: true
         }).start(() => {
-            if (typeof itemIdx === 'number') {
-                this.setState(({ activeSearch, searchTypes }) => {
-                    return {
-                        activeSearch: { value: searchTypes[itemIdx].value, label: searchTypes[itemIdx].label, icon: { ...searchTypes[itemIdx].icon, style: { color: APP_COMMON_STYLES.infoColor } } },
-                        searchTypes: [{ ...activeSearch, icon: { ...activeSearch.icon, style: null } }, ...searchTypes.slice(0, itemIdx), ...searchTypes.slice(itemIdx + 1)]
-                    }
-                });
+            if (typeof id === 'undefined') {
+                return this.setState({ isVisibleList: false });
             }
+            this.setState({ isVisibleList: false }, () => {
+                if (isGroup) {
+                    turnOn
+                        ? this.props.getAllMembersLocation(id, this.props.user.userId)
+                        : this.props.hideMembersLocation(id)
+                } else {
+                    turnOn
+                        ? this.props.getFriendsLocationList(this.props.user.userId, [id])
+                        : this.props.hideFriendsLocation(id)
+                }
+            });
         });
     }
 
@@ -2447,6 +2499,16 @@ export class Map extends Component {
             </View>
     }
 
+    hideAllLocations = () => {
+        this.closeTrackingList();
+        if (this.props.friendsLocationList.activeLength > 0) {
+            this.props.hideFriendsLocation();
+        }
+        if (this.props.membersLocationList.activeLength > 0) {
+            this.props.hideMembersLocation();
+        }
+    }
+
     renderRecordRidePaths = () => {
         const { features } = this.state.recordRideCollection;
         return <MapboxGL.ShapeSource
@@ -2467,7 +2529,7 @@ export class Map extends Component {
     render() {
         const { isEditableMap, mapViewHeight, directions, markerCollection, activeMarkerIndex, gpsPointCollection, controlsBarLeftAnim, waypointListLeftAnim, showCreateRide, currentLocation,
             searchResults, searchQuery, isEditableRide, snapshot, hideRoute, optionsBarRightAnim, isUpdatingWaypoint, mapRadiusCircle, showLoader, searchbarAnim, isSearchHeader } = this.state;
-        const { notificationList, ride, showMenu, user, canUndo, canRedo } = this.props;
+        const { notificationList, ride, showMenu, user, canUndo, canRedo, friendsLocationList, membersLocationList, FriendGroupList } = this.props;
         const MAP_VIEW_TOP_OFFSET = showCreateRide ? (CREATE_RIDE_CONTAINER_HEIGHT - WINDOW_HALF_HEIGHT) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2) : (isEditableRide ? 130 : 60) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2);
         const searchCancelAnim = searchbarAnim.interpolate({
             inputRange: [-widthPercentageToDP(100), 0],
@@ -2494,16 +2556,21 @@ export class Map extends Component {
                                     searchResults.length === 0
                                         ? ride.rideId === null
                                             ? <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                                {
-                                                    this.props.friendsLocationList
+                                                {/* {
+                                                    this.state.friendsLocationCollection.features.length > 0
                                                         ? <View style={{ flexDirection: 'row' }}>
-                                                            <LinkButton style={{ paddingVertical: 20 }} title='HIDE FRIENDS' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.props.hideFriendsLocation} />
+                                                            <LinkButton style={{ paddingVertical: 20 }} title='HIDE FRIENDS' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.openTrackingList} />
                                                         </View>
                                                         : <View style={{ flexDirection: 'row' }}>
                                                             <LinkButton style={{ paddingVertical: 20 }} title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
                                                             <LinkButton style={{ paddingVertical: 20 }} title='RECORD RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
                                                         </View>
-                                                }
+                                                } */}
+                                                <View style={{ flexDirection: 'row' }}>
+                                                    <LinkButton style={{ paddingVertical: 20 }} title='TRACKING' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.openTrackingList} />
+                                                    <LinkButton style={{ paddingVertical: 20 }} title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
+                                                    <LinkButton style={{ paddingVertical: 20 }} title='RECORD' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
+                                                </View>
                                                 <IconButton iconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }}
                                                     style={styles.logoutIcon} onPress={this.onPressLogout} />
                                             </View>
@@ -2650,8 +2717,26 @@ export class Map extends Component {
                                     id='friends'
                                     shape={this.state.friendsLocationCollection}
                                     // images={this.state.friendsImage}
-                                    onPress={({ nativeEvent }) => console.log("onPressFriendsLocationMarker: ", nativeEvent)}>
-                                    <MapboxGL.SymbolLayer id="friendLocationIcon" style={[MapElementStyles.friendsName, MapElementStyles.friendsIcon]} />
+                                    cluster
+                                    clusterRadius={50}
+                                    clusterMaxZoom={14}
+                                    onPress={({ nativeEvent }) => console.log("onPressFriendsLocationMarker: ", JSON.stringify(nativeEvent))}>
+
+                                    <MapboxGL.SymbolLayer id="friendLocationIcon"
+                                        filter={['all', ['!has', 'point_count'], ['==', 'isVisible', true]]}
+                                        style={[MapElementStyles.friendsName, MapElementStyles.friendsIcon]}
+                                    />
+                                    {/* DOC: Clustered symbol count and circle icon */}
+                                    <MapboxGL.SymbolLayer
+                                        id="pointCount"
+                                        style={MapElementStyles.clusterCount}
+                                    />
+                                    <MapboxGL.CircleLayer
+                                        id="clusteredPoints"
+                                        belowLayerID="pointCount"
+                                        filter={['has', 'point_count']}
+                                        style={MapElementStyles.clusteredPoints}
+                                    />
                                 </MapboxGL.ShapeSource>
                                 : null
                         }
@@ -2691,6 +2776,57 @@ export class Map extends Component {
                         }
 
                     </MapboxGL.MapView>
+                    {
+                        <Animated.View style={{ backgroundColor: '#fff', position: 'absolute', zIndex: 800, elevation: 10, top: APP_COMMON_STYLES.headerHeight, width: widthPercentageToDP(50), height: this.state.dropdownAnim }}>
+                            {
+                                this.state.isVisibleList && this.state.friendsLocationCollection.features.length > 0
+                                    ? <ListItem icon style={{ borderBottomWidth: 1 }} onPress={this.hideAllLocations}>
+                                        <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
+                                            <NBIcon name='location-off' type='MaterialIcons' />
+                                        </Left>
+                                        <Body style={{ borderBottomWidth: 0 }}>
+                                            <Text>Hide All</Text>
+                                        </Body>
+                                        {/* <Right style={{ borderBottomWidth: 0 }}>
+                                            <CheckBox checked={item.isVisible} />
+                                        </Right> */}
+                                    </ListItem>
+                                    : null
+                            }
+                            <FlatList
+                                data={[...Object.keys(this.props.friendsLocationList).reduce((list, k) => {
+                                    if (k === 'activeLength') return list;
+                                    list.push({ name: this.props.friendsLocationList[k].name, id: k, isVisible: this.props.friendsLocationList[k].isVisible });
+                                    return list;
+                                }, []),
+                                ...Object.keys(this.props.membersLocationList).reduce((list, k) => {
+                                    if (k === 'activeLength') return list;
+                                    list.push({ name: this.props.friendGroupList.find(g => g.groupId === k).groupName, id: k, isVisible: this.props.membersLocationList[k].some(g => g.isVisible), isGroup: true });
+                                    return list;
+                                }, [])]}
+                                keyExtractor={item => item.id}
+                                renderItem={({ item }) => {
+                                    return (
+                                        <ListItem icon style={{ borderBottomWidth: 1 }} onPress={() => this.closeTrackingList(item.id, !item.isVisible, item.isGroup)}>
+                                            <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
+                                                {
+                                                    item.isGroup
+                                                        ? <NBIcon name='account-group' type='MaterialCommunityIcons' />
+                                                        : <NBIcon name='person' type='MaterialIcons' />
+                                                }
+                                            </Left>
+                                            <Body style={{ borderBottomWidth: 0 }}>
+                                                <Text>{item.name}</Text>
+                                            </Body>
+                                            <Right style={{ borderBottomWidth: 0 }}>
+                                                <CheckBox onPress={() => this.closeTrackingList(item.id, !item.isVisible, item.isGroup)} checked={item.isVisible} />
+                                            </Right>
+                                        </ListItem>
+                                    )
+                                }}
+                            />
+                        </Animated.View>
+                    }
                     {
                         showCreateRide || (isEditableRide && searchResults.length === 0) ?
                             <TouchableOpacity style={[styles.bullseye, { marginTop: MAP_VIEW_TOP_OFFSET }]} onPress={this.onBullseyePress}>
@@ -2816,8 +2952,9 @@ const mapStateToProps = (state) => {
     // const {showLoader} = state.PageState;
     const { notificationList, pageNumber } = state.NotificationList;
     const { friendsLocationList } = state.FriendList;
+    const { membersLocationList, friendGroupList } = state.FriendGroupList;
     const { appState, hasNetwork, lastApi, isRetryApi } = state.PageState;
-    return { ride, isLocationOn, user, userAuthToken, deviceToken, showMenu, friendsLocationList, currentScreen, canUndo, canRedo, notificationList, pageNumber, appState, hasNetwork, unsyncedRides, lastApi, isRetryApi };
+    return { ride, isLocationOn, user, userAuthToken, deviceToken, showMenu, friendsLocationList, membersLocationList, friendGroupList, currentScreen, canUndo, canRedo, notificationList, pageNumber, appState, hasNetwork, unsyncedRides, lastApi, isRetryApi };
 }
 
 const mapDispatchToProps = (dispatch) => {
@@ -2875,7 +3012,10 @@ const mapDispatchToProps = (dispatch) => {
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         updateSourceOrDestination: (identifier, locationName) => dispatch(updateSourceOrDestinationAction({ identifier, updates: { name: locationName } })),
         updateWaypointName: (waypointId, locationName) => dispatch(updateWaypointNameAction({ waypointId, locationName })),
-        hideFriendsLocation: () => dispatch(hideFriendsLocationAction()),
+        hideFriendsLocation: (userId) => dispatch(hideFriendsLocationAction(userId)),
+        hideMembersLocation: (groupId) => dispatch(hideMembersLocationAction(groupId)),
+        getFriendsLocationList: (userId, friendsIdList) => dispatch(getFriendsLocationList(userId, friendsIdList)),
+        getAllMembersLocation: (groupId, userId) => dispatch(getAllMembersLocation(groupId, userId)),
         updateAppState: (appState) => dispatch(updateAppStateAction({ appState })),
         resetStoreToDefault: () => dispatch(resetStateOnLogout()),
         resetChatMessage: () => dispatch(resetChatMessageAction()),
@@ -2903,7 +3043,7 @@ const MapElementStyles = MapboxGL.StyleSheet.create({
         visibility: 'none'
     },
     icon: {
-        iconAllowOverlap: true, // TODO: Test against hiding marker at some zoom level
+        iconAllowOverlap: true,
         iconImage: '{icon}',
         iconSize: 1,
         iconOffset: MapboxGL.StyleSheet.source(
@@ -2937,12 +3077,14 @@ const MapElementStyles = MapboxGL.StyleSheet.create({
         textAnchor: 'center',
         textHaloColor: 'rgba(235, 134, 30, 0.9)',
         textHaloWidth: 2,
-        textOffset: IS_ANDROID ? [0, -3.4] : [0, -3]
+        textOffset: IS_ANDROID ? [0, -3.4] : [0, -3],
+        textAllowOverlap: true
     },
     friendsIcon: {
         iconImage: FRIENDS_LOCATION_ICON,
         // iconSize: IS_ANDROID ? 1 : 0.25,
         iconAnchor: 'bottom',
+        iconAllowOverlap: true
     },
     markerTitle: {
         textField: '{title}',
@@ -2962,4 +3104,32 @@ const MapElementStyles = MapboxGL.StyleSheet.create({
         lineOpacity: 0.50,
         lineColor: MapboxGL.StyleSheet.identity('lineColor')
     },
+    clusterCount: {
+        textField: '{point_count}',
+        textSize: 12,
+        textPitchAlignment: 'map',
+    },
+    clusteredPoints: {
+        circlePitchAlignment: 'map',
+        circleColor: MapboxGL.StyleSheet.source(
+            [
+                [25, 'yellow'],
+                [50, 'red'],
+                [75, 'blue'],
+                [100, 'orange'],
+                [300, 'pink'],
+                [750, 'white'],
+            ],
+            'point_count',
+            MapboxGL.InterpolationMode.Exponential,
+        ),
+        circleRadius: MapboxGL.StyleSheet.source(
+            [[0, 15], [100, 20], [750, 30]],
+            'point_count',
+            MapboxGL.InterpolationMode.Exponential,
+        ),
+        circleOpacity: 0.84,
+        circleStrokeWidth: 2,
+        circleStrokeColor: 'white',
+    }
 });

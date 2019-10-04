@@ -43,7 +43,9 @@ import {
     DELETE_UNSYNCED_RIDE,
     UPDATE_MESSAGE_COUNT,
     ERROR_HANDLING,
-    RESET_ERROR_HANDLING
+    RESET_ERROR_HANDLING,
+    ADD_MEMBERS_LOCATION,
+    HIDE_MEMBERS_LOCATION
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -317,9 +319,15 @@ export const hideFriendsLocationAction = (data) => (
         data: data
     }
 );
-export const replaceFriendsLocationAction = (data) => (
+export const addMembersLocationAction = (data) => (
     {
-        type: REPLACE_FRIENDS_LOCATION,
+        type: ADD_MEMBERS_LOCATION,
+        data: data
+    }
+);
+export const hideMembersLocationAction = (data) => (
+    {
+        type: HIDE_MEMBERS_LOCATION,
         data: data
     }
 );
