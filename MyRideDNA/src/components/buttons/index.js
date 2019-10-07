@@ -50,7 +50,7 @@ export const RoundButton = ({ title, onPress, style, titleStyle }) => (
     </TouchableOpacity>
 );
 
-export const IconButton = ({ title, titleStyle, iconRight, iconProps, onPress, onPressOut, style, disabled, disabledColor = '#DBDBDB' }) => {
+export const IconButton = ({ title, titleStyle, iconRight, iconProps = {}, onPress, onPressOut, style, disabled, disabledColor = '#DBDBDB' }) => {
     return disabled
         ? iconRight
             ? <View style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style, { borderColor: disabledColor }]}>
@@ -60,7 +60,7 @@ export const IconButton = ({ title, titleStyle, iconRight, iconProps, onPress, o
                         : null
                 }
                 <NBIcon name={iconProps.name}
-                    type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style, { color: disabledColor, borderColor: disabledColor }]} />
+                    type={iconProps.type} style={[{ fontSize: 30, }, iconProps.style, { color: disabledColor, borderColor: disabledColor }]} />
             </View>
             : <View style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style, { borderColor: disabledColor }]}>
                 <NBIcon name={iconProps.name}

@@ -11,6 +11,7 @@ import { connect } from 'react-redux';
 import Geolocation from 'react-native-geolocation-service';
 
 import MapboxGL from '@mapbox/react-native-mapbox-gl';
+import Supercluster from 'supercluster';
 import Permissions from 'react-native-permissions';
 import * as turfHelpers from '@turf/helpers';
 import { default as turfBBox } from '@turf/bbox';
@@ -86,6 +87,7 @@ const CREATE_RIDE_CONTAINER_HEIGHT = WindowDimensions.height;
 const RIDE_UPDATE_COUNT_TO_SYNC = 5;
 const DEFAULT_ZOOM_DIFFERENCE = 1;
 const DEFAULT_ZOOM_LEVEL = 15;
+const DEFAULT_CENTER_COORDS = [77.652405, 12.9127252];
 
 export class Map extends Component {
     unregisterNetworkListener = null;
@@ -177,7 +179,9 @@ export class Map extends Component {
             ],
             watchId: null,
             isEditableMap: true,
-            isVisibleList: false
+            isVisibleList: false,
+            superCluster: null,
+            superClusterClusters: []
         };
     }
 
@@ -494,7 +498,7 @@ export class Map extends Component {
                 : this.stopTrackingLocation();
         }
         if ((prevProps.friendsLocationList !== this.props.friendsLocationList) && Object.keys(this.props.friendsLocationList).length > 1) {
-            const features = [...this.state.friendsLocationCollection.features];
+            let features = [...this.state.friendsLocationCollection.features];
             // let friendsImage = {};
             Object.keys(this.props.friendsLocationList).forEach(k => {
                 if (k === 'activeLength') return;
@@ -507,59 +511,63 @@ export class Map extends Component {
                 const idx = features.findIndex(oldF => oldF.id === locInfo.id);
                 if (idx > -1) {
                     if (locInfo.isVisible === false) {
-                        features.splice(idx, 1);
+                        if (!features[idx].properties.groupIds || Object.keys(features[idx].properties.groupIds).length === 0)
+                            features = [...features.slice(0, idx), ...features.slice(idx + 1)];
                     } else {
                         features[idx].properties.isVisible = true;
                         features[idx].geometry.coordinates = [locInfo.lng, locInfo.lat];
                     }
                 } else {
-                    features.push(this.createFriendsLocationMarker(locInfo, locInfo.id));
+                    features.push(this.createFriendsLocationMarker(locInfo));
                 }
             });
+            const cluster = new Supercluster({ radius: 40, maxZoom: 20 });
+            cluster.load(features);
             this.setState({
                 friendsLocationCollection: {
                     ...prevState.friendsLocationCollection,
-                    features: features
+                    features: features,
                 },
+                superCluster: cluster
                 // friendsImage: friendsImage
             }, () => {
-                console.log(this.state.friendsLocationCollection.features);
+                this.updateClusters();
                 this.onPressRecenterMap();
             });
         }
         if ((prevProps.membersLocationList !== this.props.membersLocationList) && Object.keys(this.props.membersLocationList).length > 1) {
-            const features = [...this.state.friendsLocationCollection.features];
+            let features = [...this.state.friendsLocationCollection.features];
             Object.keys(this.props.membersLocationList).forEach(k => {
                 if (k === 'activeLength') return;
                 this.props.membersLocationList[k].forEach(locInfo => {
                     const idx = features.findIndex(oldF => oldF.id === locInfo.id);
                     if (idx > -1) {
                         if (locInfo.isVisible === false) {
-                            features.splice(idx, 1);
+                            const { [k]: deletedGroupId, ...otherGroupIds } = features[idx].properties.groupIds;
+                            features[idx].properties.groupIds = otherGroupIds;
+                            if (Object.keys(otherGroupIds).length === 0 && (!this.props.friendsLocationList[locInfo.id] || !this.props.friendsLocationList[locInfo.id].isVisible))
+                                features = [...features.slice(0, idx), ...features.slice(idx + 1)];
                         } else {
                             features[idx].properties.isVisible = true;
                             features[idx].geometry.coordinates = [locInfo.lng, locInfo.lat];
+                            features[idx].properties.groupIds = { ...features[idx].properties.groupIds, [k]: true };
                         }
                     } else {
-                        features.push(this.createFriendsLocationMarker(locInfo, locInfo.id));
+                        features.push(this.createFriendsLocationMarker(locInfo, k));
                     }
                 });
             });
+            const cluster = new Supercluster({ radius: 40, maxZoom: 20 });
+            cluster.load(features);
             this.setState({
                 friendsLocationCollection: {
                     ...prevState.friendsLocationCollection,
-                    features: features
+                    features: features,
                 },
+                superCluster: cluster
             }, () => {
+                this.updateClusters();
                 this.onPressRecenterMap();
-            });
-        }
-        if ((prevProps.friendsLocationList.activeLength > 0 || prevProps.membersLocationList.activeLength > 0) && (this.props.friendsLocationList.activeLength === 0 && this.props.membersLocationList.activeLength === 0)) {
-            this.setState({
-                friendsLocationCollection: {
-                    type: 'FeatureCollection',
-                    features: []
-                }
             });
         }
         const prevRide = prevProps.ride;
@@ -1207,9 +1215,13 @@ export class Map extends Component {
     }
 
     onRegionDidChange = async ({ properties, geometry }) => {
-        if (this.props.user.showCircle === false) return;
+        const mapZoomLevel = await this._mapView.getZoom();
+        if (this.props.user.showCircle) this.showVisibleCircle(properties, geometry, mapZoomLevel);
+        this.updateClusters(mapZoomLevel);
+    }
+
+    async showVisibleCircle(properties, geometry, mapZoomLevel) {
         if (this.state.showCreateRide === false) {
-            const mapZoomLevel = await this._mapView.getZoom();
             if (this.state.mapZoomLevel != mapZoomLevel) {
                 const { circle, diameter, coords } = this.getVisibleMapInfo(properties, geometry);
                 this.setState({ mapZoomLevel, mapRadiusCircle: circle, diameter: diameter.toFixed(2) }, () => {
@@ -1231,6 +1243,25 @@ export class Map extends Component {
         const radius = distanceBtwn / 2;
         const mapRadiusCircle = turfCircle(center, radius, options);
         return { diameter: distanceBtwn, circle: mapRadiusCircle };
+    }
+
+    async updateClusters(mapZoomLevel) {
+        if (mapZoomLevel === undefined) mapZoomLevel = await this._mapView.getZoom();
+        const sc = this.state.superCluster;
+        if (sc) {
+            const bounds = await this._mapView.getVisibleBounds();
+            const westLng = bounds[1][0];
+            const southLat = bounds[1][1];
+            const eastLng = bounds[0][0];
+            const northLat = bounds[0][1];
+            this.setState({
+                mapZoomLevel: mapZoomLevel,
+                superClusterClusters: sc.getClusters(
+                    [westLng, southLat, eastLng, northLat],
+                    Math.round(mapZoomLevel)
+                ),
+            });
+        }
     }
 
     toggleReplaceOption = () => this.setState({ isUpdatingWaypoint: !this.state.isUpdatingWaypoint });
@@ -1502,16 +1533,16 @@ export class Map extends Component {
 
     onPressRecenterMap = (location) => {
         const options = {
+            centerCoordinate: DEFAULT_CENTER_COORDS,
             zoom: DEFAULT_ZOOM_LEVEL,
             duration: 500,
         };
         if (Array.isArray(location)) {
             options.centerCoordinate = location;
-            this._mapView.setCamera(options);
         } else if (this.state.currentLocation) {
             options.centerCoordinate = this.state.currentLocation.location;
-            this._mapView.setCamera(options);
         }
+        this._mapView.setCamera(options);
     }
 
     onPressBoundRideToScreen = () => {
@@ -2384,20 +2415,27 @@ export class Map extends Component {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
 
-    createFriendsLocationMarker = (locInfo, id) => {
+    createFriendsLocationMarker = (locInfo, groupId) => {
         return {
             type: 'Feature',
-            id: id,
+            id: locInfo.id,
             geometry: {
                 type: 'Point',
                 coordinates: [locInfo.lng, locInfo.lat],
             },
-            properties: {
-                // icon: locInfo.userId + ''
-                name: locInfo.name,
-                id: id,
-                isVisible: locInfo.isVisible
-            },
+            properties: typeof groupId === 'undefined'
+                ? {
+                    // icon: locInfo.userId + ''
+                    name: locInfo.name,
+                    id: locInfo.id,
+                    isVisible: locInfo.isVisible
+                } : {
+                    groupIds: { [groupId]: true },
+                    // icon: locInfo.userId + ''
+                    name: locInfo.name,
+                    id: locInfo.id,
+                    isVisible: locInfo.isVisible
+                },
         };
     }
 
@@ -2429,7 +2467,7 @@ export class Map extends Component {
             return;
         }
         Animated.timing(this.state.dropdownAnim, {
-            toValue: heightPercentageToDP(18),
+            toValue: heightPercentageToDP(25),
             duration: 0,
         }).start(() => {
             this.setState({ isVisibleList: true });
@@ -2509,6 +2547,30 @@ export class Map extends Component {
         }
     }
 
+    onPressFriendsLocation = (event) => {
+        const point = event.nativeEvent.payload;
+        const { name, cluster } = point.properties;
+        const { coordinates } = point.geometry;
+        if (cluster) {
+            const sc = this.state.superCluster;
+            if (sc) {
+                const points = sc
+                    .getLeaves(point.properties.cluster_id, Infinity)
+                    .map(leaf => ({
+                        selectedPointName: leaf.properties.name,
+                        selectedPointLat: leaf.geometry.coordinates[1],
+                        selectedPointLng: leaf.geometry.coordinates[0],
+                    }));
+                console.log(points);
+                const zoom = sc.getClusterExpansionZoom(point.properties.cluster_id);
+                const options = { zoom, duration: 500, centerCoordinate: coordinates };
+                this._mapView.setCamera(options);
+            }
+        } else {
+            console.log("friend: ", point.properties);
+        }
+    }
+
     renderRecordRidePaths = () => {
         const { features } = this.state.recordRideCollection;
         return <MapboxGL.ShapeSource
@@ -2566,11 +2628,13 @@ export class Map extends Component {
                                                             <LinkButton style={{ paddingVertical: 20 }} title='RECORD RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
                                                         </View>
                                                 } */}
-                                                <View style={{ flexDirection: 'row' }}>
-                                                    <LinkButton style={{ paddingVertical: 20 }} title='TRACKING' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.openTrackingList} />
-                                                    <LinkButton style={{ paddingVertical: 20 }} title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
-                                                    <LinkButton style={{ paddingVertical: 20 }} title='RECORD' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
-                                                </View>
+                                                {
+                                                    <View style={{ flexDirection: 'row' }}>
+                                                        <IconButton style={{ paddingHorizontal: widthPercentageToDP(4), paddingVertical: widthPercentageToDP(4) }} title='TRACKING' titleStyle={{ color: '#fff', fontSize: 16 }} iconProps={{ name: 'ios-arrow-dropdown', type: 'Ionicons', style: { color: '#fff', marginLeft: 5, fontSize: widthPercentageToDP(5) } }} iconRight onPress={this.openTrackingList} />
+                                                        <LinkButton style={{ paddingVertical: widthPercentageToDP(4) }} title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
+                                                        <LinkButton style={{ paddingVertical: widthPercentageToDP(4) }} title='RECORD' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
+                                                    </View>
+                                                }
                                                 <IconButton iconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }}
                                                     style={styles.logoutIcon} onPress={this.onPressLogout} />
                                             </View>
@@ -2643,10 +2707,7 @@ export class Map extends Component {
                             ? <MapboxGL.MapView
                                 styleURL={MapboxGL.StyleURL.Street}
                                 zoomLevel={14}
-                                centerCoordinate={[
-                                    4.895168,
-                                    52.370216
-                                ]}
+                                centerCoordinate={DEFAULT_CENTER_COORDS}
                                 style={styles.hiddenMapStyles}
                                 ref={el => this._hiddenMapView = el}
                             >
@@ -2682,10 +2743,7 @@ export class Map extends Component {
                     <MapboxGL.MapView
                         styleURL={MapboxGL.StyleURL.Street}
                         zoomLevel={15}
-                        centerCoordinate={[
-                            4.895168,
-                            52.370216
-                        ]}
+                        centerCoordinate={DEFAULT_CENTER_COORDS}
                         style={[styles.fillParent, { marginTop: showCreateRide ? -WINDOW_HALF_HEIGHT : 0 }]}
                         ref={el => this._mapView = el}
                         onDidFinishLoadingMap={this.onFinishMapLoading}
@@ -2712,15 +2770,11 @@ export class Map extends Component {
                                 : null
                         }
                         {
-                            this.state.friendsLocationCollection.features.length > 0
+                            this.state.superClusterClusters
                                 ? <MapboxGL.ShapeSource
                                     id='friends'
-                                    shape={this.state.friendsLocationCollection}
-                                    // images={this.state.friendsImage}
-                                    cluster
-                                    clusterRadius={50}
-                                    clusterMaxZoom={14}
-                                    onPress={({ nativeEvent }) => console.log("onPressFriendsLocationMarker: ", JSON.stringify(nativeEvent))}>
+                                    shape={{ type: 'FeatureCollection', features: this.state.superClusterClusters }}
+                                    onPress={this.onPressFriendsLocation}>
 
                                     <MapboxGL.SymbolLayer id="friendLocationIcon"
                                         filter={['all', ['!has', 'point_count'], ['==', 'isVisible', true]]}
@@ -2777,7 +2831,7 @@ export class Map extends Component {
 
                     </MapboxGL.MapView>
                     {
-                        <Animated.View style={{ backgroundColor: '#fff', position: 'absolute', zIndex: 800, elevation: 10, top: APP_COMMON_STYLES.headerHeight, width: widthPercentageToDP(50), height: this.state.dropdownAnim }}>
+                        <Animated.View style={{ backgroundColor: '#fff', position: 'absolute', zIndex: 800, elevation: 10, top: 60, width: widthPercentageToDP(50), height: this.state.dropdownAnim }}>
                             {
                                 this.state.isVisibleList && this.state.friendsLocationCollection.features.length > 0
                                     ? <ListItem icon style={{ borderBottomWidth: 1 }} onPress={this.hideAllLocations}>
@@ -2787,9 +2841,6 @@ export class Map extends Component {
                                         <Body style={{ borderBottomWidth: 0 }}>
                                             <Text>Hide All</Text>
                                         </Body>
-                                        {/* <Right style={{ borderBottomWidth: 0 }}>
-                                            <CheckBox checked={item.isVisible} />
-                                        </Right> */}
                                     </ListItem>
                                     : null
                             }
@@ -3106,6 +3157,7 @@ const MapElementStyles = MapboxGL.StyleSheet.create({
     },
     clusterCount: {
         textField: '{point_count}',
+        textColor: '#fff',
         textSize: 12,
         textPitchAlignment: 'map',
     },
@@ -3113,7 +3165,7 @@ const MapElementStyles = MapboxGL.StyleSheet.create({
         circlePitchAlignment: 'map',
         circleColor: MapboxGL.StyleSheet.source(
             [
-                [25, 'yellow'],
+                [25, APP_COMMON_STYLES.headerColor],
                 [50, 'red'],
                 [75, 'blue'],
                 [100, 'orange'],
@@ -3128,8 +3180,8 @@ const MapElementStyles = MapboxGL.StyleSheet.create({
             'point_count',
             MapboxGL.InterpolationMode.Exponential,
         ),
-        circleOpacity: 0.84,
-        circleStrokeWidth: 2,
-        circleStrokeColor: 'white',
+        circleStrokeWidth: 5,
+        circleStrokeColor: 'rgba(20,104,172, 1)',
+        circleStrokeOpacity: 0.35
     }
 });

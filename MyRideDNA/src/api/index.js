@@ -1593,9 +1593,8 @@ export const getFriendsLocationList = (userId, friendsIdList) => {
             .then(res => {
                 if (res.status === 200) {
                     // dispatch(toggleLoaderAction(false));
-                    dispatch(apiLoaderActions(false))
-                    console.log('getFriendsLocationList sucess : ', res);
-                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    dispatch(apiLoaderActions(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
                     res.data.length > 0 && dispatch(addFriendsLocationAction(res.data));
                 }
             })
@@ -1865,7 +1864,6 @@ export const getAllMembersLocation = (groupId, userId) => {
         dispatch(apiLoaderActions(true));
         axios.get(GRAPH_BASE_URL + `getAllMembersLocation?userId=${userId}&groupId=${groupId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                console.log("getAllMembersLocation success: ", res.data);
                 dispatch(apiLoaderActions(false));
                 dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
                 res.data.length > 0 && dispatch(addMembersLocationAction({ list: res.data, groupId }));

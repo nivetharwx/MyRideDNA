@@ -39,7 +39,7 @@ class Login extends Component {
         if (!this.props.hasNetwork) {
             Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
         }
-        
+
         const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
         this.setState({ deviceToken });
 
@@ -77,11 +77,15 @@ class Login extends Component {
         if (this.state.deviceToken === null) {
             const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
             if (deviceToken === null) {
-                const token = await firebase.messaging().getToken();
-                console.log("TOKEN - firebase.messaging().getToken() at login", token);
-                if (token) {
-                    AsyncStorage.setItem(DEVICE_TOKEN, token);
-                    this.setState({ deviceToken: token }, () => this.doLogin());
+                try {
+                    const token = await firebase.messaging().getToken();
+                    console.log("TOKEN - firebase.messaging().getToken() at login", token);
+                    if (token) {
+                        AsyncStorage.setItem(DEVICE_TOKEN, token);
+                        this.setState({ deviceToken: token }, () => this.doLogin());
+                    }
+                } catch (er) {
+                    console.log("firebase.messaging().getToken() error: ", er);
                 }
             }
             else {
@@ -108,7 +112,7 @@ class Login extends Component {
             .then(res => {
                 if (res.status === 200) {
                     console.log('login : ', res.data);
-                    if(!res.data.clubs){
+                    if (!res.data.clubs) {
                         console.log('clubs not existing')
                         res.data.clubs = [];
                     }

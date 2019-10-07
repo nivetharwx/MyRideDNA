@@ -16,7 +16,7 @@ export const heightPercentageToDP = (percentage) => {
 
 export const IS_ANDROID = Platform.OS === 'android';
 
-const APP_HEADER_HEIGHT = IS_ANDROID ? heightPercentageToDP(10) : heightPercentageToDP(10);
+const APP_HEADER_HEIGHT = heightPercentageToDP(10);
 
 export const DEVICE_LOCATION_STATE = { ON: 'on', OFF: 'off' };
 
