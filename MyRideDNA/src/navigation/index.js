@@ -20,6 +20,7 @@ import Chat from '../containers/chats';
 import Signup from '../containers/signup';
 import Passengers from '../containers/passengers';
 import PaasengerForm from '../containers/passengers/add-edit-passenger-from';
+import PassengersProfile from '../containers/passengers/passenger-profile';
 import Notifications from '../containers/notifications';
 import { GalleryView } from '../components/gallery';
 
@@ -32,6 +33,7 @@ import MyWalletForm from '../containers/profile/my-profile/my-wallet-form';
 import Settings from '../containers/settings';
 import Offers from '../containers/offers';
 import ChatList from '../containers/chats/chat-list';
+import Album from '../containers/album';
 
 export default class Navigation extends Component {
     render() {
@@ -59,12 +61,14 @@ export default class Navigation extends Component {
                             <Scene gesturesEnabled={false} key={PageKeys.GALLERY} component={GalleryView} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.PASSENGERS} component={Passengers} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.PASSENGER_FORM} component={PaasengerForm} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.PASSENGER_PROFILE} component={PassengersProfile} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.NOTIFICATIONS} component={Notifications} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.CONTACTS_SECTION} component={ContactsSection} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.FRIENDS_PROFILE} component={FriendsProfile} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.CHAT} component={Chat} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.OFFERS} component={Offers} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.CHAT_LIST} component={ChatList} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.ALBUM} component={Album} hideNavBar></Scene>
                         </Scene>
                     </Router>
                 </Root>

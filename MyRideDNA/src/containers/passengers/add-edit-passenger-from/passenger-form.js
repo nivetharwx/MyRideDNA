@@ -13,9 +13,8 @@ import { toggleLoaderAction } from '../../../actions';
 import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon, Toast } from 'native-base';
 import { IconLabelPair } from '../../../components/labels';
 import ImagePicker from 'react-native-image-crop-picker';
-import PaasengerFormDisplay from './passenger-form';
 
-class PaasengerForm extends Component {
+class PaasengerFormDisplay extends Component {
     fieldRefs = [];
     constructor(props) {
         super(props);
@@ -79,7 +78,7 @@ class PaasengerForm extends Component {
             this.props.registerPassenger(this.props.user.userId, passenger);
         } else {
             console.log('passenger update : ', this.state.passenger);
-            this.props.updatePassengerDetails(passenger);
+            this.props.updatePassengerDetails(passenger.passengerId, passenger);
         }
     }
 
@@ -126,34 +125,56 @@ class PaasengerForm extends Component {
 
     render() {
         const { passenger, activeTab } = this.state;
+        const {topMargin} = this.props
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
         return (
             <View style={styles.fill} >
-                <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                </View>
-                <View style={{ flex: 1 }}>
-                    <BasicHeader headerHeight={heightPercentageToDP(10.5)} title={passenger.passengerId ? 'Edit Passenger' : 'Add Passenger'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
-                    {
-                        this.props.passengerIdx !== -1?
-                            <PaasengerFormDisplay passengerIdx={this.props.passengerIdx} topMargin={{marginTop:heightPercentageToDP(15)}}/>
-                            :
-                            <Tabs locked={false} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
-                                {/* <Tab heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 0 ? '#000000' : '#81BA41' }}> */}
-                                <Tab heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 0 ? '#000000' : '#81BA41' }}>
-                                    <IconLabelPair containerStyle={styles.tabContentCont} text={`NEW PASSENGER`} textStyle={{ color: '#fff', fontSize: heightPercentageToDP(2), letterSpacing: 0.6 }} />
-                                </TabHeading>}>
-                                    <PaasengerFormDisplay  topMargin={{marginTop:heightPercentageToDP(6)}}/>
-                                </Tab>
-                                <Tab heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 1 ? '#000000' : '#81BA41', borderColor: '#fff', borderColor: '#fff', borderLeftWidth: 1, borderRightWidth: 1 }}>
-                                    <IconLabelPair containerStyle={styles.tabContentCont} text={`FROM COMMUNITY`} textStyle={{ color: '#fff', fontSize: heightPercentageToDP(2), letterSpacing: 0.6 }} />
-                                </TabHeading>}>
-                                    <Text>community</Text>
-                                </Tab>
-                            </Tabs>
-                    }
-
-                </View>
+                <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
+                    <ScrollView >
+                        <View style={[{ flexDirection: 'row', justifyContent: 'space-evenly' }, topMargin]}>
+                            <View style={{ alignSelf: 'center' }}>
+                                <IconButton Button iconProps={{ name: 'camera', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(9), color: '#F5891F' } }}
+                                    style={{}} onPress={this.onPressCameraIcon} />
+                                <Text style={{ letterSpacing: 2, marginTop: heightPercentageToDP(1), fontWeight: '500', color: '#000', fontSize: heightPercentageToDP(2) }}>{' TAKE \nPHOTO'}</Text>
+                            </View>
+                            <View style={{ alignSelf: 'center' }}>
+                                <IconButton Button iconProps={{ name: 'md-photos', type: 'Ionicons', style: { fontSize: widthPercentageToDP(9), color: '#F5891F' } }}
+                                    style={{}} onPress={this.onPressGalleryIcon} />
+                                <Text style={{ letterSpacing: 2, marginTop: heightPercentageToDP(1), fontWeight: '500', color: '#000', fontSize: heightPercentageToDP(2) }}>{'UPLOAD \n PHOTO'}</Text>
+                            </View>
+                        </View>
+                        <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(3) }}>
+                            <LabeledInputPlaceholder
+                                inputValue={passenger.name} inputStyle={{ paddingBottom: 0 }}
+                                inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next'
+                                onChange={this.onChangeName} label='NAME' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInputPlaceholder
+                                inputValue={passenger.homeAddress.city} inputStyle={{ paddingBottom: 0 }}
+                                inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next'
+                                onChange={this.onChangeCity} label='CITY' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInputPlaceholder
+                                inputValue={passenger.homeAddress.state} inputStyle={{ paddingBottom: 0 }}
+                                inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next'
+                                onChange={this.onChangeState} label='STATE' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInputPlaceholder
+                                inputValue={passenger.phoneNumber? + passenger.phoneNumber + "":passenger.phoneNumber} inputStyle={{ paddingBottom: 0 }}
+                                inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next'
+                                onChange={this.onChangePhone} label='PHONE' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
+                            <IconicList
+                                selectedValue={passenger.gender} values={GENDER_LIST} labelPlaceHolder='GENDER'
+                                labelPlaceHolderStyle={[styles.labelStyle, { marginTop: heightPercentageToDP(1) }]}
+                                innerContainerStyle={{ borderBottomWidth: 1 }} onChange={this.onChangeGender} />
+                            <IconicDatePicker
+                                selectedDate={passenger.dob} datePickerStyle={{ paddingLeft: 0, paddingBottom: 1, fontSize: heightPercentageToDP(2.3) }}
+                                onChange={this.onChangeDOB} label='BIRTHDAY' labelStyle={styles.labelStyle} />
+                        </View>
+                        <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: heightPercentageToDP(3.5) }} onPress={this.onSubmit} />
+                    </ScrollView>
+                </KeyboardAvoidingView>
 
                 {/* <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
                     <BasicHeader headerHeight={heightPercentageToDP(8.5)} title={passenger.passengerId ? 'Edit Passenger' : 'Add Passenger'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
@@ -187,10 +208,10 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         registerPassenger: (userId, passenger) => dispatch(registerPassenger(userId, passenger)),
-        updatePassengerDetails: (passenger) => dispatch(updatePassengerDetails(passenger)),
+        updatePassengerDetails: (passengerId ,passenger) => dispatch(updatePassengerDetails(passengerId ,passenger)),
     };
 }
-export default connect(mapStateToProps, mapDispatchToProps)(PaasengerForm);
+export default connect(mapStateToProps, mapDispatchToProps)(PaasengerFormDisplay);
 
 const styles = StyleSheet.create({
     fill: {

@@ -1,29 +1,68 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, TouchableWithoutFeedback, StatusBar, FlatList, ScrollView, View, Keyboard, Alert, TextInput, Text } from 'react-native';
+import { StyleSheet, TouchableWithoutFeedback, StatusBar, FlatList, ScrollView, View, Keyboard, Alert, TextInput, Text, ActivityIndicator, Animated, Easing } from 'react-native';
 import { BasicHeader } from '../../components/headers';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, PageKeys } from '../../constants';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInput, IconicList, IconicDatePicker, IconicInput } from '../../components/inputs';
-import { BasicButton, LinkButton } from '../../components/buttons';
+import { BasicButton, LinkButton, IconButton } from '../../components/buttons';
 import { DatePicker, Icon as NBIcon, Toast, ListItem, Left, Body, Right, Thumbnail } from 'native-base';
 import { BaseModal } from '../../components/modal';
-import { getPassengerList, deletePassenger } from '../../api';
+import { getPassengerList, deletePassenger, getPictureList } from '../../api';
+import { SmallCard, SquareCard } from '../../components/cards';
+import { updatePassengerInListAction } from '../../actions';
+import { Loader } from '../../components/loader';
 
+
+const roadbuddiesDummyData = [{ name: 'person1', id: '1' }, { name: 'person2', id: '2' }, { name: 'person3', id: '3' }, { name: 'person4', id: '4' }]
 class Passengers extends Component {
+    PASSENGER_OPTIONS = [{ text: 'Passenger Detail', id: 'passengerDetail', handler: () => this.openPassengerDetail() }, { text: 'Edit Passenger', id: 'edit', handler: () => this.openPassengerForm() }, { text: 'Remove Passenger', id: 'removePassenger', handler: () => this.showRemovePassengerConfirmation() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     constructor(props) {
         super(props);
         this.state = {
             selectedPassenger: null,
-            isVisibleOptionsModal: false
+            isVisibleOptionsModal: false,
+            isLoadingData: false,
+            isLoading: false,
+            spinValue: new Animated.Value(0),
         };
     }
 
     componentDidMount() {
-        this.props.getPassengerList(this.props.user.userId);
+        this.props.getPassengerList(this.props.user.userId, 0, 10, (res) => {
+        }, (err) => {
+        });
     }
 
     componentDidUpdate(prevProps, prevState) {
+        if (prevProps.passengerList !== this.props.passengerList) {
+            const pictureIdList = [];
+            this.props.passengerList.forEach((friend) => {
+                if (!friend.profilePicture && friend.profilePictureId) {
+                    pictureIdList.push(friend.profilePictureId);
+                }
+            })
+            if (pictureIdList.length > 0) {
+                this.props.getPictureList(pictureIdList);
+            }
+        }
+    }
+
+
+    retryApiFunction = () => {
+        this.state.spinValue.setValue(0);
+        Animated.timing(this.state.spinValue, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.linear,
+            useNativeDriver: true
+        }).start(() => {
+            if (this.props.hasNetwork === true) {
+                this.props.getPassengerList(this.props.user.userId, 0, 10, (res) => {
+                }, (err) => {
+                });
+            }
+        });
 
     }
 
@@ -37,7 +76,8 @@ class Passengers extends Component {
 
     renderMenuOptions = () => {
         if (this.state.selectedPassenger === null) return;
-        const options = [{ text: 'Edit Passenger', id: 'editPassenger', handler: () => this.openPassengerForm() }, { text: 'Remove Passenger', id: 'removePassenger', handler: () => this.showRemovePassengerConfirmation() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
+        // const options = [{ text: 'Edit Passenger', id: 'editPassenger', handler: () => this.openPassengerForm() }, { text: 'Remove Passenger', id: 'removePassenger', handler: () => this.showRemovePassengerConfirmation() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
+        const options = this.PASSENGER_OPTIONS;
         return (
             options.map(option => (
                 <LinkButton
@@ -110,9 +150,56 @@ class Passengers extends Component {
         );
     }
 
+    passengerListKeyExtractor = (item) => item.passengerId;
+
+    loadMoreData = () => {
+        if (this.state.isLoadingData && this.state.isLoading === false) {
+            this.setState({ isLoading: true, isLoadingData: false })
+            this.props.getPassengerList(this.props.user.userId, this.props.pageNumber, 10, (res) => {
+                this.setState({ isLoading: false })
+            }, (err) => {
+                this.setState({ isLoading: false })
+            });
+        }
+    }
+
+    renderFooter = () => {
+        if (this.state.isLoading) {
+            return (
+                <View
+                    style={{
+                        paddingVertical: 20,
+                        borderTopWidth: 1,
+                        borderColor: "#CED0CE"
+                    }}
+                >
+                    <ActivityIndicator animating size="large" />
+                </View>
+            );
+        }
+        return null
+    }
+
+    openPassengerDetail = (index) => {
+        if(this.state.selectedPassenger){
+            const passengerIdx = this.props.passengerList.findIndex(passenger => passenger.passengerId === this.state.selectedPassenger.passengerId);
+            Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx });
+        }
+        else{
+            Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx:index });
+        }
+        
+        this.onCancelOptionsModal();
+    }
+
+
     render() {
-        const { user, passengerList } = this.props;
+        const { user, passengerList, showLoader } = this.props;
         const { isVisibleOptionsModal } = this.state;
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         return (
             <View style={styles.fill}>
                 <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
@@ -129,15 +216,47 @@ class Passengers extends Component {
                     <BasicHeader
                         title='Passengers'
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                        rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.openPassengerForm }}
+                        rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.openPassengerForm , rightIconPropsStyle:styles.rightIconPropsStyle, style:{color:'#fff', fontSize:heightPercentageToDP(3.5)} }}
                     />
-                    <FlatList
-                        contentContainerStyle={[styles.passengerList, { paddingBottom: passengerList.length > 0 ? heightPercentageToDP(8) : 0 }]}
-                        data={passengerList}
-                        keyExtractor={this.passengerKeyExtractor}
-                        renderItem={this.renderPassenger}
-                    />
+                    {
+                        passengerList.length > 0
+                            ?
+                            <View style={{ marginTop: heightPercentageToDP(16), marginLeft: widthPercentageToDP(7) }}>
+                                <FlatList
+                                    style={{ flexDirection: 'column' }}
+                                    numColumns={2}
+                                    data={passengerList}
+                                    keyExtractor={this.passengerListKeyExtractor}
+                                    renderItem={({ item, index }) => (
+                                        <View style={{ marginRight: widthPercentageToDP(7), marginBottom: heightPercentageToDP(4) }}>
+                                            <SquareCard
+                                                squareCardPlaceholder={require('../../assets/img/profile-pic.png')}
+                                                item={item}
+                                                onLongPress={() => this.showOptionsModal(index)}
+                                                onPress={()=>this.openPassengerDetail(index)}
+                                            />
+                                        </View>
+                                    )}
+                                    ListFooterComponent={this.renderFooter}
+                                    onEndReached={this.loadMoreData}
+                                    onEndReachedThreshold={0.1}
+                                    onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                                />
+                            </View>
+                            :
+                            this.props.hasNetwork ?
+                                null :
+                                <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                                    <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                        <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                    </Animated.View>
+                                    <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                    <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                </View>
+                    }
+
                 </View>
+                <Loader isVisible={showLoader} />
             </View>
         );
     }
@@ -146,12 +265,20 @@ class Passengers extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { passengerList } = state.PassengerList;
-    return { user, passengerList };
+    const { showLoader, pageNumber, hasNetwork, lastApi } = state.PageState;
+    return { user, passengerList, showLoader, pageNumber, hasNetwork, lastApi };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        getPassengerList: (userId) => dispatch(getPassengerList(userId)),
+        getPassengerList: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getPassengerList(userId, pageNumber, preference, successCallback, errorCallback)),
         deletePassenger: (passengerId) => dispatch(deletePassenger(passengerId)),
+        getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
+            console.log('getPictureList all passenger sucess : ', pictureObj);
+            dispatch(updatePassengerInListAction({ pictureObj }))
+        }, (error) => {
+            console.log('getPictureList all friend error : ', error)
+            // dispatch(updateFriendInListAction({ userId: friendId }))
+        }),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Passengers);
@@ -183,4 +310,13 @@ const styles = StyleSheet.create({
     passengerList: {
         marginTop: APP_COMMON_STYLES.headerHeight
     },
+    rightIconPropsStyle: {
+        height: heightPercentageToDP(4.2),
+        width: widthPercentageToDP(7),
+        backgroundColor: '#F5891F',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 19,
+        color:'white'
+    }
 });

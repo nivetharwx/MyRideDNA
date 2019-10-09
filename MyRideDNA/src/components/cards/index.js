@@ -152,6 +152,26 @@ export const SmallCard = ({ item, smallardPlaceholder, onPress, onLongPress, act
         </TouchableOpacity>
     </View>
 );
+export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, actions, thumbnailRef }) => (
+    <View>
+        <TouchableOpacity onPress={() => onPress ? onPress() : null} onLongPress={() => onLongPress && onLongPress()} style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center'
+        }}>
+            <View>
+                <View style={{ height: heightPercentageToDP(23), width: widthPercentageToDP(39), backgroundColor: '#A9A9A9' }}>
+                    <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : squareCardPlaceholder}
+                        style={{ width: null, height: null, flex: 1 }} />
+                    {/* <Image source={smallardPlaceholder}
+                    style={{ width: null, height: null, flex: 1 }} /> */}
+                </View>
+                <Text style={{fontSize:15, fontWeight:'bold', color:'#000'}}>{item.name}</Text>
+                <Text style={{fontSize:11, fontWeight:'100'}}>{item.homeAddress.city}, {item.homeAddress.state}</Text>
+            </View>
+        </TouchableOpacity>
+    </View>
+);
 
 {/* <NBIcon name='md-star' type='Ionicons' />
     <View style={styles.columnContainer}>
