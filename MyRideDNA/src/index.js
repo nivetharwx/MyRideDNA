@@ -59,11 +59,14 @@ export default class App extends Component {
                 this.redirectToTargetScreen(JSON.parse(notification._data.reference).targetScreen, notification._data)
             }
         });
-
-        const token = await firebase.messaging().getToken();
-        console.log("TOKEN - firebase.messaging().getToken()", token);
-        if (token) {
-            AsyncStorage.setItem(DEVICE_TOKEN, token);
+        try {
+            const token = await firebase.messaging().getToken();
+            console.log("TOKEN - firebase.messaging().getToken()", token);
+            if (token) {
+                AsyncStorage.setItem(DEVICE_TOKEN, token);
+            }
+        } catch (er) {
+            console.log("firebase.messaging().getToken(): ", er);
         }
 
         // Didn't find anything specific to iOS on react-native-firebase
@@ -77,42 +80,42 @@ export default class App extends Component {
         // firebase.messaging().subscribeToTopic('sometopic');
         // firebase.messaging().unsubscribeFromTopic('sometopic');
     }
-    
-    handlingNotification = (notification)=>{
-            // for checking reference is present or not
-            if (!notification._data.reference) return;
-            // checking targetscreen in notification is chat 
-            // then if current screen is chat and if you are on same chat then update content only else open local notification
-            if (JSON.parse(notification._data.reference).targetScreen === "CHAT") {
-                if (notification._data.senderId && notification._data.senderId === store.getState().UserAuth.user.userId) return;
-                if (Actions.currentScene === PageKeys.CHAT) {
-                    if (store.getState().ChatList.chatData.id === notification._data.id) {
-                        this.updatePageContent(JSON.parse(notification._data.reference).targetScreen, notification._data)
-                        return;
-                    }
-                }
-                notification._data['isGroup'] = JSON.parse(notification._data.isGroup)
-                this.showLocalNotification(notification._data);
-                return;
-            }
-            // checking targetscreen in notification is Request
-            // if user current screen is friends then just updated content else open local notification
-            if (JSON.parse(notification._data.reference).targetScreen === 'REQUESTS') {
-                if (Actions.currentScene === PageKeys.FRIENDS) {
+
+    handlingNotification = (notification) => {
+        // for checking reference is present or not
+        if (!notification._data.reference) return;
+        // checking targetscreen in notification is chat 
+        // then if current screen is chat and if you are on same chat then update content only else open local notification
+        if (JSON.parse(notification._data.reference).targetScreen === "CHAT") {
+            if (notification._data.senderId && notification._data.senderId === store.getState().UserAuth.user.userId) return;
+            if (Actions.currentScene === PageKeys.CHAT) {
+                if (store.getState().ChatList.chatData.id === notification._data.id) {
                     this.updatePageContent(JSON.parse(notification._data.reference).targetScreen, notification._data)
+                    return;
                 }
-                else {
-                    store.dispatch(updateNotificationCountAction())
-                    this.showLocalNotification(notification._data);
-                }
-                return;
             }
-            // if target screen is not same as above two then open local notification 
-            if (JSON.parse(notification._data.reference).targetScreen !== Actions.currentScene) {
+            notification._data['isGroup'] = JSON.parse(notification._data.isGroup)
+            this.showLocalNotification(notification._data);
+            return;
+        }
+        // checking targetscreen in notification is Request
+        // if user current screen is friends then just updated content else open local notification
+        if (JSON.parse(notification._data.reference).targetScreen === 'REQUESTS') {
+            if (Actions.currentScene === PageKeys.FRIENDS) {
+                this.updatePageContent(JSON.parse(notification._data.reference).targetScreen, notification._data)
+            }
+            else {
                 store.dispatch(updateNotificationCountAction())
                 this.showLocalNotification(notification._data);
-                return;
             }
+            return;
+        }
+        // if target screen is not same as above two then open local notification 
+        if (JSON.parse(notification._data.reference).targetScreen !== Actions.currentScene) {
+            store.dispatch(updateNotificationCountAction())
+            this.showLocalNotification(notification._data);
+            return;
+        }
     }
 
     onNotificationOpened = async (notifBody) => {

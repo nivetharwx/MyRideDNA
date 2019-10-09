@@ -4,7 +4,7 @@ const initialState = {
     friendGroupList: [],
     // currentGroup: null,
     currentGroup: { groupMembers: [] },
-    membersLocationList: null
+    membersLocationList: { activeLength: 0 }
 };
 
 export default (state = initialState, action) => {
@@ -160,31 +160,34 @@ export default (state = initialState, action) => {
             return state
 
         case ADD_MEMBERS_LOCATION:
-            const updatedLocList = state.membersLocationList ? [...state.membersLocationList] : [];
             return {
                 ...state,
-                membersLocationList: action.data.reduce((list, locInfo) => {
+                membersLocationList: action.data.list.reduce((list, locInfo) => {
                     locInfo.isVisible = true;
-                    list.push(locInfo);
+                    list[action.data.groupId].push(locInfo);
+                    list.activeLength = list.activeLength !== undefined ? list.activeLength + 1 : 1;
                     return list;
-                }, updatedLocList)
+                }, { ...state.membersLocationList, [action.data.groupId]: [] })
             }
 
         case HIDE_MEMBERS_LOCATION:
-            const updatedList = [...state.membersLocationList];
             if (!action.data) {
                 return {
                     ...state,
-                    membersLocationList: null
+                    membersLocationList: Object.keys(state.membersLocationList).reduce((list, k) => {
+                        if (k === 'activeLength') return list;
+                        list[k] = list[k].map(locInfo => ({ ...locInfo, isVisible: false }));
+                        return list;
+                    }, { ...state.membersLocationList, activeLength: 0 })
                 }
             }
-            action.data.forEach(locInfo => {
-                const idx = updatedList.findIndex(info => info.userId === locInfo.userId);
-                updatedList[idx] = { ...updatedList[idx], isVisible: false };
-            });
             return {
                 ...state,
-                membersLocationList: action.data.length === updatedList.length ? null : updatedList
+                membersLocationList: {
+                    ...state.membersLocationList,
+                    [action.data]: state.membersLocationList[action.data].map(locInfo => ({ ...locInfo, isVisible: false })),
+                    activeLength: state.membersLocationList.activeLength - 1
+                }
             }
 
         case GET_GROUP_INFO:

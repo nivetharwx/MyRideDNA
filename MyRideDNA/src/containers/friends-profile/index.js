@@ -153,13 +153,12 @@ class FriendsProfile extends Component {
     }
 
     showFriendsLocation = () => {
-        this.props.friendsLocationList && this.props.friendsLocationList.findIndex(f => f.id === this.props.currentFriend.userId) > -1
+        this.props.friendsLocationList !== null && this.props.friendsLocationList[this.props.currentFriend.userId] !== undefined && this.props.friendsLocationList[this.props.currentFriend.userId].isVisible
             ? this.props.changeScreen({ name: PageKeys.MAP })
             : this.props.getFriendsLocationList(this.props.user.userId, [this.props.currentFriend.userId]);
     }
 
     onPressChatIcon = () => {
-        console.log('this.props.currentFriend : ', this.props.currentFriend)
         const friendDetail = this.props.currentFriend;
         friendDetail['id'] = this.props.currentFriend.userId;
         friendDetail['isGroup'] = false;
@@ -348,7 +347,6 @@ class FriendsProfile extends Component {
     render() {
         const { user, currentFriend } = this.props;
         const { activeTab, isLoadingProfPic, friendsProfileIcons } = this.state;
-        console.log('currentFriend : ', currentFriend)
         const spin = this.state.spinValue.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']

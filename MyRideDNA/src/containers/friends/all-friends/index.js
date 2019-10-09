@@ -237,26 +237,23 @@ class AllFriendsTab extends Component {
 
     onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false, selectedPerson: null })
 
-    toggleFriendsLocation = (index = -1) => {
-        index === -1
-            ? this.props.getFriendsLocationList(this.props.user.userId, [this.state.selectedPerson.userId])
-            : this.setState({ isVisibleOptionsModal: false }, () => {
-                this.props.hideFriendsLocation([this.props.friendsLocationList[index]]);
-            });
+    toggleFriendsLocation = (isVisible) => {
+        isVisible
+            ? this.setState({ isVisibleOptionsModal: false }, () => {
+                this.props.hideFriendsLocation(this.state.selectedPerson.userId);
+            })
+            : this.props.getFriendsLocationList(this.props.user.userId, [this.state.selectedPerson.userId])
     }
 
     renderMenuOptions = () => {
         if (this.state.selectedPerson === null) return;
         let options = null;
-        let locInfoIdx = -1;
-        if (this.props.friendsLocationList) {
-            locInfoIdx = this.props.friendsLocationList.findIndex(f => f.id === this.state.selectedPerson.userId);
-        }
+        const isVisible = this.props.friendsLocationList !== null && this.props.friendsLocationList[this.state.selectedPerson.userId] !== undefined && this.props.friendsLocationList[this.state.selectedPerson.userId].isVisible;
         if (this.state.selectedPerson.isOnline && this.state.selectedPerson.locationEnable) {
             options = [
                 ...this.FRIEND_OPTIONS.slice(0, 3),
                 {
-                    text: locInfoIdx > -1 ? `Hide\nlocation` : `Show\nlocation`, id: 'location', handler: () => this.toggleFriendsLocation(locInfoIdx)
+                    text: isVisible ? `Hide\nlocation` : `Show\nlocation`, id: 'location', handler: () => this.toggleFriendsLocation(isVisible)
                 },
                 ...this.FRIEND_OPTIONS.slice(3),
             ]
@@ -481,7 +478,7 @@ class AllFriendsTab extends Component {
                                             }
                                             {
                                                 item.isOnline && item.locationEnable
-                                                    ? <IconButton iconProps={{ name: 'location-on', type: 'MaterialIcons', style: { color: friendsLocationList && friendsLocationList.findIndex(f => f.id === item.userId) > -1 ? APP_COMMON_STYLES.headerColor : '#ACACAC', fontSize: widthPercentageToDP(7) } }} />
+                                                    ? <IconButton iconProps={{ name: 'location-on', type: 'MaterialIcons', style: { color: friendsLocationList !== null && friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible ? APP_COMMON_STYLES.headerColor : '#ACACAC', fontSize: widthPercentageToDP(7) } }} />
                                                     : null
                                             }
                                         </View>
@@ -552,7 +549,7 @@ const mapDispatchToProps = (dispatch) => {
         changeScreen: (screenProps) => dispatch(screenChangeAction(screenProps)),
         getFriendsLocationList: (userId, friendsIdList) => dispatch(getFriendsLocationList(userId, friendsIdList)),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
-        hideFriendsLocation: (list) => dispatch(hideFriendsLocationAction(list)),
+        hideFriendsLocation: (userId) => dispatch(hideFriendsLocationAction(userId)),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(AllFriendsTab);

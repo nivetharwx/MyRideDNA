@@ -13,7 +13,7 @@ const initialState = {
         userId: null,
         rideList: [],
     },
-    friendsLocationList: null
+    friendsLocationList: { activeLength: 0 }
 };
 
 export default (state = initialState, action) => {
@@ -52,52 +52,37 @@ export default (state = initialState, action) => {
                 }
             }
 
-        case REPLACE_FRIENDS_LOCATION:
-            return {
-                ...state,
-                friendsLocationList: action.data.map(locInfo => {
-                    locInfo.isVisible = true;
-                    // const friend = state.allFriends.find(frnd => frnd.userId === locInfo.userId);
-                    // if (friend) locInfo.profilePicture = friend.profilePicture;
-                    return locInfo;
-                })
-            }
-
         case ADD_FRIENDS_LOCATION:
-            const updatedLocList = state.friendsLocationList ? [...state.friendsLocationList] : [];
             return {
                 ...state,
                 friendsLocationList: action.data.reduce((list, locInfo) => {
-                    locInfo.isVisible = true;
                     // const friend = state.allFriends.find(frnd => frnd.userId === locInfo.userId);
                     // if (friend) locInfo.profilePicture = friend.profilePicture;
-                    list.push(locInfo);
+                    locInfo.isVisible = true;
+                    list[locInfo.id] = locInfo;
+                    list.activeLength = list.activeLength !== undefined ? list.activeLength + 1 : 1;
                     return list;
-                }, updatedLocList)
+                }, { ...state.friendsLocationList })
             }
 
         case HIDE_FRIENDS_LOCATION:
-            const updatedList = [...state.friendsLocationList];
             if (!action.data) {
                 return {
                     ...state,
-                    friendsLocationList: null,
-                    currentFriend: {
-                        garage: {
-                            garageId: null
-                        },
-                        userId: null,
-                        rideList: []
-                    }
+                    friendsLocationList: Object.keys(state.friendsLocationList).reduce((list, k) => {
+                        if (k === 'activeLength') return list;
+                        list[k] = { ...list[k], isVisible: false };
+                        return list;
+                    }, { ...state.friendsLocationList, activeLength: 0 })
                 }
             }
-            action.data.forEach(locInfo => {
-                const idx = updatedList.findIndex(info => info.userId === locInfo.userId);
-                updatedList[idx] = { ...updatedList[idx], isVisible: false };
-            });
             return {
                 ...state,
-                friendsLocationList: action.data.length === updatedList.length ? null : updatedList
+                friendsLocationList: {
+                    ...state.friendsLocationList,
+                    [action.data]: { ...state.friendsLocationList[action.data], isVisible: false },
+                    activeLength: state.friendsLocationList.activeLength - 1
+                }
             }
 
         case GET_FRIEND_INFO:

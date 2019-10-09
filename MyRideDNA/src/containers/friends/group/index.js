@@ -497,7 +497,7 @@ class Group extends Component {
                                             }
                                             {
                                                 item.isOnline && item.locationEnable
-                                                    ? <IconButton iconProps={{ name: 'location-on', type: 'MaterialIcons', style: { color: friendsLocationList && friendsLocationList.findIndex(f => f.id === item.userId) > -1 ? APP_COMMON_STYLES.headerColor : '#ACACAC', fontSize: widthPercentageToDP(7) } }} />
+                                                    ? <IconButton iconProps={{ name: 'location-on', type: 'MaterialIcons', style: { color: friendsLocationList && friendsLocationList[item.userId] && friendsLocationList[item.userId].isVisible ? APP_COMMON_STYLES.headerColor : '#ACACAC', fontSize: widthPercentageToDP(7) } }} />
                                                     : null
                                             }
                                         </View>
