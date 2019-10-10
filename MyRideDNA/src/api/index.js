@@ -25,12 +25,14 @@ const API_TIMEOUT = 10 * 1000; // 10 seconds
  * @param {*} errorCallback - Calling component needs to dispatch error action 
  */
 export const getPicture = (pictureId, successCallback, errorCallback) => {
+    console.log('pictureId : ',pictureId)
     axios.get(USER_BASE_URL + `getPicture/${pictureId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
+            console.log('getPicture success : ',res.data)
             if (res.status === 200) {
                 if (res.data.picture === '') {
                     // errorCallback(res.data);
-                    differentErrors(er, [pictureId, successCallback, errorCallback], getPicture, false);
+                    // differentErrors(er, [pictureId, successCallback, errorCallback], getPicture, false);
                 } else {
                     successCallback(res.data);
                     store.dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
@@ -38,6 +40,7 @@ export const getPicture = (pictureId, successCallback, errorCallback) => {
             }
         })
         .catch(er => {
+            console.log('getPicture error : ', er)
             errorCallback(er.response || er);
             differentErrors(er, [pictureId, successCallback, errorCallback], getPicture, false);
         })
@@ -340,7 +343,7 @@ export const addClubs = (userId, clubName, clubs) => {
             })
             .catch(er => {
                 console.log("addClubs: ", er.response || er);
-                differentErrors(er, [userId, clubName], addClubs, true);
+                differentErrors(er, [userId, clubName, clubs], addClubs, true);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -363,7 +366,7 @@ export const updateClubs = (userId, clubName, clubId, clubs) => {
             })
             .catch(er => {
                 console.log("updateClubs: ", er.response || er);
-                differentErrors(er, [userId, clubName, clubId], updateClubs, true);
+                differentErrors(er, [userId, clubName, clubId,clubs], updateClubs, true);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -385,7 +388,7 @@ export const removeClubs = (userId, clubId, clubs) => {
             })
             .catch(er => {
                 console.log("removeClubs: ", er.response || er);
-                differentErrors(er, [userId, clubName], addClubs, true);
+                differentErrors(er, [userId, clubId, clubs], removeClubs, true);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -2052,6 +2055,7 @@ export const getRoadBuddies = (userId) => {
                 console.log("getRoadBuddies success: ", res.data);
                 dispatch(replaceFriendListAction({ friendList: res.data.friendList, pageNumber: 0 }))
                 dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                dispatch(apiLoaderActions(false))
             })
             .catch(er => {
                 console.log(`getRoadBuddies error: `, er.response || er);
@@ -2110,24 +2114,28 @@ export const getMyWallet = (userId) => {
 }
 
 // GET http://104.43.254.82:5051/getAllPassengersByUserId?userId=&pageNumber=&preference=
-export const getPassengerList = (userId) => {
+export const getPassengerList = (userId, pageNumber, preference, successCallback, errorCallback) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
-        axios.get(USER_BASE_URL + `getAllPassengersByUserId/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        // axios.get(USER_BASE_URL + `getAllPassengersByUserId/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.get(USER_BASE_URL + `getAllPassengersByUserId?userId=${userId}&pageNumber=${pageNumber}&preference=${preference}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log("getAllPassengersByUserId success: ", res.data);
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
-                dispatch(replacePassengerListAction(Array.isArray(res.data) ? res.data : []))
+                dispatch(replacePassengerListAction(res.data.passengerList))
                 dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                successCallback(res.data)
             })
             .catch(er => {
                 console.log(`getAllPassengersByUserId error: `, er.response || er);
-                differentErrors(er, [userId], getPassengerList, false);
+                differentErrors(er, [userId, pageNumber, preference, successCallback, errorCallback], getPassengerList, false);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                errorCallback(er)
             })
     };
 }
@@ -2153,17 +2161,19 @@ export const registerPassenger = (userId, passenger) => {
             })
     };
 }
-export const updatePassengerDetails = (passenger) => {
+export const updatePassengerDetails = ( psngId,passenger) => {
+    const {passengerId, ...passengerDetail} = passenger;
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
-        axios.put(USER_BASE_URL + `updatePassengerDetails`, { ...passenger }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.patch(USER_BASE_URL + `updatePassengerDetails/${psngId}`, { ...passengerDetail }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log("updatePassengerDetails success: ", res.data);
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
                 dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                dispatch(updatePassengerInListAction(passenger))
+                const {profilePicture, ...otherKeys} = passenger;
+                dispatch(updatePassengerInListAction(otherKeys))
             })
             .catch(er => {
                 console.log(`updatePassengerDetails error: `, er.response || er);

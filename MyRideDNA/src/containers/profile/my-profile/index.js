@@ -7,10 +7,10 @@ import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES,
 import { BasicHeader } from '../../../components/headers';
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
-import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction, updateFriendInListAction } from '../../../actions';
+import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction, updateFriendInListAction, updatePassengerInListAction } from '../../../actions';
 import { Accordion } from 'native-base';
 import ImagePicker from 'react-native-image-crop-picker';
-import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo, getRoadBuddies, getPictureList, getMyWallet } from '../../../api';
+import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo, getRoadBuddies, getPictureList, getMyWallet, getPassengerList } from '../../../api';
 import { ImageLoader } from '../../../components/loader';
 import { SmallCard } from '../../../components/cards';
 
@@ -41,12 +41,15 @@ class MyProfileTab extends Component {
         StatusBar.setBarStyle('light-content');
         this.props.getRoadBuddies(this.props.user.userId);
         this.props.getMyWallet(this.props.user.userId);
+        this.props.getPassengerList(this.props.user.userId, 0, 10, (res) => {
+        }, (err) => {
+        });
     }
 
     async componentDidMount() {
         // this.props.getSpaceList(this.props.user.userId);
         if (this.props.garage.garageId === null) {
-            this.props.getGarageInfo(this.props.user.userId);
+            // this.props.getGarageInfo(this.props.user.userId);
         }
         if (this.props.user.profilePictureId && !this.props.user.profilePicture) {
             this.profilePicture = await AsyncStorage.getItem('profilePicture');
@@ -115,7 +118,19 @@ class MyProfileTab extends Component {
                 }
             })
             if (pictureIdList.length > 0) {
-                this.props.getPictureList(pictureIdList);
+                this.props.getPictureList(pictureIdList, 'roadBuddies');
+            }
+        }
+
+        if (prevProps.passengerList !== this.props.passengerList) {
+            const pictureIdList = [];
+            this.props.passengerList.forEach((passenger) => {
+                if (!passenger.profilePicture && passenger.profilePictureId) {
+                    pictureIdList.push(passenger.profilePictureId);
+                }
+            })
+            if (pictureIdList.length > 0) {
+                this.props.getPictureList(pictureIdList, 'passenger');
             }
         }
     }
@@ -225,7 +240,10 @@ class MyProfileTab extends Component {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
     clubsKeyExtractor = (item) => item.clubId;
+
     roadBuddiesKeyExtractor = (item) => item.userId;
+
+    passengerListKeyExtractor = (item) => item.passengerId;
 
     onPressFriendsPage = () => {
         console.log('onPressFriendsPage')
@@ -233,7 +251,7 @@ class MyProfileTab extends Component {
     }
 
     render() {
-        const { user, allFriends } = this.props;
+        const { user, allFriends, passengerList } = this.props;
         const { isLoadingProfPic } = this.state;
         // return (
         //     <View style={styles.fill}>
@@ -382,7 +400,7 @@ class MyProfileTab extends Component {
                     <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(3), marginRight: widthPercentageToDP(7) }}>
                         <View style={{ flexDirection: 'row', marginTop: heightPercentageToDP(3) }}>
                             <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Passengers</Text>
-                            <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16 }} />
+                            <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16 }} onPress={()=> Actions.push(PageKeys.PASSENGERS)}/>
                             <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#a8a8a8', marginLeft: widthPercentageToDP(21) }}>
                                 <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: -1 })} />
                             </View>
@@ -391,8 +409,8 @@ class MyProfileTab extends Component {
                             <FlatList
                                 style={{ flexDirection: 'column' }}
                                 numColumns={4}
-                                data={roadbuddiesDummyData}
-                                keyExtractor={this.roadBuddiesKeyExtractor}
+                                data={passengerList}
+                                keyExtractor={this.passengerListKeyExtractor}
                                 renderItem={({ item, index }) => (
                                     <View style={{ marginRight: widthPercentageToDP(1.5) }}>
                                         <SmallCard
@@ -413,9 +431,9 @@ class MyProfileTab extends Component {
                     <View style={styles.usersExtraDetailContainer}>
                         <ImageBackground source={require('../../../assets/img/my-vest.png')} style={styles.usersExtraDetail}></ImageBackground>
                     </View>
-                    <View style={styles.usersExtraDetailContainer}>
+                    <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.ALBUM)}>
                         <ImageBackground source={require('../../../assets/img/my-photos.png')} style={styles.usersExtraDetail}></ImageBackground>
-                    </View>
+                    </TouchableOpacity>
                 </ScrollView>
             </View>
         );
@@ -427,9 +445,10 @@ const mapStateToProps = (state) => {
     const { profileLastOptions, hasNetwork } = state.PageState;
     const { allFriends } = state.FriendList;
     // const { shortSpaceList } = state.GarageInfo;
+    const { passengerList } = state.PassengerList;
     const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
     // return { user, shortSpaceList };
-    return { user, userAuthToken, deviceToken, garage, profileLastOptions, hasNetwork, allFriends };
+    return { user, userAuthToken, deviceToken, garage, profileLastOptions, hasNetwork, allFriends, passengerList };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -472,14 +491,22 @@ const mapDispatchToProps = (dispatch) => {
         },
         updateMyProfileLastOptions: (expanded) => dispatch(updateMyProfileLastOptionsAction({ expanded })),
         getRoadBuddies: (userId) => dispatch(getRoadBuddies(userId)),
-        getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
-            console.log('getPictureList all friend sucess : ', pictureObj);
-            dispatch(updateFriendInListAction({ pictureObj }))
+        getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
+            
+            if(callingFrom === 'roadBuddies'){
+                console.log('getPictureList all friend sucess : ', pictureObj);
+                dispatch(updateFriendInListAction({ pictureObj }))
+            }
+            else{
+                console.log('getPictureList passenger sucess : ', pictureObj);
+                dispatch(updatePassengerInListAction({ pictureObj }))
+            }
         }, (error) => {
-            console.log('getPictureList all friend error : ', error)
+            console.log('getPictureList error : ', error)
             // dispatch(updateFriendInListAction({ userId: friendId }))
         }),
         getMyWallet: (userId) => dispatch(getMyWallet(userId)),
+        getPassengerList: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getPassengerList(userId, pageNumber, preference, successCallback, errorCallback)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MyProfileTab);

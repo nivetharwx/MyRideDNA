@@ -48,6 +48,9 @@ import {
     HIDE_MEMBERS_LOCATION,
     CURRENT_USER_MY_WALLET,
     UPDATE_USER_MY_WALLET,
+    GET_PASSENGER_INFO,
+    UPDATE_CURRENT_PASSENGER,
+    RESET_CURRENT_PASSENGER,
     UPDATE_GROUPS_LOCATION
 } from './actionConstants';
 
@@ -591,6 +594,24 @@ export const updatePassengerInListAction = (data) => (
 export const removeFromPassengerListAction = (data) => (
     {
         type: REMOVE_PASSENGER_FROM_LIST,
+        data: data
+    }
+);
+export const getPassengerInfoAction = (data) => (
+    {
+        type: GET_PASSENGER_INFO,
+        data: data
+    }
+);
+export const updateCurrentPassengerAction = (data) => (
+    {
+        type: UPDATE_CURRENT_PASSENGER,
+        data: data
+    }
+);
+export const resetCurrentPassengerAction = (data) => (
+    {
+        type: RESET_CURRENT_PASSENGER,
         data: data
     }
 );
