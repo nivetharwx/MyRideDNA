@@ -46,7 +46,7 @@ import DEFAULT_DESTINATION_ICON from '../../assets/img/destination-pin-red.png';
 import SELECTED_DESTINATION_ICON from '../../assets/img/destination-pin-green.png';
 import FRIENDS_LOCATION_ICON from '../../assets/img/friends-location.png';
 
-import { createRecordRide, pauseRecordRide, updateDestination, continueRecordRide, addTrackpoints, completeRecordRide, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser, updateLocation, getFriendsLocationList, getAllMembersLocation } from '../../api';
+import { createRecordRide, pauseRecordRide, updateDestination, continueRecordRide, addTrackpoints, completeRecordRide, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser, updateLocation, getFriendsLocationList, getAllMembersLocation, getAllMembersAndFriendsLocationList } from '../../api';
 
 import Bubble from '../../components/bubble';
 import MenuModal from '../../components/modal';
@@ -110,6 +110,7 @@ export class Map extends Component {
     locationProximity = null;
     closeRidePressed = false;
     updateStatusLocally = false;
+    locationPollInterval = null;
     constructor(props) {
         super(props);
         this.state = {
@@ -531,8 +532,13 @@ export class Map extends Component {
                 superCluster: cluster
                 // friendsImage: friendsImage
             }, () => {
+                if (features.length === 0) {
+                    this.stopUpdatingLocation();
+                } else if (this.locationPollInterval === null) {
+                    this.startUpdatingLocation();
+                }
                 this.updateClusters();
-                this.onPressRecenterMap();
+                // this.onPressRecenterMap();
             });
         }
         if ((prevProps.membersLocationList !== this.props.membersLocationList) && Object.keys(this.props.membersLocationList).length > 1) {
@@ -566,8 +572,13 @@ export class Map extends Component {
                 },
                 superCluster: cluster
             }, () => {
+                if (features.length === 0) {
+                    this.stopUpdatingLocation();
+                } else if (this.locationPollInterval === null) {
+                    this.startUpdatingLocation();
+                }
                 this.updateClusters();
-                this.onPressRecenterMap();
+                // this.onPressRecenterMap();
             });
         }
         const prevRide = prevProps.ride;
@@ -681,7 +692,6 @@ export class Map extends Component {
                 this.onPressRecenterMap();
             }
         }
-
         if (prevProps.isRetryApi === false && this.props.isRetryApi === true) {
             if (Actions.currentScene === this.props.lastApi.currentScene) {
                 Alert.alert(
@@ -700,6 +710,13 @@ export class Map extends Component {
                 )
             }
         }
+        if (prevProps.currentScreen.name !== this.props.currentScreen.name) {
+            if (prevProps.currentScreen.name === PageKeys.MAP) {
+                this.locationPollInterval === null && this.stopUpdatingLocation();
+            } else if (this.props.currentScreen.name === PageKeys.MAP) {
+                this.state.friendsLocationCollection.features.length > 0 && this.startUpdatingLocation();
+            }
+        }
     }
 
     retryApiFunc = () => {
@@ -711,6 +728,29 @@ export class Map extends Component {
                 this.props.retryLastApi(this.props.lastApi.api, this.props.lastApi.params);
             }
         }
+    }
+
+    startUpdatingLocation() {
+        this.locationPollInterval = setInterval(() => {
+            const { features } = this.state.friendsLocationCollection;
+            if (features.length > 0) {
+                const friendsIdList = new Set();
+                const groupIdList = new Set();
+                features.forEach(feature => {
+                    if (this.props.friendsLocationList[feature.id] !== undefined && this.props.friendsLocationList[feature.id].isVisible) friendsIdList.add(feature.id);
+                    if (Object.keys(feature.properties.groupIds || {}).length > 0) groupIdList.add(...Object.keys(feature.properties.groupIds));
+                });
+                let ids = null;
+                if (friendsIdList.size > 0) ids = { ...ids, friendsIdList: [...friendsIdList] };
+                if (groupIdList.size > 0) ids = { ...ids, groupIdList: [...groupIdList] };
+                if (ids === null) return;
+                this.props.getAllMembersAndFriendsLocationList(this.props.user.userId, ids);
+            }
+        }, APP_CONFIGS.locationUpdateInterval);
+    }
+
+    stopUpdatingLocation() {
+        clearInterval(this.locationPollInterval);
     }
 
     getPlaceNameByReverseGeocode = async (location, successCallback, errorCallback) => {
@@ -2124,6 +2164,7 @@ export class Map extends Component {
         BackgroundGeolocation.removeAllListeners();
         // this.watchID != null && Geolocation.clearWatch(this.watchID);
         clearInterval(this.state.watchId);
+        this.stopUpdatingLocation();
         // this.notificationInterval != null && clearInterval(this.notificationInterval);
         BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPress);
         this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: false, userId: this.props.user.userId, deviceId: await DeviceInfo.getUniqueId() } });
@@ -3067,6 +3108,7 @@ const mapDispatchToProps = (dispatch) => {
         hideMembersLocation: (groupId) => dispatch(hideMembersLocationAction(groupId)),
         getFriendsLocationList: (userId, friendsIdList) => dispatch(getFriendsLocationList(userId, friendsIdList)),
         getAllMembersLocation: (groupId, userId) => dispatch(getAllMembersLocation(groupId, userId)),
+        getAllMembersAndFriendsLocationList: (userId, ids) => dispatch(getAllMembersAndFriendsLocationList(userId, ids)),
         updateAppState: (appState) => dispatch(updateAppStateAction({ appState })),
         resetStoreToDefault: () => dispatch(resetStateOnLogout()),
         resetChatMessage: () => dispatch(resetChatMessageAction()),

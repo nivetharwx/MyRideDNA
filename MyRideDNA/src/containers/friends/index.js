@@ -10,7 +10,7 @@ import GroupListTab from './group-list';
 import { appNavMenuVisibilityAction, updateFriendInListAction, resetCurrentFriendAction, updateFriendRequestListAction } from '../../actions';
 import { ShifterButton, IconButton, LinkButton } from '../../components/buttons';
 import { IconLabelPair } from '../../components/labels';
-import { logoutUser, getAllFriendRequests, getPicture, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, createFriendGroup, getAllFriends,getAllFriends1, readNotification, getPictureList, getFriendGroups } from '../../api';
+import { logoutUser, getAllFriendRequests, getPicture, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, createFriendGroup, getAllFriends, getAllFriends1, readNotification, getPictureList, getFriendGroups } from '../../api';
 import { BaseModal } from '../../components/modal';
 import { LabeledInput } from '../../components/inputs';
 import { getFormattedDateFromISO } from '../../util';
@@ -526,7 +526,6 @@ const mapDispatchToProps = (dispatch) => {
         //     dispatch(updateFriendInListAction({ userId: friendId }))
         // }),
         getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
-            console.log('getPictureList all friend sucess : ', pictureObj);
             dispatch(updateFriendInListAction({ pictureObj }))
         }, (error) => {
             console.log('getPictureList all friend error : ', error)

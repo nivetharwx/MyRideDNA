@@ -47,7 +47,8 @@ import {
     ADD_MEMBERS_LOCATION,
     HIDE_MEMBERS_LOCATION,
     CURRENT_USER_MY_WALLET,
-    UPDATE_USER_MY_WALLET
+    UPDATE_USER_MY_WALLET,
+    UPDATE_GROUPS_LOCATION
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -333,6 +334,12 @@ export const hideFriendsLocationAction = (data) => (
         data: data
     }
 );
+export const updateFriendsLocationAction = (data) => (
+    {
+        type: UPDATE_FRIENDS_LOCATION,
+        data: data
+    }
+);
 export const addMembersLocationAction = (data) => (
     {
         type: ADD_MEMBERS_LOCATION,
@@ -342,6 +349,12 @@ export const addMembersLocationAction = (data) => (
 export const hideMembersLocationAction = (data) => (
     {
         type: HIDE_MEMBERS_LOCATION,
+        data: data
+    }
+);
+export const updateGroupsLocationAction = (data) => (
+    {
+        type: UPDATE_GROUPS_LOCATION,
         data: data
     }
 );
