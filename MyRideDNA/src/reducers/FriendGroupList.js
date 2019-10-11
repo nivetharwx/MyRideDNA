@@ -1,4 +1,4 @@
-import { REPLACE_FRIEND_GROUP_LIST, ADD_FRIEND_GROUP_TO_LIST, ADD_MEMBERS_TO_CURRENT_GROUP, UPDATE_MEMBER_IN_CURRENT_GROUP, UPDATE_CURRENT_GROUP, RESET_CURRENT_GROUP, RESET_MEMBERS_FROM_CURRENT_GROUP, RESET_MEMBERS_IN_CURRENT_GROUP, GET_GROUP_INFO, REMOVE_MEMBER_FROM_CURRENT_GROUP, REMOVE_FRIEND_GROUP_FROM_LIST, HIDE_MEMBERS_LOCATION, ADD_MEMBERS_LOCATION } from "../actions/actionConstants";
+import { REPLACE_FRIEND_GROUP_LIST, ADD_FRIEND_GROUP_TO_LIST, ADD_MEMBERS_TO_CURRENT_GROUP, UPDATE_MEMBER_IN_CURRENT_GROUP, UPDATE_CURRENT_GROUP, RESET_CURRENT_GROUP, RESET_MEMBERS_FROM_CURRENT_GROUP, RESET_MEMBERS_IN_CURRENT_GROUP, GET_GROUP_INFO, REMOVE_MEMBER_FROM_CURRENT_GROUP, REMOVE_FRIEND_GROUP_FROM_LIST, HIDE_MEMBERS_LOCATION, ADD_MEMBERS_LOCATION, UPDATE_MEMBERS_LOCATION, UPDATE_GROUPS_LOCATION } from "../actions/actionConstants";
 
 const initialState = {
     friendGroupList: [],
@@ -188,6 +188,16 @@ export default (state = initialState, action) => {
                     [action.data]: state.membersLocationList[action.data].map(locInfo => ({ ...locInfo, isVisible: false })),
                     activeLength: state.membersLocationList.activeLength - 1
                 }
+            }
+
+        case UPDATE_GROUPS_LOCATION:
+            return {
+                ...state,
+                membersLocationList: Object.keys(action.data).reduce((list, k) => {
+                    const isVisible = list[k][0].isVisible;
+                    list[k] = action.data[k].map(locInfo => ({ ...locInfo, isVisible }));
+                    return list;
+                }, { ...state.membersLocationList })
             }
 
         case GET_GROUP_INFO:

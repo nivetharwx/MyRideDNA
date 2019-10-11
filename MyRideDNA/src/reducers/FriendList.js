@@ -85,6 +85,15 @@ export default (state = initialState, action) => {
                 }
             }
 
+        case UPDATE_FRIENDS_LOCATION:
+            return {
+                ...state,
+                friendsLocationList: action.data.reduce((list, locInfo) => {
+                    list[locInfo.id] = { ...list[locInfo.id], locInfo };
+                    return list;
+                }, { ...state.friendsLocationList })
+            }
+
         case GET_FRIEND_INFO:
             const index = state.allFriends.findIndex(item => item.userId === action.data.userId);
             const friend = state.allFriends[index];

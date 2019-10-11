@@ -46,7 +46,7 @@ import DEFAULT_DESTINATION_ICON from '../../assets/img/destination-pin-red.png';
 import SELECTED_DESTINATION_ICON from '../../assets/img/destination-pin-green.png';
 import FRIENDS_LOCATION_ICON from '../../assets/img/friends-location.png';
 
-import { createRecordRide, pauseRecordRide, updateDestination, continueRecordRide, addTrackpoints, completeRecordRide, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser, updateLocation, getFriendsLocationList, getAllMembersLocation } from '../../api';
+import { createRecordRide, pauseRecordRide, continueRecordRide, addTrackpoints, completeRecordRide, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser, updateLocation, getFriendsLocationList, getAllMembersLocation, getAllMembersAndFriendsLocationList, updateRide as updateRideOnServer } from '../../api';
 
 import Bubble from '../../components/bubble';
 import MenuModal from '../../components/modal';
@@ -106,10 +106,12 @@ export class Map extends Component {
     // notificationInterval = null;
     trackpointTick = 0;
     hasModifiedRide = false;
+    hasManualSnapshot = false;
     prevCoordsStr = '';
     locationProximity = null;
     closeRidePressed = false;
     updateStatusLocally = false;
+    locationPollInterval = null;
     constructor(props) {
         super(props);
         this.state = {
@@ -207,6 +209,7 @@ export class Map extends Component {
                     updatedState.isEditableRide = false;
                 }
                 this.hasModifiedRide = false;
+                this.hasManualSnapshot = false;
                 this.locationProximity = null;
                 if (ride.rideId === null) this.prevCoordsStr = '';
 
@@ -270,6 +273,8 @@ export class Map extends Component {
                                 features: tempList
                             };
                         }
+                    } else {
+                        this.hideAllLocations();
                     }
 
                     if (ride.source) {
@@ -531,8 +536,13 @@ export class Map extends Component {
                 superCluster: cluster
                 // friendsImage: friendsImage
             }, () => {
+                if (features.length === 0) {
+                    this.stopUpdatingLocation();
+                } else if (this.locationPollInterval === null) {
+                    this.startUpdatingLocation();
+                }
                 this.updateClusters();
-                this.onPressRecenterMap();
+                // this.onPressRecenterMap();
             });
         }
         if ((prevProps.membersLocationList !== this.props.membersLocationList) && Object.keys(this.props.membersLocationList).length > 1) {
@@ -566,8 +576,13 @@ export class Map extends Component {
                 },
                 superCluster: cluster
             }, () => {
+                if (features.length === 0) {
+                    this.stopUpdatingLocation();
+                } else if (this.locationPollInterval === null) {
+                    this.startUpdatingLocation();
+                }
                 this.updateClusters();
-                this.onPressRecenterMap();
+                // this.onPressRecenterMap();
             });
         }
         const prevRide = prevProps.ride;
@@ -681,7 +696,6 @@ export class Map extends Component {
                 this.onPressRecenterMap();
             }
         }
-
         if (prevProps.isRetryApi === false && this.props.isRetryApi === true) {
             if (Actions.currentScene === this.props.lastApi.currentScene) {
                 Alert.alert(
@@ -700,6 +714,13 @@ export class Map extends Component {
                 )
             }
         }
+        if (prevProps.currentScreen.name !== this.props.currentScreen.name) {
+            if (prevProps.currentScreen.name === PageKeys.MAP) {
+                this.locationPollInterval !== null && this.stopUpdatingLocation();
+            } else if (this.props.currentScreen.name === PageKeys.MAP) {
+                if (this.state.friendsLocationCollection.features.length > 0 && this.locationPollInterval === null) this.startUpdatingLocation();
+            }
+        }
     }
 
     retryApiFunc = () => {
@@ -711,6 +732,30 @@ export class Map extends Component {
                 this.props.retryLastApi(this.props.lastApi.api, this.props.lastApi.params);
             }
         }
+    }
+
+    startUpdatingLocation() {
+        this.locationPollInterval = setInterval(() => {
+            const { features } = this.state.friendsLocationCollection;
+            if (features.length > 0) {
+                const friendsIdList = new Set();
+                const groupIdList = new Set();
+                features.forEach(feature => {
+                    if (this.props.friendsLocationList[feature.id] !== undefined && this.props.friendsLocationList[feature.id].isVisible) friendsIdList.add(feature.id);
+                    if (Object.keys(feature.properties.groupIds || {}).length > 0) groupIdList.add(...Object.keys(feature.properties.groupIds));
+                });
+                let ids = null;
+                if (friendsIdList.size > 0) ids = { ...ids, friendsIdList: [...friendsIdList] };
+                if (groupIdList.size > 0) ids = { ...ids, groupIdList: [...groupIdList] };
+                if (ids === null) return;
+                this.props.getAllMembersAndFriendsLocationList(this.props.user.userId, ids);
+            }
+        }, APP_CONFIGS.locationUpdateInterval);
+    }
+
+    stopUpdatingLocation() {
+        clearInterval(this.locationPollInterval);
+        this.locationPollInterval = null;
     }
 
     getPlaceNameByReverseGeocode = async (location, successCallback, errorCallback) => {
@@ -750,31 +795,39 @@ export class Map extends Component {
                 const { ride } = this.props;
                 let hasSnapshotResponse = false;
                 this.setState({ showLoader: true, snapMode: true }, () => {
-                    this.getMapSnapshot((mapSnapshot) => {
-                        if (hasSnapshotResponse === true) return;
-                        hasSnapshotResponse = true;
-                        const body = {};
-                        if (ride.source) body.source = ride.source;
-                        if (ride.destination) body.destination = ride.destination;
-                        if (ride.waypoints) body.waypoints = ride.waypoints;
-                        if (ride.totalDistance) body.totalDistance = ride.totalDistance;
-                        if (ride.totalTime) body.totalTime = ride.totalTime;
-                        if (mapSnapshot) body.snapshot = { mimeType: 'image/jpeg', picture: mapSnapshot };
+                    const body = {};
+                    if (ride.source) body.source = ride.source;
+                    if (ride.destination) body.destination = ride.destination;
+                    if (ride.waypoints) body.waypoints = ride.waypoints;
+                    if (this.state.directions) {
+                        body.totalDistance = this.state.directions.distance;
+                        body.totalTime = this.state.directions.duration;
+                    }
+                    if (this.hasManualSnapshot === false) {
+                        this.getMapSnapshot((mapSnapshot) => {
+                            if (hasSnapshotResponse === true) return;
+                            hasSnapshotResponse = true;
+                            if (mapSnapshot) body.snapshot = { mimeType: 'image/jpeg', picture: mapSnapshot };
+                            replaceRide(ride.rideId, body,
+                                () => this.setState({ showLoader: false, snapMode: false }),
+                                () => this.setState({ showLoader: false, snapMode: false }));
+                            if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
+                            this.props.clearRideFromMap();
+                        }, (er) => {
+                            console.log(er);
+                            replaceRide(ride.rideId, body,
+                                () => this.setState({ showLoader: false, snapMode: false }),
+                                () => this.setState({ showLoader: false, snapMode: false }));
+                            if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
+                            this.props.clearRideFromMap();
+                        });
+                    } else {
                         replaceRide(ride.rideId, body,
                             () => this.setState({ showLoader: false, snapMode: false }),
                             () => this.setState({ showLoader: false, snapMode: false }));
-                    }, (er) => {
-                        console.log(er);
-                        const body = {};
-                        if (ride.source) body.source = ride.source;
-                        if (ride.destination) body.destination = ride.destination;
-                        if (ride.waypoints) body.waypoints = ride.waypoints;
-                        if (ride.totalDistance) body.totalDistance = ride.totalDistance;
-                        if (ride.totalTime) body.totalTime = ride.totalTime;
-                        replaceRide(ride.rideId, body,
-                            () => this.setState({ showLoader: false, snapMode: false }),
-                            () => this.setState({ showLoader: false, snapMode: false }));
-                    });
+                        if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
+                        this.props.clearRideFromMap();
+                    }
                 });
             }
         }
@@ -913,8 +966,10 @@ export class Map extends Component {
 
     handleAppStateChange = (nextAppState) => {
         if (nextAppState === 'active') {
+            if (this.state.friendsLocationCollection.features.length > 0 && this.locationPollInterval === null) this.startUpdatingLocation();
             this.props.updateAppState('foreground');
         } else {
+            if (this.locationPollInterval !== null) this.stopUpdatingLocation();
             this.props.updateAppState('background');
         }
     }
@@ -1533,6 +1588,35 @@ export class Map extends Component {
         });
     }
 
+    onPressCamera = () => {
+        this.hideMapControls();
+        const { ride } = this.props;
+        let hasSnapshotResponse = null;
+        if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
+        this.setState({ showLoader: true }, () => {
+            this.getMapSnapshot((mapSnapshot) => {
+                if (hasSnapshotResponse === true) return;
+                hasSnapshotResponse = true;
+                if (mapSnapshot) {
+                    updateRideOnServer({ rideId: ride.rideId, snapshot: { mimeType: 'image/jpeg', picture: mapSnapshot } },
+                        (res) => {
+                            console.log({ res });
+                            this.setState({ showLoader: false }, () => {
+                                Toast.show({ text: 'Snapshot of map updated successfully', position: 'bottom', type: 'success', duration: 1000 });
+                            });
+                        },
+                        (er) => {
+                            console.log({ er });
+                            this.setState({ showLoader: false })
+                        });
+                }
+            }, (er) => {
+                console.log(er);
+                this.setState({ showLoader: false });
+            }, true);
+        });
+    }
+
     onPressRecenterMap = (location) => {
         const options = {
             centerCoordinate: DEFAULT_CENTER_COORDS,
@@ -1610,48 +1694,72 @@ export class Map extends Component {
         this.setState((prevState) => ({ hideRoute: !prevState.hideRoute }));
     }
 
-    getMapSnapshot = (successCallback, errorCallback) => {
+    getMapSnapshot = async (successCallback, errorCallback, userControlled = false) => {
+        if (!this._hiddenMapView) {
+            typeof errorCallback === 'function' && errorCallback("Hidden map not initialized");
+            return;
+        }
         let timeout = null;
         try {
             timeout = setTimeout(() => {
                 clearTimeout(timeout);
+                timeout = null;
                 typeof errorCallback === 'function' && errorCallback();
             }, 2000);
-            const { ride } = this.props;
-            let rideBounds = null;
-            if (ride.isRecorded) {
-                let coordinates = [];
-                if (ride.source) {
-                    coordinates.push([ride.source.lng, ride.source.lat]);
-                }
-                coordinates.push(...this.state.gpsPointCollection.features[0].geometry.coordinates);
-                if (ride.destination) {
-                    coordinates.push([ride.destination.lng, ride.destination.lat]);
-                }
-                if (coordinates.length > 1) {
-                    // DOC: Update the mapbounds to include the recorded ride path
-                    rideBounds = turfBBox({ coordinates, type: 'LineString' });
-                    this._hiddenMapView && this._hiddenMapView.fitBounds(rideBounds.slice(0, 2), rideBounds.slice(2), 35, 0);
-                } else {
-                    if (this._hiddenMapView) {
-                        this._hiddenMapView.flyTo(coordinates[0], 0);
+            if (userControlled) {
+                const bounds = await this._mapView.getVisibleBounds();
+                this._hiddenMapView.setCamera({ duration: 1, bounds: { ne: bounds[0], sw: bounds[1] }, mode: MapboxGL.CameraModes.None });
+                // this._hiddenMapView.fitBounds(bounds[0], bounds[1], 35, 0);
+                setTimeout(async () => {
+                    const mapSnapshotString = await this._hiddenMapView.takeSnap(false);
+                    if (timeout) {
+                        clearTimeout(timeout);
+                        timeout = null;
+                        console.log("mapSnapshotString: ", mapSnapshotString);
+                        if (typeof successCallback === 'function') {
+                            this.hasManualSnapshot = true;
+                            successCallback(mapSnapshotString);
+                        }
                     }
-                }
+                }, 500);
             } else {
-                if (!this.state.directions) return;
-                rideBounds = turfBBox(this.state.directions.geometry);
-                this._hiddenMapView && this._hiddenMapView.fitBounds(rideBounds.slice(0, 2), rideBounds.slice(2), 35, 0);
-            }
-            this._hiddenMapView && this._hiddenMapView.takeSnap(false).then(mapSnapshotString => {
-                if (timeout) {
-                    clearTimeout(timeout);
-                    console.log("mapSnapshotString: ", mapSnapshotString);
-                    typeof successCallback === 'function' && successCallback(mapSnapshotString);
+                const { ride } = this.props;
+                let rideBounds = null;
+                if (ride.isRecorded) {
+                    let coordinates = [];
+                    if (ride.source) {
+                        coordinates.push([ride.source.lng, ride.source.lat]);
+                    }
+                    coordinates.push(...this.state.gpsPointCollection.features[0].geometry.coordinates);
+                    if (ride.destination) {
+                        coordinates.push([ride.destination.lng, ride.destination.lat]);
+                    }
+                    if (coordinates.length > 1) {
+                        // DOC: Update the mapbounds to include the recorded ride path
+                        rideBounds = turfBBox({ coordinates, type: 'LineString' });
+                        this._hiddenMapView.setCamera({ duration: 1, bounds: { ne: rideBounds.slice(0, 2), sw: rideBounds.slice(2) }, mode: MapboxGL.CameraModes.None });
+                    } else {
+                        this._hiddenMapView.setCamera({ duration: 1, centerCoordinate: coordinates[0], mode: MapboxGL.CameraModes.None });
+                    }
+                } else {
+                    if (!this.state.directions) return;
+                    rideBounds = turfBBox(this.state.directions.geometry);
+                    this._hiddenMapView.setCamera({ duration: 1, bounds: { ne: rideBounds.slice(0, 2), sw: rideBounds.slice(2) }, mode: MapboxGL.CameraModes.None });
                 }
-            });
+                setTimeout(async () => {
+                    const mapSnapshotString = await this._hiddenMapView.takeSnap(false);
+                    if (timeout) {
+                        clearTimeout(timeout);
+                        timeout = null;
+                        console.log("mapSnapshotString: ", mapSnapshotString);
+                        typeof successCallback === 'function' && successCallback(mapSnapshotString);
+                    }
+                }, 500);
+            }
         } catch (er) {
             if (timeout) {
                 clearTimeout(timeout);
+                timeout = null;
                 typeof errorCallback === 'function' && errorCallback(er);
             }
         }
@@ -1730,6 +1838,7 @@ export class Map extends Component {
     }
 
     renderCurrentLocation(markerInfo) {
+        if (markerInfo === null) return;
         return (
             <MapboxGL.PointAnnotation
                 key={markerInfo.location.join('')}
@@ -1762,7 +1871,7 @@ export class Map extends Component {
             (error) => {
                 console.log(error.code, error.message);
             },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+            // { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
         );
     }
 
@@ -1813,7 +1922,7 @@ export class Map extends Component {
             (error) => {
                 console.log(error.code, error.message);
             },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+            // { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
         );
     }
 
@@ -2076,37 +2185,39 @@ export class Map extends Component {
                     const { ride } = this.props;
                     let hasSnapshotResponse = null;
                     this.setState({ showLoader: true, snapMode: true }, () => {
-                        this.getMapSnapshot((mapSnapshot) => {
-                            if (hasSnapshotResponse === true) return;
-                            hasSnapshotResponse = true;
-                            const body = {};
-                            if (ride.source) body.source = ride.source;
-                            if (ride.destination) body.destination = ride.destination;
-                            if (ride.waypoints) body.waypoints = ride.waypoints;
-                            if (this.state.directions) {
-                                body.totalDistance = this.state.directions.distance;
-                                body.totalTime = this.state.directions.duration;
-                            }
-                            if (mapSnapshot) body.snapshot = { mimeType: 'image/jpeg', picture: mapSnapshot };
+                        const body = {};
+                        if (ride.source) body.source = ride.source;
+                        if (ride.destination) body.destination = ride.destination;
+                        if (ride.waypoints) body.waypoints = ride.waypoints;
+                        if (this.state.directions) {
+                            body.totalDistance = this.state.directions.distance;
+                            body.totalTime = this.state.directions.duration;
+                        }
+                        if (this.hasManualSnapshot === false) {
+                            this.getMapSnapshot((mapSnapshot) => {
+                                if (hasSnapshotResponse === true) return;
+                                hasSnapshotResponse = true;
+                                if (mapSnapshot) body.snapshot = { mimeType: 'image/jpeg', picture: mapSnapshot };
+                                replaceRide(ride.rideId, body,
+                                    () => this.setState({ showLoader: false, snapMode: false }),
+                                    () => this.setState({ showLoader: false, snapMode: false }));
+                                if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
+                                this.props.clearRideFromMap();
+                            }, (er) => {
+                                console.log(er);
+                                replaceRide(ride.rideId, body,
+                                    () => this.setState({ showLoader: false, snapMode: false }),
+                                    () => this.setState({ showLoader: false, snapMode: false }));
+                                if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
+                                this.props.clearRideFromMap();
+                            });
+                        } else {
                             replaceRide(ride.rideId, body,
                                 () => this.setState({ showLoader: false, snapMode: false }),
                                 () => this.setState({ showLoader: false, snapMode: false }));
                             if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
                             this.props.clearRideFromMap();
-                        }, (er) => {
-                            console.log(er);
-                            const body = {};
-                            if (ride.source) body.source = ride.source;
-                            if (ride.destination) body.destination = ride.destination;
-                            if (ride.waypoints) body.waypoints = ride.waypoints;
-                            if (ride.totalDistance) body.totalDistance = ride.totalDistance;
-                            if (ride.totalTime) body.totalTime = ride.totalTime;
-                            replaceRide(ride.rideId, body,
-                                () => this.setState({ showLoader: false, snapMode: false }),
-                                () => this.setState({ showLoader: false, snapMode: false }));
-                            if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
-                            this.props.clearRideFromMap();
-                        });
+                        }
                     });
                 } else {
                     if (this.state.activeMarkerIndex !== -1) this.onCloseOptionsBar(true);
@@ -2126,33 +2237,47 @@ export class Map extends Component {
         BackgroundGeolocation.removeAllListeners();
         // this.watchID != null && Geolocation.clearWatch(this.watchID);
         clearInterval(this.state.watchId);
+        this.stopUpdatingLocation();
         // this.notificationInterval != null && clearInterval(this.notificationInterval);
         BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPress);
         this.props.publishEvent({ eventName: APP_EVENT_NAME.USER_EVENT, eventType: APP_EVENT_TYPE.INACTIVE, eventParam: { isLoggedIn: false, userId: this.props.user.userId, deviceId: await DeviceInfo.getUniqueId() } });
         this.props.resetStoreToDefault();
     }
 
-    renderMapControlsForRide() {
+    renderMapHeaderForRide() {
         const { ride } = this.props;
         if (ride.rideId && (ride.status === null || ride.status === RECORD_RIDE_STATUS.COMPLETED)) {
             return (
-                <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
-                    <LinkButton style={{ paddingVertical: 20 }} title='CLOSE RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressCloseRide} />
+                <View style={{ flex: 1, flexDirection: 'row' }}>
+                    {
+                        ride.isRecorded
+                            ? <IconButton style={{ paddingHorizontal: widthPercentageToDP(4), paddingVertical: widthPercentageToDP(4) }} title='TRACKING' titleStyle={{ color: '#fff', fontSize: 16 }} iconProps={{ name: 'ios-arrow-dropdown', type: 'Ionicons', style: { color: '#fff', marginLeft: 5, fontSize: widthPercentageToDP(5) } }} iconRight onPress={this.openTrackingList} />
+                            : null
+                    }
+                    <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
+                        <LinkButton style={{ paddingVertical: 20 }} title='CLOSE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressCloseRide} />
+                    </View>
                 </View>
             )
         } else if (ride.status === RECORD_RIDE_STATUS.PAUSED) {
             return (
-                <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
-                    <LinkButton style={{ paddingVertical: 20 }} title='CONTINUE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressContinueRide} />
-                    <LinkButton style={{ paddingVertical: 20 }} title='STOP' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressStopRide} />
-                    <LinkButton style={{ paddingVertical: 20 }} title='CLOSE RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressCloseRide} />
+                <View style={{ flex: 1, flexDirection: 'row' }}>
+                    <IconButton style={{ paddingHorizontal: widthPercentageToDP(4), paddingVertical: widthPercentageToDP(4) }} title='TRACKING' titleStyle={{ color: '#fff', fontSize: 16 }} iconProps={{ name: 'ios-arrow-dropdown', type: 'Ionicons', style: { color: '#fff', marginLeft: 5, fontSize: widthPercentageToDP(5) } }} iconRight onPress={this.openTrackingList} />
+                    <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
+                        <LinkButton style={{ paddingVertical: 20 }} title='CONTINUE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressContinueRide} />
+                        <LinkButton style={{ paddingVertical: 20 }} title='STOP' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressStopRide} />
+                        <LinkButton style={{ paddingVertical: 20 }} title='CLOSE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressCloseRide} />
+                    </View>
                 </View>
             )
         } else {
             return (
-                <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
-                    <LinkButton style={{ paddingVertical: 20 }} title='PAUSE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressPauseRide} />
-                    <LinkButton style={{ paddingVertical: 20 }} title='STOP' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressStopRide} />
+                <View style={{ flex: 1, flexDirection: 'row' }}>
+                    <IconButton style={{ paddingHorizontal: widthPercentageToDP(4), paddingVertical: widthPercentageToDP(4) }} title='TRACKING' titleStyle={{ color: '#fff', fontSize: 16 }} iconProps={{ name: 'ios-arrow-dropdown', type: 'Ionicons', style: { color: '#fff', marginLeft: 5, fontSize: widthPercentageToDP(5) } }} iconRight onPress={this.openTrackingList} />
+                    <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
+                        <LinkButton style={{ paddingVertical: 20 }} title='PAUSE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressPauseRide} />
+                        <LinkButton style={{ paddingVertical: 20 }} title='STOP' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressStopRide} />
+                    </View>
                 </View>
             )
         }
@@ -2640,7 +2765,7 @@ export class Map extends Component {
                                                 <IconButton iconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }}
                                                     style={styles.logoutIcon} onPress={this.onPressLogout} />
                                             </View>
-                                            : this.renderMapControlsForRide()
+                                            : this.renderMapHeaderForRide()
                                         : null
                                 }
                             </View>
@@ -2713,9 +2838,7 @@ export class Map extends Component {
                                 style={styles.hiddenMapStyles}
                                 ref={el => this._hiddenMapView = el}
                             >
-                                {
-                                    currentLocation ? this.renderCurrentLocation(currentLocation) : null
-                                }
+                                {this.renderCurrentLocation(currentLocation)}
                                 {
                                     directions ?
                                         <MapboxGL.ShapeSource id='ridePathLayer' shape={directions.geometry}>
@@ -2929,6 +3052,11 @@ export class Map extends Component {
                         <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'target', type: 'MaterialCommunityIcons' }} onPress={this.onPressRecenterMap} />
                         {
                             ride.rideId
+                                ? <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'camera', type: 'MaterialCommunityIcons' }} onPress={this.onPressCamera} />
+                                : null
+                        }
+                        {
+                            ride.rideId
                                 ? <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'map-marker-circle', type: 'MaterialCommunityIcons' }} onPress={this.onPressBoundRideToScreen} />
                                 : null
                         }
@@ -3069,6 +3197,7 @@ const mapDispatchToProps = (dispatch) => {
         hideMembersLocation: (groupId) => dispatch(hideMembersLocationAction(groupId)),
         getFriendsLocationList: (userId, friendsIdList) => dispatch(getFriendsLocationList(userId, friendsIdList)),
         getAllMembersLocation: (groupId, userId) => dispatch(getAllMembersLocation(groupId, userId)),
+        getAllMembersAndFriendsLocationList: (userId, ids) => dispatch(getAllMembersAndFriendsLocationList(userId, ids)),
         updateAppState: (appState) => dispatch(updateAppStateAction({ appState })),
         resetStoreToDefault: () => dispatch(resetStateOnLogout()),
         resetChatMessage: () => dispatch(resetChatMessageAction()),
