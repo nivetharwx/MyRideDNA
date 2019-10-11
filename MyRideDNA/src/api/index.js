@@ -1295,10 +1295,10 @@ export const getAllFriends = (friendType, userId, pageNumber, toggleLoader, succ
         axios.get(GRAPH_BASE_URL + `getFriendList?userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log('getFriendList : ', res.data);
-                if (res.status === 200 && res.data.length > 0) {
+                if (res.status === 200 && res.data.friendList.length > 0) {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false));
-                    dispatch(replaceFriendListAction({ friendList: res.data, pageNumber: pageNumber }))
+                    dispatch(replaceFriendListAction({ friendList: res.data.friendList, pageNumber: pageNumber }))
                     dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     successCallback(res.data);
@@ -1311,7 +1311,7 @@ export const getAllFriends = (friendType, userId, pageNumber, toggleLoader, succ
                     //     dispatch(updateFriendListAction({ friendType, friendList: res.data }))
                     // }
                 }
-                else if (res.data.length === 0) {
+                else if (res.data.friendList.length === 0) {
                     dispatch(apiLoaderActions(false));
                     successCallback(false);
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
@@ -2130,8 +2130,9 @@ export const getMyWallet = (userId) => {
     };
 }
 
-// GET http://104.43.254.82:5051/getAllPassengersByUserId?userId=&pageNumber=&preference=
+
 export const getPassengerList = (userId, pageNumber, preference, successCallback, errorCallback) => {
+    console.log('pageNumber : ',pageNumber)
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
@@ -2140,11 +2141,18 @@ export const getPassengerList = (userId, pageNumber, preference, successCallback
             .then(res => {
                 console.log("getAllPassengersByUserId success: ", res.data);
                 // dispatch(toggleLoaderAction(false));
-                dispatch(apiLoaderActions(false))
-                dispatch(replacePassengerListAction(res.data.passengerList))
-                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
-                successCallback(res.data)
+                if(res.status === 200 && res.data.passengerList.length>0){
+                    dispatch(apiLoaderActions(false))
+                    dispatch(replacePassengerListAction({passengerList:res.data.passengerList, pageNumber:pageNumber}))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    successCallback(res.data)
+                }
+                else if (res.data.passengerList.length === 0) {
+                    dispatch(apiLoaderActions(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    successCallback(false)
+                }
             })
             .catch(er => {
                 console.log(`getAllPassengersByUserId error: `, er.response || er);
@@ -2157,6 +2165,8 @@ export const getPassengerList = (userId, pageNumber, preference, successCallback
     };
 }
 export const registerPassenger = (userId, passenger) => {
+    console.log('userId : ', userId);
+    console.log('passenger : ', {...passenger});
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
@@ -2167,7 +2177,7 @@ export const registerPassenger = (userId, passenger) => {
                 dispatch(apiLoaderActions(false))
                 dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 passenger.passengerId = res.data.passengerId;
-                dispatch(addToPassengerListAction(passenger))
+                dispatch(addToPassengerListAction(res.data))
             })
             .catch(er => {
                 console.log(`registerPassenger error: `, er.response || er);
@@ -2189,8 +2199,7 @@ export const updatePassengerDetails = ( psngId,passenger) => {
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
                 dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                const {profilePicture, ...otherKeys} = passenger;
-                dispatch(updatePassengerInListAction(otherKeys))
+                dispatch(updatePassengerInListAction(res.data))
             })
             .catch(er => {
                 console.log(`updatePassengerDetails error: `, er.response || er);

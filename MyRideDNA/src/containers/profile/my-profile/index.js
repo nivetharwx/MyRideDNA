@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import { Actions } from 'react-native-router-flux';
-import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions } from '../../../constants/index';
+import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions, FRIEND_TYPE } from '../../../constants/index';
 import { BasicHeader } from '../../../components/headers';
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
@@ -41,7 +41,7 @@ class MyProfileTab extends Component {
         StatusBar.setBarStyle('light-content');
         this.props.getRoadBuddies(this.props.user.userId);
         this.props.getMyWallet(this.props.user.userId);
-        this.props.getPassengerList(this.props.user.userId, 0, 10, (res) => {
+        this.props.getPassengerList(this.props.user.userId, 0, 4, (res) => {
         }, (err) => {
         });
     }
@@ -250,6 +250,20 @@ class MyProfileTab extends Component {
         store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.PROFILE } }));
     }
 
+    openPassengerProfile = (item, index) => {
+        if (item.isFriend) {
+            Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: item.passengerId, friendType: FRIEND_TYPE.ALL_FRIENDS });
+        }
+        else {
+            Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx: index });
+        }
+        // Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx: index });
+    }
+
+    openRoadBuddy = (item,index) => {
+        Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: item.userId, friendType: FRIEND_TYPE.ALL_FRIENDS });
+    }
+
     render() {
         const { user, allFriends, passengerList } = this.props;
         const { isLoadingProfPic } = this.state;
@@ -387,10 +401,15 @@ class MyProfileTab extends Component {
                                 keyExtractor={this.roadBuddiesKeyExtractor}
                                 renderItem={({ item, index }) => (
                                     <View style={{ marginRight: widthPercentageToDP(1.5) }}>
-                                        <SmallCard
-                                            smallardPlaceholder={require('../../../assets/img/profile-pic.png')}
-                                            item={item}
-                                        />
+                                        {
+                                            index < 4?
+                                            <SmallCard
+                                                smallardPlaceholder={require('../../../assets/img/profile-pic.png')}
+                                                item={item}
+                                                onPress={() => this.openRoadBuddy(item, index)}
+                                            />
+                                            : null
+                                        }
                                     </View>
                                 )}
                             />
@@ -400,7 +419,7 @@ class MyProfileTab extends Component {
                     <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(3), marginRight: widthPercentageToDP(7) }}>
                         <View style={{ flexDirection: 'row', marginTop: heightPercentageToDP(3) }}>
                             <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Passengers</Text>
-                            <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16 }} onPress={()=> Actions.push(PageKeys.PASSENGERS)}/>
+                            <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16 }} onPress={() => Actions.push(PageKeys.PASSENGERS)} />
                             <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#a8a8a8', marginLeft: widthPercentageToDP(21) }}>
                                 <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: -1 })} />
                             </View>
@@ -413,10 +432,17 @@ class MyProfileTab extends Component {
                                 keyExtractor={this.passengerListKeyExtractor}
                                 renderItem={({ item, index }) => (
                                     <View style={{ marginRight: widthPercentageToDP(1.5) }}>
-                                        <SmallCard
-                                            smallardPlaceholder={require('../../../assets/img/profile-pic.png')}
-                                            item={item}
-                                        />
+                                        {
+                                            index < 4 ?
+                                                <SmallCard
+                                                    smallardPlaceholder={require('../../../assets/img/profile-pic.png')}
+                                                    item={item}
+                                                    onPress={() => this.openPassengerProfile(item, index)}
+                                                />
+                                                :
+                                                null
+                                        }
+
                                     </View>
                                 )}
                             />
@@ -492,12 +518,12 @@ const mapDispatchToProps = (dispatch) => {
         updateMyProfileLastOptions: (expanded) => dispatch(updateMyProfileLastOptionsAction({ expanded })),
         getRoadBuddies: (userId) => dispatch(getRoadBuddies(userId)),
         getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
-            
-            if(callingFrom === 'roadBuddies'){
+
+            if (callingFrom === 'roadBuddies') {
                 console.log('getPictureList all friend sucess : ', pictureObj);
                 dispatch(updateFriendInListAction({ pictureObj }))
             }
-            else{
+            else {
                 console.log('getPictureList passenger sucess : ', pictureObj);
                 dispatch(updatePassengerInListAction({ pictureObj }))
             }

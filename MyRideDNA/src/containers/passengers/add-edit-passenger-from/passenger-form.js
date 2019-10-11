@@ -29,7 +29,7 @@ class PaasengerFormDisplay extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.passengerList !== this.props.passengerList) {
-            Actions.pop();
+            // Actions.pop();
         }
     }
 
@@ -163,7 +163,9 @@ class PaasengerFormDisplay extends Component {
                                 inputValue={passenger.phoneNumber? + passenger.phoneNumber + "":passenger.phoneNumber} inputStyle={{ paddingBottom: 0 }}
                                 inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next'
                                 onChange={this.onChangePhone} label='PHONE' labelStyle={styles.labelStyle}
-                                onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
+                                onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} 
+                                inputType="telephoneNumber"
+                                />
                             <IconicList
                                 selectedValue={passenger.gender} values={GENDER_LIST} labelPlaceHolder='GENDER'
                                 labelPlaceHolderStyle={[styles.labelStyle, { marginTop: heightPercentageToDP(1) }]}

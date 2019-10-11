@@ -64,7 +64,7 @@ class Friends extends Component {
         // this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
         // }, (err) => {
         // });
-        this.props.getAllFriends1(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
+        this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
         }, (err) => {
         });
     }
@@ -179,7 +179,7 @@ class Friends extends Component {
             // this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
             // }, (err) => {
             // });
-            this.props.getAllFriends1(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
+            this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
             }, (err) => {
             });
         }
@@ -187,7 +187,7 @@ class Friends extends Component {
             // this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
             // }, (err) => {
             // });
-            this.props.getAllFriends1(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
+            this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
             }, (err) => {
             });
         }

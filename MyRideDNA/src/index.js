@@ -9,6 +9,8 @@ import { Actions } from 'react-native-router-flux';
 import { Root } from "native-base";
 import { seenMessage } from './api';
 
+console.disableYellowBox = true
+
 export default class App extends Component {
     // removeNotificationListener = null;
     removeNotificationOpenedListener = null;

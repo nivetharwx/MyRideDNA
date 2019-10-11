@@ -1,20 +1,23 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, StatusBar, ScrollView, View, Keyboard, Alert, KeyboardAvoidingView, Text } from 'react-native';
+import { StyleSheet, StatusBar, ScrollView, View, Keyboard, Alert, KeyboardAvoidingView, Text, FlatList } from 'react-native';
 import { BasicHeader } from '../../../components/headers';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, FRIEND_TYPE } from '../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInput, IconicList, IconicDatePicker, LabeledInputPlaceholder } from '../../../components/inputs';
 import { BasicButton, IconButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import { addBikeToGarage, editBike, registerPassenger, updatePassengerDetails } from '../../../api';
+import { addBikeToGarage, editBike, registerPassenger, updatePassengerDetails, getAllFriends } from '../../../api';
 import { toggleLoaderAction } from '../../../actions';
 import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon, Toast } from 'native-base';
 import { IconLabelPair } from '../../../components/labels';
 import ImagePicker from 'react-native-image-crop-picker';
 import PaasengerFormDisplay from './passenger-form';
+import { HorizontalCard } from '../../../components/cards';
 
+
+const clubDummyData = [{ name: 'Black Rebel Motorcycle Club', id: "1" }, { name: 'Hell’s Angels', id: "2" }, { name: 'Milwaukee Outlaws', id: "3" }]
 class PaasengerForm extends Component {
     fieldRefs = [];
     constructor(props) {
@@ -22,111 +25,60 @@ class PaasengerForm extends Component {
         this.state = {
             passenger: props.passengerIdx >= 0 ? props.passengerList[props.passengerIdx] : {},
             activeTab: 0,
+            searchQuery: ''
         };
-        if (!this.state.passenger.homeAddress) {
-            this.state.passenger['homeAddress'] = { city: '', state: '' };
-        }
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.passengerList !== this.props.passengerList) {
             Actions.pop();
         }
-    }
 
-    onChangeName = (val) => {
-        this.setState(prevState => ({ passenger: { ...prevState.passenger, name: val + '' } }));
-    }
-
-    onChangeGender = (val) => {
-        this.setState(prevState => ({ passenger: { ...prevState.passenger, gender: val + '' } }));
-    }
-
-    onChangeDOB = (val) => {
-        this.setState(prevState => ({ passenger: { ...prevState.passenger, dob: new Date(val).toISOString() } }));
-    }
-
-    // onChangeCity = (val) => {
-    //     this.setState(prevState => ({ passenger: { ...prevState.passenger, city: val + '' } }));
-    // }
-
-    // onChangeState = (val) => {
-    //     this.setState(prevState => ({ passenger: { ...prevState.passenger, state: val + '' } }));
-    // }
-    onChangeCity = (val) => {
-        this.setState(prevState => ({ passenger: { ...prevState.passenger, homeAddress: { ...prevState.passenger.homeAddress, city: val + '' } } }));
-    }
-
-    onChangeState = (val) => {
-        this.setState(prevState => ({ passenger: { ...prevState.passenger, homeAddress: { ...prevState.passenger.homeAddress, state: val + '' } } }));
-    }
-
-
-    onChangePhone = (val) => {
-        // this.changedDetails['gender'] = val;
-        this.setState(prevState => ({ passenger: { ...prevState.passenger, phoneNumber: val + '' } }));
-    }
-
-    onSubmit = () => {
-        Keyboard.dismiss();
-        const { passenger } = this.state;
-        if (!passenger.name || passenger.name.trim().length === 0) {
-            Alert.alert('Field Error', 'Please enter a passenger name');
-            return;
-        }
-        if (!passenger.passengerId) {
-            console.log('passenger submit : ', this.state.passenger)
-            this.props.registerPassenger(this.props.user.userId, passenger);
-        } else {
-            console.log('passenger update : ', this.state.passenger);
-            this.props.updatePassengerDetails(passenger);
+        if (prevProps.allFriends !== this.props.allFriends) {
+            const pictureIdList = [];
+            this.props.allFriends.forEach((friend) => {
+                if (!friend.profilePicture && friend.profilePictureId) {
+                    pictureIdList.push(friend.profilePictureId);
+                }
+            })
+            if (pictureIdList.length > 0) {
+                this.props.getPictureList(pictureIdList);
+            }
         }
     }
+
+
 
     onChangeTab = ({ from, i }) => {
         this.setState({ activeTab: i }, () => {
+            if (i === 1) {
+                this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, false, (res) => {
+                }, (err) => {
+                });
+            }
         });
     }
 
-    onPressGalleryIcon = async () => {
-        console.log('onPressGalleryIcon')
-        this.setState({ isLoadingProfPic: true });
-        try {
-            const imageObj = await ImagePicker.openPicker({
-                width: 300,
-                height: 300,
-                cropping: false,
-                includeBase64: true,
-            });
-            // this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
-            this.setState(prevState => ({ passenger: { ...prevState.passenger, mimeType: imageObj.mime, image: imageObj.data } }));
-        } catch (er) {
-            this.setState({ isLoadingProfPic: false });
-            console.log("Error occurd: ", er);
-        }
+    onChangeSearchFriend = (val) => {
+        this.setState({ searchQuery: val })
     }
 
-    onPressCameraIcon = async () => {
-        console.log('onPressCameraIcon')
-        this.setState({ isLoadingProfPic: true });
-        try {
-            const imageObj = await ImagePicker.openCamera({
-                width: 300,
-                height: 300,
-                includeBase64: true,
-                cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
-            });
-            this.setState(prevState => ({ passenger: { ...prevState.passenger, mimeType: imageObj.mime, image: imageObj.data } }));
-        } catch (er) {
-            this.setState({ isLoadingProfPic: false });
-            console.log("Error occurd: ", er);
-        }
-
+    addFriendToCommunity = (item) => {
+        console.log('addFriendToCommunity : ', item)
+        this.props.registerPassenger(this.props.user.userId, { passengerId: item.userId })
     }
+
+    communityKeyExtractor = (item) => item.userId;
 
     render() {
-        const { passenger, activeTab } = this.state;
+        const { passenger, activeTab, searchQuery } = this.state;
+        const { allFriends } = this.props;
+        console.log('allFriends : ', allFriends)
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
+        this.state.filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
+            return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
+                (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
+        });
         return (
             <View style={styles.fill} >
                 <View style={APP_COMMON_STYLES.statusBar}>
@@ -135,20 +87,53 @@ class PaasengerForm extends Component {
                 <View style={{ flex: 1 }}>
                     <BasicHeader headerHeight={heightPercentageToDP(10.5)} title={passenger.passengerId ? 'Edit Passenger' : 'Add Passenger'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
                     {
-                        this.props.passengerIdx !== -1?
-                            <PaasengerFormDisplay passengerIdx={this.props.passengerIdx} topMargin={{marginTop:heightPercentageToDP(15)}}/>
+                        this.props.passengerIdx !== -1 ?
+                            <PaasengerFormDisplay passengerIdx={this.props.passengerIdx} topMargin={{ marginTop: heightPercentageToDP(15) }} />
                             :
                             <Tabs locked={false} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
-                                {/* <Tab heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 0 ? '#000000' : '#81BA41' }}> */}
                                 <Tab heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 0 ? '#000000' : '#81BA41' }}>
                                     <IconLabelPair containerStyle={styles.tabContentCont} text={`NEW PASSENGER`} textStyle={{ color: '#fff', fontSize: heightPercentageToDP(2), letterSpacing: 0.6 }} />
                                 </TabHeading>}>
-                                    <PaasengerFormDisplay  topMargin={{marginTop:heightPercentageToDP(6)}}/>
+                                    <PaasengerFormDisplay topMargin={{ marginTop: heightPercentageToDP(6) }} />
                                 </Tab>
-                                <Tab heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 1 ? '#000000' : '#81BA41', borderColor: '#fff', borderColor: '#fff', borderLeftWidth: 1, borderRightWidth: 1 }}>
+
+                                <Tab heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 1 ? '#000000' : '#81BA41', borderColor: '#fff', borderColor: '#fff', borderLeftWidth: 1 }}>
                                     <IconLabelPair containerStyle={styles.tabContentCont} text={`FROM COMMUNITY`} textStyle={{ color: '#fff', fontSize: heightPercentageToDP(2), letterSpacing: 0.6 }} />
                                 </TabHeading>}>
-                                    <Text>community</Text>
+                                    <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: heightPercentageToDP(7), borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: heightPercentageToDP(7) }}>
+                                        <View style={{ flex: 2.89 }}>
+                                            <LabeledInputPlaceholder
+                                                inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: heightPercentageToDP(5), backgroundColor: '#fff' }}
+                                                inputRef={elRef => this.fieldRefs[7] = elRef} returnKeyType='next'
+                                                onChange={this.onChangeSearchFriend}
+                                                hideKeyboardOnSubmit={false}
+                                                containerStyle={styles.containerStyle} />
+                                        </View>
+                                        <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
+                                            <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 19 } }} />
+                                        </View>
+                                        {/* rightIcon={{name:'user', type:'FontAwesome', style:styles.rightIconStyle}} /> */}
+
+                                    </View>
+                                    <View style={{ borderBottomWidth: 3, borderBottomColor: '#F5891F', marginTop: heightPercentageToDP(5), marginHorizontal: widthPercentageToDP(9) }}>
+                                        <Text style={{ marginLeft: widthPercentageToDP(3), fontSize: 12, fontWeight: 'bold', color: '#000', letterSpacing: 0.6, marginBottom: 2 }}>SEARCH RESULTS</Text>
+                                    </View>
+                                    <View style={{ marginTop: heightPercentageToDP(6) }}>
+                                        <FlatList
+                                            data={this.state.filteredFriends}
+                                            keyExtractor={this.communityKeyExtractor}
+                                            renderItem={({ item, index }) => (
+                                                <HorizontalCard
+                                                    item={item}
+                                                    horizontalCardPlaceholder={require('../../../assets/img/profile-pic.png')}
+                                                    cardOuterStyle={styles.HorizontalCardOuterStyle}
+                                                    righticonImage={require('../../../assets/img/add-passenger-from-community.png')}
+                                                    onPress={() => this.addFriendToCommunity(item)}
+                                                />
+                                            )}
+                                        />
+
+                                    </View>
                                 </Tab>
                             </Tabs>
                     }
@@ -182,12 +167,14 @@ class PaasengerForm extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { passengerList } = state.PassengerList;
-    return { user, passengerList };
+    const { allFriends, paginationNum } = state.FriendList;
+    return { user, passengerList, allFriends, paginationNum };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         registerPassenger: (userId, passenger) => dispatch(registerPassenger(userId, passenger)),
         updatePassengerDetails: (passenger) => dispatch(updatePassengerDetails(passenger)),
+        getAllFriends: (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(PaasengerForm);
@@ -231,4 +218,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#f69039',
         marginTop: heightPercentageToDP(8)
     },
+    HorizontalCardOuterStyle: {
+        marginHorizontal: widthPercentageToDP(9),
+        marginBottom: heightPercentageToDP(4)
+    },
+    rightIconStyle: {
+    },
+    containerStyle: {
+        marginBottom: 0
+    }
 });

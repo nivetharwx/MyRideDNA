@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, TouchableWithoutFeedback, StatusBar, FlatList, ScrollView, View, Keyboard, Alert, TextInput, Text, ActivityIndicator, Animated, Easing } from 'react-native';
 import { BasicHeader } from '../../components/headers';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, PageKeys } from '../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, PageKeys, FRIEND_TYPE } from '../../constants';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInput, IconicList, IconicDatePicker, IconicInput } from '../../components/inputs';
 import { BasicButton, LinkButton, IconButton } from '../../components/buttons';
@@ -46,6 +46,8 @@ class Passengers extends Component {
                 this.props.getPictureList(pictureIdList);
             }
         }
+
+
     }
 
 
@@ -77,7 +79,16 @@ class Passengers extends Component {
     renderMenuOptions = () => {
         if (this.state.selectedPassenger === null) return;
         // const options = [{ text: 'Edit Passenger', id: 'editPassenger', handler: () => this.openPassengerForm() }, { text: 'Remove Passenger', id: 'removePassenger', handler: () => this.showRemovePassengerConfirmation() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
-        const options = this.PASSENGER_OPTIONS;
+        var options = []
+        if (this.state.selectedPassenger.isFriend) {
+            options = [
+                ...this.PASSENGER_OPTIONS.slice(0, 1),
+                ...this.PASSENGER_OPTIONS.slice(2)
+            ]
+        }
+        else {
+            options = this.PASSENGER_OPTIONS
+        }
         return (
             options.map(option => (
                 <LinkButton
@@ -180,16 +191,24 @@ class Passengers extends Component {
         return null
     }
 
-    openPassengerDetail = (index) => {
-        if(this.state.selectedPassenger){
+    openPassengerDetail = (item, index) => {
+        // console.log('item : ',item)
+        if (this.state.selectedPassenger) {
             const passengerIdx = this.props.passengerList.findIndex(passenger => passenger.passengerId === this.state.selectedPassenger.passengerId);
-            Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx });
+            this.openPassengerProfile(this.state.selectedPassenger, passengerIdx)
         }
-        else{
-            Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx:index });
-        }
-        
         this.onCancelOptionsModal();
+    }
+
+    openPassengerProfile = (item, index) => {
+        console.log('item : ', item)
+        if (item.isFriend) {
+            Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: item.passengerId, friendType: FRIEND_TYPE.ALL_FRIENDS });
+        }
+        else {
+            Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx: index });
+        }
+        // Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx: index });
     }
 
 
@@ -216,7 +235,7 @@ class Passengers extends Component {
                     <BasicHeader
                         title='Passengers'
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                        rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.openPassengerForm , rightIconPropsStyle:styles.rightIconPropsStyle, style:{color:'#fff', fontSize:heightPercentageToDP(3.5)} }}
+                        rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.openPassengerForm, rightIconPropsStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: heightPercentageToDP(3.5) } }}
                     />
                     {
                         passengerList.length > 0
@@ -233,7 +252,7 @@ class Passengers extends Component {
                                                 squareCardPlaceholder={require('../../assets/img/profile-pic.png')}
                                                 item={item}
                                                 onLongPress={() => this.showOptionsModal(index)}
-                                                onPress={()=>this.openPassengerDetail(index)}
+                                                onPress={() => this.openPassengerProfile(item, index)}
                                             />
                                         </View>
                                     )}
@@ -273,7 +292,7 @@ const mapDispatchToProps = (dispatch) => {
         getPassengerList: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getPassengerList(userId, pageNumber, preference, successCallback, errorCallback)),
         deletePassenger: (passengerId) => dispatch(deletePassenger(passengerId)),
         getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
-            console.log('getPictureList all passenger sucess : ', pictureObj);
+            // console.log('getPictureList all passenger sucess : ', pictureObj);
             dispatch(updatePassengerInListAction({ pictureObj }))
         }, (error) => {
             console.log('getPictureList all friend error : ', error)
@@ -317,6 +336,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 19,
-        color:'white'
+        color: 'white'
     }
 });

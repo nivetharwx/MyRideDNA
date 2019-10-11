@@ -11,9 +11,18 @@ const initialState = {
 export default (state = initialState, action) => {
     switch (action.type) {
         case REPLACE_PASSENGER_LIST:
-            return {
-                ...state,
-                passengerList: action.data
+            console.log('REPLACE_PASSENGER_LIST : ', action.data)
+            if(action.data.pageNumber === 0 ){
+                return {
+                    ...state,
+                    passengerList: action.data.passengerList
+                }
+            }
+            else{
+                return {
+                    ...state,
+                    passengerList: [...state.passengerList,action.data.passengerList]
+                }
             }
         case ADD_PASSENGER_TO_LIST:
             return {

@@ -1,7 +1,7 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, TouchableHighlight, ImageBackground, Image, Animated, Easing } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, TouchableHighlight, ImageBackground, TouchableWithoutFeedback, Image, Animated, Easing } from 'react-native';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
-import { Icon as NBIcon } from 'native-base';
+import { Icon as NBIcon, ListItem, Left, Body, Right } from 'native-base';
 import { LinkButton, IconButton } from '../buttons';
 
 export class BasicCard extends React.Component {
@@ -166,13 +166,67 @@ export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, 
                     {/* <Image source={smallardPlaceholder}
                     style={{ width: null, height: null, flex: 1 }} /> */}
                 </View>
-                <Text style={{fontSize:15, fontWeight:'bold', color:'#000'}}>{item.name}</Text>
-                <Text style={{fontSize:11, fontWeight:'100'}}>{item.homeAddress.city}, {item.homeAddress.state}</Text>
+                <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#000' }}>{item.name?item.name:''}</Text>
+                {
+                    item.homeAddress?
+                    <Text style={{ fontSize: 11, fontWeight: '100' }}>{item.homeAddress.city?item.homeAddress.city:''}, {item.homeAddress.state?item.homeAddress.state:''}</Text>
+                    :
+                    null
+                }
+                
             </View>
         </TouchableOpacity>
     </View>
 );
 
+export const HorizontalCard = ({ item, onPress, onLongPress, actionsBar, cardOuterStyle, horizontalCardPlaceholder, righticonImage }) => (
+        // <View style={cardOuterStyle}>
+        //     <ListItem thumbnail style={{ backgroundColor: '#EAEAEA' }}>
+        //         <Left style={{ height: heightPercentageToDP(13), width: heightPercentageToDP(13), backgroundColor: 'grey' }}>
+        //             <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : horizontalCardPlaceholder}
+        //                 style={{ width: heightPercentageToDP(13), height: heightPercentageToDP(13), flex: 1 }} />
+        //         </Left>
+        //         <Body style={{ height: heightPercentageToDP(13), backgroundColor: '#EAEAEA', flex: 1 }}>
+        //             <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#585756' }}>{item.name}</Text>
+        //             <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#9A9A9A' }}>{item.nickname}</Text>
+        //         </Body>
+        //         <Right style={{ height: heightPercentageToDP(13), width: heightPercentageToDP(13), justifyContent:'center', alignItems:'center', backgroundColor:'#C4C6C8',...APP_COMMON_STYLES.testingBorderS}}>
+        //             {
+        //                 righticonImage ?
+        //                     <TouchableOpacity style={{height: heightPercentageToDP(13), width: heightPercentageToDP(13)}}>
+        //                         <Image source={righticonImage} style={{ height: null, width: null, flex:1, borderWidth:2, borderColor:'black'}} />
+        //                     </TouchableOpacity>
+        //                     :
+        //                     <Text>Right</Text>
+        //             }
+        //         </Right>
+        //     </ListItem>
+        // </View>
+        <TouchableWithoutFeedback style={{ width: widthPercentageToDP(100), marginTop: 20, }} >
+            <View style={[{ flex: 1, flexDirection: 'row', height: heightPercentageToDP(13) }, cardOuterStyle]}>
+                <View style={{ width: heightPercentageToDP(13)}}>
+                    <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : horizontalCardPlaceholder}
+                        style={{ width: null, height: null, flex: 1 }} />
+                </View>
+                <View style={{ flex: 1, justifyContent: 'center', backgroundColor: '#EAEAEA' }}>
+                    <View style={{ marginLeft: widthPercentageToDP(3) }}>
+                        <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#585756' }}>{item.name}</Text>
+                        <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#9A9A9A' }}>{item.nickname}</Text>
+                    </View>
+                </View>
+                <View>
+                    {
+                        righticonImage ?
+                            <TouchableOpacity style={{ height: heightPercentageToDP(13), width: heightPercentageToDP(13) }} onPress={() => onPress ? onPress() : null}>
+                                <Image source={righticonImage} style={{ height: null, width: null, flex: 1,}} />
+                            </TouchableOpacity>
+                            :
+                            <Text>Right</Text>
+                    }
+                </View>
+            </View>
+        </TouchableWithoutFeedback>
+    )
 {/* <NBIcon name='md-star' type='Ionicons' />
     <View style={styles.columnContainer}>
         {
