@@ -481,7 +481,7 @@ export class Map extends Component {
         }
         if (prevProps.hasNetwork === true && this.props.hasNetwork === false) {
             console.log("Network connection lost");
-            // Alert.alert('Network Error', 'Failed to connect to internet');
+
             Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0, style: { height: heightPercentageToDP(8.2) } });
 
             // DOC: Show specific alert, if user is planning ride
@@ -490,12 +490,18 @@ export class Map extends Component {
                     Alert.alert('Network connection lost', 'Your changes will not save. Please try after connecting to internet')
                 }
             });
+
+            // DOC: Remove location updation polling
+            if (this.locationPollInterval !== null) this.stopUpdatingLocation();
         }
         if (prevProps.hasNetwork === false && this.props.hasNetwork === true) {
             console.log('internet connected ');
             this.setState({ isEditableMap: true });
             Toast.hide();
             this.retryApiFunc();
+
+            // DOC: Restart location updation polling
+            if (this.state.friendsLocationCollection.features.length > 0 && this.locationPollInterval === null) this.startUpdatingLocation();
         }
         if (prevProps.user.locationEnable !== this.props.user.locationEnable) {
             this.props.user.locationEnable
@@ -933,9 +939,9 @@ export class Map extends Component {
     }
 
     handleNetworkConnectivityChange = (connectionInfo) => {
-        if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
+        if ((connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') && connectionInfo.isInternetReachable) {
             this.props.toggleNetworkStatus(true);
-        } else if (connectionInfo.type === 'none') {
+        } else if (connectionInfo.isInternetReachable === false) {
             this.props.toggleNetworkStatus(false);
         }
     }
@@ -2465,6 +2471,27 @@ export class Map extends Component {
         ).start(() => this.setState({ onItinerary: false }));
     }
 
+    syncRideWithServer(eventHandler) {
+        if (this.state.rideUpdateCount === 0) {
+            return eventHandler();
+        }
+        this.setState({ showLoader: true }, () => {
+            const { ride } = this.props;
+            const body = {};
+            if (ride.source) body.source = ride.source;
+            if (ride.destination) body.destination = ride.destination;
+            if (ride.waypoints) body.waypoints = ride.waypoints;
+            if (ride.totalDistance) body.totalDistance = ride.totalDistance;
+            if (ride.totalTime) body.totalTime = ride.totalTime;
+            this.hasModifiedRide = true;
+            replaceRide(ride.rideId, body, () => {
+                this.setState({ showLoader: false, rideUpdateCount: 0 }, () => eventHandler());
+            }, (er) => {
+                this.setState({ showLoader: false }, () => console.log("Something went wrong: ", er));
+            });
+        });
+    }
+
     changeToItineraryMode = () => {
         this.hideMapControls();
         this.hideWaypointList(() => {
@@ -2593,6 +2620,7 @@ export class Map extends Component {
             this.closeTrackingList();
             return;
         }
+        if (this.props.hasNetwork === false) return;
         Animated.timing(this.state.dropdownAnim, {
             toValue: heightPercentageToDP(25),
             duration: 0,
@@ -2606,7 +2634,7 @@ export class Map extends Component {
             toValue: 0,
             duration: 0,
         }).start(() => {
-            if (typeof id === 'undefined') {
+            if (typeof id === 'undefined' || this.props.hasNetwork === false) {
                 return this.setState({ isVisibleList: false });
             }
             this.setState({ isVisibleList: false }, () => {
@@ -2655,12 +2683,12 @@ export class Map extends Component {
                         : null
                 }
                 <IconButton onPress={this.onPressDeleteOption} style={{ paddingVertical: 5, width: '100%', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }} iconProps={{ name: 'delete', type: 'MaterialCommunityIcons' }} />
-                <IconButton onPress={() => this.onPressPointCommentOption()} style={{ paddingVertical: 5, width: '100%', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }} iconProps={{ name: 'comment-text', type: 'MaterialCommunityIcons' }} />
+                <IconButton onPress={() => this.syncRideWithServer(this.onPressPointCommentOption)} style={{ paddingVertical: 5, width: '100%', borderColor: '#acacac', borderTopWidth: 1, borderBottomWidth: 1 }} iconProps={{ name: 'comment-text', type: 'MaterialCommunityIcons' }} />
             </View>
             : <View style={{ alignItems: 'center', backgroundColor: '#fff' }}>
                 <IconButton onPress={this.onCloseOptionsBar} style={{ paddingVertical: 5, width: '100%', backgroundColor: '#fff' }}
                     iconProps={{ name: 'window-close', type: 'MaterialCommunityIcons' }} />
-                <IconButton onPress={() => this.onPressPointCommentOption()} style={{ paddingVertical: 5 }} iconProps={{ name: 'comment-text', type: 'MaterialCommunityIcons' }} />
+                <IconButton onPress={() => this.syncRideWithServer(this.onPressPointCommentOption)} style={{ paddingVertical: 5 }} iconProps={{ name: 'comment-text', type: 'MaterialCommunityIcons' }} />
             </View>
     }
 
@@ -3046,7 +3074,7 @@ export class Map extends Component {
                         <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'zoom-out', type: 'Foundation' }} onPress={this.onPressZoomOut} />
                         {
                             ride.rideId !== null && ride.isRecorded === false
-                                ? <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'map-marker-multiple', type: 'MaterialCommunityIcons' }} onPress={this.showWaypointList} />
+                                ? <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'map-marker-multiple', type: 'MaterialCommunityIcons' }} onPress={() => this.syncRideWithServer(this.showWaypointList)} />
                                 : null
                         }
                         <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'target', type: 'MaterialCommunityIcons' }} onPress={this.onPressRecenterMap} />
@@ -3077,7 +3105,7 @@ export class Map extends Component {
                     }
                     {
                         ride.rideId && !ride.isRecorded
-                            ? <TouchableOpacity style={{ position: 'absolute', zIndex: 100, left: widthPercentageToDP(45), bottom: 0, width: widthPercentageToDP(10), height: widthPercentageToDP(15) }} onPress={this.showItinerarySection}>
+                            ? <TouchableOpacity style={{ position: 'absolute', zIndex: 100, left: widthPercentageToDP(45), bottom: 0, width: widthPercentageToDP(10), height: widthPercentageToDP(15) }} onPress={() => this.syncRideWithServer(this.showItinerarySection)}>
                                 <Image source={require('../../assets/img/arrow-right.png')} style={{ flex: 1, width: null, height: null, transform: [{ rotate: '270deg' }] }} />
                             </TouchableOpacity>
                             : null

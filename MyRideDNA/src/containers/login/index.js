@@ -47,10 +47,10 @@ class Login extends Component {
     }
 
     handleFirstConnectivityChange = (connectionInfo) => {
-        if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
+        if ((connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') && connectionInfo.isInternetReachable) {
             Toast.hide();
             this.props.toggleNetworkStatus(true);
-        } else if (connectionInfo.type === 'none') {
+        } else if (connectionInfo.isInternetReachable === false) {
             this.props.toggleNetworkStatus(false);
             Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
         }

@@ -40,12 +40,12 @@ class SplashScreen extends React.Component {
     }
 
     handleFirstConnectivityChange = async (connectionInfo) => {
-        if (connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') {
+        if ((connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') && connectionInfo.isInternetReachable) {
             Toast.hide();
             if (this.props.user === null || this.props.user.userId === null) {
                 this.doAuthTokenVerfication();
             }
-        } else {
+        } else if (connectionInfo.isInternetReachable === false) {
             Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
         }
     }
@@ -60,7 +60,7 @@ class SplashScreen extends React.Component {
                 .then(res => {
                     console.log('loginUserUsingAccessToken success : ', res.data);
                     if (res.status === 200) {
-                        if(!res.data.clubs){
+                        if (!res.data.clubs) {
                             console.log('clubs not existing')
                             res.data.clubs = [];
                         }
