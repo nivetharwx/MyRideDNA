@@ -307,9 +307,12 @@ class MyProfileTab extends Component {
         // );
         return (
             <View style={styles.fill}>
+                <View style={APP_COMMON_STYLES.statusBar}>
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                </View>
                 <View style={styles.mapHeader}>
                     <IconButton iconProps={{ name: 'bell', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(5) } }}
-                        style={[styles.headerIcon, { marginLeft: widthPercentageToDP(6), marginTop: heightPercentageToDP(2.1) }]} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
+                        style={[styles.headerIcon, { marginLeft: widthPercentageToDP(6), marginTop: IS_ANDROID ? heightPercentageToDP(2.1):heightPercentageToDP(1) }]} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
                     <View style={{ flexDirection: 'column' }}>
                         <Text style={styles.title}>
                             {user.name}
@@ -329,7 +332,7 @@ class MyProfileTab extends Component {
                 <ScrollView>
                     <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
                         <View style={styles.profilePic}>
-                            <ImageBackground source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}>
+                            <ImageBackground source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
                                 {/* <ImageBackground source={require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}> */}
                                 {
                                     isLoadingProfPic
@@ -573,8 +576,7 @@ const styles = StyleSheet.create({
     },
     profileBG: {
         width: '100%',
-        height: heightPercentageToDP(40),
-        paddingTop: IS_ANDROID ? 0 : hasIOSAbove10 ? heightPercentageToDP(1.5) : 0
+        height: heightPercentageToDP(40)
     },
     profilePic: {
         height: heightPercentageToDP(37),
@@ -598,10 +600,11 @@ const styles = StyleSheet.create({
 
     //  new Design styles
     mapHeader: {
-        height: 60,
+        height: IS_ANDROID? 60:70,
         backgroundColor: APP_COMMON_STYLES.headerColor,
         flexDirection: 'row',
         elevation: 30,
+        paddingTop: IS_ANDROID ? 0 :  heightPercentageToDP(1.5)
     },
     clubList: {
         marginHorizontal: widthPercentageToDP(1),

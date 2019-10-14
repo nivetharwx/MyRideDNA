@@ -32,8 +32,8 @@ export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle,
             returnKeyType={returnKeyType || 'done'} returnKeyLabel={returnKeyLabel} ref={(el) => inputRef && inputRef(el)} />
     </View>
 );
-export const LabeledInputPlaceholder = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder, placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus, onBlur, editable, placeHolderStyle, secondLabelStyle, secondLabel }) => (
-    <View>
+export const LabeledInputPlaceholder = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder, placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus, onBlur, editable, placeHolderStyle, secondLabelStyle, secondLabel, outerContainer }) => (
+    <View style={[outerContainer]}>
         <View style={[{ flexDirection: 'row', marginBottom: 3 }, containerStyle]}>
             <TextInput editable={editable} onFocus={onFocus && onFocus} onBlur={onBlur && onBlur} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ borderBottomWidth: 1, borderBottomColor: '#000', width:WindowDimensions.width }, inputStyle]}
                 textContentType={inputType} keyboardType={getKeyboardTypeForContentType(inputType)}
@@ -78,10 +78,10 @@ export const IconicInput = ({ inputColor, containerStyle, iconProps, placeholder
 );
 
 // DOC: Controlled component, caller have to pass onValueChange function to persist the user selection
-export const IconicList = ({ iconProps, values, selectedValue, placeholder, onChange, containerStyle, style, innerContainerStyle, labelPlaceHolder, labelPlaceHolderStyle, pickerStyle }) => {
+export const IconicList = ({ iconProps,outerContainer, values, selectedValue, placeholder, onChange, containerStyle, style, innerContainerStyle, labelPlaceHolder, labelPlaceHolderStyle, pickerStyle }) => {
     let options = selectedValue ? values : [{ label: placeholder || 'Select any', value: '' }, ...values];
     return (
-        <View>
+        <View style={[outerContainer]}>
             <View style={[{ flexDirection: 'row' }, containerStyle]}>
                 {
                     iconProps
@@ -129,10 +129,10 @@ export const IconicSwitch = ({ iconProps, label, selectedValue, onChange }) => (
 );
 
 // DOC: Controlled component, caller have to pass onValueChange function to persist the user selection
-export const IconicDatePicker = ({ iconProps, selectedDate, datePickerStyle, selectedDateString, minDate, maxDate, placeholder, onChange, label, labelStyle }) => {
+export const IconicDatePicker = ({ iconProps, outerContainer, selectedDate, datePickerStyle, selectedDateString, minDate, maxDate, placeholder, onChange, label, labelStyle }) => {
     let currentDate = new Date();
     return (
-        <View>
+        <View style={[outerContainer]}> 
             <View style={{ flexDirection: 'row', marginVertical: 4 }}>
                 {
                     iconProps

@@ -109,22 +109,26 @@ class MyWalletForm extends Component {
                             <Text style={{ color: '#F5891F', fontSize: 17, fontWeight: 'bold' }}>Insurance</Text>
                             <LabeledInputPlaceholder
                                 inputValue={insurance.name} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
                                 inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next'
                                 onChange={this.onChangeName} label='NAME' secondLabel='(Insured Rider)' secondLabelStyle={styles.secondLabelStyle} labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[0].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
                                 inputValue={insurance.vehicle} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
                                 inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next'
                                 onChange={this.onChangeVehicle} label='VEHICLE' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
                             <LabeledInputPlaceholder
                                 inputValue={insurance.policyNumber} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
                                 inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next'
                                 onChange={this.onChangePolicyNumberInsurance} label='POLICY NUMBER' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
                             <LabeledInputPlaceholder
                                 inputValue={insurance.contactInfo} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
                                 inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next'
                                 onChange={this.onChangeContactInfoInsurance} label='CONTACT INFO' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
@@ -132,11 +136,13 @@ class MyWalletForm extends Component {
                             <Text style={{ color: '#F5891F', fontSize: 17, fontWeight: 'bold', marginTop: heightPercentageToDP(5) }}>ROADSIDE ASSISTANCE</Text>
                             <LabeledInputPlaceholder
                                 inputValue={roadsideAssistance.policyNumber} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
                                 inputRef={elRef => this.fieldRefs[4] = elRef} returnKeyType='next'
                                 onChange={this.onChangePolicyNumberRdAsst} label='POLICY NUMBER' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
                             <LabeledInputPlaceholder
                                 inputValue={roadsideAssistance.contactInfo} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
                                 inputRef={elRef => this.fieldRefs[5] = elRef} returnKeyType='next'
                                 onChange={this.onChangeContactInfoRdAsst} label='CONTACT INFO' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />

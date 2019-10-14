@@ -8,8 +8,8 @@ import { LabeledInput, IconicList, IconicDatePicker, LabeledInputPlaceholder } f
 import { BasicButton, IconButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import { addBikeToGarage, editBike, registerPassenger, updatePassengerDetails, getAllFriends } from '../../../api';
-import { toggleLoaderAction } from '../../../actions';
+import { addBikeToGarage, editBike, registerPassenger, updatePassengerDetails, getAllFriends, getPictureList } from '../../../api';
+import { toggleLoaderAction, updateFriendInListAction } from '../../../actions';
 import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon, Toast } from 'native-base';
 import { IconLabelPair } from '../../../components/labels';
 import ImagePicker from 'react-native-image-crop-picker';
@@ -120,6 +120,7 @@ class PaasengerForm extends Component {
                                     </View>
                                     <View style={{ marginTop: heightPercentageToDP(6) }}>
                                         <FlatList
+                                        style={{marginBottom:heightPercentageToDP(20)}}
                                             data={this.state.filteredFriends}
                                             keyExtractor={this.communityKeyExtractor}
                                             renderItem={({ item, index }) => (
@@ -175,6 +176,12 @@ const mapDispatchToProps = (dispatch) => {
         registerPassenger: (userId, passenger) => dispatch(registerPassenger(userId, passenger)),
         updatePassengerDetails: (passenger) => dispatch(updatePassengerDetails(passenger)),
         getAllFriends: (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback)),
+        getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
+            dispatch(updateFriendInListAction({ pictureObj }))
+        }, (error) => {
+            console.log('getPictureList all friend error : ', error)
+            // dispatch(updateFriendInListAction({ userId: friendId }))
+        }),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(PaasengerForm);

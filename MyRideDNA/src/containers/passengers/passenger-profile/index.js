@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, TouchableWithoutFeedback, StatusBar, FlatList, ScrollView, View, Keyboard, Alert, TextInput, Text, ActivityIndicator, Animated, Easing, ImageBackground } from 'react-native';
+import { StyleSheet, Platform, TouchableWithoutFeedback, StatusBar, FlatList, ScrollView, View, Keyboard, Alert, TextInput, Text, ActivityIndicator, Animated, Easing, ImageBackground } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { DatePicker, Icon as NBIcon, Toast, ListItem, Left, Body, Right, Thumbnail } from 'native-base';
 import { BasicHeader } from '../../../components/headers';
@@ -11,6 +11,7 @@ import { getPassengerInfoAction, updateCurrentPassengerAction, resetCurrentPasse
 import { ImageLoader } from '../../../components/loader';
 import { IconButton } from '../../../components/buttons';
 
+const hasIOSAbove10 = parseInt(Platform.Version) > 10;
 
 class PassengersProfile extends Component {
     constructor(props) {
@@ -147,19 +148,19 @@ class PassengersProfile extends Component {
                         </View>
                     </ImageBackground>
                     <IconButton iconProps={{ name: 'account-edit', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#f69039' } }}
-                        style={styles.editPassenger} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx:this.props.passengerIdx })} />
-                    <View style={{marginLeft:widthPercentageToDP(12), marginTop:heightPercentageToDP(1)}}>
+                        style={styles.editPassenger} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: this.props.passengerIdx })} />
+                    <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(1) }}>
                         <View>
-                            <Text style={{ fontSize: 10, fontWeight: 'bold', letterSpacing: 1.6, color:'#707070' }}>DOB</Text>
-                            <Text style={{fontSize:14, fontWeight:'bold', color:'#000'}}>{currentPassenger.dob?new Date(currentPassenger.dob).toLocaleDateString('en-IN', { day: 'numeric', year: '2-digit', month: 'short' }):''}</Text>
+                            <Text style={{ fontSize: 10, fontWeight: 'bold', letterSpacing: 1.6, color: '#707070' }}>DOB</Text>
+                            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#000' }}>{currentPassenger.dob ? new Date(currentPassenger.dob).toLocaleDateString('en-IN', { day: 'numeric', year: '2-digit', month: 'short' }) : ''}</Text>
                         </View>
-                        <View style={{marginTop:heightPercentageToDP(3)}}>
-                            <Text style={{ fontSize: 10, fontWeight: 'bold', letterSpacing: 1.6, color:'#707070' }}>PHONE</Text>
-                            <Text style={{fontSize:14, fontWeight:'bold', color:'#000'}}>{currentPassenger.phoneNumber?currentPassenger.phoneNumber:''}</Text>
+                        <View style={{ marginTop: heightPercentageToDP(3) }}>
+                            <Text style={{ fontSize: 10, fontWeight: 'bold', letterSpacing: 1.6, color: '#707070' }}>PHONE</Text>
+                            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#000' }}>{currentPassenger.phoneNumber ? currentPassenger.phoneNumber : ''}</Text>
                         </View>
-                        <View style={{marginTop:heightPercentageToDP(3)}}>
-                            <Text style={{ fontSize: 10, fontWeight: 'bold', letterSpacing: 1.6, color:'#707070' }}>ADDRESS</Text>
-                            <Text style={{fontSize:14, fontWeight:'bold', color:'#000'}}>{currentPassenger.homeAddress?currentPassenger.homeAddress.city:''}, {currentPassenger.homeAddress?currentPassenger.homeAddress.state:''}</Text>
+                        <View style={{ marginTop: heightPercentageToDP(3) }}>
+                            <Text style={{ fontSize: 10, fontWeight: 'bold', letterSpacing: 1.6, color: '#707070' }}>ADDRESS</Text>
+                            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#000' }}>{currentPassenger.homeAddress ? currentPassenger.homeAddress.city : ''}, {currentPassenger.homeAddress ? currentPassenger.homeAddress.state : ''}</Text>
                         </View>
                     </View>
                 </View>
