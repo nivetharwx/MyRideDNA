@@ -152,7 +152,7 @@ export const SmallCard = ({ item, smallardPlaceholder, onPress, onLongPress, act
         </TouchableOpacity>
     </View>
 );
-export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, actions, thumbnailRef }) => (
+export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, actions, thumbnailRef, imageStyle }) => (
     <View>
         <TouchableOpacity onPress={() => onPress ? onPress() : null} onLongPress={() => onLongPress && onLongPress()} style={{
             flex: 1,
@@ -160,13 +160,17 @@ export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, 
             justifyContent: 'center'
         }}>
             <View>
-                <View style={{ height: heightPercentageToDP(23), width: widthPercentageToDP(39), backgroundColor: '#A9A9A9' }}>
+                <View style={[{ height: heightPercentageToDP(23), width: widthPercentageToDP(39), backgroundColor: '#A9A9A9' },imageStyle]}>
                     <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : squareCardPlaceholder}
                         style={{ width: null, height: null, flex: 1 }} />
                     {/* <Image source={smallardPlaceholder}
                     style={{ width: null, height: null, flex: 1 }} /> */}
                 </View>
-                <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#000' }}>{item.name?item.name:''}</Text>
+                {
+                    item.name ?
+                    <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#000' }}>{item.name?item.name:''}</Text>
+                    :null
+                }
                 {
                     item.homeAddress?
                     <Text style={{ fontSize: 11, fontWeight: '100' }}>{item.homeAddress.city?item.homeAddress.city:''}, {item.homeAddress.state?item.homeAddress.state:''}</Text>

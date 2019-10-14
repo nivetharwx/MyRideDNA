@@ -1,7 +1,7 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
     replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
-    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, replaceChatListAction, resetMessageCountAction, storeUserAction, errorHandlingAction, resetErrorHandlingAction, addMembersLocationAction, storeUserMyWalletAction, updateUserMyWalletAction, updateFriendsLocationAction, updateGroupsLocationAction
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, replaceChatListAction, resetMessageCountAction, storeUserAction, errorHandlingAction, resetErrorHandlingAction, addMembersLocationAction, storeUserMyWalletAction, updateUserMyWalletAction, updateFriendsLocationAction, updateGroupsLocationAction, replaceAlbumListAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN, RIDE_POINT, CHAT_BASE_URL } from '../constants';
 import axios from 'axios';
@@ -2215,6 +2215,26 @@ export const deletePassenger = (passengerId) => {
     };
 }
 
+
+export const getAlbum = (userId) => {
+    return dispatch => {
+        axios.get(USER_BASE_URL + `getAlbumByUserId?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("getAlbum success: ", res.data);
+                if (res.status === 200) {
+                    // dispatch(updateChatListAction({ comingFrom: 'getAllChatsApi', chatList: res.data }));
+                    dispatch(replaceAlbumListAction(res.data))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    // dispatch(toggleLoaderAction(false));
+                }
+            })
+            .catch(er => {
+                console.log(`getAlbum error: `, er.response || er);
+                differentErrors(er, [userId], getAlbum, false);
+                // TODO: Dispatch error info action
+            })
+    };
+}
 export const getAllChats = (userId) => {
     console.log('user id getAllChat : ', userId)
     return dispatch => {
@@ -2234,6 +2254,7 @@ export const getAllChats = (userId) => {
             })
     };
 }
+
 
 export const getAllMessages = (id, userId, isGroup) => {
     return dispatch => {

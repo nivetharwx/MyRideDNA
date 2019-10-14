@@ -51,7 +51,8 @@ import {
     GET_PASSENGER_INFO,
     UPDATE_CURRENT_PASSENGER,
     RESET_CURRENT_PASSENGER,
-    UPDATE_GROUPS_LOCATION
+    UPDATE_GROUPS_LOCATION,
+    REPLACE_ALBUM_LIST
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -612,6 +613,12 @@ export const updateCurrentPassengerAction = (data) => (
 export const resetCurrentPassengerAction = (data) => (
     {
         type: RESET_CURRENT_PASSENGER,
+        data: data
+    }
+);
+export const replaceAlbumListAction = (data) => (
+    {
+        type: REPLACE_ALBUM_LIST,
         data: data
     }
 );

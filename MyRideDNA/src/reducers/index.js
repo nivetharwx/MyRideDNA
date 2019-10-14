@@ -14,6 +14,7 @@ import CommunitySearchList from './CommunitySearchList';
 import NotificationList from './NotificationList';
 import FriendRequest from './FriendRequest';
 import ChatList from './ChatList';
+import Album from './Album';
 
 const rootReducer = (state, action) => {
     if (action.type === 'RESETING_STATE_ON_LOGOUT') {
@@ -23,6 +24,6 @@ const rootReducer = (state, action) => {
     return appReducer(state, action)
   }
 // export default  combineReducers({ UserAuth, TabVisibility, RideInfo, RideList, GPSState, PageState, FriendList, GarageInfo, PageOverTab, FriendGroupList, PassengerList, CommunitySearchList, NotificationList, FriendRequest });
- const appReducer = combineReducers({ UserAuth, TabVisibility, RideInfo, RideList, GPSState, PageState, FriendList, GarageInfo, PageOverTab, FriendGroupList, PassengerList, CommunitySearchList, NotificationList, FriendRequest,ChatList });
+ const appReducer = combineReducers({ UserAuth, TabVisibility, RideInfo, RideList, GPSState, PageState, FriendList, GarageInfo, PageOverTab, FriendGroupList, PassengerList, CommunitySearchList, NotificationList, FriendRequest,ChatList, Album });
 
  export default rootReducer;

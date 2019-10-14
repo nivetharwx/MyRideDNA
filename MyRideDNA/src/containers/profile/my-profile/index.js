@@ -260,7 +260,7 @@ class MyProfileTab extends Component {
         // Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx: index });
     }
 
-    openRoadBuddy = (item,index) => {
+    openRoadBuddy = (item, index) => {
         Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: item.userId, friendType: FRIEND_TYPE.ALL_FRIENDS });
     }
 
@@ -307,12 +307,12 @@ class MyProfileTab extends Component {
         // );
         return (
             <View style={styles.fill}>
-                <View style={APP_COMMON_STYLES.statusBar}>
+                <View style={{ height: IS_ANDROID ? 0 : heightPercentageToDP(4), backgroundColor: 'black'}}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={styles.mapHeader}>
                     <IconButton iconProps={{ name: 'bell', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(5) } }}
-                        style={[styles.headerIcon, { marginLeft: widthPercentageToDP(6), marginTop: IS_ANDROID ? heightPercentageToDP(2.1):heightPercentageToDP(1) }]} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
+                        style={[styles.headerIcon, { marginLeft: widthPercentageToDP(6), marginTop: IS_ANDROID ? heightPercentageToDP(2.1) : heightPercentageToDP(1) }]} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
                     <View style={{ flexDirection: 'column' }}>
                         <Text style={styles.title}>
                             {user.name}
@@ -405,13 +405,13 @@ class MyProfileTab extends Component {
                                 renderItem={({ item, index }) => (
                                     <View style={{ marginRight: widthPercentageToDP(1.5) }}>
                                         {
-                                            index < 4?
-                                            <SmallCard
-                                                smallardPlaceholder={require('../../../assets/img/profile-pic.png')}
-                                                item={item}
-                                                onPress={() => this.openRoadBuddy(item, index)}
-                                            />
-                                            : null
+                                            index < 4 ?
+                                                <SmallCard
+                                                    smallardPlaceholder={require('../../../assets/img/profile-pic.png')}
+                                                    item={item}
+                                                    onPress={() => this.openRoadBuddy(item, index)}
+                                                />
+                                                : null
                                         }
                                     </View>
                                 )}
@@ -460,7 +460,8 @@ class MyProfileTab extends Component {
                     <View style={styles.usersExtraDetailContainer}>
                         <ImageBackground source={require('../../../assets/img/my-vest.png')} style={styles.usersExtraDetail}></ImageBackground>
                     </View>
-                    <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.ALBUM)}>
+                    {/* <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.ALBUM)}> */}
+                    <TouchableOpacity style={styles.usersExtraDetailContainer}>
                         <ImageBackground source={require('../../../assets/img/my-photos.png')} style={styles.usersExtraDetail}></ImageBackground>
                     </TouchableOpacity>
                 </ScrollView>
@@ -600,11 +601,11 @@ const styles = StyleSheet.create({
 
     //  new Design styles
     mapHeader: {
-        height: IS_ANDROID? 60:70,
+        height: IS_ANDROID ? 60 : 70,
         backgroundColor: APP_COMMON_STYLES.headerColor,
         flexDirection: 'row',
         elevation: 30,
-        paddingTop: IS_ANDROID ? 0 :  heightPercentageToDP(1.5)
+        paddingTop: IS_ANDROID ? 0 : heightPercentageToDP(1.5)
     },
     clubList: {
         marginHorizontal: widthPercentageToDP(1),
