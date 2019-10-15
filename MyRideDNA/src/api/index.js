@@ -25,10 +25,10 @@ const API_TIMEOUT = 10 * 1000; // 10 seconds
  * @param {*} errorCallback - Calling component needs to dispatch error action 
  */
 export const getPicture = (pictureId, successCallback, errorCallback) => {
-    console.log('pictureId : ',pictureId)
+    console.log('pictureId : ', pictureId)
     axios.get(USER_BASE_URL + `getPicture/${pictureId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
-            console.log('getPicture success : ',res.data)
+            console.log('getPicture success : ', res.data)
             if (res.status === 200) {
                 if (res.data.picture === '') {
                     // errorCallback(res.data);
@@ -366,7 +366,7 @@ export const updateClubs = (userId, clubName, clubId, clubs) => {
             })
             .catch(er => {
                 console.log("updateClubs: ", er.response || er);
-                differentErrors(er, [userId, clubName, clubId,clubs], updateClubs, true);
+                differentErrors(er, [userId, clubName, clubId, clubs], updateClubs, true);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -2115,7 +2115,7 @@ export const getMyWallet = (userId) => {
 
 
 export const getPassengerList = (userId, pageNumber, preference, successCallback, errorCallback) => {
-    console.log('pageNumber : ',pageNumber)
+    console.log('pageNumber : ', pageNumber)
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
@@ -2124,9 +2124,9 @@ export const getPassengerList = (userId, pageNumber, preference, successCallback
             .then(res => {
                 console.log("getAllPassengersByUserId success: ", res.data);
                 // dispatch(toggleLoaderAction(false));
-                if(res.status === 200 && res.data.passengerList.length>0){
+                if (res.status === 200 && res.data.passengerList.length > 0) {
                     dispatch(apiLoaderActions(false))
-                    dispatch(replacePassengerListAction({passengerList:res.data.passengerList, pageNumber:pageNumber}))
+                    dispatch(replacePassengerListAction({ passengerList: res.data.passengerList, pageNumber: pageNumber }))
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
                     successCallback(res.data)
@@ -2149,7 +2149,7 @@ export const getPassengerList = (userId, pageNumber, preference, successCallback
 }
 export const registerPassenger = (userId, passenger) => {
     console.log('userId : ', userId);
-    console.log('passenger : ', {...passenger});
+    console.log('passenger : ', { ...passenger });
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
@@ -2171,8 +2171,8 @@ export const registerPassenger = (userId, passenger) => {
             })
     };
 }
-export const updatePassengerDetails = ( psngId,passenger) => {
-    const {passengerId, ...passengerDetail} = passenger;
+export const updatePassengerDetails = (psngId, passenger) => {
+    const { passengerId, ...passengerDetail } = passenger;
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
@@ -2217,13 +2217,19 @@ export const deletePassenger = (passengerId) => {
 
 
 export const getAlbum = (userId) => {
+
     return dispatch => {
         axios.get(USER_BASE_URL + `getAlbumByUserId?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log("getAlbum success: ", res.data);
-                if (res.status === 200) {
-                    // dispatch(updateChatListAction({ comingFrom: 'getAllChatsApi', chatList: res.data }));
-                    dispatch(replaceAlbumListAction(res.data))
+                if (res.status === 200 && res.data.length > 0) {
+                    const pictureList = [];
+                    res.data.map(item => {
+                        item.pictureList.map(({ pictureName }) => {
+                            pictureList.push({ profilePictureId: pictureName })
+                        })
+                    })
+                    dispatch(replaceAlbumListAction(pictureList))
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     // dispatch(toggleLoaderAction(false));
                 }

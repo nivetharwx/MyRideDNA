@@ -460,8 +460,8 @@ class MyProfileTab extends Component {
                     <View style={styles.usersExtraDetailContainer}>
                         <ImageBackground source={require('../../../assets/img/my-vest.png')} style={styles.usersExtraDetail}></ImageBackground>
                     </View>
-                    {/* <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.ALBUM)}> */}
-                    <TouchableOpacity style={styles.usersExtraDetailContainer}>
+                    <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.ALBUM)}>
+                    {/* <TouchableOpacity style={styles.usersExtraDetailContainer}> */}
                         <ImageBackground source={require('../../../assets/img/my-photos.png')} style={styles.usersExtraDetail}></ImageBackground>
                     </TouchableOpacity>
                 </ScrollView>
