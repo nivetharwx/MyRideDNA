@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, TouchableHighlight, ImageBackground, TouchableWithoutFeedback, Image, Animated, Easing } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, TouchableHighlight, ImageBackground, TouchableWithoutFeedback, Image, Animated, Easing, FlatList } from 'react-native';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
 import { Icon as NBIcon, ListItem, Left, Body, Right } from 'native-base';
 import { LinkButton, IconButton } from '../buttons';
@@ -160,7 +160,7 @@ export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, 
             justifyContent: 'center'
         }}>
             <View>
-                <View style={[{ height: heightPercentageToDP(23), width: widthPercentageToDP(39), backgroundColor: '#A9A9A9' },imageStyle]}>
+                <View style={[{ height: heightPercentageToDP(23), width: widthPercentageToDP(39), backgroundColor: '#A9A9A9' }, imageStyle]}>
                     <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : squareCardPlaceholder}
                         style={{ width: null, height: null, flex: 1 }} />
                     {/* <Image source={smallardPlaceholder}
@@ -168,69 +168,138 @@ export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, 
                 </View>
                 {
                     item.name ?
-                    <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#000' }}>{item.name?item.name:''}</Text>
-                    :null
+                        <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#000' }}>{item.name ? item.name : ''}</Text>
+                        : null
                 }
                 {
-                    item.homeAddress?
-                    <Text style={{ fontSize: 11, fontWeight: '100' }}>{item.homeAddress.city?item.homeAddress.city:''}, {item.homeAddress.state?item.homeAddress.state:''}</Text>
-                    :
-                    null
+                    item.homeAddress ?
+                        <Text style={{ fontSize: 11, fontWeight: '100' }}>{item.homeAddress.city ? item.homeAddress.city : ''}, {item.homeAddress.state ? item.homeAddress.state : ''}</Text>
+                        :
+                        null
                 }
-                
+
             </View>
         </TouchableOpacity>
     </View>
 );
 
-export const HorizontalCard = ({ item, onPress, onLongPress, actionsBar, cardOuterStyle, horizontalCardPlaceholder, righticonImage }) => (
-        // <View style={cardOuterStyle}>
-        //     <ListItem thumbnail style={{ backgroundColor: '#EAEAEA' }}>
-        //         <Left style={{ height: heightPercentageToDP(13), width: heightPercentageToDP(13), backgroundColor: 'grey' }}>
-        //             <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : horizontalCardPlaceholder}
-        //                 style={{ width: heightPercentageToDP(13), height: heightPercentageToDP(13), flex: 1 }} />
-        //         </Left>
-        //         <Body style={{ height: heightPercentageToDP(13), backgroundColor: '#EAEAEA', flex: 1 }}>
-        //             <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#585756' }}>{item.name}</Text>
-        //             <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#9A9A9A' }}>{item.nickname}</Text>
-        //         </Body>
-        //         <Right style={{ height: heightPercentageToDP(13), width: heightPercentageToDP(13), justifyContent:'center', alignItems:'center', backgroundColor:'#C4C6C8',...APP_COMMON_STYLES.testingBorderS}}>
-        //             {
-        //                 righticonImage ?
-        //                     <TouchableOpacity style={{height: heightPercentageToDP(13), width: heightPercentageToDP(13)}}>
-        //                         <Image source={righticonImage} style={{ height: null, width: null, flex:1, borderWidth:2, borderColor:'black'}} />
-        //                     </TouchableOpacity>
-        //                     :
-        //                     <Text>Right</Text>
-        //             }
-        //         </Right>
-        //     </ListItem>
-        // </View>
-        <TouchableWithoutFeedback style={{ width: widthPercentageToDP(100), marginTop: 20, }} >
-            <View style={[{ flex: 1, flexDirection: 'row', height: heightPercentageToDP(13) }, cardOuterStyle]}>
-                <View style={{ width: heightPercentageToDP(13)}}>
-                    <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : horizontalCardPlaceholder}
-                        style={{ width: null, height: null, flex: 1 }} />
-                </View>
-                <View style={{ flex: 1, justifyContent: 'center', backgroundColor: '#EAEAEA' }}>
-                    <View style={{ marginLeft: widthPercentageToDP(3) }}>
-                        <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#585756' }}>{item.name}</Text>
-                        <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#9A9A9A' }}>{item.nickname}</Text>
-                    </View>
-                </View>
-                <View>
-                    {
-                        righticonImage ?
-                            <TouchableOpacity style={{ height: heightPercentageToDP(13), width: heightPercentageToDP(13) }} onPress={() => onPress ? onPress() : null}>
-                                <Image source={righticonImage} style={{ height: null, width: null, flex: 1,}} />
-                            </TouchableOpacity>
-                            :
-                            <Text>Right</Text>
-                    }
-                </View>
+export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actionsBar, cardOuterStyle, horizontalCardPlaceholder, righticonImage}) => (
+    // <View style={cardOuterStyle}>
+    //     <ListItem thumbnail style={{ backgroundColor: '#EAEAEA' }}>
+    //         <Left style={{ height: heightPercentageToDP(13), width: heightPercentageToDP(13), backgroundColor: 'grey' }}>
+    //             <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : horizontalCardPlaceholder}
+    //                 style={{ width: heightPercentageToDP(13), height: heightPercentageToDP(13), flex: 1 }} />
+    //         </Left>
+    //         <Body style={{ height: heightPercentageToDP(13), backgroundColor: '#EAEAEA', flex: 1 }}>
+    //             <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#585756' }}>{item.name}</Text>
+    //             <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#9A9A9A' }}>{item.nickname}</Text>
+    //         </Body>
+    //         <Right style={{ height: heightPercentageToDP(13), width: heightPercentageToDP(13), justifyContent:'center', alignItems:'center', backgroundColor:'#C4C6C8',...APP_COMMON_STYLES.testingBorderS}}>
+    //             {
+    //                 righticonImage ?
+    //                     <TouchableOpacity style={{height: heightPercentageToDP(13), width: heightPercentageToDP(13)}}>
+    //                         <Image source={righticonImage} style={{ height: null, width: null, flex:1, borderWidth:2, borderColor:'black'}} />
+    //                     </TouchableOpacity>
+    //                     :
+    //                     <Text>Right</Text>
+    //             }
+    //         </Right>
+    //     </ListItem>
+    // </View>
+    <TouchableWithoutFeedback style={{ width: widthPercentageToDP(100), marginTop: 20, }} >
+        <View style={[{ flex: 1, flexDirection: 'row', height: heightPercentageToDP(13), width: widthPercentageToDP(81.5) }, cardOuterStyle]}>
+            <View style={{ width: heightPercentageToDP(13), flexDirection: actionsBar ? 'row' : null }}>
+                {
+                    // for online and offline
+                    actionsBar ?
+                        <View style={{ backgroundColor: actionsBar.online ? '#81BA41' : '#C4C6C8', zIndex: 1, width: 6 }}>
+                        </View>
+                        :
+                        null
+                }
+                <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : horizontalCardPlaceholder}
+                    style={{ width: null, height: null, flex: 1 }} />
             </View>
-        </TouchableWithoutFeedback>
-    )
+
+            {
+                // here condition is for change of middle view according to action bar is present or not
+                actionsBar ?
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                        <View style={{ flex: 1, backgroundColor: '#EAEAEA', justifyContent: 'center', alignItems: 'center' }}>
+                            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#585756' }}>{item.name}</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            {
+                                // to iterate the actions array
+                                actionsBar.actions ?
+                                    <FlatList
+                                        numColumns={4}
+                                        columnWrapperStyle={{ justifyContent: 'space-between', marginHorizontal: 20, marginTop: 5 }}
+                                        data={actionsBar.actions}
+                                        renderItem={({ item, index }) => (
+                                            <View >
+                                                <IconButton iconProps={{ name: item.name, type: item.type, style: { color: item.color, fontSize: 24 } }} onPress={item.onPressActions}/>
+                                            </View>
+                                        )}
+                                    />
+                                    : null
+                            }
+                        </View>
+                    </View>
+                    :
+                    <View style={{ flex: 1, justifyContent: 'center', backgroundColor: '#EAEAEA' }}>
+                        <View style={{ marginLeft: widthPercentageToDP(3) }}>
+                            <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#585756' }}>{item.name}</Text>
+                            <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#9A9A9A' }}>{item.nickname}</Text>
+                        </View>
+                    </View>
+            }
+            {
+                // here condition is when right view is present or not
+                rightProps ?
+                    rightProps.righticonImage ?
+                        <View>
+                            <TouchableOpacity style={{ height: heightPercentageToDP(13), width: heightPercentageToDP(13) }} onPress={() => onPress ? onPress() : null}>
+                                <Image source={rightProps.righticonImage} style={{ height: null, width: null, flex: 1, }} />
+                            </TouchableOpacity>
+                        </View>
+                        :
+                        null
+                    :
+                    null
+            }
+
+            {/* {
+                actionsBar ?
+                    <View style={{ flex: 1, justifyContent: 'center', backgroundColor: '#EAEAEA' }}>
+                        <View style={{ marginLeft: widthPercentageToDP(3) }}>
+                            <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#585756' }}>{item.name}</Text>
+                            <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#9A9A9A' }}>{item.nickname}</Text>
+                        </View>
+                    </View>
+                    :
+                    <View style={{flexDirection:'row'}}>
+                        <View style={{  justifyContent: 'center',width:141, backgroundColor: '#EAEAEA' }}>
+                            <View style={{ marginLeft: widthPercentageToDP(3) }}>
+                                <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#585756' }}>{item.name}</Text>
+                                <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#9A9A9A' }}>{item.nickname}</Text>
+                            </View>
+                        </View>
+                        <View>
+                            {
+                                righticonImage ?
+                                    <TouchableOpacity style={{ height: heightPercentageToDP(13), width: heightPercentageToDP(13) }} onPress={() => onPress ? onPress() : null}>
+                                        <Image source={righticonImage} style={{ height: null, width: null, flex: 1, }} />
+                                    </TouchableOpacity>
+                                    :
+                                    <Text>Right</Text>
+                            }
+                        </View>
+                    </View>
+            } */}
+        </View>
+    </TouchableWithoutFeedback>
+)
 {/* <NBIcon name='md-star' type='Ionicons' />
     <View style={styles.columnContainer}>
         {

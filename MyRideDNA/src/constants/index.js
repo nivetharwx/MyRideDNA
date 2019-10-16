@@ -11,12 +11,14 @@ export const widthPercentageToDP = (percentage) => {
 }
 
 export const heightPercentageToDP = (percentage) => {
+    console.log('window height : ', WindowDimensions.height)
     return WindowDimensions.height * percentage / 100;
 }
 
 export const IS_ANDROID = Platform.OS === 'android';
 
-const APP_HEADER_HEIGHT = heightPercentageToDP(10);
+// const APP_HEADER_HEIGHT = heightPercentageToDP(10);
+const APP_HEADER_HEIGHT = 64;
 
 export const DEVICE_LOCATION_STATE = { ON: 'on', OFF: 'off' };
 

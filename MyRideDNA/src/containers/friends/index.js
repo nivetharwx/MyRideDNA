@@ -409,19 +409,24 @@ class Friends extends Component {
                     {
                         this.state.activeTab === 1
                             ?
-                            <BasicHeader title='Friends' searchIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
+                            // <BasicHeader title='Road Buddies' searchIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
+                            <BasicHeader title='Road Buddies'  searchbarMode={headerSearchMode}
                                 searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false, searchQuery: '' })}
                                 onClearSearchValue={() => this.setState({ searchQuery: '' })}
                                 leftIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.onPressCreateGroup }}
-                                rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
+                                // rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} 
+                                />
                             : this.state.activeTab === 2 ?
-                                <BasicHeader title='Friends'
-                                    rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
+                                <BasicHeader title='Road Buddies'
+                                    // rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} 
+                                    />
                                 :
-                                <BasicHeader title='Friends' searchIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
+                                // <BasicHeader title='Road Buddies' searchIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
+                                <BasicHeader title='Road Buddies'  searchbarMode={headerSearchMode}
                                     searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false, searchQuery: '' })}
                                     onClearSearchValue={() => this.setState({ searchQuery: '' })}
-                                    rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
+                                    // rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} 
+                                    />
                     }
 
                     <BaseModal alignCenter={true} isVisible={this.state.isVisibleGroupModal} onCancel={this.onCancelGroupForm} onPressOutside={this.onCancelGroupForm}>
@@ -435,19 +440,22 @@ class Friends extends Component {
                         </View>
                     </BaseModal>
 
-                    <Tabs locked={false} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
-                        <Tab heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
-                            <IconLabelPair containerStyle={styles.tabContentCont} text={`Friends`} textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} iconProps={{ name: 'people-outline', type: 'MaterialIcons', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }} />
-                        </TabHeading>}>
+                    <Tabs locked={false} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab style={{height:46}} ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
+                        <Tab heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 0 ? '#000000' : '#81BA41', height:46 }}>
+                            {/* <IconLabelPair containerStyle={styles.tabContentCont} text={`Friends`} textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} iconProps={{ name: 'people-outline', type: 'MaterialIcons', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }} /> */}
+                            <IconLabelPair containerStyle={styles.tabContentCont} text={`ALL BUDDIES`} textStyle={{ color: '#fff' , fontSize:12, fontWeight:'bold' }}  />
+                        </TabHeading>} >
                             <AllFriendsTab refreshContent={activeTab === 0} searchQuery={searchQuery} />
                         </Tab>
-                        <Tab heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderColor: '#fff', borderLeftWidth: 1, borderRightWidth: 1 }}>
-                            <IconLabelPair containerStyle={styles.tabContentCont} text={`Groups`} textStyle={{ color: activeTab === 1 ? '#fff' : '#6B7663' }} iconProps={{ name: 'group', type: 'FontAwesome', style: { color: activeTab === 1 ? '#fff' : '#6B7663' } }} />
+                        <Tab heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 1 ? '#000000' : '#81BA41', borderColor: '#fff', borderColor: '#fff', borderLeftWidth: 1, borderRightWidth: 1, height:46  }}>
+                            {/* <IconLabelPair containerStyle={styles.tabContentCont} text={`Groups`} textStyle={{ color:  '#fff' }} iconProps={{ name: 'group', type: 'FontAwesome', style: { color: activeTab === 1 ? '#fff' : '#6B7663' } }} /> */}
+                            <IconLabelPair containerStyle={styles.tabContentCont} text={`FAVORITES`} textStyle={{ color:  '#fff', fontSize:12, fontWeight:'bold' }}  />
                         </TabHeading>}>
                             <GroupListTab refreshContent={activeTab === 1} searchQuery={searchQuery} />
                         </Tab>
-                        <Tab heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3', borderColor: '#fff' }}>
-                            <IconLabelPair containerStyle={styles.tabContentCont} text={`Requests`} textStyle={{ color: activeTab === 2 ? '#fff' : '#6B7663' }} iconProps={{ name: 'people', type: 'MaterialIcons', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }} />
+                        <Tab heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 2 ? '#000000' : '#81BA41', borderColor: '#fff', height:46  }}>
+                            {/* <IconLabelPair containerStyle={styles.tabContentCont} text={`Requests`} textStyle={{ color: '#fff'  }} iconProps={{ name: 'people', type: 'MaterialIcons', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }} /> */}
+                            <IconLabelPair containerStyle={styles.tabContentCont} text={`GROUPS`} textStyle={{ color: '#fff', fontSize:12, fontWeight:'bold'  }}  />
                             {
                                 this.props.allFriendRequests.filter(req => req.requestType === "receivedRequest").length > 0 ?
                                     <View style={{

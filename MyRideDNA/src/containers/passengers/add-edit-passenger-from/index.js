@@ -120,7 +120,7 @@ class PaasengerForm extends Component {
                                     </View>
                                     <View style={{ marginTop: heightPercentageToDP(6) }}>
                                         <FlatList
-                                        style={{marginBottom:heightPercentageToDP(20)}}
+                                            style={{ marginBottom: heightPercentageToDP(20) }}
                                             data={this.state.filteredFriends}
                                             keyExtractor={this.communityKeyExtractor}
                                             renderItem={({ item, index }) => (
@@ -128,7 +128,7 @@ class PaasengerForm extends Component {
                                                     item={item}
                                                     horizontalCardPlaceholder={require('../../../assets/img/profile-pic.png')}
                                                     cardOuterStyle={styles.HorizontalCardOuterStyle}
-                                                    righticonImage={require('../../../assets/img/add-passenger-from-community.png')}
+                                                    rightProps={{ righticonImage: require('../../../assets/img/add-passenger-from-community.png') }}
                                                     onPress={() => this.addFriendToCommunity(item)}
                                                 />
                                             )}

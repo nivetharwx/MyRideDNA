@@ -1,21 +1,28 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableHighlight, Alert, ActivityIndicator, Easing } from 'react-native';
-import { getAllFriends, getAllFriends1, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend, getAllOnlineFriends, getPicture, getFriendsLocationList } from '../../../api';
+import { getAllFriends, getAllFriends1, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend, getAllOnlineFriends, getPicture, getFriendsLocationList, addFavorite, removeFavorite } from '../../../api';
 import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, heightPercentageToDP, RELATIONSHIP, PageKeys } from '../../../constants';
 import { BaseModal } from '../../../components/modal';
 import { LinkButton, IconButton } from '../../../components/buttons';
-import { ThumbnailCard } from '../../../components/cards';
+import { ThumbnailCard, HorizontalCard } from '../../../components/cards';
 import { openFriendProfileAction, updateFriendInListAction, screenChangeAction, resetCurrentFriendAction, hideFriendsLocationAction } from '../../../actions';
 import { FloatingAction } from 'react-native-floating-action';
 import { Icon as NBIcon, Thumbnail } from 'native-base';
 import { Actions } from 'react-native-router-flux';
+import { LabeledInputPlaceholder } from '../../../components/inputs';
 
 
-const FLOAT_ACTION_IDS = {
+const FILTERED_ACTION_IDS = {
     BTN_ADD_FRIEND: 'btn_add_friend',
     BTN_ONLINE_FRIENDS: 'btn_online_friends',
     BTN_ALL_FRIENDS: 'btn_all_friends',
+    FAVOURITE_FRIENDS:'favourite-friends',
+    FAVOURITE:'favourite',
+    LOCATION_ENABLE_FRIENDS:'location-enable-friends',
+    LOCATION_ENABLE:'location-enable',
+    VISIBLE_ON_MAP_FRIENDS:'visible-on-map-friends',
+    VISIBLE_ON_MAP:'visible-on-map',
 };
 const ACTIVE_FILTER_COLOR = '#81BB41';
 const ACTIVE_FLOAT_ACTION_STYLE = {
@@ -31,19 +38,19 @@ const DEFAULT_FLOAT_ACTION_STYLE = {
 const FLOAT_ACTIONS = [{
     text: 'Send freind request',
     icon: <NBIcon name='add-user' type='Entypo' style={{ color: '#fff' }} />,
-    name: FLOAT_ACTION_IDS.BTN_ADD_FRIEND,
+    name: FILTERED_ACTION_IDS.BTN_ADD_FRIEND,
     position: 1,
     ...DEFAULT_FLOAT_ACTION_STYLE
 }, {
     text: 'Online friends',
     icon: <NBIcon name='people' type='MaterialIcons' style={{ color: '#fff' }} />,
-    name: FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS,
+    name: FILTERED_ACTION_IDS.BTN_ONLINE_FRIENDS,
     position: 2,
     ...DEFAULT_FLOAT_ACTION_STYLE
 }, {
     text: 'All friends',
     icon: <NBIcon name='people-outline' type='MaterialIcons' style={{ color: '#fff' }} />,
-    name: FLOAT_ACTION_IDS.BTN_ALL_FRIENDS,
+    name: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS,
     position: 3,
     ...ACTIVE_FLOAT_ACTION_STYLE
 },];
@@ -62,12 +69,14 @@ class AllFriendsTab extends Component {
             isVisibleOptionsModal: false,
             selectedPerson: null,
             selectedPersonImg: null,
-            friendsFilter: FLOAT_ACTION_IDS.BTN_ALL_FRIENDS,
+            friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS,
+            isFilter:null,
             refreshList: false,
             isLoading: false,
             isLoadingData: false,
             filteredFriends: [],
             spinValue: new Animated.Value(0),
+            searchQuery:''
         }
     }
 
@@ -81,7 +90,7 @@ class AllFriendsTab extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.friendsLocationList !== this.props.friendsLocationList) {
-            if (this.props.friendsLocationList && prevState.isVisibleOptionsModal === true) {
+            if (this.props.friendsLocationList.activeLength > prevProps.friendsLocationList.activeLength) {
                 this.setState({ isVisibleOptionsModal: false }, () => {
                     this.props.changeScreen({ name: PageKeys.MAP });
                 })
@@ -148,7 +157,7 @@ class AllFriendsTab extends Component {
             name: person.name,
             nickname: person.nickname,
             email: person.email,
-            actionDate: new Date().toISOString()
+            actionDate: new Date().toISOString(),
         };
         if (this.state.isVisibleOptionsModal) this.onCancelOptionsModal();
         this.props.sendFriendRequest(requestBody, person.userId);
@@ -237,12 +246,13 @@ class AllFriendsTab extends Component {
 
     onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false, selectedPerson: null })
 
-    toggleFriendsLocation = (isVisible) => {
+    toggleFriendsLocation = (isVisible, friendId) => {
+        friendId = friendId || this.state.selectedPerson.userId;
         isVisible
             ? this.setState({ isVisibleOptionsModal: false }, () => {
-                this.props.hideFriendsLocation(this.state.selectedPerson.userId);
+                this.props.hideFriendsLocation(friendId);
             })
-            : this.props.getFriendsLocationList(this.props.user.userId, [this.state.selectedPerson.userId])
+            : this.props.getFriendsLocationList(this.props.user.userId, [friendId])
     }
 
     renderMenuOptions = () => {
@@ -349,9 +359,9 @@ class AllFriendsTab extends Component {
 
     filterOnlineFriends() {
         this.removeFriendsFilter(false);
-        const onlineFilterIdx = FLOAT_ACTIONS.findIndex(actionBtn => actionBtn.name === FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS);
+        const onlineFilterIdx = FLOAT_ACTIONS.findIndex(actionBtn => actionBtn.name === FILTERED_ACTION_IDS.BTN_ONLINE_FRIENDS);
         FLOAT_ACTIONS[onlineFilterIdx] = { ...FLOAT_ACTIONS[onlineFilterIdx], ...ACTIVE_FLOAT_ACTION_STYLE };
-        this.setState({ friendsFilter: FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS });
+        this.setState({ friendsFilter: FILTERED_ACTION_IDS.BTN_ONLINE_FRIENDS });
     }
 
     removeFriendsFilter(setDefaultActiveOption) {
@@ -360,21 +370,21 @@ class AllFriendsTab extends Component {
         FLOAT_ACTIONS[activeFilterIdx] = { ...FLOAT_ACTIONS[activeFilterIdx], ...DEFAULT_FLOAT_ACTION_STYLE };
         if (setDefaultActiveOption) {
             FLOAT_ACTIONS[FLOAT_ACTIONS.length - 1] = { ...FLOAT_ACTIONS[FLOAT_ACTIONS.length - 1], ...ACTIVE_FLOAT_ACTION_STYLE };
-            this.setState({ friendsFilter: FLOAT_ACTION_IDS.BTN_ALL_FRIENDS });
+            this.setState({ friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS });
         }
     }
 
     onSelectFloatActionOptions = (name) => {
         switch (name) {
-            case FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS:
-                if (this.state.friendsFilter !== FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS) {
+            case FILTERED_ACTION_IDS.BTN_ONLINE_FRIENDS:
+                if (this.state.friendsFilter !== FILTERED_ACTION_IDS.BTN_ONLINE_FRIENDS) {
                     this.filterOnlineFriends();
                 }
                 break;
-            case FLOAT_ACTION_IDS.BTN_ALL_FRIENDS:
+            case FILTERED_ACTION_IDS.BTN_ALL_FRIENDS:
                 this.removeFriendsFilter(true);
                 break;
-            case FLOAT_ACTION_IDS.BTN_ADD_FRIEND:
+            case FILTERED_ACTION_IDS.BTN_ADD_FRIEND:
                 Actions.push(PageKeys.CONTACTS_SECTION);
                 break;
         }
@@ -413,26 +423,84 @@ class AllFriendsTab extends Component {
         }
         return null
     }
+    
+    onChangeSearchValue=(val) => {this.setState({ searchQuery: val })}
+
+    toggleFavouriteFriend = (friend) => {
+        friend = friend || this.state.selectedPerson;
+        if (friend.favorite) {
+            this.props.removeFavorite(friend.userId, this.props.user.userId)
+        }
+        else {
+            this.props.addFavorite(friend.userId, this.props.user.userId)
+        }
+
+    }
+
+    filterFavouriteFriend = () =>{
+        if(this.state.isFilter === FILTERED_ACTION_IDS.FAVOURITE){
+            this.setState({friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS, isFilter:null})
+        }
+        else{
+            this.setState({friendsFilter: FILTERED_ACTION_IDS.FAVOURITE_FRIENDS, isFilter:FILTERED_ACTION_IDS.FAVOURITE})
+        }
+    }
+    filterLocationEnableFriends = () =>{
+        if(this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE){
+            this.setState({friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS, isFilter:null})
+        }
+        else{
+            this.setState({friendsFilter: FILTERED_ACTION_IDS.LOCATION_ENABLE_FRIENDS, isFilter:FILTERED_ACTION_IDS.LOCATION_ENABLE})
+        }
+    }
+
+    filterVisibleOnMapFriends = () =>{
+        if(this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP){
+            this.setState({friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS, isFilter:null})
+        }
+        else{
+            this.setState({friendsFilter: FILTERED_ACTION_IDS.VISIBLE_ON_MAP_FRIENDS, isFilter:FILTERED_ACTION_IDS.VISIBLE_ON_MAP})
+        }
+    }
 
 
     render() {
-        const { isRefreshing, isVisibleOptionsModal, friendsFilter } = this.state;
-        const { allFriends, searchQuery, searchFriendList, user, friendsLocationList } = this.props;
+        const { isRefreshing, isVisibleOptionsModal, friendsFilter,searchQuery } = this.state;
+        const { allFriends, searchFriendList, user, friendsLocationList } = this.props;
+        console.log('allFriends : ', allFriends);
         const spin = this.state.spinValue.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
         });
-        if (friendsFilter === FLOAT_ACTION_IDS.BTN_ALL_FRIENDS) {
+        if (friendsFilter === FILTERED_ACTION_IDS.BTN_ALL_FRIENDS) {
+            console.log('searchQuery : ',searchQuery)
             this.state.filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                     (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
-        } else if (friendsFilter === FLOAT_ACTION_IDS.BTN_ONLINE_FRIENDS) {
+        } else if (friendsFilter === FILTERED_ACTION_IDS.BTN_ONLINE_FRIENDS) {
             const onlineFriends = allFriends.filter(friend => friend.isOnline);
             this.state.filteredFriends = searchQuery === '' ? onlineFriends : onlineFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                     (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
+        }
+        else if (friendsFilter === FILTERED_ACTION_IDS.FAVOURITE_FRIENDS){
+            const favouriteFriends = allFriends.filter(friend => friend.favorite);
+            this.state.filteredFriends = searchQuery === '' ? favouriteFriends : favouriteFriends.filter(friend => {
+                return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
+                    (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
+            });
+        }
+        else if (friendsFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE_FRIENDS){
+            const locationEnabledFriends = allFriends.filter(friend => friend.locationEnable);
+            this.state.filteredFriends = searchQuery === '' ? locationEnabledFriends : locationEnabledFriends.filter(friend => {
+                return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
+                    (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
+            });
+        }
+        else if(friendsFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP_FRIENDS){
+
         }
         return (
             <View style={styles.fill}>
@@ -443,6 +511,27 @@ class AllFriendsTab extends Component {
                         }
                     </View>
                 </BaseModal>
+                <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: heightPercentageToDP(7), borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: heightPercentageToDP(7) }}>
+                    <View style={{ flex: 2.89 }}>
+                        <LabeledInputPlaceholder
+                            inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: heightPercentageToDP(5), backgroundColor: '#fff' }}
+                            returnKeyType='next'
+                            onChange={this.onChangeSearchValue}
+                            hideKeyboardOnSubmit={false}
+                            containerStyle={styles.containerStyle} />
+                    </View>
+                    <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
+                        <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
+                    </View>
+                    {/* rightIcon={{name:'user', type:'FontAwesome', style:styles.rightIconStyle}} /> */}
+
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 23, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: heightPercentageToDP(3.5) }}>
+                    <IconButton iconProps={{ name: 'add-user', type: 'Entypo', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)}/>
+                    <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color:this.state.isFilter === FILTERED_ACTION_IDS.FAVOURITE?'#CE0D0D' :'#C4C6C8', fontSize: 23 } }} onPress={()=> this.filterFavouriteFriend()} />
+                    <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ?'#2B77B4':'#C4C6C8', fontSize: 23 } }} onPress={()=> this.filterLocationEnableFriends()}/>
+                    <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={()=> this.filterVisibleOnMapFriends()}/>
+                </View>
                 {
                     allFriends.length === 0
                         ?
@@ -462,7 +551,6 @@ class AllFriendsTab extends Component {
                             <FlatList
                                 style={{ flexDirection: 'column' }}
                                 contentContainerStyle={styles.friendList}
-                                numColumns={2}
                                 data={this.state.filteredFriends}
                                 refreshing={isRefreshing}
                                 onRefresh={this.onPullRefresh}
@@ -470,26 +558,40 @@ class AllFriendsTab extends Component {
                                 extraData={this.state}
                                 renderItem={({ item, index }) => (
                                     <View style={{ flex: 1, maxWidth: widthPercentageToDP(50) }}>
-                                        <View style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', width: '80%', height: widthPercentageToDP(15), position: 'absolute', zIndex: 100, justifyContent: 'space-between' }}>
-                                            {
-                                                item.isOnline
-                                                    ? <View style={{ backgroundColor: '#37B603', width: widthPercentageToDP(6), height: widthPercentageToDP(6), borderRadius: widthPercentageToDP(3), elevation: 10 }} />
-                                                    : null
-                                            }
-                                            {
-                                                item.isOnline && item.locationEnable
-                                                    ? <IconButton iconProps={{ name: 'location-on', type: 'MaterialIcons', style: { color: friendsLocationList !== null && friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible ? APP_COMMON_STYLES.headerColor : '#ACACAC', fontSize: widthPercentageToDP(7) } }} />
-                                                    : null
-                                            }
-                                        </View>
-                                        <ThumbnailCard
-                                            thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
+                                        <HorizontalCard
+                                            horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                                             item={item}
-                                            thumbnailRef={imgRef => this.friendsImageRef[index] = imgRef}
-                                            onLongPress={() => this.showOptionsModal(item.userId)}
-                                            onPress={() => this.openProfile(item.userId, FRIEND_TYPE.ALL_FRIENDS)}
+                                            cardOuterStyle={styles.HorizontalCardOuterStyle}
+                                            actionsBar={{
+                                                online: item.isOnline,
+                                                actions: [{ name: item.favorite ? 'star' : 'star-outlined', type: 'Entypo', color: item.favorite ? '#CE0D0D' : '#C4C6C8', onPressActions: () => this.toggleFavouriteFriend(item) },
+                                                { name: 'search', type: 'FontAwesome', color: item.locationEnable ? '#2B77B4' : '#C4C6C8' },
+                                                { name: 'location-arrow', type: 'FontAwesome', color: friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible ? '#81BA41' : '#C4C6C8', onPressActions: () => this.toggleFriendsLocation(friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible, item.userId) },
+                                                { name: 'message1', type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) }]
+                                            }}
                                         />
                                     </View>
+                                    // <View style={{ flex: 1, maxWidth: widthPercentageToDP(50) }}>
+                                    //     <View style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', width: '80%', height: widthPercentageToDP(15), position: 'absolute', zIndex: 100, justifyContent: 'space-between' }}>
+                                    //         {
+                                    //             item.isOnline
+                                    //                 ? <View style={{ backgroundColor: '#37B603', width: widthPercentageToDP(6), height: widthPercentageToDP(6), borderRadius: widthPercentageToDP(3), elevation: 10 }} />
+                                    //                 : null
+                                    //         }
+                                    //         {
+                                    //             item.isOnline && item.locationEnable
+                                    //                 ? <IconButton iconProps={{ name: 'location-on', type: 'MaterialIcons', style: { color: friendsLocationList !== null && friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible ? APP_COMMON_STYLES.headerColor : '#ACACAC', fontSize: widthPercentageToDP(7) } }} />
+                                    //                 : null
+                                    //         }
+                                    //     </View>
+                                    //     <ThumbnailCard
+                                    //         thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
+                                    //         item={item}
+                                    //         thumbnailRef={imgRef => this.friendsImageRef[index] = imgRef}
+                                    //         onLongPress={() => this.showOptionsModal(item.userId)}
+                                    //         onPress={() => this.openProfile(item.userId, FRIEND_TYPE.ALL_FRIENDS)}
+                                    //     />
+                                    // </View>
                                 )}
                                 ListFooterComponent={this.renderFooter}
                                 onEndReached={this.loadMoreData}
@@ -510,14 +612,14 @@ class AllFriendsTab extends Component {
                                     <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
                                 </View>
                 }
-                <FloatingAction
+                {/* <FloatingAction
                     floatingIcon={<NBIcon name='menu' type='MaterialIcons' style={{ color: '#fff' }} />}
                     actions={FLOAT_ACTIONS}
                     color={APP_COMMON_STYLES.headerColor}
                     position={user.handDominance === 'left' ? 'right' : 'left'}
                     onPressItem={this.onSelectFloatActionOptions}
                     listenKeyboard={true}
-                />
+                /> */}
             </View>
         )
     }
@@ -550,6 +652,8 @@ const mapDispatchToProps = (dispatch) => {
         getFriendsLocationList: (userId, friendsIdList) => dispatch(getFriendsLocationList(userId, friendsIdList)),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
         hideFriendsLocation: (userId) => dispatch(hideFriendsLocationAction(userId)),
+        addFavorite: (userId, senderId) => dispatch(addFavorite(userId, senderId)),
+        removeFavorite: (userId, senderId) => dispatch(removeFavorite(userId, senderId))
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(AllFriendsTab);
@@ -571,5 +675,9 @@ const styles = StyleSheet.create({
     },
     relationshipAction: {
         color: APP_COMMON_STYLES.headerColor
+    },
+    HorizontalCardOuterStyle: {
+        marginHorizontal: widthPercentageToDP(4),
+        marginBottom: heightPercentageToDP(4),
     },
 });

@@ -53,7 +53,8 @@ import {
     RESET_CURRENT_PASSENGER,
     UPDATE_GROUPS_LOCATION,
     REPLACE_ALBUM_LIST,
-    UPDATE_ALBUM_LIST
+    UPDATE_ALBUM_LIST,
+    UPDATE_FAVOURITE_FRIEND_LIST
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -324,6 +325,12 @@ export const updateBikePictureListAction = (data) => (
 export const updateFriendListAction = (data) => (
     {
         type: UPDATE_FRIEND_LIST,
+        data: data
+    }
+);
+export const updateFavouriteFriendAction = (data) => (
+    {
+        type: UPDATE_FAVOURITE_FRIEND_LIST,
         data: data
     }
 );
