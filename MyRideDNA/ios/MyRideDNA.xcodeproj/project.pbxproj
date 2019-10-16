@@ -2049,7 +2049,7 @@
 				CODE_SIGN_ENTITLEMENTS = MyRideDNA/MyRideDNA.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 27.1;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_TEAM = AWZJ43N4AV;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -2121,7 +2121,7 @@
 				CODE_SIGN_ENTITLEMENTS = MyRideDNA/MyRideDNA.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 27.1;
 				DEVELOPMENT_TEAM = AWZJ43N4AV;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/../node_modules/@mapbox/react-native-mapbox-gl/ios",

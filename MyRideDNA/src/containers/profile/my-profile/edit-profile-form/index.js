@@ -262,71 +262,71 @@ class EditProfileForm extends Component {
                             {/* <LabeledInputPlaceholder containerStyle={{ }} inputValue={user.homeAddress.country} inputRef={elRef => this.fieldRefs[5] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} /> */}
                             <LabeledInputPlaceholder
                                 inputValue={user.name} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next'
                                 onChange={this.onChangeName} label='NAME' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
                                 inputValue={user.nickname} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next'
                                 onChange={this.onChangeNickName} label='NICKNAME' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
                                 inputValue={user.homeAddress.address} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next'
                                 onChange={this.onChangeStreetAddress} label='STREET ADDRESS' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
                                 inputValue={user.homeAddress.city} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next'
                                 onChange={this.onChangeCity} label='CITY' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
                                 inputValue={user.homeAddress.state} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[4] = elRef} returnKeyType='next'
                                 onChange={this.onChangeState} label='STATE' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
-                                inputValue={user.homeAddress.zipCode + ""} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                inputValue={user.homeAddress.zipCode || ""} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[5] = elRef} returnKeyType='next'
                                 onChange={this.onChangeZipCode} label='ZIP CODE' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[6].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
-                                inputValue={user.phoneNumber + ""} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                inputValue={user.phoneNumber || ""} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[6] = elRef} returnKeyType='next'
                                 onChange={this.onChangePhone} label='PHONE' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[7].focus()} hideKeyboardOnSubmit={false} />
 
                             <IconicList
                                 selectedValue={user.gender} values={GENDER_LIST} labelPlaceHolder='GENDER'
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 labelPlaceHolderStyle={[styles.labelStyle, { marginTop: heightPercentageToDP(1) }]}
                                 innerContainerStyle={{ borderBottomWidth: 1 }} onChange={this.onChangeGender} />
 
                             <IconicDatePicker
                                 selectedDate={user.dob} datePickerStyle={{ paddingLeft: 0, paddingBottom: 1, fontSize: heightPercentageToDP(2.3) }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 onChange={this.onChangeDOB} label='BIRTHDAY' labelStyle={styles.labelStyle} />
 
 
                             <LabeledInputPlaceholder
-                                inputValue={user.ridingSince + ""} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                inputValue={user.ridingSince || ""} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[7] = elRef} returnKeyType='next'
                                 onChange={this.onChangeRidingSince} label='RIDING SINCE' labelStyle={styles.labelStyle}
-                                onSubmit={() => this.fieldRefs[8].focus()} hideKeyboardOnSubmit={false} />
+                                hideKeyboardOnSubmit={false} />
 
                             {/* <LabeledInputPlaceholder
                                 inputValue={user.club} onBlur={this.clubFormat} inputStyle={{ paddingBottom: 0 }}
@@ -346,7 +346,7 @@ class EditProfileForm extends Component {
                                             inputValue={club} inputStyle={{ paddingBottom: 0, borderWidth: 1, height: heightPercentageToDP(4.2), width: widthPercentageToDP(55), borderRadius: 3 }}
                                             inputRef={elRef => this.fieldRefs[7] = elRef} returnKeyType='next'
                                             onChange={this.onChangeClubs}
-                                            onSubmit={() => this.fieldRefs[8].focus()} hideKeyboardOnSubmit={false} />
+                                            hideKeyboardOnSubmit={false} />
                                         <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'space-around', marginTop: heightPercentageToDP(0.5) }}>
                                             <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#f69039' }}>
                                                 <IconButton iconProps={{ name: 'check', type: 'AntDesign', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} onPress={this.addingClub} />
