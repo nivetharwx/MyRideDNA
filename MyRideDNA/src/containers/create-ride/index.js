@@ -183,7 +183,7 @@ export class CreateRide extends Component {
                             }
                         };
                         this.props.onSubmitForm(rideDetails);
-                        this.props.cancelPopup([startRideFrom.lng, startRideFrom.lat]);
+                        this.props.cancelPopup([coords.longitude, coords.latitude]);
                     },
                     (error) => {
                         // TODO: Handle no starting point
@@ -207,7 +207,7 @@ export class CreateRide extends Component {
     }
 
     onPressUseCurrentLocation = () => {
-        this.setState({ searchQuery: 'Current location', placeSearchList: [] });
+        this.setState({ searchQuery: 'Current location', placeSearchList: [], startRideFrom: null });
         this.props.onChangeStartRideFrom(this.props.currentLocation);
     }
 

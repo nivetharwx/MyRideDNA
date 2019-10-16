@@ -841,6 +841,7 @@ export class Map extends Component {
     }
 
     async componentDidMount() {
+        console.log("windowHeight: ", WindowDimensions.height);
         this.unregisterNetworkListener = NetInfo.addEventListener(this.handleNetworkConnectivityChange);
         if (this.props.user.isNewUser) {
             this.props.changeScreen({ name: PageKeys.PROFILE })
@@ -1433,7 +1434,7 @@ export class Map extends Component {
             }
         }, () => {
             this.onCloseOptionsBar(false, () => {
-                this.props.makeWaypointAsSource(ride, activeMarkerIndex - 1);
+                this.props.makeWaypointAsSource(ride, activeMarkerIndex === 0 ? activeMarkerIndex : activeMarkerIndex - 1);
                 this.setState(prevState => ({ refreshWaypointList: true }), () => {
                     setTimeout(() => this.setState(prevState => ({ refreshWaypointList: false })), 50);
                 });
@@ -2870,7 +2871,7 @@ export class Map extends Component {
                                 {
                                     directions ?
                                         <MapboxGL.ShapeSource id='ridePathLayer' shape={directions.geometry}>
-                                            <MapboxGL.LineLayer id='ridePath' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapElementStyles.hideRoute : null]} />
+                                            <MapboxGL.LineLayer id='ridePath' belowLayerID='exampleIconName' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapElementStyles.hideRoute : null]} />
                                         </MapboxGL.ShapeSource>
                                         : null
                                 }
@@ -2918,7 +2919,7 @@ export class Map extends Component {
                         {
                             directions ?
                                 <MapboxGL.ShapeSource id='ridePathLayer' shape={directions.geometry}>
-                                    <MapboxGL.LineLayer id='ridePath' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapElementStyles.hideRoute : null]} />
+                                    <MapboxGL.LineLayer id='ridePath' belowLayerID='exampleIconName' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapElementStyles.hideRoute : null]} />
                                 </MapboxGL.ShapeSource>
                                 : null
                         }

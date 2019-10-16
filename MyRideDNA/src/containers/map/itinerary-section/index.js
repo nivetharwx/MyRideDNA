@@ -654,18 +654,18 @@ class ItinerarySection extends Component {
                 </View>
             </View>
             <View style={StyleSheet.absoluteFill} pointerEvents={this.state.activeImage ? 'auto' : 'none'}>
-                <View style={{ flex: 1, zIndex: 1000, backgroundColor: this.state.activeImage ? '#000' : 'transparent' }} ref={elRef => this.viewImage = elRef}>
+                <TouchableOpacity style={{ flex: 1, zIndex: 1000, backgroundColor: this.state.activeImage ? 'rgba(0,0,0,0.8)' : 'transparent' }} ref={elRef => this.viewImage = elRef} onPress={this.hideLargerImage}>
                     <Animated.Image
                         source={this.state.activeImage ? { uri: this.state.activeImage } : null}
                         style={[{ resizeMode: 'cover', top: 0, left: 0, height: null, width: null }, activeImageStyle]}
                     ></Animated.Image>
                     {/* <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>X</Text> */}
-                    <Animated.View style={[{ position: 'absolute', top: 30, right: 30 }, animatedCrossOpacity]}>
+                    <Animated.View style={[{ position: 'absolute', top: heightPercentageToDP(27), right: 0, backgroundColor: APP_COMMON_STYLES.infoColor, height: widthPercentageToDP(8), width: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4), alignItems: 'center' }, animatedCrossOpacity]}>
                         <TouchableOpacity onPress={this.hideLargerImage}>
                             <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>X</Text>
                         </TouchableOpacity>
                     </Animated.View>
-                </View>
+                </TouchableOpacity>
                 {/* <Animated.View style={[{ flex: 1, zIndex: 900, backgroundColor: '#fff', padding: 20, paddingTop: 50, paddingBotton: 10 }, animatedContentStyle]}>
                     <Text>TESING TEXT CONTENT</Text>
                 </Animated.View> */}
