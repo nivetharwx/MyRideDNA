@@ -4,11 +4,18 @@ import { StyleSheet, TouchableWithoutFeedback, Animated, Text, Alert, Keyboard, 
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { widthPercentageToDP, heightPercentageToDP, PageKeys, APP_COMMON_STYLES } from '../../../constants';
 import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast } from 'native-base';
-import { ThumbnailCard } from '../../../components/cards';
+import { ThumbnailCard, HorizontalCard } from '../../../components/cards';
 import { createFriendGroup, getFriendGroups, addMembers, getAllGroupMembers, exitFriendGroup, getAllGroups, getAllMembersLocation } from '../../../api';
 import { Actions } from 'react-native-router-flux';
 import { BaseModal } from '../../../components/modal';
 import { hideMembersLocationAction, screenChangeAction } from '../../../actions';
+import { LabeledInputPlaceholder } from '../../../components/inputs';
+
+const FILTERED_ACTION_IDS = {
+    ALL_GROUPS: 'all_friends',
+    VISIBLE_ON_MAP_GROUPS:'visible-on-map-groups',
+    VISIBLE_ON_MAP:'visible-on-map',
+};
 
 const CREATE_GROUP_WIDTH = widthPercentageToDP(9);
 class GroupListTab extends Component {
@@ -32,6 +39,10 @@ class GroupListTab extends Component {
             isLoading: false,
             isLoadingData: false,
             spinValue: new Animated.Value(0),
+            searchQuery: '',
+            groupFilter:FILTERED_ACTION_IDS.ALL_GROUPS,
+            filteredGroups:[],
+            isFilter:null,
         };
     }
 
@@ -58,6 +69,7 @@ class GroupListTab extends Component {
             }
         }
         if (this.props.membersLocationList && (Object.keys(this.props.membersLocationList).length > Object.keys(prevProps.membersLocationList || {}).length)) {
+            console.log('did update')
             this.setState({ isVisibleOptionsModal: false }, () => {
                 this.props.changeScreen({ name: PageKeys.MAP });
             });
@@ -78,7 +90,9 @@ class GroupListTab extends Component {
             useNativeDriver: true
         }).start(() => {
             if (this.props.hasNetwork === true) {
-                this.props.getAllChats(this.props.user.userId);
+                this.props.getFriendGroups(this.props.user.userId, true, 0, (res) => {
+                }, (err) => {
+                });
             }
         });
 
@@ -116,8 +130,8 @@ class GroupListTab extends Component {
             Actions.push(PageKeys.GROUP, { grpIndex: index });
         }
     }
-    openChatPage = (index) => {
-        const groupDetail = this.props.friendGroupList[index];
+    openChatPage = (item) => {
+        const groupDetail = this.state.selectedGroup || item;
         groupDetail['isGroup'] = true
         groupDetail['id'] = groupDetail.groupId
         Actions.push(PageKeys.CHAT, { isGroup: true, chatInfo: groupDetail })
@@ -163,12 +177,13 @@ class GroupListTab extends Component {
         });
     }
 
-    toggleMembersLocation = (isVisible) => {
+    toggleMembersLocation = (isVisible, groupId) => {
+        groupId = groupId || this.state.selectedGroup.groupId
         isVisible
             ? this.setState({ isVisibleOptionsModal: false }, () => {
-                this.props.hideMembersLocation(this.state.selectedGroup.groupId);
+                this.props.hideMembersLocation(groupId);
             })
-            : this.props.getAllMembersLocation(this.state.selectedGroup.groupId, this.props.user.userId)
+            : this.props.getAllMembersLocation(groupId, this.props.user.userId)
     }
 
     showOptionsModal = (index) => {
@@ -219,23 +234,35 @@ class GroupListTab extends Component {
     renderGroup = ({ item, index }) => {
         return (
             // DOC: Removed native-base ListItem as TouchableNativeFeedback is not working in react-native 0.59.0
-            <TouchableWithoutFeedback style={{ width: widthPercentageToDP(100), marginTop: 20 }} onLongPress={() => this.showOptionsModal(index)} onPress={() => this.openGroupInfo(index)}>
-                <View style={{ flex: 1, flexDirection: 'row', height: heightPercentageToDP(10) }}>
-                    <View style={{ width: widthPercentageToDP(15), alignItems: 'center', justifyContent: 'center' }}>
-                        {
-                            item.groupProfilePictureThumbnail
-                                ? <Thumbnail source={{ uri: 'Image URL' }} />
-                                : <NBIcon active name="group" type='FontAwesome' style={{ width: '50%', alignSelf: 'center' }} />
-                        }
-                    </View>
-                    <View style={{ flex: 1, justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.1)' }}>
-                        <Text>{item.groupName}</Text>
-                    </View>
-                    <View>
-                        <Text note></Text>
-                    </View>
-                </View>
-            </TouchableWithoutFeedback>
+            // <TouchableWithoutFeedback style={{ width: widthPercentageToDP(100), marginTop: 20 }} onLongPress={() => this.showOptionsModal(index)} onPress={() => this.openGroupInfo(index)}>
+            //     <View style={{ flex: 1, flexDirection: 'row', height: heightPercentageToDP(10) }}>
+            //         <View style={{ width: widthPercentageToDP(15), alignItems: 'center', justifyContent: 'center' }}>
+            //             {
+            //                 item.groupProfilePictureThumbnail
+            //                     ? <Thumbnail source={{ uri: 'Image URL' }} />
+            //                     : <NBIcon active name="group" type='FontAwesome' style={{ width: '50%', alignSelf: 'center' }} />
+            //             }
+            //         </View>
+            //         <View style={{ flex: 1, justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.1)' }}>
+            //             <Text>{item.groupName}</Text>
+            //         </View>
+            //         <View>
+            //             <Text note></Text>
+            //         </View>
+            //     </View>
+            // </TouchableWithoutFeedback>
+            <HorizontalCard
+                horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
+                item={item}
+                cardOuterStyle={styles.HorizontalCardOuterStyle}
+                onPressLeft={() => this.openGroupInfo(index)}
+                actionsBar={{
+                    LeftIcon:{name:'group', type:'FontAwesome'},
+                    actions: [
+                    { name: 'location-arrow', type: 'FontAwesome', color:this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId][0].isVisible?'#81BA41':'#C4C6C8', onPressActions: () => this.toggleMembersLocation(this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId][0].isVisible, item.groupId) },
+                    { name: 'message1', type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) }]
+                }}
+            />
         );
     }
 
@@ -338,10 +365,21 @@ class GroupListTab extends Component {
         }
         return null
     }
+    onChangeSearchValue = (val) => { this.setState({ searchQuery: val }) }
+
+    filterVisibleOnMapGroups = () =>{
+        if(this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP){
+            this.setState({groupFilter: FILTERED_ACTION_IDS.ALL_GROUPS, isFilter:null})
+        }
+        else{
+            this.setState({groupFilter: FILTERED_ACTION_IDS.VISIBLE_ON_MAP_GROUPS, isFilter:FILTERED_ACTION_IDS.VISIBLE_ON_MAP})
+        }
+    }
+
 
     render() {
-        const { newGroupName, isVisibleOptionsModal, isRefreshing } = this.state;
-        const { friendGroupList, user, searchQuery, membersLocationList } = this.props;
+        const { newGroupName, isVisibleOptionsModal, isRefreshing, searchQuery, groupFilter } = this.state;
+        const { friendGroupList, user, membersLocationList, onPressAddGroup } = this.props;
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '45deg']
@@ -350,10 +388,18 @@ class GroupListTab extends Component {
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
         });
-        let filteredGroups = [];
-        filteredGroups = searchQuery === '' ? friendGroupList : friendGroupList.filter(group => {
-            return (group.groupName.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
-        });
+        if(groupFilter === FILTERED_ACTION_IDS.ALL_GROUPS){
+            this.state.filteredGroups = searchQuery === '' ? friendGroupList : friendGroupList.filter(group => {
+                return (group.groupName.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
+            });
+        }
+        else if(groupFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP_GROUPS){
+            const groupsVisibleOnMap = friendGroupList.filter(group => membersLocationList[group.groupId] && membersLocationList[group.groupId][0].isVisible===true);
+            this.state.filteredGroups = searchQuery === '' ? groupsVisibleOnMap : groupsVisibleOnMap.filter(group => {
+                return (group.groupName.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
+            });
+        }
+       
         return (
             <View style={styles.fill}>
                 <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
@@ -363,6 +409,27 @@ class GroupListTab extends Component {
                         }
                     </View>
                 </BaseModal>
+                <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
+                    <View style={{ flex: 2.89 }}>
+                        <LabeledInputPlaceholder
+                            inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: 18, backgroundColor: '#fff' }}
+                            returnKeyType='next'
+                            onChange={this.onChangeSearchValue}
+                            hideKeyboardOnSubmit={false}
+                            containerStyle={styles.containerStyle} />
+                    </View>
+                    <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
+                        <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
+                    </View>
+                    {/* rightIcon={{name:'user', type:'FontAwesome', style:styles.rightIconStyle}} /> */}
+
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
+                    <IconButton iconProps={{ name: 'group-add', type: 'MaterialIcons', style: { color: '#C4C6C8', fontSize: 27 } }} onPress={() => onPressAddGroup()} />
+                    {/* <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterFavouriteFriend()} /> */}
+                    {/* <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color:'#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} /> */}
+                    <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP?'#81BA41':'#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapGroups()} />
+                </View>
                 {
                     friendGroupList.length === 0
                         ?
@@ -377,11 +444,12 @@ class GroupListTab extends Component {
                             </View>
                             :
                             <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
-                        : filteredGroups.length > 0
+                        : this.state.filteredGroups.length > 0
                             ?
                             <FlatList
-                                data={filteredGroups}
+                                data={this.state.filteredGroups}
                                 refreshing={isRefreshing}
+                                contentContainerStyle={styles.friendList}
                                 onRefresh={this.onPullRefresh}
                                 keyExtractor={this.groupKeyExtractor}
                                 renderItem={this.renderGroup}
@@ -484,6 +552,14 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         paddingTop: heightPercentageToDP(5)
+    },
+    HorizontalCardOuterStyle: {
+        marginHorizontal: widthPercentageToDP(4),
+        marginBottom: heightPercentageToDP(4),
+    },
+    friendList: {
+        marginHorizontal: widthPercentageToDP(5),
+        paddingTop: widthPercentageToDP(5)
     },
 });
 

@@ -183,50 +183,35 @@ export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, 
     </View>
 );
 
-export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actionsBar, cardOuterStyle, horizontalCardPlaceholder, righticonImage}) => (
-    // <View style={cardOuterStyle}>
-    //     <ListItem thumbnail style={{ backgroundColor: '#EAEAEA' }}>
-    //         <Left style={{ height: heightPercentageToDP(13), width: heightPercentageToDP(13), backgroundColor: 'grey' }}>
-    //             <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : horizontalCardPlaceholder}
-    //                 style={{ width: heightPercentageToDP(13), height: heightPercentageToDP(13), flex: 1 }} />
-    //         </Left>
-    //         <Body style={{ height: heightPercentageToDP(13), backgroundColor: '#EAEAEA', flex: 1 }}>
-    //             <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#585756' }}>{item.name}</Text>
-    //             <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#9A9A9A' }}>{item.nickname}</Text>
-    //         </Body>
-    //         <Right style={{ height: heightPercentageToDP(13), width: heightPercentageToDP(13), justifyContent:'center', alignItems:'center', backgroundColor:'#C4C6C8',...APP_COMMON_STYLES.testingBorderS}}>
-    //             {
-    //                 righticonImage ?
-    //                     <TouchableOpacity style={{height: heightPercentageToDP(13), width: heightPercentageToDP(13)}}>
-    //                         <Image source={righticonImage} style={{ height: null, width: null, flex:1, borderWidth:2, borderColor:'black'}} />
-    //                     </TouchableOpacity>
-    //                     :
-    //                     <Text>Right</Text>
-    //             }
-    //         </Right>
-    //     </ListItem>
-    // </View>
+export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actionsBar, cardOuterStyle, horizontalCardPlaceholder, righticonImage, onPressLeft }) => (
     <TouchableWithoutFeedback style={{ width: widthPercentageToDP(100), marginTop: 20, }} >
-        <View style={[{ flex: 1, flexDirection: 'row', height: heightPercentageToDP(13), width: widthPercentageToDP(81.5) }, cardOuterStyle]}>
-            <View style={{ width: heightPercentageToDP(13), flexDirection: actionsBar ? 'row' : null }}>
+        <View style={[{ flex: 1, flexDirection: 'row', width: widthPercentageToDP(81.5) }, cardOuterStyle]}>
+            <View style={{ height: 74, width: 74, flexDirection: actionsBar ? 'row' : null }} onPress={onPressLeft}>
                 {
                     // for online and offline
-                    actionsBar ?
+                    actionsBar && actionsBar.online ?
                         <View style={{ backgroundColor: actionsBar.online ? '#81BA41' : '#C4C6C8', zIndex: 1, width: 6 }}>
                         </View>
                         :
                         null
                 }
-                <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : horizontalCardPlaceholder}
-                    style={{ width: null, height: null, flex: 1 }} />
+                {
+                    item.profilePictureId ?
+                        <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : horizontalCardPlaceholder}
+                            style={{ width: null, height: null, flex: 1 }} />
+                        :
+                        <View style={{ flex: 1, width: null, heigh: null, backgroundColor: '#C4C6C8', justifyContent: 'center', alignItems: 'center' }}>
+                            <NBIcon active name={actionsBar.LeftIcon.name} type={actionsBar.LeftIcon.type} style={{ fontSize: 40, color: '#707070' }} />
+                        </View>
+                }
             </View>
 
             {
                 // here condition is for change of middle view according to action bar is present or not
                 actionsBar ?
-                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <View style={{ flex: 1, justifyContent: 'center', borderWidth: 1, borderColor: '#EAEAEA' }}>
                         <View style={{ flex: 1, backgroundColor: '#EAEAEA', justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#585756' }}>{item.name}</Text>
+                            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#585756' }}>{item.name ? item.name : item.groupName ? item.groupName : null}</Text>
                         </View>
                         <View style={{ flex: 1 }}>
                             {
@@ -234,11 +219,11 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                                 actionsBar.actions ?
                                     <FlatList
                                         numColumns={4}
-                                        columnWrapperStyle={{ justifyContent: 'space-between', marginHorizontal: 20, marginTop: 5 }}
+                                        columnWrapperStyle={{ justifyContent: actionsBar.actions.length < 3 ? 'space-around' : 'space-between', marginHorizontal: 20, marginTop: 5 }}
                                         data={actionsBar.actions}
                                         renderItem={({ item, index }) => (
                                             <View >
-                                                <IconButton iconProps={{ name: item.name, type: item.type, style: { color: item.color, fontSize: 24 } }} onPress={item.onPressActions}/>
+                                                <IconButton iconProps={{ name: item.name, type: item.type, style: { color: item.color, fontSize: 24 } }} onPress={item.onPressActions} />
                                             </View>
                                         )}
                                     />

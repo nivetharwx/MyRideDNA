@@ -467,13 +467,11 @@ class AllFriendsTab extends Component {
     render() {
         const { isRefreshing, isVisibleOptionsModal, friendsFilter,searchQuery } = this.state;
         const { allFriends, searchFriendList, user, friendsLocationList } = this.props;
-        console.log('allFriends : ', allFriends);
         const spin = this.state.spinValue.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
         });
         if (friendsFilter === FILTERED_ACTION_IDS.BTN_ALL_FRIENDS) {
-            console.log('searchQuery : ',searchQuery)
             this.state.filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                     (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
@@ -500,7 +498,11 @@ class AllFriendsTab extends Component {
             });
         }
         else if(friendsFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP_FRIENDS){
-
+            const friendsVisibleOnMap = allFriends.filter(friend => friendsLocationList[friend.userId] && friendsLocationList[friend.userId].isVisible===true);
+            this.state.filteredFriends = searchQuery === '' ? friendsVisibleOnMap : friendsVisibleOnMap.filter(friend => {
+                return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
+                    (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
+            });
         }
         return (
             <View style={styles.fill}>
@@ -511,10 +513,10 @@ class AllFriendsTab extends Component {
                         }
                     </View>
                 </BaseModal>
-                <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: heightPercentageToDP(7), borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: heightPercentageToDP(7) }}>
+                <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
                     <View style={{ flex: 2.89 }}>
                         <LabeledInputPlaceholder
-                            inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: heightPercentageToDP(5), backgroundColor: '#fff' }}
+                            inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: 18, backgroundColor: '#fff' }}
                             returnKeyType='next'
                             onChange={this.onChangeSearchValue}
                             hideKeyboardOnSubmit={false}
@@ -526,11 +528,11 @@ class AllFriendsTab extends Component {
                     {/* rightIcon={{name:'user', type:'FontAwesome', style:styles.rightIconStyle}} /> */}
 
                 </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 23, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: heightPercentageToDP(3.5) }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
                     <IconButton iconProps={{ name: 'add-user', type: 'Entypo', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)}/>
                     <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color:this.state.isFilter === FILTERED_ACTION_IDS.FAVOURITE?'#CE0D0D' :'#C4C6C8', fontSize: 23 } }} onPress={()=> this.filterFavouriteFriend()} />
                     <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ?'#2B77B4':'#C4C6C8', fontSize: 23 } }} onPress={()=> this.filterLocationEnableFriends()}/>
-                    <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={()=> this.filterVisibleOnMapFriends()}/>
+                    <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color:this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP? '#81BA41':'#C4C6C8', fontSize: 23 } }} onPress={()=> this.filterVisibleOnMapFriends()}/>
                 </View>
                 {
                     allFriends.length === 0
@@ -671,7 +673,7 @@ const styles = StyleSheet.create({
     },
     friendList: {
         marginHorizontal: widthPercentageToDP(5),
-        paddingTop: widthPercentageToDP(5)
+        paddingTop: 16
     },
     relationshipAction: {
         color: APP_COMMON_STYLES.headerColor

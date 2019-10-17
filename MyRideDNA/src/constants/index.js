@@ -11,7 +11,6 @@ export const widthPercentageToDP = (percentage) => {
 }
 
 export const heightPercentageToDP = (percentage) => {
-    console.log('window height : ', WindowDimensions.height)
     return WindowDimensions.height * percentage / 100;
 }
 
