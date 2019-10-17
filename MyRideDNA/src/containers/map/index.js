@@ -2871,7 +2871,7 @@ export class Map extends Component {
                                 {
                                     directions ?
                                         <MapboxGL.ShapeSource id='ridePathLayer' shape={directions.geometry}>
-                                            <MapboxGL.LineLayer id='ridePath' belowLayerID='exampleIconName' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapElementStyles.hideRoute : null]} />
+                                            <MapboxGL.LineLayer id='ridePath' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapElementStyles.hideRoute : null]} />
                                         </MapboxGL.ShapeSource>
                                         : null
                                 }
@@ -2919,7 +2919,7 @@ export class Map extends Component {
                         {
                             directions ?
                                 <MapboxGL.ShapeSource id='ridePathLayer' shape={directions.geometry}>
-                                    <MapboxGL.LineLayer id='ridePath' belowLayerID='exampleIconName' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapElementStyles.hideRoute : null]} />
+                                    <MapboxGL.LineLayer id='ridePath' style={[{ lineColor: 'blue', lineWidth: 5, lineCap: MapboxGL.LineCap.Butt, visibility: 'visible' }, hideRoute ? MapElementStyles.hideRoute : null]} />
                                 </MapboxGL.ShapeSource>
                                 : null
                         }
