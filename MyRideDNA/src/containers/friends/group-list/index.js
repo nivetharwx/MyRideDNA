@@ -13,8 +13,8 @@ import { LabeledInputPlaceholder } from '../../../components/inputs';
 
 const FILTERED_ACTION_IDS = {
     ALL_GROUPS: 'all_friends',
-    VISIBLE_ON_MAP_GROUPS:'visible-on-map-groups',
-    VISIBLE_ON_MAP:'visible-on-map',
+    VISIBLE_ON_MAP_GROUPS: 'visible-on-map-groups',
+    VISIBLE_ON_MAP: 'visible-on-map',
 };
 
 const CREATE_GROUP_WIDTH = widthPercentageToDP(9);
@@ -40,9 +40,9 @@ class GroupListTab extends Component {
             isLoadingData: false,
             spinValue: new Animated.Value(0),
             searchQuery: '',
-            groupFilter:FILTERED_ACTION_IDS.ALL_GROUPS,
-            filteredGroups:[],
-            isFilter:null,
+            groupFilter: FILTERED_ACTION_IDS.ALL_GROUPS,
+            filteredGroups: [],
+            isFilter: null,
         };
     }
 
@@ -257,10 +257,10 @@ class GroupListTab extends Component {
                 cardOuterStyle={styles.HorizontalCardOuterStyle}
                 onPressLeft={() => this.openGroupInfo(index)}
                 actionsBar={{
-                    LeftIcon:{name:'group', type:'FontAwesome'},
+                    LeftIcon: { name: 'group', type: 'FontAwesome' },
                     actions: [
-                    { name: 'location-arrow', type: 'FontAwesome', color:this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId][0].isVisible?'#81BA41':'#C4C6C8', onPressActions: () => this.toggleMembersLocation(this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId][0].isVisible, item.groupId) },
-                    { name: 'message1', type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) }]
+                        { name: 'location-arrow', type: 'FontAwesome', color: this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId][0].isVisible ? '#81BA41' : '#C4C6C8', onPressActions: () => this.toggleMembersLocation(this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId][0].isVisible, item.groupId) },
+                        { name: 'message1', type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) }]
                 }}
             />
         );
@@ -367,12 +367,12 @@ class GroupListTab extends Component {
     }
     onChangeSearchValue = (val) => { this.setState({ searchQuery: val }) }
 
-    filterVisibleOnMapGroups = () =>{
-        if(this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP){
-            this.setState({groupFilter: FILTERED_ACTION_IDS.ALL_GROUPS, isFilter:null})
+    filterVisibleOnMapGroups = () => {
+        if (this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP) {
+            this.setState({ groupFilter: FILTERED_ACTION_IDS.ALL_GROUPS, isFilter: null })
         }
-        else{
-            this.setState({groupFilter: FILTERED_ACTION_IDS.VISIBLE_ON_MAP_GROUPS, isFilter:FILTERED_ACTION_IDS.VISIBLE_ON_MAP})
+        else {
+            this.setState({ groupFilter: FILTERED_ACTION_IDS.VISIBLE_ON_MAP_GROUPS, isFilter: FILTERED_ACTION_IDS.VISIBLE_ON_MAP })
         }
     }
 
@@ -388,18 +388,18 @@ class GroupListTab extends Component {
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
         });
-        if(groupFilter === FILTERED_ACTION_IDS.ALL_GROUPS){
+        if (groupFilter === FILTERED_ACTION_IDS.ALL_GROUPS) {
             this.state.filteredGroups = searchQuery === '' ? friendGroupList : friendGroupList.filter(group => {
                 return (group.groupName.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
             });
         }
-        else if(groupFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP_GROUPS){
-            const groupsVisibleOnMap = friendGroupList.filter(group => membersLocationList[group.groupId] && membersLocationList[group.groupId][0].isVisible===true);
+        else if (groupFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP_GROUPS) {
+            const groupsVisibleOnMap = friendGroupList.filter(group => membersLocationList[group.groupId] && membersLocationList[group.groupId][0].isVisible === true);
             this.state.filteredGroups = searchQuery === '' ? groupsVisibleOnMap : groupsVisibleOnMap.filter(group => {
                 return (group.groupName.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
             });
         }
-       
+
         return (
             <View style={styles.fill}>
                 <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
@@ -412,7 +412,7 @@ class GroupListTab extends Component {
                 <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
                     <View style={{ flex: 2.89 }}>
                         <LabeledInputPlaceholder
-                            inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: 18, backgroundColor: '#fff' }}
+                            inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: 25, backgroundColor: '#fff' }}
                             returnKeyType='next'
                             onChange={this.onChangeSearchValue}
                             hideKeyboardOnSubmit={false}
@@ -428,7 +428,7 @@ class GroupListTab extends Component {
                     <IconButton iconProps={{ name: 'group-add', type: 'MaterialIcons', style: { color: '#C4C6C8', fontSize: 27 } }} onPress={() => onPressAddGroup()} />
                     {/* <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterFavouriteFriend()} /> */}
                     {/* <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color:'#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} /> */}
-                    <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP?'#81BA41':'#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapGroups()} />
+                    <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapGroups()} />
                 </View>
                 {
                     friendGroupList.length === 0

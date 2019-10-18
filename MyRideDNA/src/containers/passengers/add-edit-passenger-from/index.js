@@ -15,6 +15,7 @@ import { IconLabelPair } from '../../../components/labels';
 import ImagePicker from 'react-native-image-crop-picker';
 import PaasengerFormDisplay from './passenger-form';
 import { HorizontalCard } from '../../../components/cards';
+import { Loader } from '../../../components/loader';
 
 
 const clubDummyData = [{ name: 'Black Rebel Motorcycle Club', id: "1" }, { name: 'Hell’s Angels', id: "2" }, { name: 'Milwaukee Outlaws', id: "3" }]
@@ -31,7 +32,7 @@ class PaasengerForm extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.passengerList !== this.props.passengerList) {
-            Actions.pop();
+            // Actions.pop();
         }
 
         if (prevProps.allFriends !== this.props.allFriends) {
@@ -73,7 +74,6 @@ class PaasengerForm extends Component {
     render() {
         const { passenger, activeTab, searchQuery } = this.state;
         const { allFriends } = this.props;
-        console.log('allFriends : ', allFriends)
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
         this.state.filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
             return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
@@ -100,7 +100,7 @@ class PaasengerForm extends Component {
                                 <Tab heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 1 ? '#000000' : '#81BA41', borderColor: '#fff', borderColor: '#fff', borderLeftWidth: 1 }}>
                                     <IconLabelPair containerStyle={styles.tabContentCont} text={`FROM COMMUNITY`} textStyle={{ color: '#fff', fontSize: heightPercentageToDP(2), letterSpacing: 0.6 }} />
                                 </TabHeading>}>
-                                    <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: heightPercentageToDP(7), borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: heightPercentageToDP(7) }}>
+                                    <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
                                         <View style={{ flex: 2.89 }}>
                                             <LabeledInputPlaceholder
                                                 inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: heightPercentageToDP(5), backgroundColor: '#fff' }}
@@ -115,10 +115,10 @@ class PaasengerForm extends Component {
                                         {/* rightIcon={{name:'user', type:'FontAwesome', style:styles.rightIconStyle}} /> */}
 
                                     </View>
-                                    <View style={{ borderBottomWidth: 3, borderBottomColor: '#F5891F', marginTop: heightPercentageToDP(5), marginHorizontal: widthPercentageToDP(9) }}>
+                                    <View style={{ borderBottomWidth: 3, borderBottomColor: '#F5891F', marginTop: 16, marginHorizontal: widthPercentageToDP(9) }}>
                                         <Text style={{ marginLeft: widthPercentageToDP(3), fontSize: 12, fontWeight: 'bold', color: '#000', letterSpacing: 0.6, marginBottom: 2 }}>SEARCH RESULTS</Text>
                                     </View>
-                                    <View style={{ marginTop: heightPercentageToDP(6) }}>
+                                    <View style={{ marginTop: 16 }}>
                                         <FlatList
                                             style={{ marginBottom: heightPercentageToDP(20) }}
                                             data={this.state.filteredFriends}
@@ -160,6 +160,7 @@ class PaasengerForm extends Component {
                     </ScrollView>
                     <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
                 </KeyboardAvoidingView> */}
+                <Loader isVisible={this.props.showLoader} />
             </View>
         );
     }
@@ -169,7 +170,8 @@ const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { passengerList } = state.PassengerList;
     const { allFriends, paginationNum } = state.FriendList;
-    return { user, passengerList, allFriends, paginationNum };
+    const { showLoader, hasNetwork } = state.PageState;
+    return { user, passengerList, allFriends, paginationNum, showLoader };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -197,9 +199,6 @@ const styles = StyleSheet.create({
         paddingTop: 20,
         flex: 1,
         justifyContent: 'space-around'
-    },
-    submitBtn: {
-        height: heightPercentageToDP(8.5),
     },
     imageUploadBtn: {
         marginLeft: 10,
