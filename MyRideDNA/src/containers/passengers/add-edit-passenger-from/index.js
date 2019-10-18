@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, StatusBar, ScrollView, View, Keyboard, Alert, KeyboardAvoidingView, Text, FlatList } from 'react-native';
+import { StyleSheet, StatusBar, ScrollView, View, Keyboard, Alert, KeyboardAvoidingView, Text, FlatList, Animated, ActivityIndicator, Easing } from 'react-native';
 import { BasicHeader } from '../../../components/headers';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, FRIEND_TYPE } from '../../../constants';
 import { Actions } from 'react-native-router-flux';
@@ -8,8 +8,8 @@ import { LabeledInput, IconicList, IconicDatePicker, LabeledInputPlaceholder } f
 import { BasicButton, IconButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import { addBikeToGarage, editBike, registerPassenger, updatePassengerDetails, getAllFriends, getPictureList } from '../../../api';
-import { toggleLoaderAction, updateFriendInListAction } from '../../../actions';
+import { addBikeToGarage, editBike, registerPassenger, updatePassengerDetails, getPictureList, getCommunityFriendsList } from '../../../api';
+import { toggleLoaderAction, updateFriendInListAction, updateCommunityListAction, resetCommunityListAction } from '../../../actions';
 import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon, Toast } from 'native-base';
 import { IconLabelPair } from '../../../components/labels';
 import ImagePicker from 'react-native-image-crop-picker';
@@ -20,14 +20,22 @@ import { Loader } from '../../../components/loader';
 
 const clubDummyData = [{ name: 'Black Rebel Motorcycle Club', id: "1" }, { name: 'Hell’s Angels', id: "2" }, { name: 'Milwaukee Outlaws', id: "3" }]
 class PaasengerForm extends Component {
+    borderWidthAnim = new Animated.Value(0);
     fieldRefs = [];
     constructor(props) {
         super(props);
         this.state = {
             passenger: props.passengerIdx >= 0 ? props.passengerList[props.passengerIdx] : {},
             activeTab: 0,
-            searchQuery: ''
+            searchQuery: '',
+            isLoadingData: false,
+            isLoading: false,
+            spinValue: new Animated.Value(0),
         };
+    }
+
+    componentDidMount() {
+
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -35,9 +43,13 @@ class PaasengerForm extends Component {
             // Actions.pop();
         }
 
-        if (prevProps.allFriends !== this.props.allFriends) {
+        if (prevProps.communityList !== this.props.communityList) {
+            if (this.props.communityList.length === 0) {
+                Actions.pop();
+                return;
+            }
             const pictureIdList = [];
-            this.props.allFriends.forEach((friend) => {
+            this.props.communityList.forEach((friend) => {
                 if (!friend.profilePicture && friend.profilePictureId) {
                     pictureIdList.push(friend.profilePictureId);
                 }
@@ -48,14 +60,31 @@ class PaasengerForm extends Component {
         }
     }
 
+    retryApiFunction = () => {
+        this.state.spinValue.setValue(0);
+        Animated.timing(this.state.spinValue, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.linear,
+            useNativeDriver: true
+        }).start(() => {
+            if (this.props.hasNetwork === true) {
+                this.props.getCommunityFriendsList(this.props.user.userId, 0, 10, (res) => {
+                },
+                    (error) => {
+                    })
+            }
+        });
 
+    }
 
     onChangeTab = ({ from, i }) => {
         this.setState({ activeTab: i }, () => {
             if (i === 1) {
-                this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, false, (res) => {
-                }, (err) => {
-                });
+                this.props.getCommunityFriendsList(this.props.user.userId, 0, 10, (res) => {
+                },
+                    (error) => {
+                    })
             }
         });
     }
@@ -71,11 +100,53 @@ class PaasengerForm extends Component {
 
     communityKeyExtractor = (item) => item.userId;
 
+
+    loadMoreData = () => {
+        if (this.state.isLoadingData && this.state.isLoading === false) {
+            this.setState({ isLoading: true, isLoadingData: false })
+            this.props.getCommunityFriendsList(this.props.user.userId, this.props.pageNumber, 10, (res) => {
+                this.setState({ isLoading: false })
+            }, (err) => {
+                this.setState({ isLoading: false })
+            });
+        }
+    }
+
+    renderFooter = () => {
+        if (this.state.isLoading) {
+            return (
+                <View
+                    style={{
+                        paddingVertical: 20,
+                        borderTopWidth: 1,
+                        borderColor: "#CED0CE"
+                    }}
+                >
+                    <ActivityIndicator animating size="large" />
+                </View>
+            );
+        }
+        return null
+    }
+
+    onPressBackIcon = () => {
+        this.props.resetCommunityList()
+    }
+
     render() {
         const { passenger, activeTab, searchQuery } = this.state;
-        const { allFriends } = this.props;
+        const { communityList } = this.props;
+        console.log('community : ', communityList);
+        const spinAnim = this.borderWidthAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '45deg']
+        });
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
-        this.state.filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
+        this.state.filteredFriends = searchQuery === '' ? communityList : communityList.filter(friend => {
             return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                 (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
         });
@@ -85,12 +156,12 @@ class PaasengerForm extends Component {
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={{ flex: 1 }}>
-                    <BasicHeader headerHeight={heightPercentageToDP(10.5)} title={passenger.passengerId ? 'Edit Passenger' : 'Add Passenger'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
+                    <BasicHeader headerHeight={heightPercentageToDP(10.5)} title={passenger.passengerId ? 'Edit Passenger' : 'Add Passenger'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => this.onPressBackIcon() }} />
                     {
                         this.props.passengerIdx !== -1 ?
                             <PaasengerFormDisplay passengerIdx={this.props.passengerIdx} topMargin={{ marginTop: heightPercentageToDP(15) }} />
                             :
-                            <Tabs locked={false} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
+                            <Tabs locked={false} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} style={{ height: 46 }} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
                                 <Tab heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 0 ? '#000000' : '#81BA41' }}>
                                     <IconLabelPair containerStyle={styles.tabContentCont} text={`NEW PASSENGER`} textStyle={{ color: '#fff', fontSize: heightPercentageToDP(2), letterSpacing: 0.6 }} />
                                 </TabHeading>}>
@@ -119,20 +190,56 @@ class PaasengerForm extends Component {
                                         <Text style={{ marginLeft: widthPercentageToDP(3), fontSize: 12, fontWeight: 'bold', color: '#000', letterSpacing: 0.6, marginBottom: 2 }}>SEARCH RESULTS</Text>
                                     </View>
                                     <View style={{ marginTop: 16 }}>
-                                        <FlatList
-                                            style={{ marginBottom: heightPercentageToDP(20) }}
-                                            data={this.state.filteredFriends}
-                                            keyExtractor={this.communityKeyExtractor}
-                                            renderItem={({ item, index }) => (
-                                                <HorizontalCard
-                                                    item={item}
-                                                    horizontalCardPlaceholder={require('../../../assets/img/profile-pic.png')}
-                                                    cardOuterStyle={styles.HorizontalCardOuterStyle}
-                                                    rightProps={{ righticonImage: require('../../../assets/img/add-passenger-from-community.png') }}
-                                                    onPress={() => this.addFriendToCommunity(item)}
-                                                />
-                                            )}
-                                        />
+                                        {
+                                            communityList.length === 0
+                                                ?
+                                                this.props.hasNetwork === false
+                                                    ?
+                                                    <View style={{ flex: 1, position: 'absolute', top: 23 }}>
+                                                        <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                                            <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                                        </Animated.View>
+                                                        <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                                        <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                                    </View>
+                                                    :
+                                                    null
+                                                :
+                                                this.state.filteredFriends.length > 0
+                                                    ?
+                                                    <FlatList
+                                                        style={{ marginBottom: heightPercentageToDP(20) }}
+                                                        data={this.state.filteredFriends}
+                                                        keyExtractor={this.communityKeyExtractor}
+                                                        renderItem={({ item, index }) => (
+                                                            <HorizontalCard
+                                                                item={item}
+                                                                horizontalCardPlaceholder={require('../../../assets/img/profile-pic.png')}
+                                                                cardOuterStyle={styles.HorizontalCardOuterStyle}
+                                                                rightProps={{ righticonImage: require('../../../assets/img/add-passenger-from-community.png') }}
+                                                                onPress={() => this.addFriendToCommunity(item)}
+                                                                ListFooterComponent={this.renderFooter}
+                                                                // onTouchStart={this.loadMoreData}
+                                                                onEndReached={this.loadMoreData}
+                                                                onEndReachedThreshold={0.1}
+                                                                onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                                                            />
+                                                        )}
+                                                    />
+                                                    :
+                                                    this.props.hasNetwork ?
+                                                        null
+                                                        :
+                                                        <View style={{ flex: 1, position: 'absolute', top: 23 }}>
+                                                            <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                                                <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                                            </Animated.View>
+                                                            <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                                            <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                                        </View>
+
+                                        }
+
 
                                     </View>
                                 </Tab>
@@ -140,26 +247,6 @@ class PaasengerForm extends Component {
                     }
 
                 </View>
-
-                {/* <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
-                    <BasicHeader headerHeight={heightPercentageToDP(8.5)} title={passenger.passengerId ? 'Edit Passenger' : 'Add Passenger'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
-                    <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
-                        <LabeledInput inputValue={passenger.name} inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
-                        <IconicList
-                            selectedValue={passenger.gender} placeholder='Gender' values={GENDER_LIST}
-                            onChange={this.onChangeGender} />
-                        <IconicDatePicker selectedDate={passenger.dob} onChange={this.onChangeDOB} />
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.homeAddress.address} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onChangeAddress} placeholder='Building number, street' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.homeAddress.city} inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChange={this.onChangeCity} placeholder='City' onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
-                        </View>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.homeAddress.state} inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChange={this.onChangeState} placeholder='State' onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.homeAddress.country} inputRef={elRef => this.fieldRefs[4] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} />
-                        </View>
-                    </ScrollView>
-                    <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
-                </KeyboardAvoidingView> */}
                 <Loader isVisible={this.props.showLoader} />
             </View>
         );
@@ -168,22 +255,23 @@ class PaasengerForm extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { passengerList } = state.PassengerList;
+    const { passengerList, communityList } = state.PassengerList;
     const { allFriends, paginationNum } = state.FriendList;
-    const { showLoader, hasNetwork } = state.PageState;
-    return { user, passengerList, allFriends, paginationNum, showLoader };
+    const { showLoader, hasNetwork, pageNumber } = state.PageState;
+    return { user, passengerList, allFriends, paginationNum, showLoader, hasNetwork, pageNumber, communityList };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         registerPassenger: (userId, passenger) => dispatch(registerPassenger(userId, passenger)),
         updatePassengerDetails: (passenger) => dispatch(updatePassengerDetails(passenger)),
-        getAllFriends: (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback)),
         getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
-            dispatch(updateFriendInListAction({ pictureObj }))
+            dispatch(updateCommunityListAction({ pictureObj }))
         }, (error) => {
-            console.log('getPictureList all friend error : ', error)
+            console.log('getPictureList community list error : ', error)
             // dispatch(updateFriendInListAction({ userId: friendId }))
         }),
+        getCommunityFriendsList: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getCommunityFriendsList(userId, pageNumber, preference, successCallback, errorCallback)),
+        resetCommunityList: () => dispatch(resetCommunityListAction())
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(PaasengerForm);

@@ -1,11 +1,13 @@
-import { REPLACE_PASSENGER_LIST, ADD_PASSENGER_TO_LIST, REMOVE_PASSENGER_FROM_LIST, UPDATE_PASSENGER_IN_LIST, GET_PASSENGER_INFO, UPDATE_CURRENT_PASSENGER, RESET_CURRENT_PASSENGER } from "../actions/actionConstants";
+import { REPLACE_PASSENGER_LIST, ADD_PASSENGER_TO_LIST, REMOVE_PASSENGER_FROM_LIST, UPDATE_PASSENGER_IN_LIST, GET_PASSENGER_INFO, UPDATE_CURRENT_PASSENGER, RESET_CURRENT_PASSENGER, REPLACE_COMMUNITY_LIST, UPDATE_COMMUNITY_LIST, RESET_COMMUNITY_LIST } from "../actions/actionConstants";
 import passengers from "../containers/passengers";
+import { Actions } from "react-native-router-flux";
 
 const initialState = {
     passengerList: [],
     currentPassenger: {
         passengerId: null
-    }
+    },
+    communityList: [],
 };
 
 export default (state = initialState, action) => {
@@ -57,14 +59,29 @@ export default (state = initialState, action) => {
                 //     ],
                 // }
                 const passengerIndex = state.passengerList.findIndex(passenger => passenger.passengerId === action.data.passengerId);
-                return {
-                    ...state,
-                    passengerList: [
-                        ...state.passengerList.slice(0, passengerIndex),
-                        action.data,
-                        ...state.passengerList.slice(passengerIndex + 1)
-                    ],
+                if (state.currentPassenger.passengerId !== null && state.currentPassenger.passengerId === action.data.passengerId) {
+                    const updatedCurrentPassenger = action.data
+                    return {
+                        ...state,
+                        passengerList: [
+                            ...state.passengerList.slice(0, passengerIndex),
+                            action.data,
+                            ...state.passengerList.slice(passengerIndex + 1)
+                        ],
+                        currentPassenger: updatedCurrentPassenger
+                    }
                 }
+                else {
+                    return {
+                        ...state,
+                        passengerList: [
+                            ...state.passengerList.slice(0, passengerIndex),
+                            action.data,
+                            ...state.passengerList.slice(passengerIndex + 1)
+                        ]
+                    }
+                }
+
             }
 
         case REMOVE_PASSENGER_FROM_LIST:
@@ -107,6 +124,51 @@ export default (state = initialState, action) => {
                 }
             }
 
+        case REPLACE_COMMUNITY_LIST:
+            if (action.data.pageNumber === 0) {
+                return {
+                    ...state,
+                    communityList: action.data.communityList
+                }
+            }
+            else {
+                return {
+                    ...state,
+                    communityList: [...state.communityList, action.data.communityList]
+                }
+            }
+
+        case UPDATE_COMMUNITY_LIST:
+            console.log('UPDATE_COMMUNITY_LIST : ', action.data)
+            if (action.data.pictureObj) {
+                let updatedCommunityList = state.communityList.map(item => {
+                    if (!item.profilePictureId) return item;
+                    if (typeof action.data.pictureObj[item.profilePictureId] === 'string') {
+                        return { ...item, profilePicture: action.data.pictureObj[item.profilePictureId] }
+                    }
+                    return item;
+                })
+                return {
+                    ...state,
+                    communityList: updatedCommunityList
+                }
+            }
+            else {
+                const communityIndex = state.communityList.findIndex(item => item.userId === action.data.userId)
+                console.log('communityIndex :', communityIndex)
+                return {
+                    ...state,
+                    communityList: [
+                        ...state.communityList.slice(0, communityIndex),
+                        ...state.communityList.slice(communityIndex + 1),
+                    ]
+                }
+            }
+        case RESET_COMMUNITY_LIST:
+            return {
+                ...state,
+                communityList: []
+            }
         default: return state
     }
 }

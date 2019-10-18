@@ -186,11 +186,11 @@ export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, 
 export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actionsBar, cardOuterStyle, horizontalCardPlaceholder, righticonImage, onPressLeft }) => (
     <TouchableWithoutFeedback style={{ width: widthPercentageToDP(100), marginTop: 20, }} >
         <View style={[{ flex: 1, flexDirection: 'row', width: widthPercentageToDP(81.5) }, cardOuterStyle]}>
-            <View style={{ height: 74, width: 74, flexDirection: actionsBar ? 'row' : null }} onPress={onPressLeft}>
+            <TouchableOpacity style={{ height: 74, width: 74, flexDirection: actionsBar ? 'row' : null }} onPress={onPressLeft} >
                 {
                     // for online and offline
                     actionsBar && actionsBar.online ?
-                        <View style={{ backgroundColor: actionsBar.online ? '#81BA41' : '#C4C6C8', zIndex: 1, width: 6 }}>
+                        <View style={{ backgroundColor: item.isOnline ? '#81BA41' : '#C4C6C8', zIndex: 1, width: 6 }}>
                         </View>
                         :
                         null
@@ -204,7 +204,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                             <NBIcon active name={actionsBar.LeftIcon.name} type={actionsBar.LeftIcon.type} style={{ fontSize: 40, color: '#707070' }} />
                         </View>
                 }
-            </View>
+            </TouchableOpacity>
 
             {
                 // here condition is for change of middle view according to action bar is present or not
@@ -232,7 +232,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                         </View>
                     </View>
                     :
-                    <View style={{ flex: 1, justifyContent: 'center', backgroundColor: '#EAEAEA' }}>
+                    <View style={{ flex: 1, justifyContent: 'center', backgroundColor: '#EAEAEA', height: 74 }}>
                         <View style={{ marginLeft: widthPercentageToDP(3) }}>
                             <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#585756' }}>{item.name}</Text>
                             <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#9A9A9A' }}>{item.nickname}</Text>
@@ -244,7 +244,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                 rightProps ?
                     rightProps.righticonImage ?
                         <View>
-                            <TouchableOpacity style={{ height: heightPercentageToDP(13), width: heightPercentageToDP(13) }} onPress={() => onPress ? onPress() : null}>
+                            <TouchableOpacity style={{ height: 74, width: 74 }} onPress={() => onPress ? onPress() : null}>
                                 <Image source={rightProps.righticonImage} style={{ height: null, width: null, flex: 1, }} />
                             </TouchableOpacity>
                         </View>

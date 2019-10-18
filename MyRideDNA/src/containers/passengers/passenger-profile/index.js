@@ -31,7 +31,6 @@ class PassengersProfile extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        console.log('did update : ', this.props.currentPassenger);
         if (prevProps.currentPassenger !== this.props.currentPassenger) {
             if (this.props.currentPassenger.passengerId === null) {
                 Actions.pop();

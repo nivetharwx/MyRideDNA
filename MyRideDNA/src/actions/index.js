@@ -54,7 +54,10 @@ import {
     UPDATE_GROUPS_LOCATION,
     REPLACE_ALBUM_LIST,
     UPDATE_ALBUM_LIST,
-    UPDATE_FAVOURITE_FRIEND_LIST
+    UPDATE_FAVOURITE_FRIEND_LIST,
+    REPLACE_COMMUNITY_LIST,
+    UPDATE_COMMUNITY_LIST,
+    RESET_COMMUNITY_LIST
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -621,6 +624,24 @@ export const updateCurrentPassengerAction = (data) => (
 export const resetCurrentPassengerAction = (data) => (
     {
         type: RESET_CURRENT_PASSENGER,
+        data: data
+    }
+);
+export const replaceCommunityListAction = (data) => (
+    {
+        type: REPLACE_COMMUNITY_LIST,
+        data: data
+    }
+);
+export const updateCommunityListAction = (data) => (
+    {
+        type: UPDATE_COMMUNITY_LIST,
+        data: data
+    }
+);
+export const resetCommunityListAction = (data) => (
+    {
+        type: RESET_COMMUNITY_LIST,
         data: data
     }
 );

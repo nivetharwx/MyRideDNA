@@ -140,9 +140,10 @@ class AllFriendsTab extends Component {
         const { selectedPerson } = this.state;
         this.openProfile(selectedPerson.userId, FRIEND_TYPE.ALL_FRIENDS, 1)
     }
-    openFriendsProfileTab = () => {
-        const { selectedPerson } = this.state;
-        this.openProfile(selectedPerson.userId, FRIEND_TYPE.ALL_FRIENDS, 0)
+    openFriendsProfileTab = (friend) => {
+        console.log('openFriendsProfileTab : ', friend);
+        friend = friend || this.state.selectedPerson;
+        this.openProfile(friend.userId, FRIEND_TYPE.ALL_FRIENDS, 0)
     }
     sendFriendRequest = (person) => {
         const { user } = this.props;
@@ -563,9 +564,10 @@ class AllFriendsTab extends Component {
                                         <HorizontalCard
                                             horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                                             item={item}
+                                            onPressLeft={() => this.openFriendsProfileTab(item)}
                                             cardOuterStyle={styles.HorizontalCardOuterStyle}
                                             actionsBar={{
-                                                online: item.isOnline,
+                                                online: true,
                                                 actions: [{ name: item.favorite ? 'star' : 'star-outlined', type: 'Entypo', color: item.favorite ? '#CE0D0D' : '#C4C6C8', onPressActions: () => this.toggleFavouriteFriend(item) },
                                                 { name: 'search', type: 'FontAwesome', color: item.locationEnable ? '#2B77B4' : '#C4C6C8' },
                                                 { name: 'location-arrow', type: 'FontAwesome', color: friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible ? '#81BA41' : '#C4C6C8', onPressActions: () => this.toggleFriendsLocation(friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible, item.userId) },

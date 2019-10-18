@@ -1,7 +1,7 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
     replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
-    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, replaceChatListAction, resetMessageCountAction, storeUserAction, errorHandlingAction, resetErrorHandlingAction, addMembersLocationAction, storeUserMyWalletAction, updateUserMyWalletAction, updateFriendsLocationAction, updateGroupsLocationAction, replaceAlbumListAction, updateFavouriteFriendAction
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, replaceChatListAction, resetMessageCountAction, storeUserAction, errorHandlingAction, resetErrorHandlingAction, addMembersLocationAction, storeUserMyWalletAction, updateUserMyWalletAction, updateFriendsLocationAction, updateGroupsLocationAction, replaceAlbumListAction, updateFavouriteFriendAction, replaceCommunityListAction, updateCommunityListAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN, RIDE_POINT, CHAT_BASE_URL } from '../constants';
 import axios from 'axios';
@@ -1274,8 +1274,6 @@ export const deleteWaypointPicture = (ride, id, pictureIdList) => {
     };
 }
 export const getAllFriends = (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => {
-    console.log('inside getAllFriend userId : ', userId);
-    console.log('inside getAllFriend pageNumber : ', pageNumber);
     return dispatch => {
         toggleLoader && dispatch(apiLoaderActions(true))
         // pageNumber > 0 && dispatch(toggleLoaderAction(true));
@@ -1415,8 +1413,8 @@ export const searchForFriend = (searchParam, userId, pageNumber) => {
 
 
 export const addFavorite = (userId, senderId) => {
-    console.log('userId : ',userId);
-    console.log('senderId : ',senderId);
+    console.log('userId : ', userId);
+    console.log('senderId : ', senderId);
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
@@ -1427,7 +1425,7 @@ export const addFavorite = (userId, senderId) => {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false));
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
-                    dispatch(updateFavouriteFriendAction({friendId:userId, favorite:true}))
+                    dispatch(updateFavouriteFriendAction({ friendId: userId, favorite: true }))
                     // res.data.length > 0 && dispatch(addFriendsLocationAction(res.data));
                 }
             })
@@ -1453,7 +1451,7 @@ export const removeFavorite = (userId, senderId) => {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false));
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
-                    dispatch(updateFavouriteFriendAction({friendId:userId, favorite:false}))
+                    dispatch(updateFavouriteFriendAction({ friendId: userId, favorite: false }))
                     // res.data.length > 0 && dispatch(addFriendsLocationAction(res.data));
                 }
             })
@@ -2205,8 +2203,6 @@ export const getPassengerList = (userId, pageNumber, preference, successCallback
     };
 }
 export const registerPassenger = (userId, passenger) => {
-    console.log('userId : ', userId);
-    console.log('passenger : ', { ...passenger });
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
@@ -2217,6 +2213,10 @@ export const registerPassenger = (userId, passenger) => {
                 dispatch(apiLoaderActions(false))
                 dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                 passenger.passengerId = res.data.passengerId;
+                if (res.data.isFriend) {
+                    console.log('isFriend True')
+                    dispatch(updateCommunityListAction({ userId: res.data.passengerId }))
+                }
                 dispatch(addToPassengerListAction(res.data))
             })
             .catch(er => {
@@ -2268,6 +2268,39 @@ export const deletePassenger = (passengerId) => {
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+            })
+    };
+}
+
+
+
+export const getCommunityFriendsList = (userId, pageNumber, preference, successCallback, errorCallback) => {
+    console.log('pageNumber : ', pageNumber)
+    return dispatch => {
+        dispatch(apiLoaderActions(true))
+        axios.get(FRIENDS_BASE_URL + `getCommunityFriendsList?userId=${userId}&pageNumber=${pageNumber}&preference=${preference}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("getCommunityFriendsList success: ", res.data);
+                if (res.status === 200 && res.data.friendList.length > 0) {
+                    dispatch(apiLoaderActions(false))
+                    dispatch(replaceCommunityListAction({ communityList: res.data.friendList, pageNumber: pageNumber }))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    successCallback(res.data)
+                }
+                else if (res.data.friendList.length === 0) {
+                    dispatch(apiLoaderActions(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    successCallback(false)
+                }
+            })
+            .catch(er => {
+                console.log(`getCommunityFriendsList error: `, er.response || er);
+                differentErrors(er, [userId, pageNumber, preference, successCallback, errorCallback], getCommunityFriendsList, false);
+                // TODO: Dispatch error info action
+                // dispatch(toggleLoaderAction(false));
+                dispatch(apiLoaderActions(false))
+                errorCallback(er)
             })
     };
 }
