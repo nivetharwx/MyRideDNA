@@ -37,6 +37,7 @@ const styles = StyleSheet.create({
     shiterImgContainer: {
         flex: 1,
         backgroundColor: 'rgba(235, 134, 30, 0.6)',
+        overflow: 'hidden'
     },
     alignLeft: {
         left: 0,
