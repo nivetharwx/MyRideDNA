@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
-import { View, ImageBackground, Text, Alert, StatusBar, ScrollView, FlatList, TextInput, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
+import { View, Keyboard, ImageBackground, Text, Alert, StatusBar, ScrollView, FlatList, TextInput, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
 import { connect } from 'react-redux';
 import styles from './styles';
 import { appNavMenuVisibilityAction, resetMessageCountAction, updateChatDatatAction, resetChatMessageAction } from '../../actions';
 import { ShifterButton, IconButton, LinkButton } from '../../components/buttons';
 import { Thumbnail, Item, List, Icon as NBIcon } from 'native-base';
-import { APP_COMMON_STYLES, widthPercentageToDP, WindowDimensions, heightPercentageToDP, PageKeys } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, WindowDimensions, heightPercentageToDP, PageKeys, IS_ANDROID } from '../../constants';
 import { ChatBubble } from '../../components/bubble';
 import { sendMessgae, getAllMessages, deleteMessagesById, deleteMessagesByIdForEveryone, seenMessage, getPicture, deleteAllMessages } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
@@ -23,10 +23,13 @@ class Chat extends Component {
             isVisibleDeleteModal: false,
             isNewMessage: false,
             isVisibleOptionsModal: false,
-            selectedsenderId: null
+            selectedsenderId: null,
+            iOSKeyboardShown: false
         };
     }
     componentDidMount() {
+        Keyboard.addListener('keyboardWillShow', this.toggleIOSKeyboardStatus);
+        Keyboard.addListener('keyboardWillHide', this.toggleIOSKeyboardStatus);
         // if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
         //     this.props.getAllMessages(this.props.chatInfo.id, this.props.user.userId, this.props.chatInfo.isGroup)
         //     this.props.updateChatData(this.props.chatInfo)
@@ -65,6 +68,8 @@ class Chat extends Component {
         }
     }
 
+    toggleIOSKeyboardStatus = () => this.setState(prevState => ({ iOSKeyboardShown: !prevState.iOSKeyboardShown }));
+
     showAppNavigation = () => this.props.showAppNavMenu();
     clearChat = () => {
         this.props.deleteAllMessages(this.props.chatInfo.id, this.props.user.userId, this.props.isGroup)
@@ -91,7 +96,6 @@ class Chat extends Component {
     chatKeyExtractor = (item) => item.messageId;
 
     changeToMessageSelectionMode = (messageId, senderId) => {
-        console.log('openMessageHandler index : ', messageId);
         this.setState({ messageSelectionMode: true, selectedMessage: { [messageId]: true }, selectedsenderId: { [senderId]: true } });
     }
 
@@ -114,7 +118,6 @@ class Chat extends Component {
     }
     openDeleteModal = () => {
         // this.setState({ isVisibleDeleteModal: true })
-        console.log('selectedsenderId : ', Object.keys(this.state.selectedsenderId));
         if (Object.keys(this.state.selectedsenderId).every(v => v === this.props.user.userId)) {
             Alert.alert(
                 'Delete Messages ?',
@@ -150,7 +153,6 @@ class Chat extends Component {
     deleteMessageForMe = () => {
 
         const newChatMessages = this.props.chatMessages.filter(msg => Object.keys(this.state.selectedMessage).indexOf(msg.messageId) === -1)
-        console.log('newChatMessages : ', newChatMessages);
         if (newChatMessages.length > 0) {
             this.props.deleteMessagesById(this.props.chatInfo.isGroup, this.props.chatInfo.id, this.props.user.userId, Object.keys(this.state.selectedMessage), newChatMessages[0])
         }
@@ -162,7 +164,6 @@ class Chat extends Component {
     }
     deleteMessageForEveryone = () => {
         const newChatMessages = this.props.chatMessages.filter(msg => Object.keys(this.state.selectedMessage).indexOf(msg.messageId) === -1)
-        console.log('newChatMessages : ', newChatMessages);
         if (newChatMessages.length > 0) {
             this.props.deleteMessagesByIdForEveryone(this.props.chatInfo.isGroup, this.props.chatInfo.id, this.props.user.userId, Object.keys(this.state.selectedMessage), newChatMessages[0])
         }
@@ -176,7 +177,6 @@ class Chat extends Component {
     }
 
     onViewableItemsChanged = ({ viewableItems, changed }) => {
-        console.log('ViewwableItems : ', viewableItems)
         // viewableItems.map(vItem => {
         //     console.log('vItem.item.messageId  : ',vItem.item.messageId );
         //     console.log('this.props.chatMessages[0].messageId  : ',this.props.chatMessages[0].messageId );
@@ -218,7 +218,7 @@ class Chat extends Component {
 
     getDateAndTime = (item) => {
         var dateFormat = { day: 'numeric', year: '2-digit', month: 'short' };
-        return new Date(item.date).toLocaleDateString('en-IN',dateFormat) + ', ' + new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        return new Date(item.date).toLocaleDateString('en-IN', dateFormat) + ', ' + new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
 
     onPressBackButton = () => {
@@ -246,6 +246,10 @@ class Chat extends Component {
         this.setState({ isVisibleOptionsModal: true });
     }
 
+    componentWillUnmount() {
+        Keyboard.removeListener('keyboardWillShow', this.toggleIOSKeyboardStatus);
+        Keyboard.removeListener('keyboardWillHide', this.toggleIOSKeyboardStatus);
+    }
 
     render() {
         const { user, chatMessages, totalUnseenMessage, chatData } = this.props;
@@ -339,78 +343,79 @@ class Chat extends Component {
                             }
                         </View>
                     </BaseModal>
-                    <View style={styles.rootContainer}>
-                        {
-                            chatMessages.length > 0 ?
-                                <FlatList
-                                    ref={'flatList'}
-                                    style={styles.chatArea}
-                                    contentContainerStyle={{ paddingBottom: 10 }}
-                                    data={chatMessages}
-                                    keyExtractor={this.chatKeyExtractor}
-                                    inverted={true}
-                                    onViewableItemsChanged={this.onViewableItemsChanged}
-                                    // onContentSizeChange={() => { this.refs.flatList.scrollToEnd({ animated: false }) }}
-                                    renderItem={({ item, index }) => {
-                                        return item.senderId === user.userId
-                                            ?
-                                            <ChatBubble
-                                                bubbleName='Me,'
-                                                messageTime={this.getDateAndTime(item)}
-                                                message={item.content}
-                                                bubbleStyle={styles.friendChatBubble}
-                                                bubbleNameStyle={styles.friendName}
-                                                onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
-                                                selectedMessage={selectedMessage && selectedMessage[item.messageId]}
-                                                onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
-                                            />
-                                            : <ChatBubble
-                                                bubbleName={item.senderName + ','}
-                                                messageTime={this.getDateAndTime(item)}
-                                                message={item.content}
-                                                onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
-                                                selectedMessage={selectedMessage && selectedMessage[item.messageId]}
-                                                onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
-                                            />
-                                    }}
+                    <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={[styles.fill, !IS_ANDROID && this.state.iOSKeyboardShown ? { marginBottom: 35 } : null]}>
+                        <View style={styles.rootContainer}>
+                            {
+                                chatMessages.length > 0 ?
+                                    <FlatList
+                                        ref={'flatList'}
+                                        style={styles.chatArea}
+                                        contentContainerStyle={{ paddingBottom: 10 }}
+                                        data={chatMessages}
+                                        keyExtractor={this.chatKeyExtractor}
+                                        inverted={true}
+                                        onViewableItemsChanged={this.onViewableItemsChanged}
+                                        // onContentSizeChange={() => { this.refs.flatList.scrollToEnd({ animated: false }) }}
+                                        renderItem={({ item, index }) => {
+                                            return item.senderId === user.userId
+                                                ?
+                                                <ChatBubble
+                                                    bubbleName='Me,'
+                                                    messageTime={this.getDateAndTime(item)}
+                                                    message={item.content}
+                                                    bubbleStyle={styles.friendChatBubble}
+                                                    bubbleNameStyle={styles.friendName}
+                                                    onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
+                                                    selectedMessage={selectedMessage && selectedMessage[item.messageId]}
+                                                    onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
+                                                />
+                                                : <ChatBubble
+                                                    bubbleName={item.senderName + ','}
+                                                    messageTime={this.getDateAndTime(item)}
+                                                    message={item.content}
+                                                    onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
+                                                    selectedMessage={selectedMessage && selectedMessage[item.messageId]}
+                                                    onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
+                                                />
+                                        }}
 
-                                />
-                                : null
-                        }
-                        {
-                            this.state.isNewMessage ?
-                                <View>
-                                    <View style={{ backgroundColor: '#6C6C6B', position: 'absolute', bottom: heightPercentageToDP(3), right: widthPercentageToDP(2), height: heightPercentageToDP(5), width: widthPercentageToDP(8), borderRadius: widthPercentageToDP(6) }}>
-                                        <IconButton iconProps={{ name: 'angle-double-down', type: 'FontAwesome', style: { color: 'black' } }} onPress={this.goToLastMessage} />
+                                    />
+                                    : null
+                            }
+                            {
+                                this.state.isNewMessage ?
+                                    <View>
+                                        <View style={{ backgroundColor: '#6C6C6B', position: 'absolute', bottom: heightPercentageToDP(3), right: widthPercentageToDP(2), height: heightPercentageToDP(5), width: widthPercentageToDP(8), borderRadius: widthPercentageToDP(6) }}>
+                                            <IconButton iconProps={{ name: 'angle-double-down', type: 'FontAwesome', style: { color: 'black' } }} onPress={this.goToLastMessage} />
+                                        </View>
+                                        {
+                                            this.props.comingFrom === PageKeys.NOTIFICATIONS ?
+                                                totalUnseenMessage > 0 ?
+                                                    <View style={{ backgroundColor: APP_COMMON_STYLES.infoColor, position: 'absolute', bottom: heightPercentageToDP(6), right: widthPercentageToDP(7), height: heightPercentageToDP(3), minWidth: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), textAlign: 'center', justifyContent: 'center' }}>
+                                                        <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: heightPercentageToDP(1.7) }}>{totalUnseenMessage}</Text>
+                                                    </View>
+                                                    : null
+                                                :
+                                                totalUnseenMessage > 0 ?
+                                                    <View style={{ backgroundColor: APP_COMMON_STYLES.infoColor, position: 'absolute', bottom: heightPercentageToDP(6), right: widthPercentageToDP(7), height: heightPercentageToDP(3), minWidth: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), textAlign: 'center', justifyContent: 'center' }}>
+                                                        <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: heightPercentageToDP(1.7) }}>{totalUnseenMessage}</Text>
+                                                    </View>
+                                                    : null
+
+                                        }
+
                                     </View>
-                                    {
-                                        this.props.comingFrom === PageKeys.NOTIFICATIONS ?
-                                            totalUnseenMessage > 0 ?
-                                                <View style={{ backgroundColor: APP_COMMON_STYLES.infoColor, position: 'absolute', bottom: heightPercentageToDP(6), right: widthPercentageToDP(7), height: heightPercentageToDP(3), minWidth: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), textAlign: 'center', justifyContent: 'center' }}>
-                                                    <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: heightPercentageToDP(1.7) }}>{totalUnseenMessage}</Text>
-                                                </View>
-                                                : null
-                                            :
-                                            totalUnseenMessage > 0 ?
-                                                <View style={{ backgroundColor: APP_COMMON_STYLES.infoColor, position: 'absolute', bottom: heightPercentageToDP(6), right: widthPercentageToDP(7), height: heightPercentageToDP(3), minWidth: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), textAlign: 'center', justifyContent: 'center' }}>
-                                                    <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: heightPercentageToDP(1.7) }}>{totalUnseenMessage}</Text>
-                                                </View>
-                                                : null
+                                    : null
+                            }
 
-                                    }
+                        </View>
 
-                                </View>
-                                : null
-                        }
-
-                    </View>
-
-                    <Item style={[styles.msgInputBoxContainer, this.props.hasNetwork === false ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
-                        {/* <IconButton style={styles.footerLeftIcon} iconProps={{ name: 'md-attach', type: 'Ionicons' }} /> */}
-                        <TextInput value={messageToBeSend} placeholder='Type a message' style={{ flex: 1, marginRight: widthPercentageToDP(1) }} onChangeText={this.OnChangeMessageToBeSend} />
-                        <IconButton iconProps={{ name: 'md-send', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={() => this.sendMessage()} />
-                    </Item>
-
+                        <Item style={[styles.msgInputBoxContainer, this.props.hasNetwork === false ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
+                            {/* <IconButton style={styles.footerLeftIcon} iconProps={{ name: 'md-attach', type: 'Ionicons' }} /> */}
+                            <TextInput value={messageToBeSend} placeholder='Type a message' style={{ flex: 1, marginRight: widthPercentageToDP(1) }} onChangeText={this.OnChangeMessageToBeSend} />
+                            <IconButton iconProps={{ name: 'md-send', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={() => this.sendMessage()} />
+                        </Item>
+                    </KeyboardAvoidingView>
                     {/* <ShifterButton onPress={this.showAppNavigation} containerStyles={styles.shifterContainer} alignLeft={this.props.user.handDominance === 'left'} /> */}
                 </ImageBackground>
             </View>
