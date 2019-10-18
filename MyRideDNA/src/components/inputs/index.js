@@ -8,7 +8,7 @@ import {
     TouchableOpacity
 } from 'react-native';
 import { Icon as NBIcon, Picker, DatePicker } from 'native-base';
-import { WindowDimensions, ShortMonthNames, heightPercentageToDP, widthPercentageToDP } from '../../constants';
+import { WindowDimensions, ShortMonthNames, heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
 import { getFormattedDateFromISO } from '../../util';
 
 const getKeyboardTypeForContentType = (contentType) => {
@@ -33,7 +33,7 @@ export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle,
     </View>
 );
 export const LabeledInputPlaceholder = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder, placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus, onBlur, editable, placeHolderStyle, secondLabelStyle, secondLabel, outerContainer }) => (
-    <View style={[outerContainer]}>
+    <View style={[outerContainer, { flex: 1}]}>
         <View style={[{ flexDirection: 'row', marginBottom: 3 }, containerStyle]}>
             <TextInput editable={editable} onFocus={onFocus && onFocus} onBlur={onBlur && onBlur} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ borderBottomWidth: 1, borderBottomColor: '#000', flex: 1 }, inputStyle]}
                 textContentType={inputType} keyboardType={getKeyboardTypeForContentType(inputType)}
