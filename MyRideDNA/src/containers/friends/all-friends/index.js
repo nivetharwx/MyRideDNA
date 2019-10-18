@@ -17,12 +17,12 @@ const FILTERED_ACTION_IDS = {
     BTN_ADD_FRIEND: 'btn_add_friend',
     BTN_ONLINE_FRIENDS: 'btn_online_friends',
     BTN_ALL_FRIENDS: 'btn_all_friends',
-    FAVOURITE_FRIENDS:'favourite-friends',
-    FAVOURITE:'favourite',
-    LOCATION_ENABLE_FRIENDS:'location-enable-friends',
-    LOCATION_ENABLE:'location-enable',
-    VISIBLE_ON_MAP_FRIENDS:'visible-on-map-friends',
-    VISIBLE_ON_MAP:'visible-on-map',
+    FAVOURITE_FRIENDS: 'favourite-friends',
+    FAVOURITE: 'favourite',
+    LOCATION_ENABLE_FRIENDS: 'location-enable-friends',
+    LOCATION_ENABLE: 'location-enable',
+    VISIBLE_ON_MAP_FRIENDS: 'visible-on-map-friends',
+    VISIBLE_ON_MAP: 'visible-on-map',
 };
 const ACTIVE_FILTER_COLOR = '#81BB41';
 const ACTIVE_FLOAT_ACTION_STYLE = {
@@ -70,13 +70,13 @@ class AllFriendsTab extends Component {
             selectedPerson: null,
             selectedPersonImg: null,
             friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS,
-            isFilter:null,
+            isFilter: null,
             refreshList: false,
             isLoading: false,
             isLoadingData: false,
             filteredFriends: [],
             spinValue: new Animated.Value(0),
-            searchQuery:''
+            searchQuery: ''
         }
     }
 
@@ -423,8 +423,8 @@ class AllFriendsTab extends Component {
         }
         return null
     }
-    
-    onChangeSearchValue=(val) => {this.setState({ searchQuery: val })}
+
+    onChangeSearchValue = (val) => { this.setState({ searchQuery: val }) }
 
     toggleFavouriteFriend = (friend) => {
         friend = friend || this.state.selectedPerson;
@@ -437,35 +437,35 @@ class AllFriendsTab extends Component {
 
     }
 
-    filterFavouriteFriend = () =>{
-        if(this.state.isFilter === FILTERED_ACTION_IDS.FAVOURITE){
-            this.setState({friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS, isFilter:null})
+    filterFavouriteFriend = () => {
+        if (this.state.isFilter === FILTERED_ACTION_IDS.FAVOURITE) {
+            this.setState({ friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS, isFilter: null })
         }
-        else{
-            this.setState({friendsFilter: FILTERED_ACTION_IDS.FAVOURITE_FRIENDS, isFilter:FILTERED_ACTION_IDS.FAVOURITE})
+        else {
+            this.setState({ friendsFilter: FILTERED_ACTION_IDS.FAVOURITE_FRIENDS, isFilter: FILTERED_ACTION_IDS.FAVOURITE })
         }
     }
-    filterLocationEnableFriends = () =>{
-        if(this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE){
-            this.setState({friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS, isFilter:null})
+    filterLocationEnableFriends = () => {
+        if (this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE) {
+            this.setState({ friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS, isFilter: null })
         }
-        else{
-            this.setState({friendsFilter: FILTERED_ACTION_IDS.LOCATION_ENABLE_FRIENDS, isFilter:FILTERED_ACTION_IDS.LOCATION_ENABLE})
+        else {
+            this.setState({ friendsFilter: FILTERED_ACTION_IDS.LOCATION_ENABLE_FRIENDS, isFilter: FILTERED_ACTION_IDS.LOCATION_ENABLE })
         }
     }
 
-    filterVisibleOnMapFriends = () =>{
-        if(this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP){
-            this.setState({friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS, isFilter:null})
+    filterVisibleOnMapFriends = () => {
+        if (this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP) {
+            this.setState({ friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS, isFilter: null })
         }
-        else{
-            this.setState({friendsFilter: FILTERED_ACTION_IDS.VISIBLE_ON_MAP_FRIENDS, isFilter:FILTERED_ACTION_IDS.VISIBLE_ON_MAP})
+        else {
+            this.setState({ friendsFilter: FILTERED_ACTION_IDS.VISIBLE_ON_MAP_FRIENDS, isFilter: FILTERED_ACTION_IDS.VISIBLE_ON_MAP })
         }
     }
 
 
     render() {
-        const { isRefreshing, isVisibleOptionsModal, friendsFilter,searchQuery } = this.state;
+        const { isRefreshing, isVisibleOptionsModal, friendsFilter, searchQuery } = this.state;
         const { allFriends, searchFriendList, user, friendsLocationList } = this.props;
         const spin = this.state.spinValue.interpolate({
             inputRange: [0, 1],
@@ -483,22 +483,22 @@ class AllFriendsTab extends Component {
                     (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
         }
-        else if (friendsFilter === FILTERED_ACTION_IDS.FAVOURITE_FRIENDS){
+        else if (friendsFilter === FILTERED_ACTION_IDS.FAVOURITE_FRIENDS) {
             const favouriteFriends = allFriends.filter(friend => friend.favorite);
             this.state.filteredFriends = searchQuery === '' ? favouriteFriends : favouriteFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                     (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
         }
-        else if (friendsFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE_FRIENDS){
+        else if (friendsFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE_FRIENDS) {
             const locationEnabledFriends = allFriends.filter(friend => friend.locationEnable);
             this.state.filteredFriends = searchQuery === '' ? locationEnabledFriends : locationEnabledFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                     (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
         }
-        else if(friendsFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP_FRIENDS){
-            const friendsVisibleOnMap = allFriends.filter(friend => friendsLocationList[friend.userId] && friendsLocationList[friend.userId].isVisible===true);
+        else if (friendsFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP_FRIENDS) {
+            const friendsVisibleOnMap = allFriends.filter(friend => friendsLocationList[friend.userId] && friendsLocationList[friend.userId].isVisible === true);
             this.state.filteredFriends = searchQuery === '' ? friendsVisibleOnMap : friendsVisibleOnMap.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                     (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
@@ -516,7 +516,7 @@ class AllFriendsTab extends Component {
                 <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
                     <View style={{ flex: 2.89 }}>
                         <LabeledInputPlaceholder
-                            inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: 18, backgroundColor: '#fff' }}
+                            inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: 25, backgroundColor: '#fff', }}
                             returnKeyType='next'
                             onChange={this.onChangeSearchValue}
                             hideKeyboardOnSubmit={false}
@@ -529,10 +529,10 @@ class AllFriendsTab extends Component {
 
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
-                    <IconButton iconProps={{ name: 'add-user', type: 'Entypo', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)}/>
-                    <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color:this.state.isFilter === FILTERED_ACTION_IDS.FAVOURITE?'#CE0D0D' :'#C4C6C8', fontSize: 23 } }} onPress={()=> this.filterFavouriteFriend()} />
-                    <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ?'#2B77B4':'#C4C6C8', fontSize: 23 } }} onPress={()=> this.filterLocationEnableFriends()}/>
-                    <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color:this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP? '#81BA41':'#C4C6C8', fontSize: 23 } }} onPress={()=> this.filterVisibleOnMapFriends()}/>
+                    <IconButton iconProps={{ name: 'add-user', type: 'Entypo', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)} />
+                    <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.FAVOURITE ? '#CE0D0D' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterFavouriteFriend()} />
+                    <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ? '#2B77B4' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} />
+                    <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapFriends()} />
                 </View>
                 {
                     allFriends.length === 0

@@ -3,8 +3,8 @@ import passengers from "../containers/passengers";
 
 const initialState = {
     passengerList: [],
-    currentPassenger : {
-        passengerId:null
+    currentPassenger: {
+        passengerId: null
     }
 };
 
@@ -12,24 +12,24 @@ export default (state = initialState, action) => {
     switch (action.type) {
         case REPLACE_PASSENGER_LIST:
             console.log('REPLACE_PASSENGER_LIST : ', action.data)
-            if(action.data.pageNumber === 0 ){
+            if (action.data.pageNumber === 0) {
                 return {
                     ...state,
                     passengerList: action.data.passengerList
                 }
             }
-            else{
+            else {
                 return {
                     ...state,
-                    passengerList: [...state.passengerList,action.data.passengerList]
+                    passengerList: [...state.passengerList, action.data.passengerList]
                 }
             }
         case ADD_PASSENGER_TO_LIST:
             return {
                 ...state,
                 passengerList: [
+                    action.data,
                     ...state.passengerList,
-                    action.data
                 ]
             }
         case UPDATE_PASSENGER_IN_LIST:
@@ -78,34 +78,34 @@ export default (state = initialState, action) => {
             }
 
         case GET_PASSENGER_INFO:
-                const passenger = state.passengerList[action.data]
-                const {profilePicture, ...otherPassengerKey} = passenger
-                return {
-                    ...state,
-                    currentPassenger: {
-                        passengerId:null,
-                        ...otherPassengerKey
-                    }
+            const passenger = state.passengerList[action.data]
+            const { profilePicture, ...otherPassengerKey } = passenger
+            return {
+                ...state,
+                currentPassenger: {
+                    passengerId: null,
+                    ...otherPassengerKey
                 }
+            }
 
         case UPDATE_CURRENT_PASSENGER:
             const psng = state.currentPassenger;
-            psng['profilePicture'] = action.data.profilePicture 
+            psng['profilePicture'] = action.data.profilePicture
             return {
                 ...state,
-                currentPassenger:{
-                    passengerId:null,
+                currentPassenger: {
+                    passengerId: null,
                     ...psng
                 }
-            } 
-            
+            }
+
         case RESET_CURRENT_PASSENGER:
             return {
                 ...state,
-                currentPassenger:{
-                    passengerId:null
+                currentPassenger: {
+                    passengerId: null
                 }
-            }    
+            }
 
         default: return state
     }
