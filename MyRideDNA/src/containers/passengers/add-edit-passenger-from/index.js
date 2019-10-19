@@ -94,7 +94,6 @@ class PaasengerForm extends Component {
     }
 
     addFriendToCommunity = (item) => {
-        console.log('addFriendToCommunity : ', item)
         this.props.registerPassenger(this.props.user.userId, { passengerId: item.userId })
     }
 
@@ -136,7 +135,6 @@ class PaasengerForm extends Component {
     render() {
         const { passenger, activeTab, searchQuery } = this.state;
         const { communityList } = this.props;
-        console.log('community : ', communityList);
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '45deg']
@@ -174,13 +172,13 @@ class PaasengerForm extends Component {
                                     <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
                                         <View style={{ flex: 2.89 }}>
                                             <LabeledInputPlaceholder
-                                                inputValue={searchQuery} inputStyle={{ paddingBottom: 0, backgroundColor: '#fff', borderBottomWidth:0 }}
+                                                inputValue={searchQuery} inputStyle={{ paddingBottom: 0, backgroundColor: '#fff', borderBottomWidth: 0 }}
                                                 inputRef={elRef => this.fieldRefs[7] = elRef} returnKeyType='next'
                                                 onChange={this.onChangeSearchFriend}
                                                 hideKeyboardOnSubmit={false}
                                                 containerStyle={styles.containerStyle}
-                                                outerContainer={{marginLeft:15}}
-                                                />
+                                                outerContainer={{ marginLeft: 15 }}
+                                            />
                                         </View>
                                         <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
                                             <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 19 } }} />
@@ -220,13 +218,13 @@ class PaasengerForm extends Component {
                                                                 cardOuterStyle={styles.HorizontalCardOuterStyle}
                                                                 rightProps={{ righticonImage: require('../../../assets/img/add-passenger-from-community.png') }}
                                                                 onPress={() => this.addFriendToCommunity(item)}
-                                                                ListFooterComponent={this.renderFooter}
-                                                                // onTouchStart={this.loadMoreData}
-                                                                onEndReached={this.loadMoreData}
-                                                                onEndReachedThreshold={0.1}
-                                                                onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
                                                             />
                                                         )}
+                                                        ListFooterComponent={this.renderFooter}
+                                                        // onTouchStart={this.loadMoreData}
+                                                        onEndReached={this.loadMoreData}
+                                                        onEndReachedThreshold={0.1}
+                                                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
                                                     />
                                                     :
                                                     this.props.hasNetwork ?

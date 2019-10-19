@@ -13,7 +13,6 @@ const initialState = {
 export default (state = initialState, action) => {
     switch (action.type) {
         case REPLACE_PASSENGER_LIST:
-            console.log('REPLACE_PASSENGER_LIST : ', action.data)
             if (action.data.pageNumber === 0) {
                 return {
                     ...state,
@@ -23,7 +22,7 @@ export default (state = initialState, action) => {
             else {
                 return {
                     ...state,
-                    passengerList: [...state.passengerList, action.data.passengerList]
+                    passengerList: [...state.passengerList, ...action.data.passengerList]
                 }
             }
         case ADD_PASSENGER_TO_LIST:
@@ -134,12 +133,11 @@ export default (state = initialState, action) => {
             else {
                 return {
                     ...state,
-                    communityList: [...state.communityList, action.data.communityList]
+                    communityList: [...state.communityList, ...action.data.communityList]
                 }
             }
 
         case UPDATE_COMMUNITY_LIST:
-            console.log('UPDATE_COMMUNITY_LIST : ', action.data)
             if (action.data.pictureObj) {
                 let updatedCommunityList = state.communityList.map(item => {
                     if (!item.profilePictureId) return item;
@@ -155,7 +153,6 @@ export default (state = initialState, action) => {
             }
             else {
                 const communityIndex = state.communityList.findIndex(item => item.userId === action.data.userId)
-                console.log('communityIndex :', communityIndex)
                 return {
                     ...state,
                     communityList: [

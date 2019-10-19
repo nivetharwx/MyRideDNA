@@ -141,7 +141,6 @@ class AllFriendsTab extends Component {
         this.openProfile(selectedPerson.userId, FRIEND_TYPE.ALL_FRIENDS, 1)
     }
     openFriendsProfileTab = (friend) => {
-        console.log('openFriendsProfileTab : ', friend);
         friend = friend || this.state.selectedPerson;
         this.openProfile(friend.userId, FRIEND_TYPE.ALL_FRIENDS, 0)
     }
@@ -226,7 +225,7 @@ class AllFriendsTab extends Component {
         // this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, false, (res) => {
         // }, (err) => {
         // })
-        this.props.getAllFriends1(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, false, (res) => {
+        this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, false, (res) => {
         }, (err) => {
         })
     }
@@ -400,7 +399,7 @@ class AllFriendsTab extends Component {
             // }, (err) => {
             //     this.setState({ isLoading: false })
             // });
-            this.props.getAllFriends1(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, this.props.pageNumber, false, (res) => {
+            this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, this.props.pageNumber, false, (res) => {
                 this.setState({ isLoading: false })
             }, (err) => {
                 this.setState({ isLoading: false })
@@ -568,10 +567,10 @@ class AllFriendsTab extends Component {
                                             cardOuterStyle={styles.HorizontalCardOuterStyle}
                                             actionsBar={{
                                                 online: true,
-                                                actions: [{ name: item.favorite ? 'star' : 'star-outlined', type: 'Entypo', color: item.favorite ? '#CE0D0D' : '#C4C6C8', onPressActions: () => this.toggleFavouriteFriend(item) },
-                                                { name: 'search', type: 'FontAwesome', color: item.locationEnable ? '#2B77B4' : '#C4C6C8' },
-                                                { name: 'location-arrow', type: 'FontAwesome', color: friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible ? '#81BA41' : '#C4C6C8', onPressActions: () => this.toggleFriendsLocation(friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible, item.userId) },
-                                                { name: 'message1', type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) }]
+                                                actions: [{ name: item.favorite ? 'star' : 'star-outlined', id: 1, type: 'Entypo', color: item.favorite ? '#CE0D0D' : '#C4C6C8', onPressActions: () => this.toggleFavouriteFriend(item) },
+                                                { name: 'search', id: 2, type: 'FontAwesome', color: item.locationEnable ? '#2B77B4' : '#C4C6C8' },
+                                                { name: 'location-arrow', id: 3, type: 'FontAwesome', color: friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible ? '#81BA41' : '#C4C6C8', onPressActions: () => this.toggleFriendsLocation(friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible, item.userId) },
+                                                { name: 'message1', id: 4, type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) }]
                                             }}
                                         />
                                     </View>

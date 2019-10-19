@@ -196,13 +196,13 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                         null
                 }
                 {
-                    item.profilePictureId ?
-                        <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : horizontalCardPlaceholder}
-                            style={{ width: null, height: null, flex: 1 }} />
-                        :
+                    item.groupId && actionsBar && actionsBar.LeftIcon ?
                         <View style={{ flex: 1, width: null, heigh: null, backgroundColor: '#C4C6C8', justifyContent: 'center', alignItems: 'center' }}>
                             <NBIcon active name={actionsBar.LeftIcon.name} type={actionsBar.LeftIcon.type} style={{ fontSize: 40, color: '#707070' }} />
                         </View>
+                        :
+                        <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : horizontalCardPlaceholder}
+                            style={{ width: null, height: null, flex: 1 }} />
                 }
             </TouchableOpacity>
 
@@ -221,6 +221,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                                         numColumns={4}
                                         columnWrapperStyle={{ justifyContent: actionsBar.actions.length < 3 ? 'space-around' : 'space-between', marginHorizontal: 20, marginTop: 5 }}
                                         data={actionsBar.actions}
+                                        keyExtractor={() => actionsBar.actions.id}
                                         renderItem={({ item, index }) => (
                                             <View >
                                                 <IconButton iconProps={{ name: item.name, type: item.type, style: { color: item.color, fontSize: 24 } }} onPress={item.onPressActions} />
