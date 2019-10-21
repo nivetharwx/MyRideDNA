@@ -1413,8 +1413,6 @@ export const searchForFriend = (searchParam, userId, pageNumber) => {
 
 
 export const addFavorite = (userId, senderId) => {
-    console.log('userId : ', userId);
-    console.log('senderId : ', senderId);
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
