@@ -8,11 +8,17 @@ import { getGroupInfoAction, resetCurrentGroupAction, updateMemberAction } from 
 import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, WindowDimensions, PageKeys, FRIEND_TYPE, RELATIONSHIP } from '../../../constants';
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { addMembers, getAllGroupMembers, dismissMemberAsAdmin, makeMemberAsAdmin, removeMember, getPicture, getPictureList, readNotification, getGroupMembers } from '../../../api';
-import { ThumbnailCard } from '../../../components/cards';
+import { ThumbnailCard, HorizontalCard } from '../../../components/cards';
 import { BaseModal } from '../../../components/modal';
 import { Icon as NBIcon, ListItem, Left, Thumbnail, Body, Right, CheckBox } from 'native-base';
-import { LabeledInput } from '../../../components/inputs';
+import { LabeledInput, LabeledInputPlaceholder } from '../../../components/inputs';
 import { Loader } from '../../../components/loader';
+
+const FILTERED_ACTION_IDS = {
+    BTN_ALL_MEMBERS: 'btn_all_members',
+    LOCATION_ENABLE_MEMBERS: 'location-enable-members',
+    LOCATION_ENABLE: 'location-enable',
+};
 
 class Group extends Component {
     floatSecAnim = new Animated.Value(CREATE_GROUP_WIDTH / 2);
@@ -36,6 +42,10 @@ class Group extends Component {
             isLoadingData: false,
             filteredFriends: null,
             spinValue: new Animated.Value(0),
+            searchQuery: '',
+            friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_MEMBERS,
+            isFilter: null,
+            filteredMembers: []
         };
     }
 
@@ -262,6 +272,10 @@ class Group extends Component {
         );
     }
 
+    onChangeSearchValue = (val) => { this.setState({ searchQuery: val }) }
+
+
+
     renderMenuOptions = () => {
         const { selectedMember } = this.state;
         const userInfo = this.props.currentGroup.groupMembers[0];
@@ -291,13 +305,13 @@ class Group extends Component {
             ))
         )
     }
-    openChatPage = (person) => {
-        const { selectedMember } = this.state;
-        person = person || selectedMember;
-        person['isGroup'] = false
-        person['id'] = person.memberId
-        Actions.push(PageKeys.CHAT, { chatInfo: person })
-        this.setState({ isVisibleOptionsModal: false, selectedMember: null });
+    openChatPage = (groupDetail) => {
+        groupDetail = this.props.currentGroup;
+        const { groupMembers, ...otherGroupDetail } = groupDetail
+        otherGroupDetail['isGroup'] = true
+        otherGroupDetail['id'] = groupDetail.groupId
+        Actions.push(PageKeys.CHAT, { isGroup: true, chatInfo: otherGroupDetail })
+        this.setState({ isVisibleOptionsModal: false })
     }
     toggleFriendSelection = (index) => {
         let prevIndex = -1;
@@ -347,18 +361,22 @@ class Group extends Component {
         this.setState({ isVisibleSearchModal: true });
 
     }
-    openProfile = (userId, friendType) => {
+    openFriendsProfileTab = (userId, index, friendType) => {
         this.setState({ isVisibleOptionsModal: false, selectedMember: null });
-        if (this.props.allFriends.findIndex(friend => friend.userId === userId) === -1) {
-            const notFriend = this.props.currentGroup.groupMembers.filter(member => {
-                return member.memberId === userId
-            }, []);
-            Actions.push(PageKeys.FRIENDS_PROFILE, { relationshipStatus: RELATIONSHIP.UNKNOWN, person: notFriend[0], activeTab: 0 });
+        if (index === 0) {
+            Actions.push(PageKeys.PROFILE);
         }
         else {
-            Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId, friendType: FRIEND_TYPE.ALL_FRIENDS });
+            if (this.props.allFriends.findIndex(friend => friend.userId === userId) === -1) {
+                const notFriend = this.props.currentGroup.groupMembers.filter(member => {
+                    return member.memberId === userId
+                }, []);
+                Actions.push(PageKeys.FRIENDS_PROFILE, { relationshipStatus: RELATIONSHIP.UNKNOWN, person: notFriend[0], activeTab: 0 });
+            }
+            else {
+                Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId, friendType: FRIEND_TYPE.ALL_FRIENDS });
+            }
         }
-
     }
 
     loadMoreData = () => {
@@ -389,12 +407,29 @@ class Group extends Component {
         return null
     }
 
+    // openFriendsProfileTab = (friend, index) => {
+    //     friend = friend || this.state.selectedPerson;
+    //     if (index !== 0) {
+    //         console.log('openFriendsProfileTab friend : ', friend);
+    //         console.log('openFriendsProfileTab index : ', index);
+    //         Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: friend.memberId, friendType: FRIEND_TYPE.ALL_FRIENDS, activeTab: 0 })
+    //     }
+    // }
+
+    filterLocationEnableMembers = () => {
+        if (this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE) {
+            this.setState({ friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_MEMBERS, isFilter: null })
+        }
+        else {
+            this.setState({ friendsFilter: FILTERED_ACTION_IDS.LOCATION_ENABLE_MEMBERS, isFilter: FILTERED_ACTION_IDS.LOCATION_ENABLE })
+        }
+    }
+
+
 
     render() {
-        const { kbdBtmOffset, isActiveSearch, selectedMember, selectedFriendList, searchFriendList, isVisibleOptionsModal, isVisibleSearchModal, searchName } = this.state;
+        const { kbdBtmOffset, isActiveSearch, selectedMember, selectedFriendList, searchFriendList, isVisibleOptionsModal, isVisibleSearchModal, searchName, searchQuery, friendsFilter } = this.state;
         const { user, currentGroup, friendGroupList, friendsLocationList } = this.props;
-        console.log('selectedMemeber : ', selectedMember)
-        console.log('currentGroup.groupMembers : ', currentGroup.groupMembers)
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '45deg']
@@ -403,6 +438,21 @@ class Group extends Component {
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
         });
+
+        if (friendsFilter === FILTERED_ACTION_IDS.BTN_ALL_MEMBERS) {
+            this.state.filteredMembers = searchQuery === '' ? currentGroup.groupMembers : currentGroup.groupMembers.filter(member => {
+                return (member.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
+                    (member.nickname ? member.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
+            });
+        }
+        else if (friendsFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE_MEMBERS) {
+            const locationEnabledMembers = currentGroup.groupMembers.filter(member => member.locationEnable);
+            this.state.filteredMembers = searchQuery === '' ? locationEnabledMembers : locationEnabledMembers.filter(member => {
+                return (member.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
+                    (member.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
+            });
+        }
+
         return currentGroup === null
             ? <View style={styles.fill} />
             : <View style={styles.fill}>
@@ -478,36 +528,77 @@ class Group extends Component {
                             </View>
                             : null
                     }
+
+                    <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 80, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
+                        <View style={{ flex: 2.89 }}>
+                            <LabeledInputPlaceholder
+                                inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: 25, backgroundColor: '#fff', }}
+                                returnKeyType='next'
+                                onChange={this.onChangeSearchValue}
+                                hideKeyboardOnSubmit={false}
+                                containerStyle={styles.containerStyle} />
+                        </View>
+                        <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
+                            <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
+                        </View>
+                        {/* rightIcon={{name:'user', type:'FontAwesome', style:styles.rightIconStyle}} /> */}
+
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
+                        <IconButton iconProps={{ name: 'adduser', type: 'AntDesign', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.onPressAddMember()} />
+                        <IconButton iconProps={{ name: 'message1', type: 'AntDesign', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.openChatPage()} />
+                        <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ? '#2B77B4' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableMembers()} />
+                        {/* <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color:'#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapFriends()} /> */}
+                    </View>
+
                     {
-                        currentGroup.groupMembers.length > 0
+                        this.state.filteredMembers.length > 0
                             ?
                             <FlatList
                                 keyboardShouldPersistTaps="handled"
-                                contentContainerStyle={[styles.memberList, { paddingBottom: currentGroup.groupMembers.length > 0 ? heightPercentageToDP(8) : 0 }]}
-                                data={currentGroup.groupMembers}
-                                numColumns={2}
+                                contentContainerStyle={styles.friendList}
+                                data={this.state.filteredMembers}
                                 keyExtractor={this.memberKeyExtractor}
                                 renderItem={({ item, index }) => (
                                     <View style={{ flex: 1, maxWidth: widthPercentageToDP(50) }}>
-                                        <View style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', width: '80%', height: widthPercentageToDP(15), position: 'absolute', zIndex: 100, justifyContent: 'space-between' }}>
-                                            {
-                                                item.isOnline
-                                                    ? <View style={{ backgroundColor: '#37B603', width: widthPercentageToDP(6), height: widthPercentageToDP(6), borderRadius: widthPercentageToDP(3), elevation: 10 }} />
-                                                    : null
-                                            }
-                                            {
-                                                item.isOnline && item.locationEnable
-                                                    ? <IconButton iconProps={{ name: 'location-on', type: 'MaterialIcons', style: { color: friendsLocationList && friendsLocationList[item.userId] && friendsLocationList[item.userId].isVisible ? APP_COMMON_STYLES.headerColor : '#ACACAC', fontSize: widthPercentageToDP(7) } }} />
-                                                    : null
-                                            }
-                                        </View>
-                                        <ThumbnailCard
-                                            thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
+                                        <HorizontalCard
+                                            horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                                             item={item}
-                                            onLongPress={() => this.showOptionsModal(index)}
-                                            onPress={() => this.openProfile(item.memberId, FRIEND_TYPE.ALL_FRIENDS)}
+                                            onPressLeft={() => this.openFriendsProfileTab(item.memberId, index)}
+                                            cardOuterStyle={styles.HorizontalCardOuterStyle}
+                                            actionsBar={{
+                                                online: true,
+                                                actions: [
+                                                    // { name: item.favorite ? 'star' : 'star-outlined', id: 1, type: 'Entypo', color: item.favorite ? '#CE0D0D' : '#C4C6C8', onPressActions: () => this.toggleFavouriteFriend(item) },
+                                                    { name: 'search', id: 2, type: 'FontAwesome', color: item.locationEnable ? '#2B77B4' : '#C4C6C8' },
+                                                    { name: 'verified-user', id: 3, type: 'MaterialIcons', color: item.isAdmin ? '#81BA41' : '#C4C6C8', onPressActions: () => this.toggleFriendsLocation(friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible, item.userId) },
+                                                    // { name: 'message1', id: 4, type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) }
+                                                ]
+                                            }}
                                         />
-                                    </View>)}
+                                    </View>
+                                    // <View style={{ flex: 1, maxWidth: widthPercentageToDP(50) }}>
+                                    //     <View style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', width: '80%', height: widthPercentageToDP(15), position: 'absolute', zIndex: 100, justifyContent: 'space-between' }}>
+                                    //         {
+                                    //             item.isOnline
+                                    //                 ? <View style={{ backgroundColor: '#37B603', width: widthPercentageToDP(6), height: widthPercentageToDP(6), borderRadius: widthPercentageToDP(3), elevation: 10 }} />
+                                    //                 : null
+                                    //         }
+                                    //         {
+                                    //             item.isOnline && item.locationEnable
+                                    //                 ? <IconButton iconProps={{ name: 'location-on', type: 'MaterialIcons', style: { color: friendsLocationList && friendsLocationList[item.userId] && friendsLocationList[item.userId].isVisible ? APP_COMMON_STYLES.headerColor : '#ACACAC', fontSize: widthPercentageToDP(7) } }} />
+                                    //                 : null
+                                    //         }
+                                    //     </View>
+                                    //     <ThumbnailCard
+                                    //         thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
+                                    //         item={item}
+                                    //         onLongPress={() => this.showOptionsModal(index)}
+                                    //         onPress={() => this.openProfile(item.memberId, FRIEND_TYPE.ALL_FRIENDS)}
+                                    //     />
+                                    // </View>
+                                )
+                                }
                                 ListFooterComponent={this.renderFooter}
                                 // onTouchStart={this.loadMoreData}
                                 onEndReached={this.loadMoreData}

@@ -216,7 +216,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                         <View style={{ flex: 1 }}>
                             {
                                 // to iterate the actions array
-                                actionsBar.actions ?
+                                actionsBar.actions.length > 0 ?
                                     <FlatList
                                         numColumns={4}
                                         columnWrapperStyle={{ justifyContent: actionsBar.actions.length < 3 ? 'space-around' : 'space-between', marginHorizontal: 20, marginTop: 5 }}

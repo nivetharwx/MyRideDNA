@@ -246,7 +246,6 @@ class MyProfileTab extends Component {
     passengerListKeyExtractor = (item) => item.passengerId;
 
     onPressFriendsPage = () => {
-        console.log('onPressFriendsPage')
         store.dispatch(screenChangeAction({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.PROFILE } }));
     }
 
@@ -307,7 +306,7 @@ class MyProfileTab extends Component {
         // );
         return (
             <View style={styles.fill}>
-                <View style={{ height: IS_ANDROID ? 0 : heightPercentageToDP(4), backgroundColor: 'black'}}>
+                <View style={{ height: IS_ANDROID ? 0 : heightPercentageToDP(4), backgroundColor: 'black' }}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={styles.mapHeader}>
@@ -461,7 +460,7 @@ class MyProfileTab extends Component {
                         <ImageBackground source={require('../../../assets/img/my-vest.png')} style={styles.usersExtraDetail}></ImageBackground>
                     </View>
                     <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.ALBUM)}>
-                    {/* <TouchableOpacity style={styles.usersExtraDetailContainer}> */}
+                        {/* <TouchableOpacity style={styles.usersExtraDetailContainer}> */}
                         <ImageBackground source={require('../../../assets/img/my-photos.png')} style={styles.usersExtraDetail}></ImageBackground>
                     </TouchableOpacity>
                 </ScrollView>
