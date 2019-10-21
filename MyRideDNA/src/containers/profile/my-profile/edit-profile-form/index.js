@@ -30,6 +30,7 @@ class EditProfileForm extends Component {
             isLoadingProfPic: false,
             isAddingClub: false,
             activeClubId: null,
+            profilePicObj: null
         };
         if (!props.user.homeAddress) {
             this.state.user.homeAddress = { address: '', city: '', state: '', zipCode: '' };
@@ -47,10 +48,7 @@ class EditProfileForm extends Component {
             }
             // DOC: Confirming changes happened due to api call from this form
             if (this.updatingUser === true) {
-                Toast.show({
-                    text: 'Profile updated successfully',
-                    buttonText: 'Okay'
-                });
+                Toast.show({ text: 'Profile updated successfully' });
                 this.onPressBackButton();
             }
         }
@@ -137,12 +135,10 @@ class EditProfileForm extends Component {
         this.setState({ showLoader: false });
     }
     onSubmit = () => {
-        console.log('useronsubmit : ', this.state.user)
         Keyboard.dismiss();
         // this.state.user.clubList = this.state.user.club.split(",");
         this.updatingUser = true;
         this.setState({ showLoader: true })
-        console.log('useronsubmit : ', this.state.user)
         this.props.updateUser(this.state.user, (res) => {
             this.hideLoader()
         }, (err) => {
@@ -151,7 +147,6 @@ class EditProfileForm extends Component {
     }
 
     onPressGalleryIcon = async () => {
-        console.log('onPressGalleryIcon')
         this.setState({ isLoadingProfPic: true });
         try {
             const imageObj = await ImagePicker.openPicker({
@@ -160,7 +155,9 @@ class EditProfileForm extends Component {
                 cropping: false,
                 includeBase64: true,
             });
-            this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
+            Toast.show({ text: 'One image selected' });
+            this.setState(prevState => ({ user: { ...prevState.user, mimeType: imageObj.mime, profilePicture: imageObj.data } }));
+            // this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
         } catch (er) {
             this.setState({ isLoadingProfPic: false });
             console.log("Error occurd: ", er);
@@ -168,7 +165,6 @@ class EditProfileForm extends Component {
     }
 
     onPressCameraIcon = async () => {
-        console.log('onPressCameraIcon')
         this.setState({ isLoadingProfPic: true });
         try {
             const imageObj = await ImagePicker.openCamera({
@@ -177,7 +173,9 @@ class EditProfileForm extends Component {
                 includeBase64: true,
                 cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
             });
-            this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
+            Toast.show({ text: 'One image selected' });
+            this.setState(prevState => ({ user: { ...prevState.user, mimeType: imageObj.mime, profilePicture: imageObj.data } }));
+            // this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
         } catch (er) {
             this.setState({ isLoadingProfPic: false });
             console.log("Error occurd: ", er);
@@ -187,7 +185,6 @@ class EditProfileForm extends Component {
 
     clubFormat = () => {
         const clubList = this.state.user.club.split(",");
-        console.log('clubFormat : ', clubList);
         for (var i = 0; i < clubList.length - 1; i++) {
             if (clubList[i].trim() === clubList[i + 1].trim()) {
                 console.log('club already present : ', clubList[i + 1]);
@@ -206,7 +203,6 @@ class EditProfileForm extends Component {
     }
 
     deleteClub = (item) => {
-        console.log('delete club : ', item)
         this.props.removeClubs(this.props.user.userId, item.clubId, this.props.user.clubs)
     }
     clubsKeyExtractor = (item) => item.clubId;
@@ -214,7 +210,6 @@ class EditProfileForm extends Component {
     render() {
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
         const { user, showLoader, isAddingClub, club, activeClubId } = this.state;
-        console.log('user edit profile : ', user);
         return (
             <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
@@ -244,7 +239,7 @@ class EditProfileForm extends Component {
                 </KeyboardAvoidingView> */}
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
                     <BasicHeader title='Edit Profile' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
-                    <ScrollView >
+                    <ScrollView keyboardShouldPersistTaps='always'>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: heightPercentageToDP(18) }}>
                             <View style={{ alignSelf: 'center' }}>
                                 <IconButton Button iconProps={{ name: 'camera', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(9), color: '#F5891F' } }}

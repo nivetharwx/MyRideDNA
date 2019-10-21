@@ -308,14 +308,18 @@ export const registerUser = (user) => {
     };
 }
 export const updateUserInfo = (userData, successCallback, errorCallback) => {
-    console.log('userData : ', userData);
     return dispatch => {
         dispatch(toggleLoaderAction(true));
         axios.put(USER_BASE_URL + 'updateUserDetails', userData, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(toggleLoaderAction(false));
-                    dispatch(updateUserAction(userData));
+                    if (userData.mimeType) {
+                        const { mimeType: mime, profilePicture: picStr, ...otherData } = userData;
+                        dispatch(updateUserAction({ ...otherData, profilePicture: `data:${mime};base64,${picStr}` }));
+                    } else {
+                        dispatch(updateUserAction(userData));
+                    }
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     successCallback(false)
                 }
