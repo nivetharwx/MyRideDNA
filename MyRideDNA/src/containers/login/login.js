@@ -21,7 +21,7 @@ import { LoginStyles } from './styles';
 import { Item, Icon as NBIcon } from 'native-base';
 
 export const LoginScreen = (props) => (
-    <ScrollView style={{ flex: 1 }}>
+    <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps='always'>
         <StatusBar translucent backgroundColor='black' barStyle="light-content" />
         <Animatable.View iterationCount={1} style={{ flex: 1, height: heightPercentageToDP(25) }}>
             <Image source={require('../../assets/img/logo.png')} style={{ width: WindowDimensions.width, height: heightPercentageToDP(29) }}
