@@ -185,8 +185,8 @@ export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, 
 
 export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actionsBar, cardOuterStyle, horizontalCardPlaceholder, righticonImage, onPressLeft }) => (
     <TouchableWithoutFeedback style={{ width: widthPercentageToDP(100), marginTop: 20, }} >
-        <View style={[{ flex: 1, flexDirection: 'row', width: widthPercentageToDP(81.5) }, cardOuterStyle]}>
-            <TouchableOpacity style={{ height: 74, width: 74, flexDirection: actionsBar ? 'row' : null }} onPress={onPressLeft} >
+        <View style={[{ flex: 1, flexDirection: 'row', width: widthPercentageToDP(81.5), borderWidth: 1, borderColor: '#EAEAEA' }, cardOuterStyle]}>
+            <TouchableOpacity style={{ height: 74, width: 74, flexDirection: actionsBar ? 'row' : null, }} onPress={onPressLeft} >
                 {
                     // for online and offline
                     actionsBar && actionsBar.online ?

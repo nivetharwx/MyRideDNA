@@ -254,15 +254,15 @@ class Group extends Component {
         this.onCancelOptionsModal();
     }
 
-    removeMemberConfirmation() {
-        const { memberId, name } = this.state.selectedMember;
+    removeMemberConfirmation(member) {
+        member = member || this.state.selectedMember;
         Alert.alert(
             'Confirmation to remove',
-            `Are you sure to remove ${name}?`,
+            `Are you sure to remove ${member.name}?`,
             [
                 {
                     text: 'Yes', onPress: () => {
-                        this.props.removeMember(this.props.currentGroup.groupId, memberId);
+                        this.props.removeMember(this.props.currentGroup.groupId, member.memberId);
                         this.onCancelOptionsModal();
                     }
                 },
@@ -467,7 +467,7 @@ class Group extends Component {
                         onClearSearchValue={() => this.setState({ searchName: '' })}
                         title={<Text>{currentGroup.groupName ? currentGroup.groupName + `\n` : '\n'}<Text style={{ fontSize: 14 }}>Members: {currentGroup.groupMembers.length ? currentGroup.groupMembers.length : ''}</Text></Text>}
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                        rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.onPressAddMember }}
+                    // rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.onPressAddMember }}
                     />
                     {/* <BaseModal alignCenter={true} isVisible={this.state.isVisibleAddMemberModal} onCancel={this.onCancelAddMemberForm} onPressOutside={this.onCancelAddMemberForm}>
                         <View style={{ backgroundColor: '#fff', width: WindowDimensions.width *0.8, height: WindowDimensions.height*0.8, padding: 20, elevation: 3 }}>
@@ -545,7 +545,12 @@ class Group extends Component {
 
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
-                        <IconButton iconProps={{ name: 'adduser', type: 'AntDesign', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.onPressAddMember()} />
+                        {
+                            currentGroup.groupMembers.length > 0 && currentGroup.groupMembers[0].isAdmin ?
+                                <IconButton iconProps={{ name: 'adduser', type: 'AntDesign', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.onPressAddMember()} />
+                                :
+                                null
+                        }
                         <IconButton iconProps={{ name: 'message1', type: 'AntDesign', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.openChatPage()} />
                         <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ? '#2B77B4' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableMembers()} />
                         {/* <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color:'#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapFriends()} /> */}
@@ -571,8 +576,10 @@ class Group extends Component {
                                                 actions: [
                                                     // { name: item.favorite ? 'star' : 'star-outlined', id: 1, type: 'Entypo', color: item.favorite ? '#CE0D0D' : '#C4C6C8', onPressActions: () => this.toggleFavouriteFriend(item) },
                                                     { name: 'search', id: 2, type: 'FontAwesome', color: item.locationEnable ? '#2B77B4' : '#C4C6C8' },
+                                                    index !== 0 ? { name: 'contacts', id: 2, type: 'AntDesign', color: item.isFriend ? '#CE0D0D' : '#C4C6C8' } : null,
                                                     { name: 'verified-user', id: 3, type: 'MaterialIcons', color: item.isAdmin ? '#81BA41' : '#C4C6C8', onPressActions: () => this.toggleFriendsLocation(friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible, item.userId) },
                                                     // { name: 'message1', id: 4, type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) }
+                                                    index === 0 || item.isAdmin ? null : this.state.filteredMembers[0].isAdmin === false ? null : { name: 'remove-user', id: 4, type: 'Entypo', color: '#707070', onPressActions: () => this.removeMemberConfirmation(item) }
                                                 ]
                                             }}
                                         />
