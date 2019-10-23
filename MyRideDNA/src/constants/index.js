@@ -157,5 +157,8 @@ export const APP_COMMON_STYLES = {
     },
     txtAlignRight: {
         textAlign: 'right'
+    },
+    tabContainer: {
+        height: 43
     }
 };
