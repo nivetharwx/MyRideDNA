@@ -1,4 +1,4 @@
-import { Dimensions, Platform, StatusBar } from 'react-native';
+import { Dimensions, Platform, StatusBar, PixelRatio } from 'react-native';
 
 var window = Dimensions.get("window");
 export const WindowDimensions = {
@@ -7,11 +7,11 @@ export const WindowDimensions = {
 };
 
 export const widthPercentageToDP = (percentage) => {
-    return WindowDimensions.width * percentage / 100;
+    return PixelRatio.roundToNearestPixel(WindowDimensions.width * percentage / 100);
 }
 
 export const heightPercentageToDP = (percentage) => {
-    return WindowDimensions.height * percentage / 100;
+    return PixelRatio.roundToNearestPixel(WindowDimensions.height * percentage / 100);
 }
 
 export const IS_ANDROID = Platform.OS === 'android';
