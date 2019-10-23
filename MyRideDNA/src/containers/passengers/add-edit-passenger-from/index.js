@@ -159,16 +159,12 @@ class PaasengerForm extends Component {
                         this.props.passengerIdx !== -1 ?
                             <PaasengerFormDisplay passengerIdx={this.props.passengerIdx} topMargin={{ marginTop: heightPercentageToDP(15) }} />
                             :
-                            <Tabs locked={false} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} style={{ height: 46 }} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
-                                <Tab heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 0 ? '#000000' : '#81BA41' }}>
-                                    <IconLabelPair containerStyle={styles.tabContentCont} text={`NEW PASSENGER`} textStyle={{ color: '#fff', fontSize: widthPercentageToDP(3.16), letterSpacing: 0.6 }} />
-                                </TabHeading>}>
+                            <Tabs onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' style={{ marginTop: APP_COMMON_STYLES.headerHeight }} tabBarUnderlineStyle={{ height: 0 }}>
+                                <Tab heading='NEW PASSENGER' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
                                     <PaasengerFormDisplay topMargin={{ marginTop: heightPercentageToDP(6) }} />
                                 </Tab>
 
-                                <Tab heading={<TabHeading style={{ width: widthPercentageToDP(50), backgroundColor: activeTab === 1 ? '#000000' : '#81BA41', borderColor: '#fff', borderColor: '#fff', borderLeftWidth: 1 }}>
-                                    <IconLabelPair containerStyle={styles.tabContentCont} text={`FROM COMMUNITY`} textStyle={{ color: '#fff', fontSize: widthPercentageToDP(3.16), letterSpacing: 0.6 }} />
-                                </TabHeading>}>
+                                <Tab heading='FROM COMMUNITY' tabStyle={[styles.inActiveTab, styles.borderLeftWhite]} activeTabStyle={[styles.activeTab, styles.borderLeftWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
                                     <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
                                         <View style={{ flex: 2.89 }}>
                                             <LabeledInputPlaceholder
@@ -215,7 +211,7 @@ class PaasengerForm extends Component {
                                                             <HorizontalCard
                                                                 item={item}
                                                                 horizontalCardPlaceholder={require('../../../assets/img/profile-pic.png')}
-                                                                cardOuterStyle={styles.HorizontalCardOuterStyle}
+                                                                cardOuterStyle={styles.horizontalCardOuterStyle}
                                                                 rightProps={{ righticonImage: require('../../../assets/img/add-passenger-from-community.png') }}
                                                                 onPress={() => this.addFriendToCommunity(item)}
                                                             />
@@ -248,7 +244,7 @@ class PaasengerForm extends Component {
 
                 </View>
                 <Loader isVisible={this.props.showLoader} />
-            </View>
+            </View >
         );
     }
 }
@@ -312,7 +308,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f69039',
         marginTop: heightPercentageToDP(8)
     },
-    HorizontalCardOuterStyle: {
+    horizontalCardOuterStyle: {
         marginHorizontal: widthPercentageToDP(9),
         marginBottom: heightPercentageToDP(4)
     },
@@ -322,5 +318,23 @@ const styles = StyleSheet.create({
         marginBottom: 0,
         flex: 1,
         width: widthPercentageToDP(47),
+    },
+    activeTab: {
+        backgroundColor: '#000000'
+    },
+    inActiveTab: {
+        backgroundColor: '#81BA41'
+    },
+    borderRightWhite: {
+        borderRightWidth: 1,
+        borderColor: '#fff'
+    },
+    borderLeftWhite: {
+        borderLeftWidth: 1,
+        borderColor: '#fff'
+    },
+    tabText: {
+        fontSize: 13,
+        fontWeight: 'bold'
     }
 });

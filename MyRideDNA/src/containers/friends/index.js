@@ -46,18 +46,18 @@ class Friends extends Component {
             if (this.props.comingFrom === PageKeys.NOTIFICATIONS || this.props.comingFrom === 'notificationPage' || this.props.comingFrom === PageKeys.FRIENDS) {
                 switch (this.props.goTo) {
                     case 'REQUESTS':
-                        this.tabsRef.props.goToPage(2);
+                        this.tabsRef.goToPage(2);
                         this.props.readNotification(this.props.user.userId, this.props.notificationBody.id);
                         break;
                     case 'GROUP':
-                        this.tabsRef.props.goToPage(1);
+                        this.tabsRef.goToPage(1);
                         break;
                     default:
-                        this.tabsRef.props.goToPage(0);
+                        this.tabsRef.goToPage(0);
                 }
             }
             else {
-                this.tabsRef.props.goToPage(0)
+                this.tabsRef.goToPage(0)
             }
         }, 0);
         this.props.getAllRequest(this.props.user.userId, true);
@@ -75,14 +75,14 @@ class Friends extends Component {
             if (!prevProps.notificationBody || prevProps.notificationBody.id !== this.props.notificationBody.id) {
                 switch (this.props.goTo) {
                     case 'REQUESTS':
-                        this.props.isRefresh && this.state.activeTab !== 2 && this.tabsRef.props.goToPage(2);
+                        // this.props.isRefresh && this.state.activeTab !== 2 && this.tabsRef.goToPage(2);
                         this.props.getAllRequest(this.props.user.userId, true);
                         break;
                     case 'GROUP':
-                        this.state.activeTab !== 1 && this.tabsRef.props.goToPage(1);
+                        // this.state.activeTab !== 1 && this.tabsRef.goToPage(1);
                         break;
                     default:
-                        this.state.activeTab !== 0 && this.tabsRef.props.goToPage(0);
+                    // this.state.activeTab !== 0 && this.tabsRef.goToPage(0);
                 }
             }
         }
@@ -176,17 +176,11 @@ class Friends extends Component {
 
 
         if (from === 2 && i === 0) {
-            // this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
-            // }, (err) => {
-            // });
             this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
             }, (err) => {
             });
         }
         if (from === 1 && i === 0) {
-            // this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
-            // }, (err) => {
-            // });
             this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
             }, (err) => {
             });
@@ -440,65 +434,16 @@ class Friends extends Component {
                         </View>
                     </BaseModal>
 
-                    <Tabs locked={false} onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab style={{ height: 46 }} ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
-                        <Tab heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 0 ? '#000000' : '#81BA41', height: 46 }}>
-                            {/* <IconLabelPair containerStyle={styles.tabContentCont} text={`Friends`} textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663' }} iconProps={{ name: 'people-outline', type: 'MaterialIcons', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }} /> */}
-                            <IconLabelPair containerStyle={styles.tabContentCont} text={`ALL BUDDIES`} textStyle={{ color: '#fff', fontSize: widthPercentageToDP(3.16), fontWeight: 'bold' }} />
-                        </TabHeading>} >
+                    <Tabs ref={elRef => this.tabsRef = elRef} onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' style={{ marginTop: APP_COMMON_STYLES.headerHeight }} tabBarUnderlineStyle={{ height: 0 }}>
+                        <Tab heading='ALL BUDDIES' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
                             <AllFriendsTab refreshContent={activeTab === 0} searchQuery={searchQuery} />
                         </Tab>
-                        <Tab heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 1 ? '#000000' : '#81BA41', borderColor: '#fff', borderColor: '#fff', borderLeftWidth: 1, borderRightWidth: 1, height: 46 }}>
-                            {/* <IconLabelPair containerStyle={styles.tabContentCont} text={`Groups`} textStyle={{ color:  '#fff' }} iconProps={{ name: 'group', type: 'FontAwesome', style: { color: activeTab === 1 ? '#fff' : '#6B7663' } }} /> */}
-                            <IconLabelPair containerStyle={styles.tabContentCont} text={`FAVORITES`} textStyle={{ color: '#fff', fontSize: widthPercentageToDP(3.16), fontWeight: 'bold' }} />
-                        </TabHeading>}>
-                            {/* <GroupListTab refreshContent={activeTab === 1} searchQuery={searchQuery} /> */}
+                        <Tab heading='FAVORITES' tabStyle={[styles.inActiveTab, styles.borderRightWhite, styles.borderLeftWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite, styles.borderLeftWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
                         </Tab>
-                        <Tab heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 2 ? '#000000' : '#81BA41', borderColor: '#fff', height: 46 }}>
-                            {/* <IconLabelPair containerStyle={styles.tabContentCont} text={`Requests`} textStyle={{ color: '#fff'  }} iconProps={{ name: 'people', type: 'MaterialIcons', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }} /> */}
-                            <IconLabelPair containerStyle={styles.tabContentCont} text={`GROUPS`} textStyle={{ color: '#fff', fontSize: widthPercentageToDP(3.16), fontWeight: 'bold' }} />
-
-                            {/* {
-                                this.props.allFriendRequests.filter(req => req.requestType === "receivedRequest").length > 0 ?
-                                    <View style={{
-                                        position: 'absolute', minWidth: widthPercentageToDP(6), height: widthPercentageToDP(5), borderRadius: widthPercentageToDP(2),
-                                        backgroundColor: 'red', top: 1, left: 15, borderWidth: 2.5, borderColor: '#fff', justifyContent: 'center', alignItems: 'center', padding: widthPercentageToDP(0.25)
-                                    }}>
-                                        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: widthPercentageToDP(3) }}>{this.props.allFriendRequests.length > 99 ? '99+' : this.props.allFriendRequests.filter(req => req.requestType === "receivedRequest").length}</Text>
-                                    </View>
-                                    : null
-                            } */}
-
-                        </TabHeading>}>
-                            {/* <View style={{ backgroundColor: '#fff', flex: 1 }}>
-                                {
-                                    this.props.allFriendRequests.length > 0
-                                        ?
-                                        <FlatList
-                                            data={this.props.allFriendRequests}
-                                            refreshing={isRefreshing}
-                                            onRefresh={this.onPullRefresh}
-                                            renderItem={this.renderFriendRequestList}
-                                            keyExtractor={this.requestKeyExtractor}
-                                        />
-                                        :
-                                        this.props.hasNetwork ?
-                                            null :
-                                            <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
-                                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                                </Animated.View>
-                                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
-                                            </View>
-                                }
-
-                            </View> */}
+                        <Tab heading='GROUPS' tabStyle={[styles.inActiveTab, styles.borderLeftWhite]} activeTabStyle={[styles.activeTab, styles.borderLeftWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
                             <GroupListTab refreshContent={activeTab === 2} onPressAddGroup={this.onPressCreateGroup} />
                         </Tab>
                     </Tabs>
-                    {/* <View style={[StyleSheet.absoluteFill, { zIndex: 900 }]} pointerEvents={this.state.selectedPersonImg ? 'auto' : 'none'}>
-                        </View> */}
-
                     {/* Shifter: - Brings the app navigation menu */}
                     <ShifterButton onPress={this.toggleAppNavigation}
                         containerStyles={[{ bottom: this.state.selectedPersonImg ? IS_ANDROID ? BOTTOM_TAB_HEIGHT : BOTTOM_TAB_HEIGHT - 8 : 0 }, this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null]}

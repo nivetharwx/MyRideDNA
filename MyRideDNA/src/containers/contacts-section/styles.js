@@ -2,6 +2,18 @@ import { StyleSheet } from 'react-native';
 import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES } from '../../constants';
 
 const styles = StyleSheet.create({
+    tabContentCont: {
+        paddingHorizontal: 0
+    },
+    horizontalCardOuterStyle: {
+        marginHorizontal: widthPercentageToDP(9),
+        marginBottom: heightPercentageToDP(4)
+    },
+    containerStyle: {
+        marginBottom: 0,
+        flex: 1,
+        width: widthPercentageToDP(47),
+    },
     rootContainer: {
         flex: 1,
         backgroundColor: '#fff',
@@ -59,6 +71,24 @@ const styles = StyleSheet.create({
         paddingTop: 20,
         backgroundColor: '#fff'
         // justifyContent: 'space-between'
+    },
+    activeTab: {
+        backgroundColor: '#000000'
+    },
+    inActiveTab: {
+        backgroundColor: '#81BA41'
+    },
+    borderRightWhite: {
+        borderRightWidth: 1,
+        borderColor: '#fff'
+    },
+    borderLeftWhite: {
+        borderLeftWidth: 1,
+        borderColor: '#fff'
+    },
+    tabText: {
+        fontSize: 13,
+        fontWeight: 'bold'
     }
 });
 export default styles;

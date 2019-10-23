@@ -2,7 +2,7 @@ import { REPLACE_SEARCH_RESULTS, CLEAR_SEARCH_RESULTS, UPDATE_FRIEND_REQUEST_RES
 
 const initialState = {
     paginationNum: 0,
-    searchResults: null,
+    searchResults: [],
     friendRequestSuccess: null,
     friendRequestError: null,
     invitationSuccess: null,
@@ -12,10 +12,17 @@ const initialState = {
 export default (state = initialState, action) => {
     switch (action.type) {
         case REPLACE_SEARCH_RESULTS:
-            return {
-                ...state,
-                searchResults: action.data
-            };
+            if (action.data.pageNumber === 0) {
+                return {
+                    ...state,
+                    searchResults: action.data.results
+                };
+            } else {
+                return {
+                    ...state,
+                    searchResults: [...state.searchResults, ...action.data.results]
+                };
+            }
 
         case UPDATE_FRIEND_REQUEST_RESPONSE:
             if (action.data.error) {
@@ -58,7 +65,7 @@ export default (state = initialState, action) => {
         case CLEAR_SEARCH_RESULTS:
             return {
                 ...state,
-                searchResults: null
+                searchResults: []
             };
 
         default: return state

@@ -1394,20 +1394,25 @@ export const getAllOnlineFriends = (userId) => {
             })
     };
 }
-export const searchForFriend = (searchParam, userId, pageNumber) => {
+export const searchForFriend = (searchParam, userId, pageNumber, preference) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         axios.get(FRIENDS_BASE_URL + `searchFriend?searchParam=${searchParam}&userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    // dispatch(toggleLoaderAction(false));
-                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    return dispatch(replaceSearchFriendListAction(res.data));
+                    if (res.data.length > 0) {
+                        console.log("res.data: ", res.data);
+                        dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                        dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                        dispatch(replaceSearchFriendListAction({ results: res.data, pageNumber }));
+                    } else {
+                        dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    }
                 }
             })
             .catch(er => {
                 console.log(`searchFriend: `, er.response || er);
-                differentErrors(er, [searchParam, userId, pageNumber], searchForFriend, true);
+                differentErrors(er, [searchParam, userId, pageNumber, preference], searchForFriend, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
             })

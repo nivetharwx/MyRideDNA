@@ -27,6 +27,24 @@ const styles = {
         width: THUMBNAIL_SIZE,
         borderRadius: THUMBNAIL_SIZE / 2,
         alignSelf: 'center'
+    },
+    activeTab: {
+        backgroundColor: '#000000'
+    },
+    inActiveTab: {
+        backgroundColor: '#81BA41'
+    },
+    borderRightWhite: {
+        borderRightWidth: 1,
+        borderColor: '#fff'
+    },
+    borderLeftWhite: {
+        borderLeftWidth: 1,
+        borderColor: '#fff'
+    },
+    tabText: {
+        fontSize: 13,
+        fontWeight: 'bold'
     }
 };
 
