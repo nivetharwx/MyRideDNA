@@ -12,6 +12,7 @@ import Profile from '../containers/profile';
 import FriendsProfile from '../containers/friends-profile';
 import Friends from '../containers/friends';
 import Group from '../containers/friends/group';
+import GroupForm from '../containers/friends/group-list/add-edit-group-form';
 import Rides from '../containers/rides';
 import Map from '../containers/map';
 import WaypointList from '../containers/map/waypoint-list';
@@ -29,7 +30,7 @@ import ContactsSection from '../containers/contacts-section';
 import CreateRide from '../containers/create-ride';
 import AddBikeForm from '../containers/profile/my-garage/add-edit-bike-form';
 import EditProfileForm from '../containers/profile/my-profile/edit-profile-form';
-import MyWalletForm from '../containers/profile/my-profile/my-wallet-form';   
+import MyWalletForm from '../containers/profile/my-profile/my-wallet-form';
 import Settings from '../containers/settings';
 import Offers from '../containers/offers';
 import ChatList from '../containers/chats/chat-list';
@@ -47,6 +48,7 @@ export default class Navigation extends Component {
                             <Scene gesturesEnabled={false} key={PageKeys.SIGNUP} component={Signup} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.FRIENDS} component={Friends} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.GROUP} component={Group} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.GROUP_FORM} component={GroupForm} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.FORGOT_PASSWORD} component={ForgotPassword} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.RIDES} component={Rides} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.PROFILE} component={Profile} hideNavBar></Scene>

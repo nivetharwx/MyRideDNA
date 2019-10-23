@@ -196,7 +196,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                         null
                 }
                 {
-                    item.groupId && actionsBar && actionsBar.LeftIcon ?
+                    item.groupId && !item.profilePictureId && actionsBar && actionsBar.LeftIcon ?
                         <View style={{ flex: 1, width: null, heigh: null, backgroundColor: '#C4C6C8', justifyContent: 'center', alignItems: 'center' }}>
                             <NBIcon active name={actionsBar.LeftIcon.name} type={actionsBar.LeftIcon.type} style={{ fontSize: 40, color: '#707070' }} />
                         </View>

@@ -1674,6 +1674,7 @@ export const getFriendGroups = (userId, toggleLoader, pageNumber, successCallbac
         toggleLoader && dispatch(apiLoaderActions(true))
         axios.get(FRIENDS_BASE_URL + `getFriendGroups?memberId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
+                console.log('getFriendGroups : ', res.data)
                 if (res.status === 200 && res.data.length > 0) {
                     dispatch(replaceFriendGroupListAction({ groupList: res.data, pageNumber: pageNumber }))
                     dispatch(apiLoaderActions(false))
@@ -1707,6 +1708,7 @@ export const createFriendGroup = (newGroupInfo) => {
         dispatch(apiLoaderActions(true))
         axios.post(FRIENDS_BASE_URL + `createFriendGroup`, newGroupInfo, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
+                console.log('createFriendGroup : ', res.data);
                 if (res.status === 200) {
                     newGroupInfo.groupId = res.data.groupId;
                     // dispatch(toggleLoaderAction(false));

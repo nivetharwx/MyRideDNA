@@ -28,13 +28,28 @@ export default (state = initialState, action) => {
             }
 
         case ADD_FRIEND_GROUP_TO_LIST:
-            if (!action.data.groupMembers) action.data.groupMembers = [];
-            return {
-                ...state,
-                friendGroupList: [
-                    ...state.friendGroupList,
-                    action.data
-                ]
+            if (action.data.pictureObj) {
+                let updatedGroupList = state.friendGroupList.map(item => {
+                    if (!item.profilePictureId) return item;
+                    if (typeof action.data.pictureObj[item.profilePictureId] === 'string') {
+                        return { ...item, profilePicture: action.data.pictureObj[item.profilePictureId] }
+                    }
+                    return item;
+                })
+                return {
+                    ...state,
+                    friendGroupList: updatedGroupList
+                }
+            }
+            else {
+                if (!action.data.groupMembers) action.data.groupMembers = [];
+                return {
+                    ...state,
+                    friendGroupList: [
+                        ...state.friendGroupList,
+                        action.data
+                    ]
+                }
             }
         case REMOVE_FRIEND_GROUP_FROM_LIST:
             const groupIndex = state.friendGroupList.findIndex(group => group.groupId === action.data);

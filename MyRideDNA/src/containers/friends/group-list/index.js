@@ -5,10 +5,10 @@ import { IconButton, LinkButton } from '../../../components/buttons';
 import { widthPercentageToDP, heightPercentageToDP, PageKeys, APP_COMMON_STYLES } from '../../../constants';
 import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast } from 'native-base';
 import { ThumbnailCard, HorizontalCard } from '../../../components/cards';
-import { createFriendGroup, getFriendGroups, addMembers, getAllGroupMembers, exitFriendGroup, getAllGroups, getAllMembersLocation } from '../../../api';
+import { createFriendGroup, getFriendGroups, addMembers, getAllGroupMembers, exitFriendGroup, getAllGroups, getAllMembersLocation, getPictureList } from '../../../api';
 import { Actions } from 'react-native-router-flux';
 import { BaseModal } from '../../../components/modal';
-import { hideMembersLocationAction, screenChangeAction } from '../../../actions';
+import { hideMembersLocationAction, screenChangeAction, createFriendGroupAction } from '../../../actions';
 import { LabeledInputPlaceholder } from '../../../components/inputs';
 
 const FILTERED_ACTION_IDS = {
@@ -62,6 +62,15 @@ class GroupListTab extends Component {
             if (prevState.isRefreshing === true) {
                 this.setState({ isRefreshing: false });
             }
+            const pictureIdList = [];
+            this.props.friendGroupList.forEach((group) => {
+                if (!group.profilePicture && group.profilePictureId) {
+                    pictureIdList.push(group.profilePictureId);
+                }
+            })
+            if (pictureIdList.length > 0) {
+                this.props.getPictureList(pictureIdList);
+            }
             if (this.isAddingGroup) {
                 /** TODO: Open group details page with last group added
                  *  this.props.friendGroupList[this.props.friendGroupList.length - 1]
@@ -69,7 +78,6 @@ class GroupListTab extends Component {
             }
         }
         if (this.props.membersLocationList && (Object.keys(this.props.membersLocationList).length > Object.keys(prevProps.membersLocationList || {}).length)) {
-            console.log('did update')
             this.setState({ isVisibleOptionsModal: false }, () => {
                 this.props.changeScreen({ name: PageKeys.MAP });
             });
@@ -260,7 +268,8 @@ class GroupListTab extends Component {
                     LeftIcon: { name: 'group', type: 'FontAwesome' },
                     actions: [
                         { name: 'location-arrow', type: 'FontAwesome', color: this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId][0].isVisible ? '#81BA41' : '#C4C6C8', onPressActions: () => this.toggleMembersLocation(this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId][0].isVisible, item.groupId) },
-                        { name: 'message1', type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) }]
+                        { name: 'message1', type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) },]
+                    // { name: 'md-exit', type: 'Ionicons', color: '#707070', onPressActions: () => this.openChatPage(item) }]
                 }}
             />
         );
@@ -425,7 +434,8 @@ class GroupListTab extends Component {
 
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
-                    <IconButton iconProps={{ name: 'group-add', type: 'MaterialIcons', style: { color: '#C4C6C8', fontSize: 27 } }} onPress={() => onPressAddGroup()} />
+                    {/* <IconButton iconProps={{ name: 'group-add', type: 'MaterialIcons', style: { color: '#C4C6C8', fontSize: 27 } }} onPress={() => onPressAddGroup()} /> */}
+                    <IconButton iconProps={{ name: 'group-add', type: 'MaterialIcons', style: { color: '#C4C6C8', fontSize: 27 } }} onPress={() => Actions.push(PageKeys.GROUP_FORM)} />
                     {/* <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterFavouriteFriend()} /> */}
                     {/* <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color:'#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} /> */}
                     <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapGroups()} />
@@ -512,6 +522,12 @@ const mapDispatchToProps = (dispatch) => {
         getAllMembersLocation: (groupId, userId) => dispatch(getAllMembersLocation(groupId, userId)),
         hideMembersLocation: (groupId) => dispatch(hideMembersLocationAction(groupId)),
         changeScreen: (screenProps) => dispatch(screenChangeAction(screenProps)),
+        getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
+            dispatch(createFriendGroupAction({ pictureObj }))
+        }, (error) => {
+            console.log('getPictureList friendGroupList error : ', error)
+            // dispatch(updateFriendInListAction({ userId: friendId }))
+        }),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(GroupListTab);

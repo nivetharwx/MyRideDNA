@@ -49,6 +49,7 @@ export const PageKeys = {
     SIGNUP: 'signup',
     FRIENDS: 'friends',
     GROUP: 'group',
+    GROUP_FORM: 'groupForm',
     SPLASH_SCREEN: 'splashScreen',
     FORGOT_PASSWORD: 'forgotPassword',
     TABS: 'tabs',
