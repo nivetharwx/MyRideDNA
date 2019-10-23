@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { View, StatusBar, KeyboardAvoidingView, Keyboard, FlatList, TextInput, Text, AppState, ScrollView } from 'react-native';
+import { View, StatusBar, Animated, Keyboard, FlatList, ActivityIndicator, Text, AppState, ScrollView } from 'react-native';
 import { connect } from 'react-redux';
 import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
@@ -8,13 +8,16 @@ import styles from './styles';
 import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID } from '../../constants';
 import { IconLabelPair } from '../../components/labels';
 import { IconButton } from '../../components/buttons';
+import { HorizontalCard } from '../../components/cards';
 import Contacts from 'react-native-contacts';
 import Permissions from 'react-native-permissions';
 import { searchForFriend, sendFriendRequest, sendInvitationOrRequest } from '../../api';
 import { clearSearchFriendListAction, resetFriendRequestResponseAction, resetInvitationResponseAction } from '../../actions';
 import { isValidEmailFormat } from '../../util';
+import { LabeledInputPlaceholder } from '../../components/inputs';
 
 class ContactsSection extends PureComponent {
+    searchQueryTimeout = null;
     constructor(props) {
         super(props);
         this.state = {
@@ -26,7 +29,10 @@ class ContactsSection extends PureComponent {
             searchName: '',
             selectedMember: null,
             userEnteredEmail: '',
-            customMessage: ''
+            customMessage: '',
+            spinValue: new Animated.Value(0),
+            isLoading: false,
+            isLoadingData: false
         };
     }
 
@@ -169,7 +175,10 @@ class ContactsSection extends PureComponent {
         AppState.removeEventListener('change', this.handleAppStateChange);
     }
 
-    onPressBackButton = () => Actions.pop();
+    onPressBackButton = () => {
+        this.props.clearSearchResults();
+        Actions.pop();
+    }
 
     onChangeTab = ({ from, i }) => {
         this.setState({ activeTab: i });
@@ -192,8 +201,32 @@ class ContactsSection extends PureComponent {
         });
     }
 
-    onClearSearchName = () => {
-        this.setState({ searchName: '', selectedMember: null, canSubmit: false });
+    renderFooter = () => {
+        if (this.state.isLoading) {
+            return (
+                <View
+                    style={{
+                        paddingVertical: 20,
+                        borderTopWidth: 1,
+                        borderColor: "#CED0CE"
+                    }}
+                >
+                    <ActivityIndicator animating size="large" />
+                </View>
+            );
+        }
+        return null
+    }
+
+    loadMoreData = () => {
+        if (this.state.isLoadingData && this.state.isLoading === false) {
+            this.setState({ isLoading: true, isLoadingData: false })
+            this.props.searchForFriend(this.state.searchName, this.props.user.userId, this.props.pageNumber, 10);
+        }
+    }
+
+    onChangeSearchQuery = (val) => {
+        this.setState({ searchQuery: val });
     }
 
     onClearUserEnteredEmail = () => this.setState({ userEnteredEmail: '', canSubmit: false });
@@ -201,17 +234,13 @@ class ContactsSection extends PureComponent {
     onClearCustomMessage = () => this.setState({ customMessage: '' });
 
     searchInCommunity = (val) => {
-        this.setState({ searchName: val, selectedMember: null }, () => {
+        clearTimeout(this.searchQueryTimeout);
+        this.setState({ searchName: val }, () => this.state.searchName === '' && this.props.clearSearchResults());
+        this.searchQueryTimeout = setTimeout(() => {
             if (this.state.searchName !== '') {
-                this.props.searchForFriend(val, this.props.user.userId, 0);
+                this.props.searchForFriend(val, this.props.user.userId, 0, 10);
             }
-        });
-        // if (val.slice(-1) !== '') {
-
-        //     this.setState({ recieverEmail: val, canSubmit: val.trim().length > 0 });
-        // } else if (val.trim().length === 0 && this.state.canSubmit) {
-        //     this.setState({ canSubmit: false });
-        // }
+        }, 300);
     }
 
     onChangeEmail = (val) => this.setState({ userEnteredEmail: val });
@@ -285,82 +314,108 @@ class ContactsSection extends PureComponent {
         );
     }
 
+    renderFooter = () => {
+        if (this.state.isLoading) {
+            return (
+                <View
+                    style={{
+                        paddingVertical: 20,
+                        borderTopWidth: 1,
+                        borderColor: "#CED0CE"
+                    }}
+                >
+                    <ActivityIndicator animating size="large" />
+                </View>
+            );
+        }
+        return null
+    }
+
+    retryApiFunction = () => {
+        this.state.spinValue.setValue(0);
+        Animated.timing(this.state.spinValue, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.linear,
+            useNativeDriver: true
+        }).start(() => {
+            if (this.props.hasNetwork === true) {
+                this.props.searchForFriend(this.state.searchName, this.props.user.userId, this.props.pageNumber, 10);
+            }
+        });
+
+    }
+
+    renderIconOnOffline = (spin) => {
+        return (<View style={{ flex: 1, position: 'absolute', top: 23 }}>
+            <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+            </Animated.View>
+            <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+            <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+        </View>);
+    }
+
     render() {
-        const { activeTab, canSubmit, deviceContacts, customMessage, isVisibleSearchModal, userEnteredEmail, searchName, selectedMember } = this.state;
+        const { activeTab, searchName } = this.state;
         const { user, searchResults } = this.props;
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         return (
             <View style={styles.rootContainer}>
                 <View style={APP_COMMON_STYLES.statusBar}>
-                <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+                    <StatusBar translucent backgroundColor='black' barStyle="light-content" />
                 </View>
                 <View style={styles.fill}>
-                    <BasicHeader title='Connect with people' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
-                    {
-                        isVisibleSearchModal
-                            ? <View style={styles.searchMemberModal}>
-                                <View style={{ flex: 1 }}>
-                                    {
-                                        <IconButton iconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: 'white', alignSelf: user.handDominance === 'left' ? 'flex-start' : 'flex-end' } }} onPress={this.onCancelSearchModal} />
-                                    }
-                                    {
-                                        searchResults && searchResults.length > 0
-                                            ? <FlatList
-                                                keyboardShouldPersistTaps='handled'
-                                                style={{ marginTop: widthPercentageToDP(4) }}
-                                                contentContainerStyle={{ paddingBottom: searchResults.length > 0 ? heightPercentageToDP(8) : 0 }}
-                                                data={searchResults}
-                                                keyExtractor={this.searchResultsKeyExtractor}
-                                                renderItem={this.renderCommunityMember}
-                                                extraData={this.state}
-                                            />
-                                            : <Text style={{ alignSelf: 'center', color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(5), letterSpacing: 1, fontWeight: 'bold' }}>Not found any users</Text>
-                                    }
+                    <BasicHeader title='Add A Road Buddy' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
+                    <Tabs ref={elRef => this.tabsRef = elRef} onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' style={{ marginTop: APP_COMMON_STYLES.headerHeight }} tabBarUnderlineStyle={{ height: 0 }}>
+                        <Tab heading='COMMUNITY' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
+                            <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
+                                <View style={{ flex: 2.89 }}>
+                                    <LabeledInputPlaceholder
+                                        inputValue={searchName} inputStyle={{ paddingBottom: 0, backgroundColor: '#fff', borderBottomWidth: 0 }}
+                                        onChange={this.searchInCommunity}
+                                        hideKeyboardOnSubmit={false}
+                                        containerStyle={styles.containerStyle}
+                                        outerContainer={{ marginLeft: 15 }}
+                                    />
+                                </View>
+                                <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
+                                    <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 19 } }} />
                                 </View>
                             </View>
-                            : null
-                    }
-                    <Tabs onChangeTab={this.onChangeTab} style={{ flex: 1, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor='#E3EED3' underlineStyle={{ height: 0 }} />}>
-                        <Tab
-                            heading={<TabHeading style={{ width: widthPercentageToDP(33.33), backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
-                                <IconLabelPair containerStyle={styles.tabHeaderContent} text={`Community`} textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663', fontSize: widthPercentageToDP(3) }} iconProps={{ name: 'account-group', type: 'MaterialCommunityIcons', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }} />
-                            </TabHeading>}>
-                            <ScrollView style={styles.fill} contentContainerStyle={styles.formContent}>
-                                <Item style={styles.itemField}>
-                                    <TextInput clearButtonMode='always' value={searchName} onChangeText={this.searchInCommunity} style={styles.fill} placeholder='Name of MyRideDNA user' placeholderTextColor='#6B7663' />
-                                    <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearSearchName} />
-                                </Item>
-                                <Text style={styles.sectionDeviderText}>OR</Text>
-                                <Item disabled={selectedMember !== null} style={styles.itemField}>
-                                    <TextInput value={userEnteredEmail} onChangeText={this.onChangeEmail} onBlur={this.validateEmail} editable={selectedMember === null} style={styles.fill} placeholder='Send to email' placeholderTextColor='#6B7663' />
-                                    <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearUserEnteredEmail} />
-                                </Item>
-                                <Item disabled={selectedMember !== null} style={[styles.itemField, styles.textareaItem]}>
-                                    <TextInput editable={selectedMember === null} multiline={true} maxLength={160} value={customMessage} onChangeText={this.onChangeCustomMessage} style={styles.fill} placeholder='Your message to the person (160 characters or less)' placeholderTextColor='#6B7663' />
-                                    <IconButton iconProps={{ name: 'close-circle', type: 'MaterialCommunityIcons' }} onPress={this.onClearCustomMessage} />
-                                </Item>
-                            </ScrollView>
-                            <IconButton iconProps={{ name: 'send-o', type: 'FontAwesome', style: styles.enabledStyle }} style={[styles.submitBtn, styles.enabledStyle]} onPress={this.sendInvitationOrRequest} disabled={!canSubmit} />
-                        </Tab>
-                        <Tab
-                            heading={<TabHeading style={{ width: widthPercentageToDP(33.3), backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 1, borderLeftWidth: 1 }}>
-                                <IconLabelPair containerStyle={styles.tabHeaderContent} text={`Device\nContacts`} textStyle={{ color: activeTab === 1 ? '#fff' : '#6B7663', fontSize: widthPercentageToDP(3) }} iconProps={{ name: 'contacts', type: 'MaterialIcons', style: { color: activeTab === 1 ? '#fff' : '#6B7663' } }} />
-                            </TabHeading>}>
-                            <View style={styles.tabContent}>
+                            <View style={{ borderBottomWidth: 3, borderBottomColor: '#F5891F', marginTop: 16, marginHorizontal: widthPercentageToDP(9) }}>
+                                <Text style={{ marginLeft: widthPercentageToDP(3), fontSize: 12, fontWeight: 'bold', color: '#000', letterSpacing: 0.6, marginBottom: 2 }}>SEARCH RESULTS</Text>
+                            </View>
+                            <View style={{ marginTop: 16 }}>
                                 <FlatList
-                                    keyboardShouldPersistTaps='handled'
-                                    data={deviceContacts}
-                                    renderItem={this.renderDeviceContact}
-                                    keyExtractor={this.contactKeyExtractor}
+                                    style={{ marginBottom: heightPercentageToDP(20) }}
+                                    data={searchResults}
+                                    keyExtractor={this.searchResultsKeyExtractor}
+                                    renderItem={({ item, index }) => (
+                                        <HorizontalCard
+                                            item={item}
+                                            horizontalCardPlaceholder={require('../../assets/img/profile-pic.png')}
+                                            cardOuterStyle={styles.horizontalCardOuterStyle}
+                                            rightProps={{ righticonImage: require('../../assets/img/add-friend-from-community.png') }}
+                                            onPress={() => this.addFriendToCommunity(item)}
+                                        />
+                                    )}
+                                    ListFooterComponent={this.renderFooter}
+                                    onEndReached={this.loadMoreData}
+                                    onEndReachedThreshold={0.1}
+                                    onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
                                 />
+                                {this.props.hasNetwork === false && this.renderIconOnOffline(spin)}
                             </View>
                         </Tab>
-                        <Tab
-                            heading={<TabHeading style={{ width: widthPercentageToDP(33.3), backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3' }}>
-                                <IconLabelPair containerStyle={styles.tabHeaderContent} text={`Facebook`} textStyle={{ color: activeTab === 2 ? '#fff' : '#6B7663', fontSize: widthPercentageToDP(3) }} iconProps={{ name: 'logo-facebook', type: 'Ionicons', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }} />
-                            </TabHeading>}>
-                            <View style={styles.rootContainer}>
+                        <Tab heading='CONTACTS' tabStyle={[styles.inActiveTab, styles.borderLeftWhite, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderLeftWhite, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
 
-                            </View>
+                        </Tab>
+                        <Tab heading='FACEBOOK' tabStyle={[styles.inActiveTab, styles.borderLeftWhite]} activeTabStyle={[styles.activeTab, styles.borderLeftWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
+
                         </Tab>
                     </Tabs>
                 </View>
@@ -370,12 +425,13 @@ class ContactsSection extends PureComponent {
 }
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
+    const { pageNumber } = state.PageState;
     const { searchResults, friendRequestSuccess, friendRequestError, invitationSuccess, invitationError } = state.CommunitySearchList;
-    return { user, searchResults, friendRequestSuccess, friendRequestError, invitationSuccess, invitationError };
+    return { user, searchResults, friendRequestSuccess, friendRequestError, invitationSuccess, invitationError, pageNumber };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
-        searchForFriend: (searchParam, userId, pageNumber) => dispatch(searchForFriend(searchParam, userId, pageNumber)),
+        searchForFriend: (searchParam, userId, pageNumber, preference) => dispatch(searchForFriend(searchParam, userId, pageNumber, preference)),
         clearSearchResults: () => dispatch(clearSearchFriendListAction()),
         clearFriendRequestResponse: () => dispatch(resetFriendRequestResponseAction()),
         clearInvitationResponse: () => dispatch(resetInvitationResponseAction()),
