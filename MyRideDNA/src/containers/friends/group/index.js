@@ -467,6 +467,7 @@ class Group extends Component {
                         onClearSearchValue={() => this.setState({ searchName: '' })}
                         title={<Text>{currentGroup.groupName ? currentGroup.groupName + `\n` : '\n'}<Text style={{ fontSize: 14 }}>Members: {currentGroup.groupMembers.length ? currentGroup.groupMembers.length : ''}</Text></Text>}
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
+                        thumbnail={{ picture: currentGroup.profilePicture ? currentGroup.profilePicture : null }}
                     // rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.onPressAddMember }}
                     />
                     {/* <BaseModal alignCenter={true} isVisible={this.state.isVisibleAddMemberModal} onCancel={this.onCancelAddMemberForm} onPressOutside={this.onCancelAddMemberForm}>
@@ -545,6 +546,7 @@ class Group extends Component {
 
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
+                        <IconButton iconProps={{ name: 'edit', type: 'FontAwesome', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => Actions.push(PageKeys.GROUP_FORM, { pageIndex: this.props.grpIndex })} />
                         {
                             currentGroup.groupMembers.length > 0 && currentGroup.groupMembers[0].isAdmin ?
                                 <IconButton iconProps={{ name: 'adduser', type: 'AntDesign', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.onPressAddMember()} />
@@ -569,6 +571,7 @@ class Group extends Component {
                                         <HorizontalCard
                                             horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                                             item={item}
+                                            thumbnail={item.profilePicture}
                                             onPressLeft={() => this.openFriendsProfileTab(item.memberId, index)}
                                             cardOuterStyle={styles.HorizontalCardOuterStyle}
                                             actionsBar={{

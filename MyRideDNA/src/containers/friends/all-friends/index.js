@@ -564,6 +564,7 @@ class AllFriendsTab extends Component {
                                             horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                                             item={item}
                                             onPressLeft={() => this.openFriendsProfileTab(item)}
+                                            thumbnail={item.profilePicture}
                                             cardOuterStyle={styles.HorizontalCardOuterStyle}
                                             actionsBar={{
                                                 online: true,

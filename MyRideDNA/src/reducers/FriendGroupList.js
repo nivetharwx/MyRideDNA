@@ -47,7 +47,7 @@ export default (state = initialState, action) => {
                     ...state,
                     friendGroupList: [
                         ...state.friendGroupList,
-                        action.data
+                        ...action.data
                     ]
                 }
             }
@@ -68,12 +68,21 @@ export default (state = initialState, action) => {
                 currentGroup: { groupMembers: [] }
             }
         case UPDATE_CURRENT_GROUP:
+            const index = state.friendGroupList.findIndex(group => group.groupId === action.data.groupId)
+            let updatedGroup = state.friendGroupList[index];
+            updatedGroup = { ...updatedGroup, ...action.data }
             return {
                 ...state,
-                currentGroup: { ...state.currentGroup, ...action.data }
+                currentGroup: { ...state.currentGroup, ...action.data },
+                friendGroupList: [
+                    ...state.friendGroupList.slice(0, index),
+                    updatedGroup,
+                    ...state.friendGroupList.slice(index + 1)
+                ]
             }
         case RESET_MEMBERS_IN_CURRENT_GROUP:
             if (action.data.pageNumber === 0) {
+                let indexGroup = state.friendGroupList.findIndex(group => group.groupId === action.data.groupId)
                 action.data.members[0].name = 'You';
                 action.data.members[0].nickname = '';
                 const groupMembers = action.data.members.map(member => {
@@ -87,7 +96,8 @@ export default (state = initialState, action) => {
                 });
                 return {
                     ...state,
-                    currentGroup: { ...state.currentGroup, groupMembers, groupId: action.data.groupId, groupName: action.data.groupName, userId: action.data.userId }
+                    // currentGroup: { ...state.currentGroup, ...groupMembers, groupId: action.data.groupId, groupName: action.data.groupName, userId: action.data.userId }
+                    currentGroup: { ...state.friendGroupList[indexGroup], groupMembers }
                 }
             }
             else {

@@ -1,7 +1,7 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
     replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
-    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, replaceChatListAction, resetMessageCountAction, storeUserAction, errorHandlingAction, resetErrorHandlingAction, addMembersLocationAction, storeUserMyWalletAction, updateUserMyWalletAction, updateFriendsLocationAction, updateGroupsLocationAction, replaceAlbumListAction, updateFavouriteFriendAction, replaceCommunityListAction, updateCommunityListAction
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, replaceChatListAction, resetMessageCountAction, storeUserAction, errorHandlingAction, resetErrorHandlingAction, addMembersLocationAction, storeUserMyWalletAction, updateUserMyWalletAction, updateFriendsLocationAction, updateGroupsLocationAction, replaceAlbumListAction, updateFavouriteFriendAction, replaceCommunityListAction, updateCommunityListAction, updateCurrentGroupAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN, RIDE_POINT, CHAT_BASE_URL } from '../constants';
 import axios from 'axios';
@@ -1674,6 +1674,7 @@ export const getFriendsLocationList = (userId, friendsIdList) => {
 //     };
 // }
 export const getFriendGroups = (userId, toggleLoader, pageNumber, successCallback, errorCallback) => {
+    console.log('pageNumber : ',pageNumber)
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         toggleLoader && dispatch(apiLoaderActions(true))
@@ -1719,6 +1720,9 @@ export const createFriendGroup = (newGroupInfo) => {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    if (newGroupInfo.profilePicture) {
+                        newGroupInfo.profilePicture = "data:" + newGroupInfo.mimeType + ";base64," + newGroupInfo.profilePicture
+                    }
                     return dispatch(createFriendGroupAction(newGroupInfo))
                 }
             })
@@ -1731,6 +1735,36 @@ export const createFriendGroup = (newGroupInfo) => {
             })
     };
 }
+
+export const updateFriendGroup = (updatedGroupInfo) => {
+    return dispatch => {
+        // dispatch(toggleLoaderAction(true));
+        dispatch(apiLoaderActions(true))
+        axios.put(FRIENDS_BASE_URL + `updateFriendGroup`, updatedGroupInfo, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log('updatedGroupInfo : ', res.data);
+                if (res.status === 200) {
+                    // newGroupInfo.groupId = res.data.groupId;
+                    // dispatch(toggleLoaderAction(false));
+                    dispatch(apiLoaderActions(false))
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    if (updatedGroupInfo.profilePicture) {
+                        updatedGroupInfo.profilePicture = "data:" + updatedGroupInfo.mimeType + ";base64," + updatedGroupInfo.profilePicture
+                    }
+                    console.log('updatedGroupInfo : ', updatedGroupInfo)
+                    return dispatch(updateCurrentGroupAction(updatedGroupInfo))
+                }
+            })
+            .catch(er => {
+                console.log(`updatedGroupInfo error: `, er.response);
+                differentErrors(er, [updatedGroupInfo], updatedGroupInfo, true);
+                // TODO: Dispatch error info action
+                // dispatch(toggleLoaderAction(false));
+                dispatch(apiLoaderActions(false))
+            })
+    };
+}
+
 export const exitFriendGroup = (groupId, memberId) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));

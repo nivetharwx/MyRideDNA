@@ -7,7 +7,7 @@ import { BasicHeader } from '../../../../components/headers';
 import { IconButton, BasicButton } from '../../../../components/buttons';
 import { APP_COMMON_STYLES, heightPercentageToDP, widthPercentageToDP, IS_ANDROID } from '../../../../constants';
 import { LabeledInputPlaceholder } from '../../../../components/inputs';
-import { createFriendGroup } from '../../../../api';
+import { createFriendGroup, updateFriendGroup } from '../../../../api';
 import { Loader } from '../../../../components/loader';
 import ImagePicker from 'react-native-image-crop-picker';
 
@@ -16,10 +16,11 @@ const hasIOSAbove10 = parseInt(Platform.Version) > 10;
 class GroupForm extends Component {
     updatingGroupList = false;
     constructor(props) {
+
         super(props);
         this.state = {
             groupDetail: {
-                groupName: ''
+                groupName: this.props.pageIndex === -1 ? '' : this.props.friendGroupList[this.props.pageIndex].groupName
             }
         };
     }
@@ -31,8 +32,8 @@ class GroupForm extends Component {
         if (prevProps.friendGroupList !== this.props.friendGroupList) {
             if (this.updatingGroupList === true) {
                 Toast.show({ text: 'Added New Group' });
-                this.onPressBackButton();
             }
+            this.onPressBackButton();
         }
     }
 
@@ -68,7 +69,7 @@ class GroupForm extends Component {
                 includeBase64: true,
             });
             Toast.show({ text: 'One image selected' });
-            this.setState(prevState => ({ groupDetail: { ...prevState.groupDetail, mimeType: imageObj.mime, groupPicture: imageObj.data } }));
+            this.setState(prevState => ({ groupDetail: { ...prevState.groupDetail, mimeType: imageObj.mime, profilePicture: imageObj.data } }));
             // this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
         } catch (er) {
             this.setState({ isLoadingProfPic: false });
@@ -86,7 +87,7 @@ class GroupForm extends Component {
                 cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
             });
             Toast.show({ text: 'One image selected' });
-            this.setState(prevState => ({ groupDetail: { ...prevState.groupDetail, mimeType: imageObj.mime, groupPicture: imageObj.data } }));
+            this.setState(prevState => ({ groupDetail: { ...prevState.groupDetail, mimeType: imageObj.mime, profilePicture: imageObj.data } }));
             // this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
         } catch (er) {
             this.setState({ isLoadingProfPic: false });
@@ -103,14 +104,21 @@ class GroupForm extends Component {
 
     onSubmit = () => {
         const { groupDetail } = this.state;
-        this.updatingGroupList = true;
-        this.props.createFriendGroup({
-            groupName: groupDetail.groupName,
-            createdBy: this.props.user.userId,
-            createdDate: new Date().toISOString(),
-            groupPicture: groupDetail.groupPicture,
-            mimeType: groupDetail.mimeType
-        });
+        if (this.props.pageIndex === -1) {
+            this.updatingGroupList = true;
+            this.props.createFriendGroup({
+                createdBy: this.props.user.userId,
+                createdDate: new Date().toISOString(),
+                ...groupDetail,
+            });
+        }
+        else {
+            this.props.updateFriendGroup({
+                groupId: this.props.friendGroupList[this.props.pageIndex].groupId,
+                updatedBy: this.props.user.userId,
+                ...groupDetail
+            })
+        }
     }
 
 
@@ -164,7 +172,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         createFriendGroup: (newGroupInfo) => dispatch(createFriendGroup(newGroupInfo)),
-
+        updateFriendGroup: (updatedGroupInfo) => dispatch(updateFriendGroup(updatedGroupInfo))
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(GroupForm);

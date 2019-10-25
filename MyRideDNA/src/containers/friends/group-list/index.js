@@ -41,7 +41,6 @@ class GroupListTab extends Component {
             spinValue: new Animated.Value(0),
             searchQuery: '',
             groupFilter: FILTERED_ACTION_IDS.ALL_GROUPS,
-            filteredGroups: [],
             isFilter: null,
         };
     }
@@ -260,12 +259,13 @@ class GroupListTab extends Component {
             //     </View>
             // </TouchableWithoutFeedback>
             <HorizontalCard
-                horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
+                // horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                 item={item}
                 cardOuterStyle={styles.HorizontalCardOuterStyle}
                 onPressLeft={() => this.openGroupInfo(index)}
+                leftIcon={{ name: 'group', type: 'FontAwesome' }}
+                thumbnail={item.profilePicture}
                 actionsBar={{
-                    LeftIcon: { name: 'group', type: 'FontAwesome' },
                     actions: [
                         { name: 'location-arrow', type: 'FontAwesome', color: this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId][0].isVisible ? '#81BA41' : '#C4C6C8', onPressActions: () => this.toggleMembersLocation(this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId][0].isVisible, item.groupId) },
                         { name: 'message1', type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) },]
@@ -397,14 +397,15 @@ class GroupListTab extends Component {
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
         });
+        let filteredGroups = []
         if (groupFilter === FILTERED_ACTION_IDS.ALL_GROUPS) {
-            this.state.filteredGroups = searchQuery === '' ? friendGroupList : friendGroupList.filter(group => {
+            filteredGroups = searchQuery === '' ? friendGroupList : friendGroupList.filter(group => {
                 return (group.groupName.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
             });
         }
         else if (groupFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP_GROUPS) {
             const groupsVisibleOnMap = friendGroupList.filter(group => membersLocationList[group.groupId] && membersLocationList[group.groupId][0].isVisible === true);
-            this.state.filteredGroups = searchQuery === '' ? groupsVisibleOnMap : groupsVisibleOnMap.filter(group => {
+            filteredGroups = searchQuery === '' ? groupsVisibleOnMap : groupsVisibleOnMap.filter(group => {
                 return (group.groupName.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
             });
         }
@@ -435,7 +436,7 @@ class GroupListTab extends Component {
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
                     {/* <IconButton iconProps={{ name: 'group-add', type: 'MaterialIcons', style: { color: '#C4C6C8', fontSize: 27 } }} onPress={() => onPressAddGroup()} /> */}
-                    <IconButton iconProps={{ name: 'group-add', type: 'MaterialIcons', style: { color: '#C4C6C8', fontSize: 27 } }} onPress={() => Actions.push(PageKeys.GROUP_FORM)} />
+                    <IconButton iconProps={{ name: 'group-add', type: 'MaterialIcons', style: { color: '#C4C6C8', fontSize: 27 } }} onPress={() => Actions.push(PageKeys.GROUP_FORM, { pageIndex: -1 })} />
                     {/* <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterFavouriteFriend()} /> */}
                     {/* <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color:'#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} /> */}
                     <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapGroups()} />
@@ -454,10 +455,10 @@ class GroupListTab extends Component {
                             </View>
                             :
                             <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
-                        : this.state.filteredGroups.length > 0
+                        : filteredGroups.length > 0
                             ?
                             <FlatList
-                                data={this.state.filteredGroups}
+                                data={filteredGroups}
                                 refreshing={isRefreshing}
                                 contentContainerStyle={styles.friendList}
                                 onRefresh={this.onPullRefresh}

@@ -212,6 +212,7 @@ class PaasengerForm extends Component {
                                                                 item={item}
                                                                 horizontalCardPlaceholder={require('../../../assets/img/profile-pic.png')}
                                                                 cardOuterStyle={styles.horizontalCardOuterStyle}
+                                                                thumbnail={item.profilePicture}
                                                                 rightProps={{ righticonImage: require('../../../assets/img/add-passenger-from-community.png') }}
                                                                 onPress={() => this.addFriendToCommunity(item)}
                                                             />

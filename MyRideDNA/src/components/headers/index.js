@@ -9,9 +9,11 @@ import {
     TextInput,
     Platform
 } from 'react-native';
-import { Icon as NBIcon } from 'native-base';
-import { WindowDimensions, APP_COMMON_STYLES, widthPercentageToDP } from '../../constants';
+import { Icon as NBIcon, Thumbnail } from 'native-base';
+import { WindowDimensions, APP_COMMON_STYLES, widthPercentageToDP, IS_ANDROID, heightPercentageToDP } from '../../constants';
 import { IconButton } from '../buttons';
+
+const THUMBNAIL_SIZE = IS_ANDROID ? heightPercentageToDP(6.5) : heightPercentageToDP(8);
 
 export class BasicHeader extends React.Component {
     constructor(props) {
@@ -56,7 +58,7 @@ export class BasicHeader extends React.Component {
 
     render() {
         const { leftIconProps, title, rightIconProps, onCancelSearchMode,
-            searchValue, onChangeSearchValue, hasEditableTitle, style, searchIconProps, rightIconPropsStyle} = this.props;
+            searchValue, onChangeSearchValue, hasEditableTitle, style, searchIconProps, rightIconPropsStyle, thumbnail } = this.props;
         const { searchbarAnim, searchbarMode, titleEditingMode } = this.state;
 
         const searchCancelAnim = searchbarAnim.interpolate({
@@ -75,7 +77,7 @@ export class BasicHeader extends React.Component {
                         ? <View style={{ flex: 1, flexDirection: 'row' }}>
                             {
                                 leftIconProps
-                                    ? <View style={{ marginHorizontal: 17, alignItems: 'center', justifyContent: 'center' }}>
+                                    ? <View style={{ marginLeft: 17, alignItems: 'center', justifyContent: 'center' }}>
                                         <TouchableOpacity style={leftIconProps.reverse ? styles.iconPadding : null} onPress={leftIconProps.onPress}>
                                             <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
                                                 fontSize: 27,
@@ -85,17 +87,28 @@ export class BasicHeader extends React.Component {
                                     </View>
                                     : null
                             }
+                            {
+                                thumbnail
+                                    ?
+                                    thumbnail.picture ?
+                                        <Thumbnail style={styles.thumbnail} source={{ uri: thumbnail.picture }} />
+                                        :
+                                        <View style={styles.groupIconStyle}>
+                                            <IconButton iconProps={{ name: 'user', type: 'FontAwesome', style: { color: 'white', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(5), marginLeft: widthPercentageToDP(7), marginTop: heightPercentageToDP(0.8) } }} />
+                                        </View>
+                                    : null
+                            }
                             <View style={{ flex: 1, alignSelf: 'center', marginHorizontal: leftIconProps ? 0 : 20 }}>
                                 {
                                     titleEditingMode === false
                                         ? hasEditableTitle
                                             ? <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing:0.2}}>
+                                                <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing: 0.2 }}>
                                                     {title}
                                                 </Text>
                                                 <IconButton style={{ paddingHorizontal: 0 }} onPress={this.toggleTitleEditingMode} iconProps={{ name: 'edit', type: 'MaterialIcons', style: { color: '#fff' } }} />
                                             </View>
-                                            : <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing:0.2 }}>
+                                            : <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing: 0.2 }}>
                                                 {title}
                                             </Text>
                                         : <View style={{ flexDirection: 'row', marginRight: rightIconProps ? 20 : 0, justifyContent: 'space-between', alignItems: 'center' }}>
@@ -121,7 +134,7 @@ export class BasicHeader extends React.Component {
                             {
                                 rightIconProps
                                     ? <Animated.View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
-                                        <TouchableOpacity style={[rightIconProps.reverse ? styles.iconPadding : null,rightIconProps.rightIconPropsStyle]} onPress={rightIconProps.onPress && rightIconProps.onPress}>
+                                        <TouchableOpacity style={[rightIconProps.reverse ? styles.iconPadding : null, rightIconProps.rightIconPropsStyle]} onPress={rightIconProps.onPress && rightIconProps.onPress}>
                                             <NBIcon name={rightIconProps.name} type={rightIconProps.type} style={[{
                                                 fontSize: 25,
                                                 color: rightIconProps.reverse ? 'black' : 'white'
@@ -209,5 +222,21 @@ const styles = StyleSheet.create({
         width: 33,
         alignItems: 'center',
         justifyContent: 'center'
+    },
+    thumbnail: {
+        marginTop: heightPercentageToDP(1),
+        marginHorizontal: widthPercentageToDP(2),
+        height: THUMBNAIL_SIZE,
+        width: THUMBNAIL_SIZE,
+        borderRadius: THUMBNAIL_SIZE / 2,
+        alignSelf: 'center'
+    },
+    groupIconStyle: {
+        marginTop: heightPercentageToDP(2),
+        marginHorizontal: widthPercentageToDP(2),
+        height: THUMBNAIL_SIZE,
+        width: THUMBNAIL_SIZE,
+        borderRadius: THUMBNAIL_SIZE / 2,
+        backgroundColor: '#6C6C6B',
     },
 })
