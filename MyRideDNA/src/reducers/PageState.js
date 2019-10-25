@@ -40,6 +40,7 @@ export default (state = initialState, action) => {
         //         loader:action.data
         //     } 
         case UPDATE_PAGENUMBER:
+            console.log('UPDATE_PAGENUMBER : ', action.data)
             return {
                 ...state,
                 pageNumber: action.data.pageNumber + 1,

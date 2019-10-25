@@ -153,10 +153,14 @@ export default (state = initialState, action) => {
             }
             else {
                 const communityIndex = state.communityList.findIndex(item => item.userId === action.data.userId)
+                updatedCommnuity = state.communityList[communityIndex];
+                console.log('updatedCommnuity : ', updatedCommnuity)
+                updatedCommnuity.isPassenger = true
                 return {
                     ...state,
                     communityList: [
                         ...state.communityList.slice(0, communityIndex),
+                        updatedCommnuity,
                         ...state.communityList.slice(communityIndex + 1),
                     ]
                 }

@@ -1674,7 +1674,7 @@ export const getFriendsLocationList = (userId, friendsIdList) => {
 //     };
 // }
 export const getFriendGroups = (userId, toggleLoader, pageNumber, successCallback, errorCallback) => {
-    console.log('pageNumber : ',pageNumber)
+    console.log('pageNumber : ', pageNumber)
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         toggleLoader && dispatch(apiLoaderActions(true))
@@ -2258,9 +2258,9 @@ export const registerPassenger = (userId, passenger) => {
                 passenger.passengerId = res.data.passengerId;
                 if (res.data.isFriend) {
                     console.log('isFriend True')
-                    dispatch(updateCommunityListAction({ userId: res.data.passengerId }))
+                    dispatch(updateCommunityListAction({ userId: res.data.passengerUserId }))
                 }
-                dispatch(addToPassengerListAction(res.data))
+                // dispatch(addToPassengerListAction(res.data))
             })
             .catch(er => {
                 console.log(`registerPassenger error: `, er.response || er);

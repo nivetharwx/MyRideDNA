@@ -183,13 +183,13 @@ export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, 
     </View>
 );
 
-export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actionsBar = {}, cardOuterStyle, horizontalCardPlaceholder, righticonImage, onPressLeft, thumbnail, leftIcon }) => (
+export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actionsBar, cardOuterStyle, horizontalCardPlaceholder, righticonImage, onPressLeft, thumbnail, leftIcon }) => (
     <TouchableWithoutFeedback style={{ width: widthPercentageToDP(100), marginTop: 20, }} >
         <View style={[{ flex: 1, flexDirection: 'row', width: widthPercentageToDP(81.5), borderWidth: 1, borderColor: '#EAEAEA' }, cardOuterStyle]}>
             <TouchableOpacity style={{ height: 74, width: 74, flexDirection: actionsBar ? 'row' : null, }} onPress={onPressLeft} >
                 {
                     // for online and offline
-                    actionsBar.online ?
+                    actionsBar && actionsBar.online ?
                         <View style={{ backgroundColor: item.isOnline ? '#81BA41' : '#C4C6C8', zIndex: 1, width: 6 }}>
                         </View>
                         :
@@ -224,7 +224,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                         <View style={{ flex: 1 }}>
                             {
                                 // to iterate the actions array
-                                actionsBar.actions.length > 0 ?
+                                actionsBar.actions && actionsBar.actions.length > 0 ?
                                     <FlatList
                                         numColumns={4}
                                         columnWrapperStyle={{ justifyContent: actionsBar.actions.length < 3 ? 'space-around' : 'space-between', marginHorizontal: 20, marginTop: 5 }}

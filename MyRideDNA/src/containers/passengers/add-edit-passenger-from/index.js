@@ -135,6 +135,7 @@ class PaasengerForm extends Component {
     render() {
         const { passenger, activeTab, searchQuery } = this.state;
         const { communityList } = this.props;
+        console.log('communityLIst : ', communityList)
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '45deg']
@@ -144,7 +145,8 @@ class PaasengerForm extends Component {
             outputRange: ['0deg', '360deg']
         });
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
-        this.state.filteredFriends = searchQuery === '' ? communityList : communityList.filter(friend => {
+        let filteredFriends = [];
+        filteredFriends = searchQuery === '' ? communityList : communityList.filter(friend => {
             return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                 (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
         });
@@ -201,11 +203,11 @@ class PaasengerForm extends Component {
                                                     :
                                                     null
                                                 :
-                                                this.state.filteredFriends.length > 0
+                                                filteredFriends.length > 0
                                                     ?
                                                     <FlatList
                                                         style={{ marginBottom: heightPercentageToDP(20) }}
-                                                        data={this.state.filteredFriends}
+                                                        data={filteredFriends}
                                                         keyExtractor={this.communityKeyExtractor}
                                                         renderItem={({ item, index }) => (
                                                             <HorizontalCard
@@ -213,7 +215,7 @@ class PaasengerForm extends Component {
                                                                 horizontalCardPlaceholder={require('../../../assets/img/profile-pic.png')}
                                                                 cardOuterStyle={styles.horizontalCardOuterStyle}
                                                                 thumbnail={item.profilePicture}
-                                                                rightProps={{ righticonImage: require('../../../assets/img/add-passenger-from-community.png') }}
+                                                                rightProps={item.isPassenger ? { righticonImage: require('../../../assets/img/add-passenger-from-community-true.png') } : { righticonImage: require('../../../assets/img/add-passenger-from-community.png') }}
                                                                 onPress={() => this.addFriendToCommunity(item)}
                                                             />
                                                         )}

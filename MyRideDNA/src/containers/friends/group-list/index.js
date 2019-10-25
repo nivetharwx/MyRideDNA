@@ -350,6 +350,7 @@ class GroupListTab extends Component {
     loadMoreData = () => {
         if (this.state.isLoadingData && this.state.isLoading === false) {
             this.setState({ isLoading: true, isLoadingData: false })
+            console.log('load more data : ', this.props.pageNumber)
             this.props.getFriendGroups(this.props.user.userId, false, this.props.pageNumber, (res) => {
                 this.setState({ isLoading: false })
             }, (err) => {
