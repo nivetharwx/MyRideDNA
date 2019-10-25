@@ -6,6 +6,11 @@
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "jest"
   },
+	"rnpm": {
+		"assets": [
+			"./assets/fonts/"
+		]
+	},
   "dependencies": {
     "@babel/runtime": "^7.1.2",
     "@mapbox/mapbox-sdk": "^0.4.1",

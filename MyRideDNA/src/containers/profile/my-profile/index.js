@@ -312,14 +312,14 @@ class MyProfileTab extends Component {
                 <View style={styles.mapHeader}>
                     <IconButton iconProps={{ name: 'bell', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(5) } }}
                         style={[styles.headerIcon, { marginLeft: widthPercentageToDP(6), marginTop: IS_ANDROID ? heightPercentageToDP(2.1) : heightPercentageToDP(1) }]} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
-                    <View style={{ flexDirection: 'column' }}>
+                    <View style={{ flexDirection: 'column', marginLeft: widthPercentageToDP(4) }}>
                         <Text style={styles.title}>
                             {user.name}
                         </Text>
                         {
                             user.nickname ?
-                                <Text style={{ color: 'rgba(189, 195, 199, 1)', fontWeight: 'bold', alignSelf: 'center' }}>
-                                    {'  '}{user.nickname.toUpperCase()}
+                                <Text style={{ color: 'rgba(189, 195, 199, 1)', fontWeight: 'bold' }}>
+                                    {user.nickname.toUpperCase()}
                                 </Text>
                                 : null
                         }
@@ -329,21 +329,20 @@ class MyProfileTab extends Component {
                 {/* <BasicHeader style={[{}, IS_ANDROID ? {height:heightPercentageToDP(10)} : { marginTop: 20 }]} headerHeight={heightPercentageToDP(14.5)}
                         leftIconProps={{ reverse: true, name: 'bell', type: 'FontAwesome'}} /> */}
                 <ScrollView>
-                    <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
-                        <View style={styles.profilePic}>
-                            <ImageBackground source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
-                                {/* <ImageBackground source={require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}> */}
-                                {
-                                    isLoadingProfPic
-                                        ? <ImageLoader show={isLoadingProfPic} />
-                                        : null
-                                }
-                            </ImageBackground>
-                        </View>
-                    </ImageBackground>
+                    <View style={styles.profilePic}>
+                        <ImageBackground source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
+                            {/* <ImageBackground source={require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}> */}
+                            {
+                                isLoadingProfPic
+                                    ? <ImageLoader show={isLoadingProfPic} />
+                                    : null
+                            }
+                        </ImageBackground>
+                    </View>
+                    <Image source={require('../../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} />
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                        <View style={{ flexDirection: 'column', marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(3) }}>
-                            <Text style={{ letterSpacing: 3, fontSize: 11, color: '#a8a8a8', fontWeight: '600' }}>LOCATION</Text>
+                        <View style={{ flexDirection: 'column', marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(2) }}>
+                            <Text style={{ letterSpacing: 1, fontSize: 11, color: '#a8a8a8', fontWeight: '600' }}>LOCATION</Text>
                             <Text style={{ fontWeight: 'bold', color: '#000' }}>{user.homeAddress.city}, {user.homeAddress.state}</Text>
                         </View>
                         <IconButton iconProps={{ name: 'account-edit', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#f69039' } }}
@@ -363,7 +362,7 @@ class MyProfileTab extends Component {
                             <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7), alignSelf: 'center' }}>{new Date(user.dateOfRegistration).getFullYear()}</Text>
                         </View>
                     </View>
-                    <View style={{ flexDirection: 'column', marginHorizontal: widthPercentageToDP(8), marginTop: heightPercentageToDP(4), borderBottomWidth: 1 }}   >
+                    <View style={{ flexDirection: 'column', marginHorizontal: widthPercentageToDP(8), marginTop: heightPercentageToDP(4), borderBottomWidth: 1, borderBottomColor: '#B1B1B1' }}   >
                         <Text style={{ letterSpacing: 3, fontSize: 11, color: '#a8a8a8', fontWeight: '600' }}>CLUBS</Text>
                         {
                             user.clubs ?
@@ -382,19 +381,15 @@ class MyProfileTab extends Component {
                         }
                     </View>
                     <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(2), marginRight: widthPercentageToDP(7) }}>
-                        <View style={{ flexDirection: 'row', marginTop: heightPercentageToDP(3) }}>
-                            <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Road Buddies</Text>
-                            <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16 }} onPress={this.onPressFriendsPage} />
-                            <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#a8a8a8', marginLeft: widthPercentageToDP(16) }}>
+                        <View style={{ flexDirection: 'row', marginTop: heightPercentageToDP(2), justifyContent: 'space-between', paddingBottom: 3 }}>
+                            <View style={{ flexDirection: 'row' }}>
+                                <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Road Buddies</Text>
+                                <LinkButton title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16, fontWeight: 'bold' }} onPress={this.onPressFriendsPage} />
+                            </View>
+                            <View style={styles.addButnCont}>
                                 <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)} />
                             </View>
                         </View>
-                        {/* <View style={{flexDirection:'row',justifyContent:'space-between'}}>
-                            <SmallCard />
-                            <SmallCard />
-                            <SmallCard />
-                            <SmallCard />
-                        </View> */}
                         <View style={{ borderTopWidth: 15, borderTopColor: '#DCDCDE' }}>
                             <FlatList
                                 style={{ flexDirection: 'column' }}
@@ -418,11 +413,13 @@ class MyProfileTab extends Component {
 
                         </View>
                     </View>
-                    <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(3), marginRight: widthPercentageToDP(7) }}>
-                        <View style={{ flexDirection: 'row', marginTop: heightPercentageToDP(3) }}>
-                            <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Passengers</Text>
-                            <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16 }} onPress={() => Actions.push(PageKeys.PASSENGERS)} />
-                            <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#a8a8a8', marginLeft: widthPercentageToDP(21) }}>
+                    <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(2), marginRight: widthPercentageToDP(7) }}>
+                        <View style={{ flexDirection: 'row', marginTop: heightPercentageToDP(2), justifyContent: 'space-between', paddingBottom: 3 }}>
+                            <View style={{ flexDirection: 'row' }}>
+                                <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Passengers</Text>
+                                <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16, fontWeight: 'bold' }} onPress={() => Actions.push(PageKeys.PASSENGERS)} />
+                            </View>
+                            <View style={styles.addButnCont}>
                                 <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: -1 })} />
                             </View>
                         </View>
@@ -451,17 +448,25 @@ class MyProfileTab extends Component {
                         </View>
                     </View>
                     <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.MY_WALLET_FORM)}>
-                        <ImageBackground source={require('../../../assets/img/my-wallet.png')} style={styles.usersExtraDetail}></ImageBackground>
+                        <ImageBackground source={require('../../../assets/img/my-wallet.png')} style={styles.usersExtraDetail}>
+                            <Text style={styles.txtOnImg}>My Wallet</Text>
+                        </ImageBackground>
                     </TouchableOpacity >
                     <View style={styles.usersExtraDetailContainer}>
-                        <ImageBackground source={require('../../../assets/img/my-journal.png')} style={styles.usersExtraDetail}></ImageBackground>
+                        <ImageBackground source={require('../../../assets/img/my-journal.png')} style={styles.usersExtraDetail}>
+                            <Text style={styles.txtOnImg}>My Journal</Text>
+                        </ImageBackground>
                     </View>
                     <View style={styles.usersExtraDetailContainer}>
-                        <ImageBackground source={require('../../../assets/img/my-vest.png')} style={styles.usersExtraDetail}></ImageBackground>
+                        <ImageBackground source={require('../../../assets/img/my-vest.png')} style={styles.usersExtraDetail}>
+                            <Text style={styles.txtOnImg}>My Vest</Text>
+                        </ImageBackground>
                     </View>
                     <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.ALBUM)}>
                         {/* <TouchableOpacity style={styles.usersExtraDetailContainer}> */}
-                        <ImageBackground source={require('../../../assets/img/my-photos.png')} style={styles.usersExtraDetail}></ImageBackground>
+                        <ImageBackground source={require('../../../assets/img/my-photos.png')} style={styles.usersExtraDetail}>
+                            <Text style={styles.txtOnImg}>My Photos</Text>
+                        </ImageBackground>
                     </TouchableOpacity>
                 </ScrollView>
             </View>
@@ -567,19 +572,18 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     title: {
-        marginLeft: widthPercentageToDP(6),
         marginTop: widthPercentageToDP(1),
         fontSize: widthPercentageToDP(6),
         color: 'white',
         fontWeight: 'bold',
         backgroundColor: 'transparent',
     },
-    profileBG: {
+    profilePicBtmBorder: {
         width: '100%',
-        height: heightPercentageToDP(40)
+        height: 13
     },
     profilePic: {
-        height: heightPercentageToDP(37),
+        height: 255,
         width: WindowDimensions.width,
         borderWidth: 1,
     },
@@ -613,11 +617,26 @@ const styles = StyleSheet.create({
     usersExtraDetail: {
         width: WindowDimensions.width,
         height: heightPercentageToDP(30),
+        justifyContent: 'center',
+        paddingLeft: 20
     },
     usersExtraDetailContainer: {
-        marginTop: heightPercentageToDP(8),
+        marginTop: 20,
         borderTopWidth: 9,
         borderTopColor: '#f69039',
         elevation: 20,
+    },
+    addButnCont: {
+        height: widthPercentageToDP(5),
+        width: widthPercentageToDP(5),
+        borderRadius: widthPercentageToDP(2.5),
+        backgroundColor: '#a8a8a8',
+        marginRight: 10
+    },
+    txtOnImg: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 25,
+        letterSpacing: 2
     }
 });

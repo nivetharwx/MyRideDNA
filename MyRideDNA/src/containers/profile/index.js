@@ -9,7 +9,6 @@ import MyProfileTab from './my-profile';
 import MyGarageTab from './my-garage';
 import { Loader } from '../../components/loader';
 
-const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
 class Profile extends Component {
     tabsRef = null;
     constructor(props) {
@@ -22,7 +21,7 @@ class Profile extends Component {
 
     componentDidMount() {
         setTimeout(() => {
-            this.tabsRef.props.goToPage(0);
+            this.tabsRef.goToPage(0);
             this.setState({ activeTab: 0 });
         }, 50);
     }
@@ -50,33 +49,18 @@ class Profile extends Component {
                             : null
                 }
                 <View style={[{ flex: 1 }, !this.props.hasNetwork ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
-                    <Tabs onChangeTab={this.onChangeTab} style={styles.bottomTabContainer} tabBarPosition='bottom' renderTabBar={() => <ScrollableTab ref={elRef => this.tabsRef = elRef} style={{ backgroundColor: '#6C6C6B', height: BOTTOM_TAB_HEIGHT }} underlineStyle={{ height: 0 }} />}>
-                        <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 0 ? 'rgba(0, 0, 0, 0.5)' : '#0083CA' }]}>
-                            <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>MY PROFILE</Text>
-                        </TabHeading>}>
+                    <Tabs tabBarPosition='bottom' tabContainerStyle={styles.bottomTabContainer} ref={elRef => this.tabsRef = elRef} onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' tabBarUnderlineStyle={{ height: 0 }}>
+                        <Tab heading='MY PROFILE' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
                             <MyProfileTab />
                         </Tab>
-                        <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 1 ? 'rgba(0, 0, 0, 0.5)' : '#0083CA', borderLeftWidth: 2, borderLeftColor: '#fff', borderRightWidth: 2, borderRightColor: '#fff' }]}>
-                            <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>MY GARAGE</Text>
-                        </TabHeading>}>
+                        <Tab heading='MY GARAGE' tabStyle={[styles.inActiveTab, styles.borderLeftWhite]} activeTabStyle={[styles.activeTab, styles.borderLeftWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
                             <MyGarageTab />
                         </Tab>
-                        {/* <Tab heading={<TabHeading style={[styles.bottomTab, { backgroundColor: activeTab === 2 ? '#0083CA' : '#6C6C6B' }]}>
-                            <Text style={{ color: '#fff', fontSize: widthPercentageToDP(3) }}>MY VEST</Text>
-                        </TabHeading>}>
-                            <View style={{ backgroundColor: 'rgba(149, 165, 166, 1)', flex: 1, }}>
-                                <ImageBackground source={require('../../assets/img/vest.png')} style={{ width: '100%', height: '100%' }} imageStyle={{ opacity: 0.5 }}></ImageBackground>
-                                <Text style={{ position: 'absolute', width: '100%', textAlign: 'center', marginTop: heightPercentageToDP(20), fontWeight: 'bold', fontSize: 80, color: 'rgba(rgba(46, 49, 49, 1))' }}>MY VEST</Text>
-                                <Text style={{ position: 'absolute', width: '100%', textAlign: 'center', marginTop: heightPercentageToDP(40), fontSize: 50, color: 'rgba(rgba(46, 49, 49, 1))' }}>Coming Soon...</Text>
-
-                            </View>
-
-                        </Tab> */}
                     </Tabs>
 
                     {/* Shifter: - Brings the app navigation menu */}
                     <ShifterButton onPress={this.showAppNavMenu}
-                        containerStyles={{ bottom: BOTTOM_TAB_HEIGHT }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
+                        containerStyles={{ bottom: APP_COMMON_STYLES.tabContainer.height }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
                 </View>
                 <Loader isVisible={showLoader} />
             </View >
@@ -104,17 +88,33 @@ const styles = StyleSheet.create({
     },
     bottomTabContainer: {
         position: 'absolute',
-        // zIndex: 50,
         bottom: 0,
-        // paddingBottom: IS_ANDROID ? 0 : 20,
-        height: '100%',
         width: '100%',
+        height: APP_COMMON_STYLES.tabContainer.height
     },
     bottomTab: {
-        height: BOTTOM_TAB_HEIGHT,
+        height: APP_COMMON_STYLES.tabContainer.height,
         alignItems: 'center',
         justifyContent: 'center',
         width: widthPercentageToDP(50),
 
+    },
+    activeTab: {
+        backgroundColor: '#000000'
+    },
+    inActiveTab: {
+        backgroundColor: '#0083CA'
+    },
+    borderRightWhite: {
+        borderRightWidth: 1,
+        borderColor: '#fff'
+    },
+    borderLeftWhite: {
+        borderLeftWidth: 1,
+        borderColor: '#fff'
+    },
+    tabText: {
+        fontSize: 13,
+        fontWeight: 'bold'
     }
 });

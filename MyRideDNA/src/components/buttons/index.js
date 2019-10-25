@@ -102,7 +102,7 @@ export const AppMenuButton = ({ containerStyle, iconProps, onPress }) => (
     </TouchableOpacity>
 );
 
-export const LinkButton = ({ style, title, titleStyle, onPress, highlightColor }) => (
+export const LinkButton = ({ style = {}, title, titleStyle, onPress, highlightColor }) => (
     highlightColor
         ? <TouchableHighlight onPress={onPress}
             underlayColor={highlightColor} style={style}>
@@ -166,9 +166,9 @@ export const ImageButton = ({ onPress, styles, imageSrc }) => (
 );
 
 export const ShifterButton = ({ onPress, containerStyles, size = 20, alignLeft = false }) => (
-    <TouchableOpacity onPress={onPress} style={[styles.shiterButtonContainer, containerStyles, alignLeft ? styles.alignLeft : null, { width: widthPercentageToDP(size), height: widthPercentageToDP(size) }]}>
-        <View style={[styles.shiterImgContainer, alignLeft ? { borderTopEndRadius: widthPercentageToDP(size) } : { borderTopStartRadius: widthPercentageToDP(size) }]}>
-            <Image source={require('../../assets/img/shifter_shadow.png')} style={[{ position: 'absolute', bottom: 0, right: 0, height: widthPercentageToDP(size - 5), width: widthPercentageToDP(size - 5) }, alignLeft ? styles.leftImage : null]} />
+    <TouchableOpacity onPress={onPress} style={[styles.shiterButtonContainer, containerStyles, alignLeft ? styles.alignLeft : null]}>
+        <View style={[styles.shiterImgContainer, alignLeft ? { borderTopEndRadius: 90 } : { borderTopStartRadius: 90 }]}>
+            <Image source={require('../../assets/img/shifter_shadow.png')} style={[{ position: 'absolute', bottom: 0, right: 0, height: 65, width: 75 }, alignLeft ? styles.leftImage : null]} />
         </View>
     </TouchableOpacity>
 );

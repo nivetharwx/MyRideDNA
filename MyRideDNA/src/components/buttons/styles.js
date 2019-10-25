@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { APP_COMMON_STYLES } from '../../constants';
 
 const styles = StyleSheet.create({
     loginButtonText: {
@@ -32,12 +33,14 @@ const styles = StyleSheet.create({
         zIndex: 900,
         elevation: 10,
         bottom: 0,
-        right: 0,
+        right: 0
     },
     shiterImgContainer: {
-        flex: 1,
-        backgroundColor: 'rgba(235, 134, 30, 0.6)',
-        overflow: 'hidden'
+        height: 60, 
+        width: 60,
+        backgroundColor: 'rgba(235, 128, 20, 0.8)',
+        borderWidth: 1,
+        borderColor: 'rgba(235, 128, 20, 0.8)'
     },
     alignLeft: {
         left: 0,
