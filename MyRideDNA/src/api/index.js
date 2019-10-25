@@ -2260,7 +2260,7 @@ export const registerPassenger = (userId, passenger) => {
                     console.log('isFriend True')
                     dispatch(updateCommunityListAction({ userId: res.data.passengerUserId }))
                 }
-                // dispatch(addToPassengerListAction(res.data))
+                dispatch(addToPassengerListAction(res.data))
             })
             .catch(er => {
                 console.log(`registerPassenger error: `, er.response || er);
