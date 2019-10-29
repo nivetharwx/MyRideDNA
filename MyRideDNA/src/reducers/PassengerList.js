@@ -1,6 +1,7 @@
 import { REPLACE_PASSENGER_LIST, ADD_PASSENGER_TO_LIST, REMOVE_PASSENGER_FROM_LIST, UPDATE_PASSENGER_IN_LIST, GET_PASSENGER_INFO, UPDATE_CURRENT_PASSENGER, RESET_CURRENT_PASSENGER, REPLACE_COMMUNITY_LIST, UPDATE_COMMUNITY_LIST, RESET_COMMUNITY_LIST } from "../actions/actionConstants";
 import passengers from "../containers/passengers";
 import { Actions } from "react-native-router-flux";
+import { THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG } from "../constants";
 
 const initialState = {
     passengerList: [],
@@ -37,8 +38,12 @@ export default (state = initialState, action) => {
             if (action.data.pictureObj) {
                 let updatedPassengerList = state.passengerList.map(item => {
                     if (!item.profilePictureId) return item;
-                    if (typeof action.data.pictureObj[item.profilePictureId] === 'string') {
-                        return { ...item, profilePicture: action.data.pictureObj[item.profilePictureId] }
+                    let picId = item.profilePictureId;
+                    if (action.data.newImgSize) {
+                        picId = item.profilePictureId.replace(action.data.curImgSize, action.data.newImgSize);
+                    }
+                    if (typeof action.data.pictureObj[picId] === 'string') {
+                        return { ...item, profilePicture: action.data.pictureObj[picId] }
                     }
                     return item;
                 })

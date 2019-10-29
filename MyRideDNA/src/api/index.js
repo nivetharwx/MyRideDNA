@@ -109,13 +109,10 @@ export const pushNotification = (userId) => {
 //     }
 // }
 export const getAllNotifications = (userId, pageNumber, date, comingFrom, successCallback, errorCallback) => {
-    console.log('comingFrom : ', comingFrom)
     return dispatch => {
         // dispatch(isloadingDataAction(true));
         axios.get(NOTIFICATIONS_BASE_URL + `getNotifications?userId=${userId}&pageNumber=${pageNumber}&date=${date}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-
-                console.log(' getNotifications : ', res.data)
                 if (res.status === 200 && res.data.notification.length > 0) {
                     // dispatch(isloadingDataAction(false));
                     dispatch(resetNotificationListAction(res.data));
@@ -1315,6 +1312,28 @@ export const getAllFriends = (friendType, userId, pageNumber, toggleLoader, succ
                 dispatch(apiLoaderActions(false));
                 differentErrors(er, [friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback], getAllFriends, false);
                 // errorCallback(er);
+            })
+    };
+}
+export const getFriendInfo = (friendType, userId, friendsIdList) => {
+    return dispatch => {
+        dispatch(apiLoaderActions(true));
+        axios.put(GRAPH_BASE_URL + `getFriend`, { userId, friendsIdList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("getFriend success: ", res.data);
+                if (res.status === 200 && res.data.friendList.length > 0) {
+                    dispatch(apiLoaderActions(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+                }
+                else if (res.data.friendList.length === 0) {
+                    dispatch(apiLoaderActions(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                }
+            })
+            .catch(er => {
+                console.log(`getFriend: `, er.response || er);
+                dispatch(apiLoaderActions(false));
+                differentErrors(er, [friendType, userId, friendIdList], getFriendInfo, false);
             })
     };
 }
