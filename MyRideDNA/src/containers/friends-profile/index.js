@@ -9,7 +9,7 @@ import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { ImageLoader, Loader } from '../../components/loader';
 import styles from './styles';
-import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend, getFriendsLocationList, getUserById, getAllFriends, getAllFriends1, readNotification, getPictureList, getRidePictureList } from '../../api';
+import { getPicture, getGarageInfo, getFriendsRideList, getRideByRideId, doUnfriend, getFriendsLocationList, getUserById, getAllFriends, getAllFriends1, readNotification, getPictureList, getRidePictureList, getFriendInfo } from '../../api';
 import { BasicCard } from '../../components/cards';
 import { IconLabelPair } from '../../components/labels';
 
@@ -50,11 +50,12 @@ class FriendsProfile extends Component {
         //     this.props.readNotification(this.props.user.userId, this.props.notificationBody.id);
         // }
         else if (this.props.relationshipStatus === RELATIONSHIP.UNKNOWN) {
-            this.props.getFriendsNotFirend(this.props.person);
+            this.props.getFriendsNotFriend(this.props.person);
             this.setState({ totalTabs: 3 })
         }
         else {
             this.props.getFriendsInfo(this.props.frienduserId, this.props.friendType);
+            // this.props.getFriendInfo(this.props.friendType, this.props.user.userId, [this.props.frienduserId]);
         }
 
     }
@@ -71,9 +72,6 @@ class FriendsProfile extends Component {
         if (prevProps.currentFriend !== this.props.currentFriend) {
             if (this.props.currentFriend.userId === null) {
                 if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
-                    // this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
-                    // }, (err) => {
-                    // });
                     this.props.getAllFriends1(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
                     }, (err) => {
                     });
@@ -85,7 +83,6 @@ class FriendsProfile extends Component {
                 if (prevProps.currentFriend.userId === null) {
                     if (this.props.currentFriend.locationEnable && this.props.currentFriend.isOnline) {
                         if (this.state.friendsProfileIcons.findIndex(icon => icon.name === 'location-on') === -1) {
-                            console.log("pushing location icon");
                             this.setState(prevState => ({
                                 friendsProfileIcons: [...prevState.friendsProfileIcons, { name: 'location-on', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.showFriendsLocation() }]
                             }));
@@ -132,7 +129,6 @@ class FriendsProfile extends Component {
                 if (ridePicIdList.length > 0) {
                     this.props.getRidePictureList(ridePicIdList, this.props.currentFriend.userId);
                 }
-                // this.props.getFirendsRideInfo(this.props.currentFriend.userId, RELATIONSHIP.FRIEND)
             }
         }
     }
@@ -499,7 +495,8 @@ const mapDispatchToProps = (dispatch) => {
         getAllFriends1: (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => dispatch(getAllFriends1(friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         getFriendsInfo: (frienduserId, friendType) => dispatch(getFriendsInfoAction({ userId: frienduserId, friendType })),
-        getFriendsNotFirend: (notFriendData) => dispatch(getNotFriendsInfoAction({ notFriendData })),
+        // getFriendInfo: (friendType, userId, friendIdList) => dispatch(getFriendInfo(friendType, userId, friendIdList)),
+        getFriendsNotFriend: (notFriendData) => dispatch(getNotFriendsInfoAction({ notFriendData })),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
         getUserById: (userId) => dispatch(getUserById(userId)),
         getProfilePicture: (pictureId, friendId, friendType) => getPicture(pictureId, ({ picture, pictureId }) => {
@@ -522,7 +519,7 @@ const mapDispatchToProps = (dispatch) => {
                 console.log(`getGarage error: `, error);
             })
         },
-        getFirendsRideInfo: (friendId, relationship) => {
+        getFriendsRideInfo: (friendId, relationship) => {
             dispatch(getFriendsRideList(friendId, relationship))
         },
         getRidePictureList: (pictureIdList, userId) => {

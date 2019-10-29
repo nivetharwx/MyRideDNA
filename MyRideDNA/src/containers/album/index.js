@@ -65,9 +65,7 @@ class Album extends Component {
         return <View style={styles.fill}>
             <BaseModal alignCenter={true} isVisible={isVisiblePicture} onCancel={this.onCancelVisiblePicture} onPressOutside={this.onCancelVisiblePicture}>
                 <View style={{ backgroundColor: '#fff' }}>
-                    <View style={styles.closeIconContainer}>
-                        <IconButton iconProps={{ name: 'close', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} onPress={() => this.setState({ isVisiblePicture: false, selectedPicture: null })} />
-                    </View>
+                    <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={() => this.setState({ isVisiblePicture: false, selectedPicture: null })} />
                     <View style={{ height: heightPercentageToDP(70), width: widthPercentageToDP(92), justifyContent: 'center', alignItems: 'center', paddingBottom: heightPercentageToDP(6) }}>
                         <View style={{ height: heightPercentageToDP(58), width: widthPercentageToDP(82) }}>
                             {

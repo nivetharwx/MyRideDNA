@@ -4,7 +4,7 @@ import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image
 import { getAllFriends, getAllFriends1, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend, getAllOnlineFriends, getPicture, getFriendsLocationList, addFavorite, removeFavorite } from '../../../api';
 import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, heightPercentageToDP, RELATIONSHIP, PageKeys } from '../../../constants';
 import { BaseModal } from '../../../components/modal';
-import { LinkButton, IconButton } from '../../../components/buttons';
+import { LinkButton, IconButton, ImageButton } from '../../../components/buttons';
 import { ThumbnailCard, HorizontalCard } from '../../../components/cards';
 import { openFriendProfileAction, updateFriendInListAction, screenChangeAction, resetCurrentFriendAction, hideFriendsLocationAction } from '../../../actions';
 import { FloatingAction } from 'react-native-floating-action';
@@ -212,8 +212,8 @@ class AllFriendsTab extends Component {
     openChatPage = (person) => {
         const { selectedPerson } = this.state;
         person = person || selectedPerson;
-        person['isGroup'] = false
-        person['id'] = person.userId
+        person['isGroup'] = false;
+        person['id'] = person.userId;
         Actions.push(PageKeys.CHAT, { chatInfo: person })
         if (this.state.isVisibleOptionsModal)
             this.onCancelOptionsModal();
@@ -516,11 +516,12 @@ class AllFriendsTab extends Component {
                 <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
                     <View style={{ flex: 2.89 }}>
                         <LabeledInputPlaceholder
-                            inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: 25, backgroundColor: '#fff', }}
+                            placeholder='Name'
+                            inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
                             returnKeyType='next'
                             onChange={this.onChangeSearchValue}
                             hideKeyboardOnSubmit={false}
-                            containerStyle={styles.containerStyle} />
+                            containerStyle={styles.searchCont} />
                     </View>
                     <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
                         <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
@@ -529,7 +530,7 @@ class AllFriendsTab extends Component {
 
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
-                    <IconButton iconProps={{ name: 'add-user', type: 'Entypo', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)} />
+                    <ImageButton imageSrc={require('../../../assets/img/add-person-icon.png')} styles={{ width: 23, height: 26 }} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)} />
                     {/* <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.FAVOURITE ? '#CE0D0D' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterFavouriteFriend()} /> */}
                     <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ? '#2B77B4' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} />
                     <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapFriends()} />
@@ -565,37 +566,16 @@ class AllFriendsTab extends Component {
                                             item={item}
                                             onPressLeft={() => this.openFriendsProfileTab(item)}
                                             thumbnail={item.profilePicture}
-                                            cardOuterStyle={styles.HorizontalCardOuterStyle}
+                                            cardOuterStyle={styles.horizontalCardOuterStyle}
                                             actionsBar={{
                                                 online: true,
                                                 actions: [{ name: item.favorite ? 'star' : 'star-outlined', id: 1, type: 'Entypo', color: item.favorite ? '#CE0D0D' : '#C4C6C8', onPressActions: () => this.toggleFavouriteFriend(item) },
                                                 { name: 'search', id: 2, type: 'FontAwesome', color: item.locationEnable ? '#2B77B4' : '#C4C6C8' },
                                                 { name: 'location-arrow', id: 3, type: 'FontAwesome', color: friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible ? '#81BA41' : '#C4C6C8', onPressActions: () => this.toggleFriendsLocation(friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible, item.userId) },
-                                                { name: 'message1', id: 4, type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) }]
+                                                { isIconImage: true, imgSrc: require('../../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }]
                                             }}
                                         />
                                     </View>
-                                    // <View style={{ flex: 1, maxWidth: widthPercentageToDP(50) }}>
-                                    //     <View style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', width: '80%', height: widthPercentageToDP(15), position: 'absolute', zIndex: 100, justifyContent: 'space-between' }}>
-                                    //         {
-                                    //             item.isOnline
-                                    //                 ? <View style={{ backgroundColor: '#37B603', width: widthPercentageToDP(6), height: widthPercentageToDP(6), borderRadius: widthPercentageToDP(3), elevation: 10 }} />
-                                    //                 : null
-                                    //         }
-                                    //         {
-                                    //             item.isOnline && item.locationEnable
-                                    //                 ? <IconButton iconProps={{ name: 'location-on', type: 'MaterialIcons', style: { color: friendsLocationList !== null && friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible ? APP_COMMON_STYLES.headerColor : '#ACACAC', fontSize: widthPercentageToDP(7) } }} />
-                                    //                 : null
-                                    //         }
-                                    //     </View>
-                                    //     <ThumbnailCard
-                                    //         thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
-                                    //         item={item}
-                                    //         thumbnailRef={imgRef => this.friendsImageRef[index] = imgRef}
-                                    //         onLongPress={() => this.showOptionsModal(item.userId)}
-                                    //         onPress={() => this.openProfile(item.userId, FRIEND_TYPE.ALL_FRIENDS)}
-                                    //     />
-                                    // </View>
                                 )}
                                 ListFooterComponent={this.renderFooter}
                                 onEndReached={this.loadMoreData}
@@ -616,14 +596,6 @@ class AllFriendsTab extends Component {
                                     <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
                                 </View>
                 }
-                {/* <FloatingAction
-                    floatingIcon={<NBIcon name='menu' type='MaterialIcons' style={{ color: '#fff' }} />}
-                    actions={FLOAT_ACTIONS}
-                    color={APP_COMMON_STYLES.headerColor}
-                    position={user.handDominance === 'left' ? 'right' : 'left'}
-                    onPressItem={this.onSelectFloatActionOptions}
-                    listenKeyboard={true}
-                /> */}
             </View>
         )
     }
@@ -680,8 +652,13 @@ const styles = StyleSheet.create({
     relationshipAction: {
         color: APP_COMMON_STYLES.headerColor
     },
-    HorizontalCardOuterStyle: {
+    horizontalCardOuterStyle: {
         marginHorizontal: widthPercentageToDP(4),
         marginBottom: heightPercentageToDP(4),
+    },
+    searchCont: {
+        marginBottom: 0,
+        flex: 1,
+        width: widthPercentageToDP(47),
     },
 });

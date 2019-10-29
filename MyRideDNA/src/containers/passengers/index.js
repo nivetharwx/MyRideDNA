@@ -2,15 +2,15 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, TouchableWithoutFeedback, StatusBar, FlatList, ScrollView, View, Keyboard, Alert, TextInput, Text, ActivityIndicator, Animated, Easing } from 'react-native';
 import { BasicHeader } from '../../components/headers';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, PageKeys, FRIEND_TYPE } from '../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, PageKeys, FRIEND_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, PORTRAIT_TAIL_TAG } from '../../constants';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInput, IconicList, IconicDatePicker, IconicInput } from '../../components/inputs';
-import { BasicButton, LinkButton, IconButton } from '../../components/buttons';
+import { BasicButton, LinkButton, IconButton, ShifterButton } from '../../components/buttons';
 import { DatePicker, Icon as NBIcon, Toast, ListItem, Left, Body, Right, Thumbnail } from 'native-base';
 import { BaseModal } from '../../components/modal';
 import { getPassengerList, deletePassenger, getPictureList } from '../../api';
 import { SmallCard, SquareCard } from '../../components/cards';
-import { updatePassengerInListAction } from '../../actions';
+import { updatePassengerInListAction, appNavMenuVisibilityAction } from '../../actions';
 import { Loader } from '../../components/loader';
 
 
@@ -39,11 +39,11 @@ class Passengers extends Component {
             const pictureIdList = [];
             this.props.passengerList.forEach((friend) => {
                 if (!friend.profilePicture && friend.profilePictureId) {
-                    pictureIdList.push(friend.profilePictureId);
+                    pictureIdList.push(friend.profilePictureId.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG));
                 }
             })
             if (pictureIdList.length > 0) {
-                this.props.getPictureList(pictureIdList);
+                this.props.getPictureList(pictureIdList, THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG);
             }
         }
 
@@ -192,7 +192,6 @@ class Passengers extends Component {
     }
 
     openPassengerDetail = (item, index) => {
-        // console.log('item : ',item)
         if (this.state.selectedPassenger) {
             const passengerIdx = this.props.passengerList.findIndex(passenger => passenger.passengerId === this.state.selectedPassenger.passengerId);
             this.openPassengerProfile(this.state.selectedPassenger, passengerIdx)
@@ -201,16 +200,15 @@ class Passengers extends Component {
     }
 
     openPassengerProfile = (item, index) => {
-        console.log('item : ', item)
         if (item.isFriend) {
             Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: item.passengerId, friendType: FRIEND_TYPE.ALL_FRIENDS });
         }
         else {
             Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx: index });
         }
-        // Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx: index });
     }
 
+    toggleAppNavigation = () => this.props.showAppNavMenu();
 
     render() {
         const { user, passengerList, showLoader } = this.props;
@@ -235,26 +233,31 @@ class Passengers extends Component {
                     <BasicHeader
                         title='Passengers'
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                        rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.openPassengerForm, rightIconPropsStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: heightPercentageToDP(3.5) } }}
+                        rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.openPassengerForm, rightIconPropsStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: widthPercentageToDP(5) } }}
                     />
                     {
                         passengerList.length > 0
                             ?
-                            <View style={{ marginTop: heightPercentageToDP(16), marginLeft: widthPercentageToDP(7) }}>
+                            <View style={{ marginTop: 40 + APP_COMMON_STYLES.headerHeight, marginLeft: widthPercentageToDP(7) }}>
                                 <FlatList
                                     style={{ flexDirection: 'column' }}
                                     numColumns={2}
                                     data={passengerList}
                                     keyExtractor={this.passengerListKeyExtractor}
+                                    // contentContainerStyle={{
+                                    //     flex: 1,
+                                    //     flexDirection: 'row',
+                                    //     justifyContent: 'space-between'
+                                    // }}
                                     renderItem={({ item, index }) => (
-                                        <View style={{ marginRight: widthPercentageToDP(7), marginBottom: heightPercentageToDP(4) }}>
-                                            <SquareCard
-                                                squareCardPlaceholder={require('../../assets/img/profile-pic.png')}
-                                                item={item}
-                                                onLongPress={() => this.showOptionsModal(index)}
-                                                onPress={() => this.openPassengerProfile(item, index)}
-                                            />
-                                        </View>
+                                        <SquareCard
+                                            containerStyle={{ marginRight: widthPercentageToDP(7), marginBottom: heightPercentageToDP(4) }}
+                                            squareCardPlaceholder={require('../../assets/img/profile-pic.png')}
+                                            item={item}
+                                            onLongPress={() => this.showOptionsModal(index)}
+                                            onPress={() => this.openPassengerProfile(item, index)}
+                                            imageStyle={{ height: 141, width: 141 }}
+                                        />
                                     )}
                                     ListFooterComponent={this.renderFooter}
                                     onEndReached={this.loadMoreData}
@@ -276,6 +279,8 @@ class Passengers extends Component {
 
                 </View>
                 <Loader isVisible={showLoader} />
+                {/* Shifter: - Brings the app navigation menu */}
+                <ShifterButton onPress={this.toggleAppNavigation} alignLeft={this.props.user.handDominance === 'left'} />
             </View>
         );
     }
@@ -289,11 +294,12 @@ const mapStateToProps = (state) => {
 }
 const mapDispatchToProps = (dispatch) => {
     return {
+        showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         getPassengerList: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getPassengerList(userId, pageNumber, preference, successCallback, errorCallback)),
         deletePassenger: (passengerId) => dispatch(deletePassenger(passengerId)),
-        getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
+        getPictureList: (pictureIdList, curImgSize, newImgSize) => getPictureList(pictureIdList, (pictureObj) => {
             // console.log('getPictureList all passenger sucess : ', pictureObj);
-            dispatch(updatePassengerInListAction({ pictureObj }))
+            dispatch(updatePassengerInListAction({ pictureObj, curImgSize, newImgSize }))
         }, (error) => {
             console.log('getPictureList all friend error : ', error)
             // dispatch(updateFriendInListAction({ userId: friendId }))
@@ -330,12 +336,10 @@ const styles = StyleSheet.create({
         marginTop: APP_COMMON_STYLES.headerHeight
     },
     rightIconPropsStyle: {
-        height: heightPercentageToDP(4.2),
+        height: widthPercentageToDP(7),
         width: widthPercentageToDP(7),
         backgroundColor: '#F5891F',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 19,
-        color: 'white'
+        borderRadius: widthPercentageToDP(3.5),
+        marginRight: 10
     }
 });

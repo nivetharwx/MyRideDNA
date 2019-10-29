@@ -4,7 +4,7 @@ import { StyleSheet, Platform, TouchableWithoutFeedback, StatusBar, FlatList, Sc
 import { Actions } from 'react-native-router-flux';
 import { DatePicker, Icon as NBIcon, Toast, ListItem, Left, Body, Right, Thumbnail } from 'native-base';
 import { BasicHeader } from '../../../../components/headers';
-import { IconButton, BasicButton } from '../../../../components/buttons';
+import { IconButton, BasicButton, ImageButton } from '../../../../components/buttons';
 import { APP_COMMON_STYLES, heightPercentageToDP, widthPercentageToDP, IS_ANDROID } from '../../../../constants';
 import { LabeledInputPlaceholder } from '../../../../components/inputs';
 import { createFriendGroup, updateFriendGroup } from '../../../../api';
@@ -135,16 +135,14 @@ class GroupForm extends Component {
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
                     />
                     <ScrollView keyboardShouldPersistTaps='always'>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: heightPercentageToDP(18) }}>
-                            <View style={{ alignSelf: 'center' }}>
-                                <IconButton Button iconProps={{ name: 'camera', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(9), color: '#F5891F' } }}
-                                    style={{}} onPress={this.onPressCameraIcon} />
-                                <Text style={{ letterSpacing: 2, marginTop: heightPercentageToDP(1), fontWeight: '500', color: '#000', fontSize: heightPercentageToDP(2) }}>{' TAKE \nPHOTO'}</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 41 + APP_COMMON_STYLES.headerHeight }}>
+                            <View style={{ alignSelf: 'center', alignItems: 'center' }}>
+                                <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../../assets/img/cam-icon.png')} styles={{ width: 45, height: 37 }} />
+                                <Text style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{' TAKE \nPHOTO'}</Text>
                             </View>
-                            <View style={{ alignSelf: 'center' }}>
-                                <IconButton Button iconProps={{ name: 'md-photos', type: 'Ionicons', style: { fontSize: widthPercentageToDP(9), color: '#F5891F' } }}
-                                    style={{}} onPress={this.onPressGalleryIcon} />
-                                <Text style={{ letterSpacing: 2, marginTop: heightPercentageToDP(1), fontWeight: '500', color: '#000', fontSize: heightPercentageToDP(2) }}>{'UPLOAD \n PHOTO'}</Text>
+                            <View style={{ alignSelf: 'center', alignItems: 'center' }}>
+                                <ImageButton onPress={this.onPressGalleryIcon} imageSrc={require('../../../../assets/img/photos-icon.png')} styles={{ width: 41, height: 33 }} />
+                                <Text style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{'UPLOAD \n PHOTO'}</Text>
                             </View>
                         </View>
                         <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(3) }}>

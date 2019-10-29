@@ -164,19 +164,6 @@ class MyProfileTab extends Component {
             this.props.updateMyProfileLastOptions(1)
             return (
                 <View style={[styles.rowContent, !this.props.hasNetwork === false ? { padding: heightPercentageToDP(2) } : { padding: heightPercentageToDP(5) }]}>
-                    {/* <ScrollView
-                        showsHorizontalScrollIndicator={false}
-                        horizontal={true}
-                        contentContainerStyle={styles.horizontalScroll}>
-                        <FlatList
-                            horizontal={true}
-                            data={this.state.bikes}
-                            keyExtractor={(item, index) => index + ''}
-                            // FIXME: Pass active based on active bike
-                            renderItem={({ item, index }) => <Thumbnail horizontal={false} height={heightPercentageToDP(12)} width={widthPercentageToDP(28)} active={index === 0} imagePath={require('../../../assets/img/harley.jpg')} title={`Harley Space - ${item}`} onLongPress={index != 0 ? () => this.onSpaceLongPress(index) : null} />}
-                            ref={view => this.hScrollView = view}
-                        />
-                    </ScrollView> */}
                     <FlatList
                         horizontal={true}
                         data={this.props.garage.spaceList}
@@ -203,38 +190,6 @@ class MyProfileTab extends Component {
             );
         }
     }
-
-    // onPressGalleryIcon = async () => {
-    //     this.setState({ isLoadingProfPic: true });
-    //     try {
-    //         const imageObj = await ImagePicker.openPicker({
-    //             width: 300,
-    //             height: 300,
-    //             cropping: false,
-    //             includeBase64: true,
-    //         });
-    //         this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
-    //     } catch (er) {
-    //         this.setState({ isLoadingProfPic: false });
-    //         console.log("Error occurd: ", er);
-    //     }
-    // }
-
-    // onPressCameraIcon = async () => {
-    //     this.setState({ isLoadingProfPic: true });
-    //     try {
-    //         const imageObj = await ImagePicker.openCamera({
-    //             width: 300,
-    //             height: 300,
-    //             includeBase64: true,
-    //             cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
-    //         });
-    //         this.props.updateProfilePicture(imageObj.data, imageObj.mime, this.props.user.userId);
-    //     } catch (er) {
-    //         this.setState({ isLoadingProfPic: false });
-    //         console.log("Error occurd: ", er);
-    //     }
-    // }
 
     onPressLogout = async () => {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
@@ -266,44 +221,6 @@ class MyProfileTab extends Component {
     render() {
         const { user, allFriends, passengerList } = this.props;
         const { isLoadingProfPic } = this.state;
-        // return (
-        //     <View style={styles.fill}>
-        //         {
-        //             // IS_ANDROID
-        //             //     ? null
-        //             //     : <View style={APP_COMMON_STYLES.appBar} />
-        //         }
-        //         <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
-        //             <View style={styles.profilePic}>
-        //                 <ImageBackground source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}>
-        //                     {
-        //                         isLoadingProfPic
-        //                             ? <ImageLoader show={isLoadingProfPic} />
-        //                             : null
-        //                     }
-        //                 </ImageBackground>
-        //             </View>
-        //             <View style={styles.profileHeader}>
-        //                 <IconButton iconProps={{ name: 'bell', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(5) } }}
-        //                     style={[styles.headerIcon, { marginLeft: widthPercentageToDP(1) }]} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
-        //                 <Text style={styles.title}
-        //                     renderToHardwareTextureAndroid collapsable={false}>
-        //                     {user.name}
-        //                     <Text style={{ color: APP_COMMON_STYLES.infoColor, fontWeight: 'bold' }}>
-        //                         {'  '}{user.nickname}
-        //                     </Text>
-        //                 </Text>
-        //                 <IconButton iconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: APP_COMMON_STYLES.infoColor } }}
-        //                     style={[styles.headerIcon, { backgroundColor: 'transparent' }]} onPress={this.onPressLogout} />
-        //             </View>
-        //         </ImageBackground>
-        //         <ScrollView styles={styles.scrollBottom} contentContainerStyle={styles.scrollBottomContent}>
-        //             <Accordion expanded={this.props.profileLastOptions} dataArray={[{ title: 'Change profile', content: [this.PROFILE_ICONS.gallery, this.PROFILE_ICONS.camera, this.PROFILE_ICONS.passengers, this.PROFILE_ICONS.edit] },
-        //             { title: 'Change bike', content: [] }]}
-        //                 renderContent={this.renderAccordionItem} headerStyle={styles.accordionHeader} />
-        //         </ScrollView>
-        //     </View>
-        // );
         return (
             <View style={styles.fill}>
                 <View style={{ height: IS_ANDROID ? 0 : heightPercentageToDP(4), backgroundColor: 'black' }}>
@@ -312,7 +229,7 @@ class MyProfileTab extends Component {
                 <View style={styles.mapHeader}>
                     <IconButton iconProps={{ name: 'bell', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(5) } }}
                         style={[styles.headerIcon, { marginLeft: widthPercentageToDP(6), marginTop: IS_ANDROID ? heightPercentageToDP(2.1) : heightPercentageToDP(1) }]} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
-                    <View style={{ flexDirection: 'column', marginLeft: widthPercentageToDP(4) }}>
+                    <View style={{ flexDirection: 'column', marginLeft: 17 }}>
                         <Text style={styles.title}>
                             {user.name}
                         </Text>
@@ -326,8 +243,6 @@ class MyProfileTab extends Component {
 
                     </View>
                 </View>
-                {/* <BasicHeader style={[{}, IS_ANDROID ? {height:heightPercentageToDP(10)} : { marginTop: 20 }]} headerHeight={heightPercentageToDP(14.5)}
-                        leftIconProps={{ reverse: true, name: 'bell', type: 'FontAwesome'}} /> */}
                 <ScrollView>
                     <View style={styles.profilePic}>
                         <ImageBackground source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
@@ -386,9 +301,7 @@ class MyProfileTab extends Component {
                                 <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Road Buddies</Text>
                                 <LinkButton title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16, fontWeight: 'bold' }} onPress={this.onPressFriendsPage} />
                             </View>
-                            <View style={styles.addButnCont}>
-                                <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)} />
-                            </View>
+                            <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)} />
                         </View>
                         <View style={{ borderTopWidth: 15, borderTopColor: '#DCDCDE' }}>
                             <FlatList
@@ -419,9 +332,7 @@ class MyProfileTab extends Component {
                                 <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Passengers</Text>
                                 <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16, fontWeight: 'bold' }} onPress={() => Actions.push(PageKeys.PASSENGERS)} />
                             </View>
-                            <View style={styles.addButnCont}>
-                                <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: -1 })} />
-                            </View>
+                            <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: -1 })} />
                         </View>
                         <View style={{ borderTopWidth: 15, borderTopColor: '#DCDCDE' }}>
                             <FlatList
@@ -478,10 +389,8 @@ const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { profileLastOptions, hasNetwork } = state.PageState;
     const { allFriends } = state.FriendList;
-    // const { shortSpaceList } = state.GarageInfo;
     const { passengerList } = state.PassengerList;
     const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
-    // return { user, shortSpaceList };
     return { user, userAuthToken, deviceToken, garage, profileLastOptions, hasNetwork, allFriends, passengerList };
 }
 const mapDispatchToProps = (dispatch) => {
@@ -498,27 +407,17 @@ const mapDispatchToProps = (dispatch) => {
         }),
         getSpaceList: (userId) => dispatch(getSpaceList(userId)),
         updateProfilePicture: (profilePicStr, mimeType, userId) => dispatch(updateProfilePicture(profilePicStr, mimeType, userId)),
-        // getBikePicture: (pictureId, spaceId) => getPicture(pictureId, ({ picture }) => {
-        //     dispatch(updateShortSpaceListAction({ profilePicture: picture, spaceId }))
-        // }, (error) => {
-        //     dispatch(updateShortSpaceListAction({ spaceId }))
-        // }),
         getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
             dispatch(updateBikePictureListAction({ spaceId, ...response }))
         }, (error) => console.log("getPicture error: ", error)),
 
         setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
         getGarageInfo: (userId) => {
-            // dispatch(toggleLoaderAction(true));
             dispatch(apiLoaderActions(true));
-            console.log("loader enabled");
             getGarageInfo(userId, (garage) => {
                 dispatch(replaceGarageInfoAction(garage))
-                // setTimeout(() => dispatch(toggleLoaderAction(false)), 100);
                 dispatch(apiLoaderActions(false))
-                console.log("loader disabled");
             }, (error) => {
-                // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
                 console.log(`getGarage error: `, error);
             })
@@ -528,16 +427,13 @@ const mapDispatchToProps = (dispatch) => {
         getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
 
             if (callingFrom === 'roadBuddies') {
-                console.log('getPictureList all friend sucess : ', pictureObj);
                 dispatch(updateFriendInListAction({ pictureObj }))
             }
             else {
-                console.log('getPictureList passenger sucess : ', pictureObj);
                 dispatch(updatePassengerInListAction({ pictureObj }))
             }
         }, (error) => {
             console.log('getPictureList error : ', error)
-            // dispatch(updateFriendInListAction({ userId: friendId }))
         }),
         getMyWallet: (userId) => dispatch(getMyWallet(userId)),
         getPassengerList: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getPassengerList(userId, pageNumber, preference, successCallback, errorCallback)),
@@ -626,7 +522,7 @@ const styles = StyleSheet.create({
         borderTopColor: '#f69039',
         elevation: 20,
     },
-    addButnCont: {
+    addBtnCont: {
         height: widthPercentageToDP(5),
         width: widthPercentageToDP(5),
         borderRadius: widthPercentageToDP(2.5),
@@ -636,7 +532,7 @@ const styles = StyleSheet.create({
     txtOnImg: {
         color: '#fff',
         fontWeight: 'bold',
-        fontSize: 25,
+        fontSize: 18,
         letterSpacing: 2
     }
 });

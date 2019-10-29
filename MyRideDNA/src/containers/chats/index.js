@@ -270,9 +270,6 @@ class Chat extends Component {
                             </View>
                             :
                             <View style={styles.chatHeader}>
-                                {/* <View style={{marginRight:widthPercentageToDP(4),backgroundColor:'#fff',width:widthPercentageToDP(8),height:heightPercentageToDP(6),borderRadius:widthPercentageToDP(5)}}>
-                                    <IconButton style={{textAlign:'center'}} iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: {fontSize: widthPercentageToDP(6), } }} />
-                                </View> */}
                                 <View style={{ marginHorizontal: widthPercentageToDP(3), alignItems: 'center', justifyContent: 'center' }}>
                                     <TouchableOpacity style={styles.iconPadding} onPress={this.onPressBackButton}>
                                         <NBIcon name='md-arrow-round-back' type='Ionicons' style={{
@@ -411,7 +408,6 @@ class Chat extends Component {
                         </View>
 
                         <Item style={[styles.msgInputBoxContainer, this.props.hasNetwork === false ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
-                            {/* <IconButton style={styles.footerLeftIcon} iconProps={{ name: 'md-attach', type: 'Ionicons' }} /> */}
                             <TextInput value={messageToBeSend} placeholder='Type a message' style={{ flex: 1, marginRight: widthPercentageToDP(1) }} onChangeText={this.OnChangeMessageToBeSend} />
                             <IconButton iconProps={{ name: 'md-send', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={() => this.sendMessage()} />
                         </Item>

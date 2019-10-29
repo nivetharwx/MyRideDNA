@@ -5,11 +5,11 @@ import { BasicHeader } from '../../../../components/headers';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInput, IconicList, IconicDatePicker, IconicInput, LabeledInputPlaceholder } from '../../../../components/inputs';
-import { BasicButton, IconButton } from '../../../../components/buttons';
+import { BasicButton, IconButton, ImageButton, ShifterButton } from '../../../../components/buttons';
 import { Thumbnail } from '../../../../components/images';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import { addBikeToGarage, editBike, updateUserInfo, updateProfilePicture, addClubs, updateClubs, removeClubs } from '../../../../api';
-import { toggleLoaderAction } from '../../../../actions';
+import { toggleLoaderAction, appNavMenuVisibilityAction } from '../../../../actions';
 import { DatePicker, Icon as NBIcon, Toast } from 'native-base';
 import { Loader } from '../../../../components/loader';
 import ImagePicker from 'react-native-image-crop-picker';
@@ -205,7 +205,10 @@ class EditProfileForm extends Component {
     deleteClub = (item) => {
         this.props.removeClubs(this.props.user.userId, item.clubId, this.props.user.clubs)
     }
+
     clubsKeyExtractor = (item) => item.clubId;
+
+    showAppNavMenu = () => this.props.showAppNavMenu();
 
     render() {
         const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
@@ -215,41 +218,17 @@ class EditProfileForm extends Component {
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
-                {/* <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
-                    <BasicHeader title='Edit Profile' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
-                    <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
-                        <LabeledInput containerStyle={{ marginHorizontal: widthPercentageToDP(2) }} inputValue={user.email} editable={false} />
-                        <LabeledInput containerStyle={{ marginHorizontal: widthPercentageToDP(2) }} inputValue={user.name} inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[0].focus()} hideKeyboardOnSubmit={false} />
-                        <LabeledInput containerStyle={{ marginHorizontal: widthPercentageToDP(2) }} inputValue={user.nickname} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onChangeNickName} placeholder='Nick Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
-
-                        <IconicList
-                            selectedValue={user.gender} placeholder='Gender' values={GENDER_LIST}
-                            onChange={this.onChangeGender} />
-                        <IconicDatePicker selectedDate={user.dob} onChange={this.onChangeDOB} />
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <LabeledInput containerStyle={{ flex: 1, marginHorizontal: widthPercentageToDP(2) }} inputValue={user.homeAddress.address} inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChange={this.onChangeAddress} placeholder='Building number, street' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
-                            <LabeledInput containerStyle={{ flex: 1, marginHorizontal: widthPercentageToDP(2) }} inputValue={user.homeAddress.city} inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChange={this.onChangeCity} placeholder='City' onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
-                        </View>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <LabeledInput containerStyle={{ flex: 1, marginHorizontal: widthPercentageToDP(2) }} inputValue={user.homeAddress.state} inputRef={elRef => this.fieldRefs[4] = elRef} returnKeyType='next' onChange={this.onChangeState} placeholder='State' onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
-                            <LabeledInput containerStyle={{ flex: 1, marginHorizontal: widthPercentageToDP(2) }} inputValue={user.homeAddress.country} inputRef={elRef => this.fieldRefs[5] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} />
-                        </View>
-                    </ScrollView>
-                    <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
-                </KeyboardAvoidingView> */}
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
                     <BasicHeader title='Edit Profile' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
                     <ScrollView keyboardShouldPersistTaps='always'>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: heightPercentageToDP(18) }}>
-                            <View style={{ alignSelf: 'center' }}>
-                                <IconButton Button iconProps={{ name: 'camera', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(9), color: '#F5891F' } }}
-                                    style={{}} onPress={this.onPressCameraIcon} />
-                                <Text style={{ letterSpacing: 2, marginTop: heightPercentageToDP(1), fontWeight: '500', color: '#000', fontSize: heightPercentageToDP(2) }}>{' TAKE \nPHOTO'}</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 41 + APP_COMMON_STYLES.headerHeight }}>
+                            <View style={{ alignSelf: 'center', alignItems: 'center' }}>
+                                <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../../assets/img/cam-icon.png')} styles={{ width: 45, height: 37 }} />
+                                <Text style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{' TAKE \nPHOTO'}</Text>
                             </View>
-                            <View style={{ alignSelf: 'center' }}>
-                                <IconButton Button iconProps={{ name: 'md-photos', type: 'Ionicons', style: { fontSize: widthPercentageToDP(9), color: '#F5891F' } }}
-                                    style={{}} onPress={this.onPressGalleryIcon} />
-                                <Text style={{ letterSpacing: 2, marginTop: heightPercentageToDP(1), fontWeight: '500', color: '#000', fontSize: heightPercentageToDP(2) }}>{'UPLOAD \n PHOTO'}</Text>
+                            <View style={{ alignSelf: 'center', alignItems: 'center' }}>
+                                <ImageButton onPress={this.onPressGalleryIcon} imageSrc={require('../../../../assets/img/photos-icon.png')} styles={{ width: 41, height: 33 }} />
+                                <Text style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{'UPLOAD \n PHOTO'}</Text>
                             </View>
                         </View>
                         <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(3) }}>
@@ -305,6 +284,7 @@ class EditProfileForm extends Component {
                                 onSubmit={() => this.fieldRefs[7].focus()} hideKeyboardOnSubmit={false} />
 
                             <IconicList
+                                pickerStyle={{ borderBottomWidth: 0 }}
                                 selectedValue={user.gender} values={GENDER_LIST} labelPlaceHolder='GENDER'
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 labelPlaceHolderStyle={[styles.labelStyle, { marginTop: heightPercentageToDP(1) }]}
@@ -322,17 +302,9 @@ class EditProfileForm extends Component {
                                 inputRef={elRef => this.fieldRefs[7] = elRef} returnKeyType='next'
                                 onChange={this.onChangeRidingSince} label='RIDING SINCE' labelStyle={styles.labelStyle}
                                 hideKeyboardOnSubmit={false} />
-
-                            {/* <LabeledInputPlaceholder
-                                inputValue={user.club} onBlur={this.clubFormat} inputStyle={{ paddingBottom: 0 }}
-                                inputRef={elRef => this.fieldRefs[8] = elRef} returnKeyType='next'
-                                onChange={this.onChangeClubs} label='CLUB(s)' labelStyle={styles.labelStyle}
-                                onSubmit={() => { }} hideKeyboardOnSubmit={false} /> */}
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: heightPercentageToDP(3) }}>
                                 <Text style={[styles.labelStyle, { marginLeft: 0 }]}>CLUB(s)</Text>
-                                <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#a8a8a8', marginRight: widthPercentageToDP(10) }}>
-                                    <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} onPress={() => this.setState({ isAddingClub: true, activeClubId: null, club: '' })} />
-                                </View>
+                                <IconButton style={styles.roundBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={() => this.setState({ isAddingClub: true, activeClubId: null, club: '' })} />
                             </View>
                             {
                                 isAddingClub ?
@@ -343,12 +315,8 @@ class EditProfileForm extends Component {
                                             onChange={this.onChangeClubs}
                                             hideKeyboardOnSubmit={false} />
                                         <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'space-around', marginTop: heightPercentageToDP(0.5) }}>
-                                            <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#f69039' }}>
-                                                <IconButton iconProps={{ name: 'check', type: 'AntDesign', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} onPress={this.addingClub} />
-                                            </View>
-                                            <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#f69039' }}>
-                                                <IconButton iconProps={{ name: 'close', type: 'AntDesign', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} style={{}} onPress={() => this.setState({ isAddingClub: false, club: '' })} />
-                                            </View>
+                                            <IconButton style={[styles.roundBtnCont, { backgroundColor: APP_COMMON_STYLES.infoColor }]} iconProps={{ name: 'check', type: 'AntDesign', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={this.addingClub} />
+                                            <IconButton style={[styles.roundBtnCont, { backgroundColor: APP_COMMON_STYLES.infoColor }]} iconProps={{ name: 'close', type: 'AntDesign', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={() => this.setState({ isAddingClub: false, club: '' })} />
                                         </View>
                                     </View>
                                     :
@@ -373,24 +341,16 @@ class EditProfileForm extends Component {
                                                                 onChange={this.onChangeClubs}
                                                                 hideKeyboardOnSubmit={false} />
                                                             <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'space-around', marginTop: heightPercentageToDP(0.5) }}>
-                                                                <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#f69039' }}>
-                                                                    <IconButton iconProps={{ name: 'check', type: 'AntDesign', style: { fontSize: widthPercentageToDP(3), color: '#fff' } }} style={{}} onPress={() => this.editClub(item)} />
-                                                                </View>
-                                                                <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#f69039' }}>
-                                                                    <IconButton iconProps={{ name: 'close', type: 'AntDesign', style: { fontSize: widthPercentageToDP(3), color: '#fff' } }} style={{}} onPress={() => this.setState({ activeClubId: null, club: '' })} />
-                                                                </View>
+                                                                <IconButton style={[styles.roundBtnCont, { backgroundColor: APP_COMMON_STYLES.infoColor }]} iconProps={{ name: 'check', type: 'AntDesign', style: { fontSize: widthPercentageToDP(3), color: '#fff' } }} onPress={() => this.editClub(item)} />
+                                                                <IconButton style={[styles.roundBtnCont, { backgroundColor: APP_COMMON_STYLES.infoColor }]} iconProps={{ name: 'close', type: 'AntDesign', style: { fontSize: widthPercentageToDP(3), color: '#fff' } }} onPress={() => this.setState({ activeClubId: null, club: '' })} />
                                                             </View>
                                                         </View>
                                                         :
                                                         <View style={{ paddingVertical: heightPercentageToDP(1.5), flexDirection: 'row', justifyContent: 'space-between' }}>
                                                             <Text style={{ color: '#000', fontSize: heightPercentageToDP(2) }}>{item.clubName}</Text>
                                                             <View style={{ flexDirection: 'row', marginRight: widthPercentageToDP(10), justifyContent: 'space-around' }}>
-                                                                <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#f69039' }}>
-                                                                    <IconButton iconProps={{ name: 'edit', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(3), color: '#fff' } }} style={{}} onPress={() => this.setState({ activeClubId: item.clubId, isAddingClub: false, club: item.clubName })} />
-                                                                </View>
-                                                                <View style={{ height: heightPercentageToDP(3), width: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), backgroundColor: '#f69039', marginLeft: widthPercentageToDP(10) }}>
-                                                                    <IconButton iconProps={{ name: 'delete', type: 'AntDesign', style: { fontSize: widthPercentageToDP(3), color: '#fff' } }} style={{}} onPress={() => this.deleteClub(item)} />
-                                                                </View>
+                                                                <IconButton style={[styles.roundBtnCont, { backgroundColor: APP_COMMON_STYLES.infoColor }]} iconProps={{ name: 'edit', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(3), color: '#fff' } }} onPress={() => this.setState({ activeClubId: item.clubId, isAddingClub: false, club: item.clubName })} />
+                                                                <IconButton style={[styles.roundBtnCont, { backgroundColor: APP_COMMON_STYLES.infoColor }]} iconProps={{ name: 'delete', type: 'AntDesign', style: { fontSize: widthPercentageToDP(3), color: '#fff' } }} onPress={() => this.deleteClub(item)} />
                                                             </View>
                                                         </View>
                                                 }
@@ -404,6 +364,8 @@ class EditProfileForm extends Component {
                     </ScrollView>
                 </KeyboardAvoidingView>
                 <Loader isVisible={showLoader} />
+                {/* Shifter: - Brings the app navigation menu */}
+                <ShifterButton onPress={this.showAppNavMenu} size={18} alignLeft={this.props.user.handDominance === 'left'} />
             </View>
         );
     }
@@ -415,6 +377,7 @@ const mapStateToProps = (state) => {
 }
 const mapDispatchToProps = (dispatch) => {
     return {
+        showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         updateUser: (userInfo, successCallback, errorCallback) => dispatch(updateUserInfo(userInfo, successCallback, errorCallback)),
         updateProfilePicture: (profilePicStr, mimeType, userId) => dispatch(updateProfilePicture(profilePicStr, mimeType, userId)),
         addClubs: (userId, clubName, clubs) => dispatch(addClubs(userId, clubName, clubs)),
@@ -452,12 +415,20 @@ const styles = StyleSheet.create({
     },
     labelStyle: {
         color: '#000',
-        fontSize: 10,
+        fontSize: 11,
         fontWeight: 'bold',
-        letterSpacing: 1.1
+        letterSpacing: 1.1,
+        // color: '#8f8f8f'
     },
     clubList: {
         marginHorizontal: widthPercentageToDP(1),
         paddingTop: widthPercentageToDP(1),
+    },
+    roundBtnCont: {
+        height: widthPercentageToDP(5),
+        width: widthPercentageToDP(5),
+        borderRadius: widthPercentageToDP(2.5),
+        backgroundColor: '#a8a8a8',
+        marginRight: 20
     },
 });

@@ -108,7 +108,9 @@ export class BasicHeader extends React.Component {
                                                 </Text>
                                                 <IconButton style={{ paddingHorizontal: 0 }} onPress={this.toggleTitleEditingMode} iconProps={{ name: 'edit', type: 'MaterialIcons', style: { color: '#fff' } }} />
                                             </View>
-                                            : <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing: 0.2 }}>
+                                            : <Text style={{
+                                                color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing: 0.2, marginLeft: leftIconProps ? 17 : 0
+                                            }}>
                                                 {title}
                                             </Text>
                                         : <View style={{ flexDirection: 'row', marginRight: rightIconProps ? 20 : 0, justifyContent: 'space-between', alignItems: 'center' }}>

@@ -178,10 +178,7 @@ class PaasengerForm extends Component {
                                                 outerContainer={{ marginLeft: 15 }}
                                             />
                                         </View>
-                                        <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
-                                            <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 19 } }} />
-                                        </View>
-                                        {/* rightIcon={{name:'user', type:'FontAwesome', style:styles.rightIconStyle}} /> */}
+                                        <IconButton style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }} iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 19 } }} />
 
                                     </View>
                                     <View style={{ borderBottomWidth: 3, borderBottomColor: '#F5891F', marginTop: 16, marginHorizontal: widthPercentageToDP(9) }}>
@@ -216,7 +213,7 @@ class PaasengerForm extends Component {
                                                                 cardOuterStyle={styles.horizontalCardOuterStyle}
                                                                 thumbnail={item.profilePicture}
                                                                 rightProps={item.isPassenger ? { righticonImage: require('../../../assets/img/add-passenger-from-community-true.png') } : { righticonImage: require('../../../assets/img/add-passenger-from-community.png') }}
-                                                                onPress={() => this.addFriendToCommunity(item)}
+                                                                onPress={() => item.isPassenger === false && this.addFriendToCommunity(item)}
                                                             />
                                                         )}
                                                         ListFooterComponent={this.renderFooter}

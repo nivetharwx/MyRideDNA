@@ -5,7 +5,7 @@ import { BasicHeader } from '../../../components/headers';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInput, IconicList, IconicDatePicker, LabeledInputPlaceholder } from '../../../components/inputs';
-import { BasicButton, IconButton } from '../../../components/buttons';
+import { BasicButton, IconButton, ImageButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import { addBikeToGarage, editBike, registerPassenger, updatePassengerDetails } from '../../../api';
@@ -134,16 +134,14 @@ class PaasengerFormDisplay extends Component {
             <View style={styles.fill} >
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
                     <ScrollView >
-                        <View style={[{ flexDirection: 'row', justifyContent: 'space-evenly' }, topMargin]}>
-                            <View style={{ alignSelf: 'center' }}>
-                                <IconButton Button iconProps={{ name: 'camera', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(9), color: '#F5891F' } }}
-                                    style={{}} onPress={this.onPressCameraIcon} />
-                                <Text style={{ letterSpacing: 2, marginTop: heightPercentageToDP(1), fontWeight: '500', color: '#000', fontSize: heightPercentageToDP(2) }}>{' TAKE \nPHOTO'}</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 41 }}>
+                            <View style={{ alignSelf: 'center', alignItems: 'center' }}>
+                                <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../assets/img/cam-icon.png')} styles={{ width: 45, height: 37 }} />
+                                <Text style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{' TAKE \nPHOTO'}</Text>
                             </View>
-                            <View style={{ alignSelf: 'center' }}>
-                                <IconButton Button iconProps={{ name: 'md-photos', type: 'Ionicons', style: { fontSize: widthPercentageToDP(9), color: '#F5891F' } }}
-                                    style={{}} onPress={this.onPressGalleryIcon} />
-                                <Text style={{ letterSpacing: 2, marginTop: heightPercentageToDP(1), fontWeight: '500', color: '#000', fontSize: heightPercentageToDP(2) }}>{'UPLOAD \n PHOTO'}</Text>
+                            <View style={{ alignSelf: 'center', alignItems: 'center' }}>
+                                <ImageButton onPress={this.onPressGalleryIcon} imageSrc={require('../../../assets/img/photos-icon.png')} styles={{ width: 41, height: 33 }} />
+                                <Text style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{'UPLOAD \n PHOTO'}</Text>
                             </View>
                         </View>
                         <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(3) }}>
@@ -186,26 +184,6 @@ class PaasengerFormDisplay extends Component {
                         <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: heightPercentageToDP(3.5) }} onPress={this.onSubmit} />
                     </ScrollView>
                 </KeyboardAvoidingView>
-
-                {/* <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
-                    <BasicHeader headerHeight={heightPercentageToDP(8.5)} title={passenger.passengerId ? 'Edit Passenger' : 'Add Passenger'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
-                    <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
-                        <LabeledInput inputValue={passenger.name} inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
-                        <IconicList
-                            selectedValue={passenger.gender} placeholder='Gender' values={GENDER_LIST}
-                            onChange={this.onChangeGender} />
-                        <IconicDatePicker selectedDate={passenger.dob} onChange={this.onChangeDOB} />
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.homeAddress.address} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onChangeAddress} placeholder='Building number, street' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.homeAddress.city} inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChange={this.onChangeCity} placeholder='City' onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
-                        </View>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.homeAddress.state} inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChange={this.onChangeState} placeholder='State' onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
-                            <LabeledInput containerStyle={{ flex: 1 }} inputValue={passenger.homeAddress.country} inputRef={elRef => this.fieldRefs[4] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} />
-                        </View>
-                    </ScrollView>
-                    <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
-                </KeyboardAvoidingView> */}
             </View>
         );
     }

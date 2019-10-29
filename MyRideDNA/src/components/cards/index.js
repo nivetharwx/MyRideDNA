@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, TouchableHighlight, ImageBackground, TouchableWithoutFeedback, Image, Animated, Easing, FlatList } from 'react-native';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
 import { Icon as NBIcon, ListItem, Left, Body, Right } from 'native-base';
-import { LinkButton, IconButton } from '../buttons';
+import { LinkButton, IconButton, ImageButton } from '../buttons';
 
 export class BasicCard extends React.Component {
     constructor(props) {
@@ -152,35 +152,31 @@ export const SmallCard = ({ item, smallardPlaceholder, onPress, onLongPress, act
         </TouchableOpacity>
     </View>
 );
-export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, actions, thumbnailRef, imageStyle }) => (
-    <View>
-        <TouchableOpacity onPress={() => onPress ? onPress() : null} onLongPress={() => onLongPress && onLongPress()} style={{
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center'
-        }}>
-            <View>
-                <View style={[{ height: heightPercentageToDP(23), width: widthPercentageToDP(39), backgroundColor: '#A9A9A9' }, imageStyle]}>
-                    <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : squareCardPlaceholder}
-                        style={{ width: null, height: null, flex: 1 }} />
-                    {/* <Image source={smallardPlaceholder}
-                    style={{ width: null, height: null, flex: 1 }} /> */}
-                </View>
-                {
-                    item.name ?
-                        <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#000' }}>{item.name ? item.name : ''}</Text>
-                        : null
-                }
-                {
-                    item.homeAddress ?
-                        <Text style={{ fontSize: 11, fontWeight: '100' }}>{item.homeAddress.city ? item.homeAddress.city : ''}, {item.homeAddress.state ? item.homeAddress.state : ''}</Text>
-                        :
-                        null
-                }
-
+export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, actions, thumbnailRef, imageStyle, containerStyle }) => (
+    <TouchableOpacity onPress={() => onPress ? onPress() : null} onLongPress={() => onLongPress && onLongPress()} style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
+    }}>
+        <View style={containerStyle}>
+            <View style={[{ height: heightPercentageToDP(23), width: widthPercentageToDP(39), backgroundColor: '#A9A9A9' }, imageStyle]}>
+                <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : squareCardPlaceholder}
+                    style={{ width: null, height: null, flex: 1 }} />
             </View>
-        </TouchableOpacity>
-    </View>
+            {
+                item.name ?
+                    <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#000', marginTop: 6 }}>{item.name ? item.name : ''}</Text>
+                    : null
+            }
+            {
+                item.homeAddress ?
+                    <Text style={{ fontSize: 11, color: '#585756', marginTop: 2 }}>{item.homeAddress.city ? item.homeAddress.city : ''}, {item.homeAddress.state ? item.homeAddress.state : ''}</Text>
+                    :
+                    null
+            }
+
+        </View>
+    </TouchableOpacity>
 );
 
 export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actionsBar, cardOuterStyle, horizontalCardPlaceholder, righticonImage, onPressLeft, thumbnail, leftIcon }) => (
@@ -230,11 +226,13 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                                         columnWrapperStyle={{ justifyContent: actionsBar.actions.length < 3 ? 'space-around' : 'space-between', marginHorizontal: 20, marginTop: 5 }}
                                         data={actionsBar.actions}
                                         keyExtractor={() => actionsBar.actions.id}
-                                        renderItem={({ item, index }) => (
-                                            <View >
-                                                <IconButton iconProps={{ name: item.name, type: item.type, style: { color: item.color, fontSize: 24 } }} onPress={item.onPressActions} />
-                                            </View>
-                                        )}
+                                        renderItem={({ item, index }) => {
+                                            if (item.isIconImage) {
+                                                return <ImageButton imageSrc={item.imgSrc} styles={item.imgStyle} onPressActions={item.onPressActions} />
+                                            } else {
+                                                return <IconButton iconProps={{ name: item.name, type: item.type, style: { color: item.color, fontSize: 24 } }} onPress={item.onPressActions} />
+                                            }
+                                        }}
                                     />
                                     : null
                             }

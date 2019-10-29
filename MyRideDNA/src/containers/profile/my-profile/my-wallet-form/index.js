@@ -5,11 +5,11 @@ import { BasicHeader } from '../../../../components/headers';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInput, IconicList, IconicDatePicker, IconicInput, LabeledInputPlaceholder } from '../../../../components/inputs';
-import { BasicButton, IconButton } from '../../../../components/buttons';
+import { BasicButton, IconButton, ShifterButton } from '../../../../components/buttons';
 import { Thumbnail } from '../../../../components/images';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import { addBikeToGarage, editBike, updateUserInfo, updateProfilePicture, updateMyWallet } from '../../../../api';
-import { toggleLoaderAction } from '../../../../actions';
+import { toggleLoaderAction, appNavMenuVisibilityAction } from '../../../../actions';
 import { DatePicker, Icon as NBIcon, Toast } from 'native-base';
 import { Loader } from '../../../../components/loader';
 import ImagePicker from 'react-native-image-crop-picker';
@@ -28,14 +28,14 @@ class MyWalletForm extends Component {
             insurance: {
                 ...props.userMyWallet.insurance
             },
-            roadsideAssistance:{
+            roadsideAssistance: {
                 ...props.userMyWallet.roadsideAssistance
             }
         };
     }
 
-    componentDidMount(){
-        
+    componentDidMount() {
+
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -74,29 +74,28 @@ class MyWalletForm extends Component {
     }
 
     onPressBackButton = () => Actions.pop();
+
     hideLoader = () => {
         this.setState({ showLoader: false });
     }
+
     onSubmit = () => {
         console.log('insurance : ', this.state.insurance)
         console.log('roadsideAssistance : ', this.state.roadsideAssistance)
         Keyboard.dismiss();
         this.updatingUserMyWallet = true;
         this.setState({ showLoader: true })
-        this.props.updateMyWallet(this.props.user.userId,this.state.insurance, this.state.roadsideAssistance, (res) => {
+        this.props.updateMyWallet(this.props.user.userId, this.state.insurance, this.state.roadsideAssistance, (res) => {
             this.hideLoader()
         }, (err) => {
             this.hideLoader()
         });
     }
 
-
+    showAppNavMenu = () => this.props.showAppNavMenu();
 
     render() {
-        const { insurance,roadsideAssistance, showLoader } = this.state;
-        console.log('userMyWallet : ',this.props.userMyWallet)
-        console.log('insurance : ',this.state.insurance)
-        console.log('roadsideAssistance : ',this.state.roadsideAssistance)
+        const { insurance, roadsideAssistance, showLoader } = this.state;
         return (
             <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
@@ -106,43 +105,43 @@ class MyWalletForm extends Component {
                     <BasicHeader title='My Wallet' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
                     <ScrollView >
                         <View style={{ marginLeft: widthPercentageToDP(13), marginTop: heightPercentageToDP(15) }}>
-                            <Text style={{ color: '#F5891F', fontSize: 17, fontWeight: 'bold' }}>Insurance</Text>
+                            <Text style={{ color: '#F5891F', fontSize: 20, fontWeight: 'bold' }}>Insurance</Text>
                             <LabeledInputPlaceholder
                                 inputValue={insurance.name} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next'
                                 onChange={this.onChangeName} label='NAME' secondLabel='(Insured Rider)' secondLabelStyle={styles.secondLabelStyle} labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[0].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
                                 inputValue={insurance.vehicle} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next'
                                 onChange={this.onChangeVehicle} label='VEHICLE' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
                             <LabeledInputPlaceholder
                                 inputValue={insurance.policyNumber} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next'
                                 onChange={this.onChangePolicyNumberInsurance} label='POLICY NUMBER' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
                             <LabeledInputPlaceholder
                                 inputValue={insurance.contactInfo} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next'
                                 onChange={this.onChangeContactInfoInsurance} label='CONTACT INFO' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
 
-                            <Text style={{ color: '#F5891F', fontSize: 17, fontWeight: 'bold', marginTop: heightPercentageToDP(5) }}>ROADSIDE ASSISTANCE</Text>
+                            <Text style={{ color: '#F5891F', fontSize: 20, fontWeight: 'bold', marginTop: heightPercentageToDP(5) }}>Roadside Assistance</Text>
                             <LabeledInputPlaceholder
                                 inputValue={roadsideAssistance.policyNumber} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[4] = elRef} returnKeyType='next'
                                 onChange={this.onChangePolicyNumberRdAsst} label='POLICY NUMBER' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
                             <LabeledInputPlaceholder
                                 inputValue={roadsideAssistance.contactInfo} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{marginTop:IS_ANDROID?null:heightPercentageToDP(3)}}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[5] = elRef} returnKeyType='next'
                                 onChange={this.onChangeContactInfoRdAsst} label='CONTACT INFO' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
@@ -151,6 +150,8 @@ class MyWalletForm extends Component {
                     <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: heightPercentageToDP(3.5) }} onPress={this.onSubmit} />
                 </KeyboardAvoidingView>
                 <Loader isVisible={showLoader} />
+                {/* Shifter: - Brings the app navigation menu */}
+                <ShifterButton onPress={this.showAppNavMenu} size={18} alignLeft={this.props.user.handDominance === 'left'} />
             </View>
         );
     }
@@ -162,8 +163,8 @@ const mapStateToProps = (state) => {
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        // updateUser: (userInfo, successCallback, errorCallback) => dispatch(updateUserInfo(userInfo, successCallback, errorCallback)),
-        updateMyWallet : (userId, insurance, roadsideAssistance, successCallback, errorCallback) => dispatch(updateMyWallet(userId, insurance, roadsideAssistance, successCallback, errorCallback))
+        showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
+        updateMyWallet: (userId, insurance, roadsideAssistance, successCallback, errorCallback) => dispatch(updateMyWallet(userId, insurance, roadsideAssistance, successCallback, errorCallback))
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MyWalletForm);
@@ -195,13 +196,13 @@ const styles = StyleSheet.create({
     },
     labelStyle: {
         color: '#000',
-        fontSize: 10,
+        fontSize: 11,
         fontWeight: 'bold',
         letterSpacing: 1.1
     },
     secondLabelStyle: {
         color: '#000',
-        fontSize: 10,
+        fontSize: 11,
         letterSpacing: 1.1,
         marginLeft: widthPercentageToDP(2)
     }
