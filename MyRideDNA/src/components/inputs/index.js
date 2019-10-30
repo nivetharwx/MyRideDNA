@@ -93,13 +93,14 @@ export const IconicList = ({ iconProps, outerContainer, values, selectedValue, p
                 <View style={[innerContainerStyle]}>
                     <Picker
                         mode="dropdown"
-                        iosIcon={<NBIcon name="ios-arrow-down-outline" />}
+                        iosIcon={<NBIcon name="ios-arrow-down" />}
                         placeholder={placeholder}
-                        placeholderStyle={{ color: "#a9a9a9", marginLeft: 0, paddingLeft: 0 }}
+                        placeholderStyle={{ color: "#a9a9a9", paddingLeft: 0 }}
                         placeholderIconColor="#a9a9a9"
                         style={[{ width: iconProps ? WindowDimensions.width - 30 : WindowDimensions.width, borderBottomWidth: 1, borderBottomColor: '#000' }, pickerStyle]}
                         selectedValue={selectedValue}
                         onValueChange={onChange && onChange}
+                        textStyle={{ paddingLeft: 0, paddingHorizontal: 0 }}
                     >
                         {
                             options.map((option, index) => <Picker.Item key={option.value} label={option.label} value={option.value} />)

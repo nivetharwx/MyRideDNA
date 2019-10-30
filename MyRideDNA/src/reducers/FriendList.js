@@ -1,4 +1,4 @@
-import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION, ADD_FRIENDS_LOCATION, REPLACE_FRIEND_INFO, UPDATE_FRIENDS_RIDE_SNAPSHOT, GET_NOT_FRIEND_INFO, UPDATE_FAVOURITE_FRIEND_LIST } from "../actions/actionConstants";
+import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION, ADD_FRIENDS_LOCATION, REPLACE_FRIEND_INFO, UPDATE_FRIENDS_RIDE_SNAPSHOT, GET_NOT_FRIEND_INFO, UPDATE_FAVOURITE_FRIEND_LIST, SET_CURRENT_FRIEND } from "../actions/actionConstants";
 import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP, RIDE_TAIL_TAG, THUMBNAIL_TAIL_TAG, PageKeys } from "../constants";
 
 const initialState = {
@@ -170,6 +170,18 @@ export default (state = initialState, action) => {
             }
             return state;
 
+        case SET_CURRENT_FRIEND:
+            return {
+                ...state,
+                currentFriend: {
+                    garage: {
+                        garageId: null
+                    },
+                    rideList: [],
+                    ...action.data
+                }
+            };
+
         case UPDATE_CURRENT_FRIEND:
             if (state.currentFriend.userId === null || (action.data.userId !== state.currentFriend.userId)) return state;
             return {
@@ -292,12 +304,12 @@ export default (state = initialState, action) => {
 
         case UPDATE_FAVOURITE_FRIEND_LIST:
             const friendIndex = state.allFriends.findIndex(item => item.userId === action.data.friendId);
-            const updatedFriend = state.allFriends[friendIndex];    
+            const updatedFriend = state.allFriends[friendIndex];
             updatedFriend['favorite'] = action.data.favorite;
             return {
                 ...state,
-                allFriends:[
-                    ...state.allFriends.slice(0,friendIndex),
+                allFriends: [
+                    ...state.allFriends.slice(0, friendIndex),
                     updatedFriend,
                     ...state.allFriends.slice(friendIndex + 1)
                 ]

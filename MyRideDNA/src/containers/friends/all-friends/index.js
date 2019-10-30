@@ -134,15 +134,15 @@ class AllFriendsTab extends Component {
 
     openFriendRideTab = () => {
         const { selectedPerson } = this.state;
-        this.openProfile(selectedPerson.userId, FRIEND_TYPE.ALL_FRIENDS, 2)
+        this.openProfile(selectedPerson.userId, selectedPerson.profilePictureId, FRIEND_TYPE.ALL_FRIENDS, 2)
     }
     openFriendGarageTab = () => {
         const { selectedPerson } = this.state;
-        this.openProfile(selectedPerson.userId, FRIEND_TYPE.ALL_FRIENDS, 1)
+        this.openProfile(selectedPerson.userId, selectedPerson.profilePictureId, FRIEND_TYPE.ALL_FRIENDS, 1)
     }
     openFriendsProfileTab = (friend) => {
         friend = friend || this.state.selectedPerson;
-        this.openProfile(friend.userId, FRIEND_TYPE.ALL_FRIENDS, 0)
+        this.openProfile(friend.userId, selectedPerson.profilePictureId, FRIEND_TYPE.ALL_FRIENDS, 0)
     }
     sendFriendRequest = (person) => {
         const { user } = this.props;
@@ -331,7 +331,7 @@ class AllFriendsTab extends Component {
         }
     }
 
-    openProfile = (userId, friendType, activeTab) => {
+    openProfile = (userId, profPicId, friendType, activeTab) => {
         this.props.resetCurrentFriend();
         // if (this.props.searchFriendList.length > 0) {
         //     const person = this.props.searchFriendList[index];
@@ -354,7 +354,7 @@ class AllFriendsTab extends Component {
         if (this.state.isVisibleOptionsModal) {
             this.setState({ isVisibleOptionsModal: false })
         }
-        Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId, friendType: FRIEND_TYPE.ALL_FRIENDS, activeTab: activeTab });
+        Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId, profPicId, friendType: FRIEND_TYPE.ALL_FRIENDS, activeTab: activeTab });
     }
 
     filterOnlineFriends() {

@@ -25,7 +25,6 @@ const API_TIMEOUT = 10 * 1000; // 10 seconds
  * @param {*} errorCallback - Calling component needs to dispatch error action 
  */
 export const getPicture = (pictureId, successCallback, errorCallback) => {
-    console.log('pictureId : ', pictureId)
     axios.get(USER_BASE_URL + `getPicture/${pictureId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
             console.log('getPicture success : ', res.data)
@@ -1320,10 +1319,10 @@ export const getFriendInfo = (friendType, userId, friendsIdList) => {
         dispatch(apiLoaderActions(true));
         axios.put(GRAPH_BASE_URL + `getFriend`, { userId, friendsIdList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                console.log("getFriend success: ", res.data);
                 if (res.status === 200 && res.data.friendList.length > 0) {
                     dispatch(apiLoaderActions(false));
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+                    dispatch(updateCurrentFriendAction(res.data.friendList[0]));
                 }
                 else if (res.data.friendList.length === 0) {
                     dispatch(apiLoaderActions(false));
@@ -2232,7 +2231,6 @@ export const getMyWallet = (userId) => {
 
 
 export const getPassengerList = (userId, pageNumber, preference, successCallback, errorCallback) => {
-    console.log('pageNumber : ', pageNumber)
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))

@@ -57,7 +57,8 @@ import {
     UPDATE_FAVOURITE_FRIEND_LIST,
     REPLACE_COMMUNITY_LIST,
     UPDATE_COMMUNITY_LIST,
-    RESET_COMMUNITY_LIST
+    RESET_COMMUNITY_LIST,
+    SET_CURRENT_FRIEND
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -461,6 +462,12 @@ export const replaceFriendInfooAction = (data) => (
 export const resetCurrentFriendAction = (data) => (
     {
         type: RESET_CURRENT_FRIEND,
+        data: data
+    }
+);
+export const setCurrentFriendAction = (data) => (
+    {
+        type: SET_CURRENT_FRIEND,
         data: data
     }
 );

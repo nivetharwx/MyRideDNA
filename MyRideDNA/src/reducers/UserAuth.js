@@ -41,7 +41,6 @@ export default (state = initialState, action) => {
                 user: action.data
             }
         case UPDATE_USER:
-            console.log('UPDATE_USER : ', action.data)
             return {
                 ...state,
                 user: {
@@ -65,7 +64,6 @@ export default (state = initialState, action) => {
                 updatePasswordError: null
             }
         case CURRENT_USER_MY_WALLET:
-            console.log('CURRENT_USER_MY_WALLET : ', action.data)
             return {
                 ...state,
                 userMyWallet: {

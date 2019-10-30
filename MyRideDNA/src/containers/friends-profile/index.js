@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { StyleSheet, View, Text, StatusBar, Image, ImageBackground, Animated, ScrollView, FlatList, TouchableOpacity, Alert, Easing } from 'react-native';
 import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG, RELATIONSHIP, PageKeys, MEDIUM_TAIL_TAG, FRIEND_TYPE, RIDE_TAIL_TAG } from '../../constants/index';
 import { ShifterButton, IconButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction, apiLoaderActions, initUndoRedoRideAction, updateFriendsRideSnapshotAction, getNotFriendsInfoAction } from '../../actions';
+import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction, apiLoaderActions, initUndoRedoRideAction, updateFriendsRideSnapshotAction, getNotFriendsInfoAction, setCurrentFriendAction } from '../../actions';
 import { Tabs, Tab, ScrollableTab, TabHeading, Accordion, ListItem, Left, Right, Card, CardItem, Thumbnail, Body, Button, Icon as NBIcon } from 'native-base';
 import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
@@ -54,8 +54,9 @@ class FriendsProfile extends Component {
             this.setState({ totalTabs: 3 })
         }
         else {
-            this.props.getFriendsInfo(this.props.frienduserId, this.props.friendType);
-            // this.props.getFriendInfo(this.props.friendType, this.props.user.userId, [this.props.frienduserId]);
+            // this.props.getFriendsInfo(this.props.frienduserId, this.props.friendType);
+            this.props.setCurrentFriend({ userId: this.props.frienduserId, profilePictureId: this.props.profPicId });
+            this.props.getFriendInfo(this.props.friendType, this.props.user.userId, [this.props.frienduserId]);
         }
 
     }
@@ -494,8 +495,9 @@ const mapDispatchToProps = (dispatch) => {
         getAllFriends: (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => dispatch(getAllFriends(friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback)),
         getAllFriends1: (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => dispatch(getAllFriends1(friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        getFriendsInfo: (frienduserId, friendType) => dispatch(getFriendsInfoAction({ userId: frienduserId, friendType })),
-        // getFriendInfo: (friendType, userId, friendIdList) => dispatch(getFriendInfo(friendType, userId, friendIdList)),
+        // getFriendsInfo: (frienduserId, friendType) => dispatch(getFriendsInfoAction({ userId: frienduserId, friendType })),
+        getFriendInfo: (friendType, userId, friendIdList) => dispatch(getFriendInfo(friendType, userId, friendIdList)),
+        setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
         getFriendsNotFriend: (notFriendData) => dispatch(getNotFriendsInfoAction({ notFriendData })),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
         getUserById: (userId) => dispatch(getUserById(userId)),
