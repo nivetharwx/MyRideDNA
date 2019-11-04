@@ -5,7 +5,7 @@ import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { Icon as NBIcon, Tabs, Tab, TabHeading, ScrollableTab, Item, Toast, ListItem, Left, Body, Thumbnail, Right, CheckBox } from 'native-base';
 import styles from './styles';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, RELATIONSHIP } from '../../constants';
 import { IconLabelPair } from '../../components/labels';
 import { IconButton } from '../../components/buttons';
 import { HorizontalCard } from '../../components/cards';
@@ -261,9 +261,8 @@ class ContactsSection extends PureComponent {
         }
     }
 
-    sendFriendRequest = () => {
+    sendFriendRequest = (selectedMember = this.state.selectedMember) => {
         const { user } = this.props;
-        const { selectedMember } = this.state;
         const requestBody = {
             senderId: user.userId,
             senderName: user.name,
@@ -399,8 +398,8 @@ class ContactsSection extends PureComponent {
                                             item={item}
                                             horizontalCardPlaceholder={require('../../assets/img/profile-pic.png')}
                                             cardOuterStyle={styles.horizontalCardOuterStyle}
-                                            rightProps={{ righticonImage: require('../../assets/img/add-friend-from-community.png') }}
-                                            onPress={() => this.addFriendToCommunity(item)}
+                                            rightProps={{ righticonImage: item.relationship === RELATIONSHIP.UNKNOWN ? require('../../assets/img/add-friend-from-community.png') : require('../../assets/img/add-frnd-frm-comm-success.png') }}
+                                            onPress={() => item.relationship === RELATIONSHIP.UNKNOWN && this.sendFriendRequest(item)}
                                         />
                                     )}
                                     ListFooterComponent={this.renderFooter}

@@ -1,4 +1,4 @@
-import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION, ADD_FRIENDS_LOCATION, REPLACE_FRIEND_INFO, UPDATE_FRIENDS_RIDE_SNAPSHOT, GET_NOT_FRIEND_INFO, UPDATE_FAVOURITE_FRIEND_LIST, SET_CURRENT_FRIEND } from "../actions/actionConstants";
+import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_CURRENT_FRIEND, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION, ADD_FRIENDS_LOCATION, REPLACE_FRIEND_INFO, UPDATE_FRIENDS_RIDE_SNAPSHOT, GET_NOT_FRIEND_INFO, UPDATE_FAVOURITE_FRIEND_LIST, SET_CURRENT_FRIEND, UPDATE_PICTURES } from "../actions/actionConstants";
 import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP, RIDE_TAIL_TAG, THUMBNAIL_TAIL_TAG, PageKeys } from "../constants";
 
 const initialState = {
@@ -7,11 +7,15 @@ const initialState = {
     paginationNum: 0,
     // searchFriendList: [],
     currentFriend: {
+        isFriend: false,
         garage: {
             garageId: null
         },
         userId: null,
         rideList: [],
+        homeAddress: {},
+        passengerList: [],
+        friendList: [],
     },
     friendsLocationList: { activeLength: 0 }
 };
@@ -103,11 +107,15 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 currentFriend: {
+                    isFriend: false,
                     garage: {
                         garageId: null
                     },
                     userId: null,
                     rideList: [],
+                    homeAddress: {},
+                    passengerList: [],
+                    friendList: [],
                     ...friend
                 }
             };
@@ -119,11 +127,15 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 currentFriend: {
+                    isFriend: false,
                     garage: {
                         garageId: null
                     },
                     userId: null,
                     rideList: [],
+                    homeAddress: {},
+                    passengerList: [],
+                    friendList: [],
                     ...notFriend
                 }
             };
@@ -132,6 +144,10 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 currentFriend: {
+                    isFriend: false,
+                    homeAddress: {},
+                    passengerList: [],
+                    friendList: [],
                     ...action.data,
                     garage: {
                         garageId: null
@@ -152,11 +168,15 @@ export default (state = initialState, action) => {
                             ...state.allFriends.slice(personIndex + 1)
                         ],
                         currentFriend: {
+                            isFriend: false,
                             garage: {
                                 garageId: null
                             },
                             userId: null,
-                            rideList: []
+                            rideList: [],
+                            homeAddress: {},
+                            passengerList: [],
+                            friendList: [],
                         }
                     }
                 }
@@ -174,10 +194,14 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 currentFriend: {
+                    isFriend: false,
                     garage: {
                         garageId: null
                     },
                     rideList: [],
+                    homeAddress: {},
+                    passengerList: [],
+                    friendList: [],
                     ...action.data
                 }
             };
@@ -191,6 +215,38 @@ export default (state = initialState, action) => {
                     ...action.data
                 }
             };
+
+        case UPDATE_PICTURES:
+            if (action.data.type === 'roadBuddies') {
+                return {
+                    ...state,
+                    currentFriend: {
+                        ...state.currentFriend,
+                        friendList: state.currentFriend.friendList.map(frnd => {
+                            if (!frnd.profilePictureId) return frnd;
+                            if (typeof action.data.pictureObj[frnd.profilePictureId] === 'string') {
+                                return { ...frnd, profilePicture: action.data.pictureObj[frnd.profilePictureId] };
+                            }
+                            return frnd;
+                        })
+                    }
+                };
+            }
+            if (action.data.type === 'passenger') {
+                return {
+                    ...state,
+                    currentFriend: {
+                        ...state.currentFriend,
+                        passengerList: state.currentFriend.passengerList.map(pass => {
+                            if (!pass.profilePictureId) return pass;
+                            if (typeof action.data.pictureObj[pass.profilePictureId] === 'string') {
+                                return { ...pass, profilePicture: action.data.pictureObj[pass.profilePictureId] };
+                            }
+                            return pass;
+                        })
+                    }
+                };
+            }
 
         case UPDATE_FRIENDS_RIDE_SNAPSHOT:
             if (state.currentFriend.userId === null || (action.data.userId !== state.currentFriend.userId)) return state;
@@ -238,6 +294,9 @@ export default (state = initialState, action) => {
                         },
                         userId: null,
                         rideList: [],
+                        homeAddress: {},
+                        passengerList: [],
+                        friendList: []
                     }
                 }
             }
@@ -251,6 +310,9 @@ export default (state = initialState, action) => {
                         ...state.currentFriend,
                         userId: null,
                         rideList: [],
+                        homeAddress: {},
+                        passengerList: [],
+                        friendList: []
                     }
                 }
             }

@@ -7,7 +7,7 @@ import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES,
 import { BasicHeader } from '../../../components/headers';
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
-import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction, updateFriendInListAction, updatePassengerInListAction, resetCurrentFriendAction } from '../../../actions';
+import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction, updateFriendInListAction, updatePassengerInListAction, setCurrentFriendAction } from '../../../actions';
 import { Accordion } from 'native-base';
 import ImagePicker from 'react-native-image-crop-picker';
 import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo, getRoadBuddies, getPictureList, getMyWallet, getPassengerList } from '../../../api';
@@ -204,9 +204,7 @@ class MyProfileTab extends Component {
 
     openPassengerProfile = (item, index) => {
         if (item.isFriend) {
-            const personInfo = { userId: item.passengerUserId, profilePictureId: item.profilePictureId };
-            this.props.resetCurrentFriend(personInfo);
-            Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: item.passengerUserId, profPicId: item.profilePictureId, friendType: FRIEND_TYPE.ALL_FRIENDS });
+            this.openRoadBuddy(item.passengerUserId);
         }
         else {
             Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx: index });
@@ -214,8 +212,9 @@ class MyProfileTab extends Component {
         // Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx: index });
     }
 
-    openRoadBuddy = (item, index) => {
-        Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: item.userId, profPicId: item.profilePictureId, friendType: FRIEND_TYPE.ALL_FRIENDS });
+    openRoadBuddy = (userId) => {
+        this.props.setCurrentFriend({ userId });
+        Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId });
     }
 
     render() {
@@ -307,18 +306,16 @@ class MyProfileTab extends Component {
                             <FlatList
                                 style={{ flexDirection: 'column' }}
                                 numColumns={4}
-                                data={allFriends}
+                                data={allFriends.slice(0, 4)}
                                 keyExtractor={this.roadBuddiesKeyExtractor}
                                 renderItem={({ item, index }) => (
                                     <View style={{ marginRight: widthPercentageToDP(1.5) }}>
                                         {
-                                            index < 4 ?
-                                                <SmallCard
-                                                    smallardPlaceholder={require('../../../assets/img/profile-pic.png')}
-                                                    item={item}
-                                                    onPress={() => this.openRoadBuddy(item, index)}
-                                                />
-                                                : null
+                                            <SmallCard
+                                                smallardPlaceholder={require('../../../assets/img/profile-pic.png')}
+                                                item={item}
+                                                onPress={() => this.openRoadBuddy(item.userId)}
+                                            />
                                         }
                                     </View>
                                 )}
@@ -437,7 +434,7 @@ const mapDispatchToProps = (dispatch) => {
         }),
         getMyWallet: (userId) => dispatch(getMyWallet(userId)),
         getPassengerList: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getPassengerList(userId, pageNumber, preference, successCallback, errorCallback)),
-        resetCurrentFriend: (data) => dispatch(resetCurrentFriendAction(data)),
+        setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MyProfileTab);
@@ -504,8 +501,13 @@ const styles = StyleSheet.create({
         height: IS_ANDROID ? 60 : 70,
         backgroundColor: APP_COMMON_STYLES.headerColor,
         flexDirection: 'row',
+        paddingTop: IS_ANDROID ? 0 : heightPercentageToDP(1.5),
         elevation: 30,
-        paddingTop: IS_ANDROID ? 0 : heightPercentageToDP(1.5)
+        shadowOffset: { width: 0, height: 8 },
+        shadowColor: '#000000',
+        shadowOpacity: 0.9,
+        shadowRadius: 5,
+        zIndex: 999
     },
     clubList: {
         marginHorizontal: widthPercentageToDP(1),

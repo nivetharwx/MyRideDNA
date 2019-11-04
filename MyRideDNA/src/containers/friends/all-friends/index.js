@@ -6,7 +6,7 @@ import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, 
 import { BaseModal } from '../../../components/modal';
 import { LinkButton, IconButton, ImageButton } from '../../../components/buttons';
 import { ThumbnailCard, HorizontalCard } from '../../../components/cards';
-import { openFriendProfileAction, updateFriendInListAction, screenChangeAction, resetCurrentFriendAction, hideFriendsLocationAction } from '../../../actions';
+import { openFriendProfileAction, updateFriendInListAction, screenChangeAction, hideFriendsLocationAction, setCurrentFriendAction } from '../../../actions';
 import { FloatingAction } from 'react-native-floating-action';
 import { Icon as NBIcon, Thumbnail } from 'native-base';
 import { Actions } from 'react-native-router-flux';
@@ -134,15 +134,15 @@ class AllFriendsTab extends Component {
 
     openFriendRideTab = () => {
         const { selectedPerson } = this.state;
-        this.openProfile(selectedPerson.userId, selectedPerson.profilePictureId, FRIEND_TYPE.ALL_FRIENDS, 2)
+        this.openProfile(selectedPerson.userId)
     }
     openFriendGarageTab = () => {
         const { selectedPerson } = this.state;
-        this.openProfile(selectedPerson.userId, selectedPerson.profilePictureId, FRIEND_TYPE.ALL_FRIENDS, 1)
+        this.openProfile(selectedPerson.userId)
     }
     openFriendsProfileTab = (friend) => {
         friend = friend || this.state.selectedPerson;
-        this.openProfile(friend.userId, selectedPerson.profilePictureId, FRIEND_TYPE.ALL_FRIENDS, 0)
+        this.openProfile(friend.userId)
     }
     sendFriendRequest = (person) => {
         const { user } = this.props;
@@ -331,30 +331,12 @@ class AllFriendsTab extends Component {
         }
     }
 
-    openProfile = (userId, profPicId, friendType, activeTab) => {
-        this.props.resetCurrentFriend();
-        // if (this.props.searchFriendList.length > 0) {
-        //     const person = this.props.searchFriendList[index];
-        //     this.searchResImageRef[index].measure((x, y, width, height, pageX, pageY) => {
-        //         const userInfo = { userId: person.userId, image: require('../../../assets/img/friend-profile-pic.png') };
-        //         const oldPosition = { pageX, pageY, width, height };
-        //         this.props.openUserProfile({ personInfo: userInfo, oldPosition });
-        //     });
-        // } else {
-        //     const person = this.props.allFriends[index];
-        //     this.friendsImageRef[index].measure((x, y, width, height, pageX, pageY) => {
-        //         const userInfo = { userId: person.userId, image: require('../../../assets/img/friend-profile-pic.png') };
-        //         const oldPosition = { pageX, pageY, width, height };
-        //         this.props.openUserProfile({ personInfo: userInfo, oldPosition });
-        //     });
-        // }
-        // if (typeof index !== 'number') {
-        //     index = this.props.allFriends.findIndex(person => person.userId === this.state.selectedPerson.userId);
-        // }
+    openProfile = (userId) => {
+        this.props.setCurrentFriend({ userId });
         if (this.state.isVisibleOptionsModal) {
             this.setState({ isVisibleOptionsModal: false })
         }
-        Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId, profPicId, friendType: FRIEND_TYPE.ALL_FRIENDS, activeTab: activeTab });
+        Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId });
     }
 
     filterOnlineFriends() {
@@ -626,7 +608,7 @@ const mapDispatchToProps = (dispatch) => {
         }),
         changeScreen: (screenProps) => dispatch(screenChangeAction(screenProps)),
         getFriendsLocationList: (userId, friendsIdList) => dispatch(getFriendsLocationList(userId, friendsIdList)),
-        resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
+        setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
         hideFriendsLocation: (userId) => dispatch(hideFriendsLocationAction(userId)),
         addFavorite: (userId, senderId) => dispatch(addFavorite(userId, senderId)),
         removeFavorite: (userId, senderId) => dispatch(removeFavorite(userId, senderId))

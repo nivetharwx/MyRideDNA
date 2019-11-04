@@ -24,6 +24,17 @@ export default (state = initialState, action) => {
                 };
             }
 
+        case UPDATE_SEARCH_RESULTS:
+            return {
+                ...state,
+                searchResults: state.searchResults.map(res => {
+                    if (res.userId === action.data.userId) {
+                        return { ...res, relationship: action.data.relationship }
+                    }
+                    return res;
+                })
+            };
+
         case UPDATE_FRIEND_REQUEST_RESPONSE:
             if (action.data.error) {
                 return {

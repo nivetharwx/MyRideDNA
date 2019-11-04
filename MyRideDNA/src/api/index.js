@@ -1,7 +1,7 @@
 import {
     updateSignupResultAction, updateRideAction, updateWaypointAction, updateUserAction, toggleLoaderAction,
-    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchFriendListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
-    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, replaceChatListAction, resetMessageCountAction, storeUserAction, errorHandlingAction, resetErrorHandlingAction, addMembersLocationAction, storeUserMyWalletAction, updateUserMyWalletAction, updateFriendsLocationAction, updateGroupsLocationAction, replaceAlbumListAction, updateFavouriteFriendAction, replaceCommunityListAction, updateCommunityListAction, updateCurrentGroupAction
+    replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
+    deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction, apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, replaceChatListAction, resetMessageCountAction, storeUserAction, errorHandlingAction, resetErrorHandlingAction, addMembersLocationAction, storeUserMyWalletAction, updateUserMyWalletAction, updateFriendsLocationAction, updateGroupsLocationAction, replaceAlbumListAction, updateFavouriteFriendAction, replaceCommunityListAction, updateCommunityListAction, updateCurrentGroupAction, updateSearchListAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN, RIDE_POINT, CHAT_BASE_URL } from '../constants';
 import axios from 'axios';
@@ -1336,6 +1336,79 @@ export const getFriendInfo = (friendType, userId, friendsIdList) => {
             })
     };
 }
+export const getFriendProfile = (userId, friendId) => {
+    return dispatch => {
+        dispatch(apiLoaderActions(true));
+        axios.get(FRIENDS_BASE_URL + `getFriendProfile?userId=${userId}&friendId=${friendId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(apiLoaderActions(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+                    dispatch(updateCurrentFriendAction(res.data));
+                }
+            })
+            .catch(er => {
+                console.log(`getFriendProfile error: `, er.response || er);
+                dispatch(apiLoaderActions(false));
+                differentErrors(er, [userId, friendId], getFriendProfile, false);
+            })
+    };
+}
+export const getFriendsPassengersByFriendId = (userId, friendId) => {
+    return dispatch => {
+        dispatch(apiLoaderActions(true));
+        axios.get(USER_BASE_URL + `getFriendsPassengersByFriendId?userId=${userId}&friendId=${friendId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(apiLoaderActions(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+                    res.data.passengerList.length > 0 && dispatch(updateCurrentFriendAction({ passengerList: res.data.passengerList, userId: friendId }));
+                }
+            })
+            .catch(er => {
+                console.log(`getFriendsPassengersByFriendId error: `, er.response || er);
+                dispatch(apiLoaderActions(false));
+                differentErrors(er, [userId, friendId], getFriendsPassengersByFriendId, false);
+            })
+    };
+}
+export const getRoadBuddiesByFriendId = (userId, friendId) => {
+    return dispatch => {
+        dispatch(apiLoaderActions(true));
+        axios.get(GRAPH_BASE_URL + `getRoadBuddiesByFriendId?userId=${userId}&friendId=${friendId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(apiLoaderActions(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+                    res.data.friendList.length > 0 && dispatch(updateCurrentFriendAction({ friendList: res.data.friendList, userId: friendId }));
+                }
+            })
+            .catch(er => {
+                console.log(`getRoadBuddiesByFriendId error: `, er.response || er);
+                dispatch(apiLoaderActions(false));
+                differentErrors(er, [userId, friendId], getRoadBuddiesByFriendId, false);
+            })
+    };
+}
+export const getUserProfile = (userId, friendId) => {
+    return dispatch => {
+        dispatch(apiLoaderActions(true));
+        axios.get(USER_BASE_URL + `getUserProfile?userId=${userId}&friendId=${friendId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(apiLoaderActions(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+                    console.log("getUserProfile success: ", res.data);
+                    dispatch(updateCurrentFriendAction(res.data));
+                }
+            })
+            .catch(er => {
+                console.log(`getUserProfile error: `, er.response || er);
+                dispatch(apiLoaderActions(false));
+                differentErrors(er, [userId, friendId], getUserProfile, false);
+            })
+    };
+}
 export const getAllFriends1 = (friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback) => {
     return dispatch => {
         toggleLoader && dispatch(apiLoaderActions(true))
@@ -1422,7 +1495,7 @@ export const searchForFriend = (searchParam, userId, pageNumber, preference) => 
                         console.log("res.data: ", res.data);
                         dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
                         dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                        dispatch(replaceSearchFriendListAction({ results: res.data, pageNumber }));
+                        dispatch(updateSearchListAction({ results: res.data, pageNumber }));
                     } else {
                         dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     }
@@ -1524,7 +1597,7 @@ export const sendFriendRequest = (requestBody) => {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    dispatch(updateFriendRequestResponseAction(res.data));
+                    dispatch(updateSearchListAction({ userId: requestBody.userId, relationship: RELATIONSHIP.SENT_REQUEST }));
                 }
             })
             .catch(er => {

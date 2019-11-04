@@ -271,14 +271,13 @@ class Friends extends Component {
     }
 
     renderFriendRequestList = ({ item, index }) => {
-        console.log('item renderFriendRequestList: ', item)
         if (item.requestType === "sentRequest") {
             return (
                 <ListItem avatar style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }} >
-                    <Left style={{ alignItems: 'center', justifyContent: 'center' }} onPress={() => this.openNotFriendProfile(index, FRIEND_TYPE.ALL_FRIENDS)}>
+                    <Left style={{ alignItems: 'center', justifyContent: 'center' }} onPress={() => this.openUserProfile(item.userId)}>
                         <Thumbnail style={styles.thumbnail} source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : require('../../assets/img/friend-profile-pic.png')} />
                     </Left>
-                    <Body onPress={() => this.openNotFriendProfile(index, FRIEND_TYPE.ALL_FRIENDS)}>
+                    <Body onPress={() => this.openUserProfile(item.userId)}>
                         {/* <Text>{`${item.name} (${item.nickname})`}</Text> */}
                         <View style={{ flexDirection: 'row' }}>
                             <Text>{`${item.name}`}</Text>
@@ -298,11 +297,11 @@ class Friends extends Component {
         }
         else {
             return (
-                <ListItem avatar style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }} onPress={() => this.openNotFriendProfile(index, FRIEND_TYPE.ALL_FRIENDS)}>
-                    <Left onPress={() => this.openNotFriendProfile(index, FRIEND_TYPE.ALL_FRIENDS)}>
+                <ListItem avatar style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
+                    <Left onPress={() => this.openUserProfile(item.userId)}>
                         <Thumbnail style={styles.thumbnail} source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : require('../../assets/img/friend-profile-pic.png')} />
                     </Left>
-                    <Body onPress={() => this.openNotFriendProfile(index, FRIEND_TYPE.ALL_FRIENDS)}>
+                    <Body onPress={() => this.openUserProfile(item.userId)}>
                         <View style={{ flexDirection: 'row' }}>
                             <Text>{`${item.name}`}</Text>
                             {item.nickname ?
@@ -323,6 +322,7 @@ class Friends extends Component {
             )
         }
     }
+    
     requestKeyExtractor = (item) => item.id;
 
     onCancelGroupForm = () => {
@@ -353,12 +353,11 @@ class Friends extends Component {
         this.setState({ isVisibleGroupModal: true })
     }
 
-    openNotFriendProfile = (index, friendType) => {
-        const item = this.props.allFriendRequests[index];
-        console.log('item request: ', item);
-        Actions.push(PageKeys.FRIENDS_PROFILE, { relationshipStatus: RELATIONSHIP.UNKNOWN, person: item, activeTab: 0 });
-
+    openUserProfile = (item) => {
+        console.log(item);
+        // Actions.push(PageKeys.FRIENDS_PROFILE, { relationshipStatus: RELATIONSHIP.UNKNOWN, person: item, activeTab: 0 });
     }
+
     render() {
         const { headerSearchMode, searchQuery, activeTab, friendsActiveTab, isRefreshing } = this.state;
         const spin = this.state.spinValue.interpolate({

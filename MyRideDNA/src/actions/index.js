@@ -58,7 +58,9 @@ import {
     REPLACE_COMMUNITY_LIST,
     UPDATE_COMMUNITY_LIST,
     RESET_COMMUNITY_LIST,
-    SET_CURRENT_FRIEND
+    SET_CURRENT_FRIEND,
+    UPDATE_PICTURES,
+    UPDATE_SEARCH_RESULTS
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -386,9 +388,15 @@ export const doUnfriendAction = (data) => (
         data: data
     }
 );
-export const replaceSearchFriendListAction = (data) => (
+export const replaceSearchListAction = (data) => (
     {
         type: REPLACE_SEARCH_RESULTS,
+        data: data
+    }
+);
+export const updateSearchListAction = (data) => (
+    {
+        type: UPDATE_SEARCH_RESULTS,
         data: data
     }
 );
@@ -474,6 +482,12 @@ export const setCurrentFriendAction = (data) => (
 export const updateCurrentFriendAction = (data) => (
     {
         type: UPDATE_CURRENT_FRIEND,
+        data: data
+    }
+);
+export const updatePicturesAction = (data) => (
+    {
+        type: UPDATE_PICTURES,
         data: data
     }
 );

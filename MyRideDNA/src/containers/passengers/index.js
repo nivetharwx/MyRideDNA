@@ -10,7 +10,7 @@ import { DatePicker, Icon as NBIcon, Toast, ListItem, Left, Body, Right, Thumbna
 import { BaseModal } from '../../components/modal';
 import { getPassengerList, deletePassenger, getPictureList } from '../../api';
 import { SmallCard, SquareCard } from '../../components/cards';
-import { updatePassengerInListAction, appNavMenuVisibilityAction, resetCurrentFriendAction } from '../../actions';
+import { updatePassengerInListAction, appNavMenuVisibilityAction, setCurrentFriendAction } from '../../actions';
 import { Loader } from '../../components/loader';
 
 
@@ -201,8 +201,8 @@ class Passengers extends Component {
 
     openPassengerProfile = (item, index) => {
         if (item.isFriend) {
-            this.props.resetCurrentFriend();
-            Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: item.passengerUserId, profPicId: item.profilePictureId, friendType: FRIEND_TYPE.ALL_FRIENDS });
+            this.props.setCurrentFriend({ userId: item.passengerUserId });
+            Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: item.passengerUserId });
         }
         else {
             Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx: index });
@@ -305,7 +305,7 @@ const mapDispatchToProps = (dispatch) => {
             console.log('getPictureList all friend error : ', error)
             // dispatch(updateFriendInListAction({ userId: friendId }))
         }),
-        resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
+        setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Passengers);

@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import styles, { CREATE_GROUP_WIDTH } from './styles';
 import { BasicHeader } from '../../../components/headers';
 import { Actions } from 'react-native-router-flux';
-import { getGroupInfoAction, resetCurrentGroupAction, updateMemberAction } from '../../../actions';
+import { getGroupInfoAction, resetCurrentGroupAction, updateMemberAction, setCurrentFriendAction } from '../../../actions';
 import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, WindowDimensions, PageKeys, FRIEND_TYPE, RELATIONSHIP } from '../../../constants';
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { addMembers, getAllGroupMembers, dismissMemberAsAdmin, makeMemberAsAdmin, removeMember, getPicture, getPictureList, readNotification, getGroupMembers } from '../../../api';
@@ -361,21 +361,14 @@ class Group extends Component {
         this.setState({ isVisibleSearchModal: true });
 
     }
-    openFriendsProfileTab = (userId, index, friendType) => {
+    openFriendsProfileTab = (item, index) => {
         this.setState({ isVisibleOptionsModal: false, selectedMember: null });
         if (index === 0) {
             Actions.push(PageKeys.PROFILE);
         }
         else {
-            if (this.props.allFriends.findIndex(friend => friend.userId === userId) === -1) {
-                const notFriend = this.props.currentGroup.groupMembers.filter(member => {
-                    return member.memberId === userId
-                }, []);
-                Actions.push(PageKeys.FRIENDS_PROFILE, { relationshipStatus: RELATIONSHIP.UNKNOWN, person: notFriend[0], activeTab: 0 });
-            }
-            else {
-                Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId, friendType: FRIEND_TYPE.ALL_FRIENDS });
-            }
+            this.props.setCurrentFriend({ userId: item.memberId });
+            Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: item.memberId, isUnknown: !item.isFriend });
         }
     }
 
@@ -406,15 +399,6 @@ class Group extends Component {
         }
         return null
     }
-
-    // openFriendsProfileTab = (friend, index) => {
-    //     friend = friend || this.state.selectedPerson;
-    //     if (index !== 0) {
-    //         console.log('openFriendsProfileTab friend : ', friend);
-    //         console.log('openFriendsProfileTab index : ', index);
-    //         Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: friend.memberId, friendType: FRIEND_TYPE.ALL_FRIENDS, activeTab: 0 })
-    //     }
-    // }
 
     filterLocationEnableMembers = () => {
         if (this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE) {
@@ -572,7 +556,7 @@ class Group extends Component {
                                             horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                                             item={item}
                                             thumbnail={item.profilePicture}
-                                            onPressLeft={() => this.openFriendsProfileTab(item.memberId, index)}
+                                            onPressLeft={() => this.openFriendsProfileTab(item, index)}
                                             cardOuterStyle={styles.HorizontalCardOuterStyle}
                                             actionsBar={{
                                                 online: true,
@@ -678,6 +662,7 @@ const mapDispatchToProps = (dispatch) => {
             // dispatch(updateMemberAction({ updates: {}, memberId: memberId }))
         }),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
+        setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(Group);

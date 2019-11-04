@@ -85,6 +85,12 @@ const styles = StyleSheet.create({
         height: 60,
         backgroundColor: APP_COMMON_STYLES.headerColor,
         flexDirection: 'row',
+        elevation: 30,
+        shadowOffset: { width: 0, height: 8 },
+        shadowColor: '#000000',
+        shadowOpacity: 0.9,
+        shadowRadius: 5,
+        zIndex: 999
     },
     mapSubHeader: {
         height: 70,
