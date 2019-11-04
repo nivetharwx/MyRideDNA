@@ -144,7 +144,7 @@ export const SmallCard = ({ item, smallardPlaceholder, onPress, onLongPress, act
             justifyContent: 'center'
         }}>
             <View style={{ height: widthPercentageToDP(20), width: widthPercentageToDP(20), backgroundColor: '#A9A9A9' }}>
-                <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : smallardPlaceholder}
+                <Image source={item.profilePicture ? { uri: item.profilePicture } : smallardPlaceholder}
                     style={{ width: null, height: null, flex: 1 }} />
                 {/* <Image source={smallardPlaceholder}
                     style={{ width: null, height: null, flex: 1 }} /> */}
@@ -181,7 +181,7 @@ export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, 
 
 export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actionsBar, cardOuterStyle, horizontalCardPlaceholder, righticonImage, onPressLeft, thumbnail, leftIcon }) => (
     <TouchableWithoutFeedback style={{ width: widthPercentageToDP(100), marginTop: 20, }} >
-        <View style={[{ flex: 1, flexDirection: 'row', width: widthPercentageToDP(81.5), borderWidth: 1, borderColor: '#EAEAEA' }, cardOuterStyle]}>
+        <View style={[{ flex: 1, flexDirection: 'row', width: widthPercentageToDP(81.5) }, cardOuterStyle]}>
             <TouchableOpacity style={{ height: 74, width: 74, flexDirection: actionsBar ? 'row' : null, }} onPress={onPressLeft} >
                 {
                     // for online and offline

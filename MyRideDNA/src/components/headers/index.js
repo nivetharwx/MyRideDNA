@@ -210,11 +210,15 @@ const styles = StyleSheet.create({
         top: 0,
         left: 0,
         width: '100%',
-        overflow: 'hidden',
         backgroundColor: APP_COMMON_STYLES.headerColor,
-        zIndex: 100,
         flexDirection: 'row',
         height: APP_COMMON_STYLES.headerHeight,
+        elevation: 30,
+        shadowOffset: { width: 0, height: 8 },
+        shadowColor: '#000000',
+        shadowOpacity: 0.9,
+        shadowRadius: 5,
+        zIndex: 999
     },
     iconPadding: {
         padding: 5,
