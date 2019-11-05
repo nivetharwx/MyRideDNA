@@ -115,7 +115,7 @@ class AddBikeForm extends Component {
         return (
             <View style={styles.fill} >
                 <View style={APP_COMMON_STYLES.statusBar}>
-                <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+                <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
                     <BasicHeader headerHeight={heightPercentageToDP(8.5)} title={bike.spaceId ? 'Edit Bike' : 'Add Bike'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />

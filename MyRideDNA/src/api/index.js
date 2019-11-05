@@ -1354,10 +1354,10 @@ export const getFriendProfile = (userId, friendId) => {
             })
     };
 }
-export const getFriendsPassengersByFriendId = (userId, friendId) => {
+export const getPassengersById = (userId, friendId, pageNumber) => {
     return dispatch => {
         dispatch(apiLoaderActions(true));
-        axios.get(USER_BASE_URL + `getFriendsPassengersByFriendId?userId=${userId}&friendId=${friendId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.get(USER_BASE_URL + `getPassengersById?userId=${userId}&friendId=${friendId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(apiLoaderActions(false));
@@ -1366,16 +1366,16 @@ export const getFriendsPassengersByFriendId = (userId, friendId) => {
                 }
             })
             .catch(er => {
-                console.log(`getFriendsPassengersByFriendId error: `, er.response || er);
+                console.log(`getPassengersById error: `, er.response || er);
                 dispatch(apiLoaderActions(false));
-                differentErrors(er, [userId, friendId], getFriendsPassengersByFriendId, false);
+                differentErrors(er, [userId, friendId, pageNumber], getPassengersById, false);
             })
     };
 }
-export const getRoadBuddiesByFriendId = (userId, friendId) => {
+export const getRoadBuddiesById = (userId, friendId, pageNumber) => {
     return dispatch => {
         dispatch(apiLoaderActions(true));
-        axios.get(GRAPH_BASE_URL + `getRoadBuddiesByFriendId?userId=${userId}&friendId=${friendId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.get(GRAPH_BASE_URL + `getRoadBuddiesById?userId=${userId}&friendId=${friendId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     dispatch(apiLoaderActions(false));
@@ -1384,9 +1384,9 @@ export const getRoadBuddiesByFriendId = (userId, friendId) => {
                 }
             })
             .catch(er => {
-                console.log(`getRoadBuddiesByFriendId error: `, er.response || er);
+                console.log(`getRoadBuddiesById error: `, er.response || er);
                 dispatch(apiLoaderActions(false));
-                differentErrors(er, [userId, friendId], getRoadBuddiesByFriendId, false);
+                differentErrors(er, [userId, friendId, pageNumber], getRoadBuddiesById, false);
             })
     };
 }
@@ -1398,7 +1398,6 @@ export const getUserProfile = (userId, friendId) => {
                 if (res.status === 200) {
                     dispatch(apiLoaderActions(false));
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
-                    console.log("getUserProfile success: ", res.data);
                     dispatch(updateCurrentFriendAction(res.data));
                 }
             })
@@ -1491,11 +1490,11 @@ export const searchForFriend = (searchParam, userId, pageNumber, preference) => 
         axios.get(FRIENDS_BASE_URL + `searchFriend?searchParam=${searchParam}&userId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    if (res.data.length > 0) {
+                    if (res.data.userList.length > 0) {
                         console.log("res.data: ", res.data);
                         dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
                         dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                        dispatch(updateSearchListAction({ results: res.data, pageNumber }));
+                        dispatch(replaceSearchListAction({ results: res.data.userList, pageNumber }));
                     } else {
                         dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     }

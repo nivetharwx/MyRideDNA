@@ -22,7 +22,7 @@ import { Item, Icon as NBIcon } from 'native-base';
 
 export const LoginScreen = (props) => (
     <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps='always'>
-        <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+        <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
         <Animatable.View iterationCount={1} style={{ width: widthPercentageToDP(100), height: heightPercentageToDP(25) }}>
             <Image source={require('../../assets/img/logo.png')} style={{ width: null, height: null, flex: 1, resizeMode: 'contain' }}></Image>
         </Animatable.View>

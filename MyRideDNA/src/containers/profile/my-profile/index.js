@@ -227,8 +227,8 @@ class MyProfileTab extends Component {
                 </View>
                 <View style={styles.mapHeader}>
                     <IconButton iconProps={{ name: 'bell', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(5) } }}
-                        style={[styles.headerIcon, { marginLeft: widthPercentageToDP(6), marginTop: IS_ANDROID ? heightPercentageToDP(2.1) : heightPercentageToDP(1) }]} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
-                    <View style={{ flexDirection: 'column', marginLeft: 17 }}>
+                        style={styles.headerIconCont} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
+                    <View style={{ flexDirection: 'column', marginLeft: 17, justifyContent: 'center', alignSelf: 'center' }}>
                         <Text style={styles.title}>
                             {user.name}
                         </Text>
@@ -335,21 +335,15 @@ class MyProfileTab extends Component {
                             <FlatList
                                 style={{ flexDirection: 'column' }}
                                 numColumns={4}
-                                data={passengerList}
+                                data={passengerList.slice(0, 4)}
                                 keyExtractor={this.passengerListKeyExtractor}
                                 renderItem={({ item, index }) => (
                                     <View style={{ marginRight: widthPercentageToDP(1.5) }}>
-                                        {
-                                            index < 4 ?
-                                                <SmallCard
-                                                    smallardPlaceholder={require('../../../assets/img/profile-pic.png')}
-                                                    item={item}
-                                                    onPress={() => this.openPassengerProfile(item, index)}
-                                                />
-                                                :
-                                                null
-                                        }
-
+                                        <SmallCard
+                                            smallardPlaceholder={require('../../../assets/img/profile-pic.png')}
+                                            item={item}
+                                            onPress={() => this.openPassengerProfile(item, index)}
+                                        />
                                     </View>
                                 )}
                             />
@@ -456,17 +450,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         marginTop: IS_ANDROID ? 0 : hasIOSAbove10 ? APP_COMMON_STYLES.statusBar.height : 0
     },
-    headerIcon: {
+    headerIconCont: {
         paddingHorizontal: 0,
         width: widthPercentageToDP(9),
         height: widthPercentageToDP(9),
         borderRadius: widthPercentageToDP(9) / 2,
         backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center'
+        alignSelf: 'center',
+        marginLeft: 17
     },
     title: {
-        marginTop: widthPercentageToDP(1),
         fontSize: widthPercentageToDP(6),
         color: 'white',
         fontWeight: 'bold',
@@ -479,7 +472,6 @@ const styles = StyleSheet.create({
     profilePic: {
         height: 255,
         width: WindowDimensions.width,
-        borderWidth: 1,
     },
     scrollBottomContent: {
         flex: 1
@@ -498,10 +490,9 @@ const styles = StyleSheet.create({
 
     //  new Design styles
     mapHeader: {
-        height: IS_ANDROID ? 60 : 70,
+        height: APP_COMMON_STYLES.headerHeight,
         backgroundColor: APP_COMMON_STYLES.headerColor,
         flexDirection: 'row',
-        paddingTop: IS_ANDROID ? 0 : heightPercentageToDP(1.5),
         elevation: 30,
         shadowOffset: { width: 0, height: 8 },
         shadowColor: '#000000',

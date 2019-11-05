@@ -190,7 +190,7 @@ class ChatList extends Component {
         return (
             <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={{ flex: 1 }}>
                     <BasicHeader title='Chat' rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />

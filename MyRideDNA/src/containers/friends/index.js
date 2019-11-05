@@ -322,7 +322,7 @@ class Friends extends Component {
             )
         }
     }
-    
+
     requestKeyExtractor = (item) => item.id;
 
     onCancelGroupForm = () => {
@@ -394,7 +394,7 @@ class Friends extends Component {
                     this.state.selectedPersonImg
                         ? null
                         : <View style={APP_COMMON_STYLES.statusBar}>
-                            <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+                            <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                         </View>
                 }
 
@@ -456,11 +456,11 @@ class Friends extends Component {
 
 const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
-    const { allFriends, paginationNum, currentFriend } = state.FriendList;
+    const { allFriends, paginationNum } = state.FriendList;
     const { personInfo, oldPosition } = state.PageOverTab;
     const { allFriendRequests } = state.FriendRequest;
     const { showLoader, hasNetwork } = state.PageState;
-    return { user, personInfo, oldPosition, allFriendRequests, allFriends, paginationNum, currentFriend, userAuthToken, deviceToken, showLoader, hasNetwork };
+    return { user, personInfo, oldPosition, allFriendRequests, allFriends, paginationNum, userAuthToken, deviceToken, showLoader, hasNetwork };
 }
 const mapDispatchToProps = (dispatch) => {
     return {

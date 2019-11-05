@@ -99,7 +99,7 @@ class Profile extends Component {
         return (
             <SafeAreaView style={styles.fill}>
                 <StatusBar
-                    backgroundColor="rgba(54,54,54,0.9)"
+                    backgroundColor={APP_COMMON_STYLES.statusBarColor}
                     barStyle="default"
                 />
                 <ImageBackground source={require('../../assets/img/profile-bg.png')} style={styles.profileBG}>

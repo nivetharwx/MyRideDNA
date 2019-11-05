@@ -441,7 +441,7 @@ class Group extends Component {
             ? <View style={styles.fill} />
             : <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={styles.fill}>
                     <BasicHeader

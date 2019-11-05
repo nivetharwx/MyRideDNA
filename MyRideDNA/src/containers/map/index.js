@@ -24,7 +24,7 @@ import { Icon as NBIcon, Toast, ListItem, Left, Body, Right, CheckBox } from 'na
 // import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT } from '../../constants';
 // import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, resetChatMessageAction } from '../../actions';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT, UNSYNCED_RIDE } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, addUnsyncedRideAction, deleteUnsyncedRideAction, resetChatMessageAction, resetErrorHandlingAction, toggleNetworkStatusAction, hideMembersLocationAction, resetCurrentPassengerAction } from '../../actions';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoLastAction, redoLastAction, initUndoRedoAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, addUnsyncedRideAction, deleteUnsyncedRideAction, resetChatMessageAction, resetErrorHandlingAction, toggleNetworkStatusAction, hideMembersLocationAction, resetCurrentPassengerAction, goToPrevProfileAction } from '../../actions';
 import { SearchBox, IconicList } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -837,11 +837,11 @@ export class Map extends Component {
                 });
             }
         }
+        this.props.resetCurrentFriend();
         this.props.changeScreen({ name: screenKey });
     }
 
     async componentDidMount() {
-        console.log("windowHeight: ", WindowDimensions.height);
         this.unregisterNetworkListener = NetInfo.addEventListener(this.handleNetworkConnectivityChange);
         if (this.props.user.isNewUser) {
             this.props.changeScreen({ name: PageKeys.PROFILE })
@@ -1179,8 +1179,11 @@ export class Map extends Component {
     onBackButtonPress = () => {
         if (Actions.state.index !== 0) {
             if (Actions.currentScene === PageKeys.FRIENDS_PROFILE) {
-                this.props.resetCurrentFriend()
+                // this.props.resetCurrentFriend()
                 // this.props.changeScreen(Actions.currentScene);
+
+                this.popToPrevProfile();
+
             } else if (Actions.currentScene === PageKeys.GROUP) {
                 this.props.resetCurrentGroup();
                 // this.props.changeScreen(Actions.currentScene);
@@ -1193,6 +1196,7 @@ export class Map extends Component {
                 Actions.pop();
                 this.props.changeScreen({ name: Actions.currentScene });
             }
+            if (Actions.currentScene === PageKeys.MAP && this.props.hasPrevProfiles) this.props.resetCurrentFriend();
             return true;
         } else {
             if (this.state.onItinerary) {
@@ -1204,6 +1208,13 @@ export class Map extends Component {
             }
             return true;
         }
+    }
+
+    popToPrevProfile() {
+        Actions.pop();
+        this.props.hasPrevProfiles
+            ? this.props.goToPrevProfile()
+            : this.props.resetCurrentFriend();
     }
 
     async fetchDirections() {
@@ -1684,14 +1695,14 @@ export class Map extends Component {
     }
 
     onPressUndo = () => {
-        if (!this.props.canUndo) return;
+        if (!this.props.canUndoRide) return;
         this.setState(prevState => ({ rideUpdateCount: prevState.rideUpdateCount + 1 }), () => {
             this.props.doUndo();
         });
     }
 
     onPressRedo = () => {
-        if (!this.props.canRedo) return;
+        if (!this.props.canRedoRide) return;
         this.setState(prevState => ({ rideUpdateCount: prevState.rideUpdateCount + 1 }), () => {
             this.props.doRedo();
         });
@@ -2747,7 +2758,7 @@ export class Map extends Component {
     render() {
         const { isEditableMap, mapViewHeight, directions, markerCollection, activeMarkerIndex, gpsPointCollection, controlsBarLeftAnim, waypointListLeftAnim, showCreateRide, currentLocation,
             searchResults, searchQuery, isEditableRide, snapshot, hideRoute, optionsBarRightAnim, isUpdatingWaypoint, mapRadiusCircle, showLoader, searchbarAnim, isSearchHeader } = this.state;
-        const { notificationList, ride, showMenu, user, canUndo, canRedo, friendsLocationList, membersLocationList, FriendGroupList } = this.props;
+        const { notificationList, ride, showMenu, user, canUndoRide, canRedoRide, friendsLocationList, membersLocationList, FriendGroupList } = this.props;
         const MAP_VIEW_TOP_OFFSET = showCreateRide ? (CREATE_RIDE_CONTAINER_HEIGHT - WINDOW_HALF_HEIGHT) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2) : (isEditableRide ? 130 : 60) + (mapViewHeight / 2) - (BULLSEYE_SIZE / 2);
         const searchCancelAnim = searchbarAnim.interpolate({
             inputRange: [-widthPercentageToDP(100), 0],
@@ -2759,6 +2770,7 @@ export class Map extends Component {
         });
         return (
             <View style={{ flex: 1 }}>
+                <StatusBar backgroundColor={APP_COMMON_STYLES.statusBarColor} />
                 {/* <MenuModal notificationCount={notificationList.notification.length} isVisible={showMenu} onClose={this.onCloseAppNavMenu} onPressNavMenu={this.onPressAppNavMenu} alignCloseIconLeft={user.handDominance === 'left'} /> */}
                 <MenuModal notificationCount={notificationList.totalUnseen} isVisible={showMenu} onClose={this.onCloseAppNavMenu} onPressNavMenu={this.onPressAppNavMenu} alignCloseIconLeft={user.handDominance === 'left'} />
                 {/* <Spinner
@@ -2985,7 +2997,7 @@ export class Map extends Component {
 
                     </MapboxGL.MapView>
                     {
-                        <Animated.View style={{ backgroundColor: '#fff', position: 'absolute', zIndex: 800, elevation: 10, top: 60, width: widthPercentageToDP(50), height: this.state.dropdownAnim }}>
+                        <Animated.View style={{ backgroundColor: '#fff', position: 'absolute', zIndex: 800, elevation: 10, top: APP_COMMON_STYLES.headerHeight, width: widthPercentageToDP(50), height: this.state.dropdownAnim }}>
                             {
                                 this.state.isVisibleList && this.state.friendsLocationCollection.features.length > 0
                                     ? <ListItem icon style={{ borderBottomWidth: 1 }} onPress={this.hideAllLocations}>
@@ -3064,7 +3076,7 @@ export class Map extends Component {
                             <Image source={require('../../assets/img/arrow-left.png')} style={{ flex: 1, width: null, height: null }} />
                         </TouchableOpacity>
                         {
-                            canUndo || canRedo
+                            canUndoRide || canRedoRide
                                 ? <View>
                                     <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'md-undo', type: 'Ionicons' }} onPress={this.onPressUndo} />
                                     <IconButton style={[styles.mapControlButton, styles.topBorder]} iconProps={{ name: 'md-redo', type: 'Ionicons' }} onPress={this.onPressRedo} />
@@ -3155,8 +3167,9 @@ const mapStateToProps = (state) => {
     const { showMenu, currentScreen } = state.TabVisibility;
     const { ride } = state.RideInfo.present;
     const { unsyncedRides } = state.RideList;
-    const canUndo = state.RideInfo.past.length > 0;
-    const canRedo = state.RideInfo.future.length > 0;
+    const canUndoRide = state.RideInfo.past.length > 0;
+    const canRedoRide = state.RideInfo.future.length > 0;
+    const hasPrevProfiles = state.CurrentProfile.prevProfiles.length > 0;
     const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { isLocationOn } = state.GPSState;
     // const {showLoader} = state.PageState;
@@ -3164,7 +3177,7 @@ const mapStateToProps = (state) => {
     const { friendsLocationList } = state.FriendList;
     const { membersLocationList, friendGroupList } = state.FriendGroupList;
     const { appState, hasNetwork, lastApi, isRetryApi } = state.PageState;
-    return { ride, isLocationOn, user, userAuthToken, deviceToken, showMenu, friendsLocationList, membersLocationList, friendGroupList, currentScreen, canUndo, canRedo, notificationList, pageNumber, appState, hasNetwork, unsyncedRides, lastApi, isRetryApi };
+    return { ride, isLocationOn, user, userAuthToken, deviceToken, showMenu, friendsLocationList, membersLocationList, friendGroupList, currentScreen, canUndoRide, canRedoRide, notificationList, pageNumber, appState, hasNetwork, unsyncedRides, lastApi, isRetryApi, hasPrevProfiles };
 }
 
 const mapDispatchToProps = (dispatch) => {
@@ -3174,7 +3187,7 @@ const mapDispatchToProps = (dispatch) => {
         hideAppNavMenu: () => dispatch(appNavMenuVisibilityAction(false)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         changeScreen: (screenKey) => dispatch(screenChangeAction(screenKey)),
-        clearRideFromMap: () => dispatch(initUndoRedoRideAction()),
+        clearRideFromMap: () => dispatch(initUndoRedoAction()),
         submitNewRide: (rideInfo) => dispatch(createNewRide(rideInfo)),
         updateRide: (data) => dispatch(updateRideAction(data)),
         publishEvent: (eventBody) => publishEvent(eventBody),
@@ -3217,8 +3230,8 @@ const mapDispatchToProps = (dispatch) => {
         getRideByRideId: (rideId) => dispatch(getRideByRideId(rideId)),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
         resetCurrentGroup: () => dispatch(resetCurrentGroupAction()),
-        doUndo: () => dispatch(undoRideAction()),
-        doRedo: () => dispatch(redoRideAction()),
+        doUndo: () => dispatch(undoLastAction()),
+        doRedo: () => dispatch(redoLastAction()),
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         updateSourceOrDestination: (identifier, locationName) => dispatch(updateSourceOrDestinationAction({ identifier, updates: { name: locationName } })),
         updateWaypointName: (waypointId, locationName) => dispatch(updateWaypointNameAction({ waypointId, locationName })),
@@ -3235,7 +3248,8 @@ const mapDispatchToProps = (dispatch) => {
         retryLastApi: (api, params) => dispatch(api(...params)),
         retryLastApiWithoutDispatch: (api, params) => api(...params),
         resetCurrentPassenger: () => dispatch(resetCurrentPassengerAction()),
-        resetErrorHandling: (state) => dispatch(resetErrorHandlingAction({ comingFrom: 'map', isRetryApi: state }))
+        resetErrorHandling: (state) => dispatch(resetErrorHandlingAction({ comingFrom: 'map', isRetryApi: state })),
+        goToPrevProfile: () => dispatch(goToPrevProfileAction()),
     }
 }
 

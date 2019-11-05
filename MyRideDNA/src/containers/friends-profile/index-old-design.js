@@ -352,7 +352,7 @@ class FriendsProfile extends Component {
             ? <View style={styles.fill} />
             : <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={[{ flex: 1 }, !this.props.hasNetwork ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
                     <BasicHeader title={<Text style={{

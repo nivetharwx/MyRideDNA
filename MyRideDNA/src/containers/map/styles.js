@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
         elevation: 8
     },
     mapHeader: {
-        height: 60,
+        height: APP_COMMON_STYLES.headerHeight,
         backgroundColor: APP_COMMON_STYLES.headerColor,
         flexDirection: 'row',
         elevation: 30,

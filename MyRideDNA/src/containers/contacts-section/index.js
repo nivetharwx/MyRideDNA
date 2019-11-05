@@ -219,7 +219,7 @@ class ContactsSection extends PureComponent {
     }
 
     loadMoreData = () => {
-        if (this.state.isLoadingData && this.state.isLoading === false) {
+        if (this.state.isLoadingData && this.state.isLoading === false && this.state.searchName !== '') {
             this.setState({ isLoading: true, isLoadingData: false })
             this.props.searchForFriend(this.state.searchName, this.props.user.userId, this.props.pageNumber, 10);
         }
@@ -365,7 +365,7 @@ class ContactsSection extends PureComponent {
         return (
             <View style={styles.rootContainer}>
                 <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={styles.fill}>
                     <BasicHeader title='Add A Road Buddy' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
@@ -390,7 +390,7 @@ class ContactsSection extends PureComponent {
                             </View>
                             <View style={{ marginTop: 16 }}>
                                 <FlatList
-                                    style={{ marginBottom: heightPercentageToDP(20) }}
+                                    // style={{ marginBottom: heightPercentageToDP(20) }}
                                     data={searchResults}
                                     keyExtractor={this.searchResultsKeyExtractor}
                                     renderItem={({ item, index }) => (

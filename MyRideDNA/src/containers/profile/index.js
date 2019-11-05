@@ -40,11 +40,11 @@ class Profile extends Component {
                 {
                     IS_ANDROID
                         ? <View style={APP_COMMON_STYLES.statusBar}>
-                            <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+                            <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                         </View>
                         : activeTab !== 0
                             ? <View style={APP_COMMON_STYLES.statusBar}>
-                                <StatusBar translucent backgroundColor='black' barStyle="light-content" />
+                                <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                             </View>
                             : null
                 }

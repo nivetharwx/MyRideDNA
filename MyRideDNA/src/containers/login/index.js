@@ -11,7 +11,7 @@ import DeviceInfo from 'react-native-device-info'; // DOC: Check https://www.npm
 import Md5 from 'react-native-md5'; // DOC: Check https://www.npmjs.com/package/react-native-md5
 
 import { LoginScreen } from './login';
-import { PageKeys, USER_AUTH_TOKEN, USER_BASE_URL, DEVICE_TOKEN, IS_ANDROID } from '../../constants';
+import { PageKeys, USER_AUTH_TOKEN, USER_BASE_URL, DEVICE_TOKEN, IS_ANDROID, APP_COMMON_STYLES } from '../../constants';
 import { storeUserAction, toggleNetworkStatusAction, updateTokenAction } from '../../actions';
 import ForgotPassword from '../forgot-password';
 import { Loader } from '../../components/loader'
@@ -234,7 +234,7 @@ class Login extends Component {
             <View style={{ flex: 1 }}>
                 <StatusBar
                     translucent
-                    backgroundColor="#7AC0E9"
+                    backgroundColor={APP_COMMON_STYLES.statusBarColor}
                     barStyle="default"
                 />
                 {/* <Spinner

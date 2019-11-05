@@ -112,9 +112,9 @@ const STATUS_BAR_COLOR = '#006297';
 
 export const APP_COMMON_STYLES = {
     infoColor: '#EB861E',
-    headerColor: HEADER_COLOR,
+    headerColor: '#2B77B4',
     headerHeight: APP_HEADER_HEIGHT,
-    statusBarColor: STATUS_BAR_COLOR,
+    statusBarColor: '#006297',
     statusBarColorDark: '#000',
     testingBorder: { borderWidth: 2, borderColor: 'red' },
     statusBar: {
