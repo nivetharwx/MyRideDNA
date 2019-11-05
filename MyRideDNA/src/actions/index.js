@@ -60,7 +60,8 @@ import {
     RESET_COMMUNITY_LIST,
     SET_CURRENT_FRIEND,
     UPDATE_PICTURES,
-    UPDATE_SEARCH_RESULTS
+    UPDATE_SEARCH_RESULTS,
+    GO_PREV_PROFILE
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -231,19 +232,19 @@ export const clearRideAction = (data) => (
         data: data
     }
 );
-export const undoRideAction = (data) => (
+export const undoLastAction = (data) => (
     {
         type: UNDO,
         data: data
     }
 );
-export const redoRideAction = (data) => (
+export const redoLastAction = (data) => (
     {
         type: REDO,
         data: data
     }
 );
-export const initUndoRedoRideAction = (data) => (
+export const initUndoRedoAction = (data) => (
     {
         type: INIT_UNDO_REDO,
         data: data
@@ -476,6 +477,12 @@ export const resetCurrentFriendAction = (data) => (
 export const setCurrentFriendAction = (data) => (
     {
         type: SET_CURRENT_FRIEND,
+        data: data
+    }
+);
+export const goToPrevProfileAction = (data) => (
+    {
+        type: GO_PREV_PROFILE,
         data: data
     }
 );

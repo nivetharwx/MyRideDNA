@@ -3,20 +3,7 @@ import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP, RIDE_TAIL_TAG, THUMBNAIL_TAIL_T
 
 const initialState = {
     allFriends: [],
-    // onlineFriends: [],
     paginationNum: 0,
-    // searchFriendList: [],
-    currentFriend: {
-        isFriend: false,
-        garage: {
-            garageId: null
-        },
-        userId: null,
-        rideList: [],
-        homeAddress: {},
-        passengerList: [],
-        friendList: [],
-    },
     friendsLocationList: { activeLength: 0 }
 };
 
@@ -98,88 +85,9 @@ export default (state = initialState, action) => {
                 }, { ...state.friendsLocationList })
             }
 
-        case GET_FRIEND_INFO:
-            const index = state.allFriends.findIndex(item => item.userId === action.data.userId);
-            const friend = state.allFriends[index];
-            if (!friend.profilePictureId) {
-                friend.profilePictureId = null;
-            }
-            return {
-                ...state,
-                currentFriend: {
-                    isFriend: false,
-                    garage: {
-                        garageId: null
-                    },
-                    userId: null,
-                    rideList: [],
-                    homeAddress: {},
-                    passengerList: [],
-                    friendList: [],
-                    ...friend
-                }
-            };
-        case GET_NOT_FRIEND_INFO:
-            const notFriend = action.data.notFriendData;
-            if (action.data.notFriendData && !notFriend.userId) {
-                notFriend['userId'] = action.data.notFriendData.memberId
-            }
-            return {
-                ...state,
-                currentFriend: {
-                    isFriend: false,
-                    garage: {
-                        garageId: null
-                    },
-                    userId: null,
-                    rideList: [],
-                    homeAddress: {},
-                    passengerList: [],
-                    friendList: [],
-                    ...notFriend
-                }
-            };
-
-        case REPLACE_FRIEND_INFO:
-            return {
-                ...state,
-                currentFriend: {
-                    isFriend: false,
-                    homeAddress: {},
-                    passengerList: [],
-                    friendList: [],
-                    ...action.data,
-                    garage: {
-                        garageId: null
-                    },
-                    rideList: []
-                }
-            }
-
         case UNFRIEND:
             const personIndex = state.allFriends.findIndex(person => person.userId === action.data.personId);
-
             if (personIndex > -1) {
-                if (state.allFriends[personIndex].userId === state.currentFriend.userId) {
-                    return {
-                        ...state,
-                        allFriends: [
-                            ...state.allFriends.slice(0, personIndex),
-                            ...state.allFriends.slice(personIndex + 1)
-                        ],
-                        currentFriend: {
-                            isFriend: false,
-                            garage: {
-                                garageId: null
-                            },
-                            userId: null,
-                            rideList: [],
-                            homeAddress: {},
-                            passengerList: [],
-                            friendList: [],
-                        }
-                    }
-                }
                 return {
                     ...state,
                     allFriends: [
@@ -189,134 +97,6 @@ export default (state = initialState, action) => {
                 }
             }
             return state;
-
-        case SET_CURRENT_FRIEND:
-            return {
-                ...state,
-                currentFriend: {
-                    isFriend: false,
-                    garage: {
-                        garageId: null
-                    },
-                    rideList: [],
-                    homeAddress: {},
-                    passengerList: [],
-                    friendList: [],
-                    ...action.data
-                }
-            };
-
-        case UPDATE_CURRENT_FRIEND:
-            if (state.currentFriend.userId === null || (action.data.userId !== state.currentFriend.userId)) return state;
-            return {
-                ...state,
-                currentFriend: {
-                    ...state.currentFriend,
-                    ...action.data
-                }
-            };
-
-        case UPDATE_PICTURES:
-            if (action.data.type === 'roadBuddies') {
-                return {
-                    ...state,
-                    currentFriend: {
-                        ...state.currentFriend,
-                        friendList: state.currentFriend.friendList.map(frnd => {
-                            if (!frnd.profilePictureId) return frnd;
-                            if (typeof action.data.pictureObj[frnd.profilePictureId] === 'string') {
-                                return { ...frnd, profilePicture: action.data.pictureObj[frnd.profilePictureId] };
-                            }
-                            return frnd;
-                        })
-                    }
-                };
-            }
-            if (action.data.type === 'passenger') {
-                return {
-                    ...state,
-                    currentFriend: {
-                        ...state.currentFriend,
-                        passengerList: state.currentFriend.passengerList.map(pass => {
-                            if (!pass.profilePictureId) return pass;
-                            if (typeof action.data.pictureObj[pass.profilePictureId] === 'string') {
-                                return { ...pass, profilePicture: action.data.pictureObj[pass.profilePictureId] };
-                            }
-                            return pass;
-                        })
-                    }
-                };
-            }
-
-        case UPDATE_FRIENDS_RIDE_SNAPSHOT:
-            if (state.currentFriend.userId === null || (action.data.userId !== state.currentFriend.userId)) return state;
-            updatedRideList = state.currentFriend.rideList.map(ride => {
-                if (!ride.snapshotId) return ride;
-                let id = ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, RIDE_TAIL_TAG);
-                if (typeof action.data.pictureObject[id] === 'string') {
-                    return { ...ride, snapshot: action.data.pictureObject[id] };
-                }
-                return ride;
-            });
-            return { ...state, currentFriend: { ...state.currentFriend, rideList: updatedRideList } };
-
-        case UPDATE_CURRENT_FRIEND_GARAGE:
-            if ((state.currentFriend.userId === null) || (action.data.userId !== state.currentFriend.userId)) return state;
-            let idx = state.currentFriend.garage.spaceList.findIndex((garageSpaceList) => garageSpaceList.spaceId === action.data.spaceId)
-            if (idx > -1) {
-                const bike = state.currentFriend.garage.spaceList[idx];
-                bike.profilePicture = action.data.profilePicture;
-                return {
-                    ...state,
-                    currentFriend: {
-                        ...state.currentFriend,
-                        garage: {
-                            ...state.currentFriend.garage,
-                            spaceList: [
-                                ...state.currentFriend.garage.spaceList.slice(0, idx),
-                                bike,
-                                ...state.currentFriend.garage.spaceList.slice(idx + 1)
-                            ]
-                        }
-                    }
-                }
-            }
-            return state;
-
-
-        case RESET_CURRENT_FRIEND:
-            if (action.data && action.data.comingFrom === PageKeys.NOTIFICATIONS) {
-                return {
-                    ...state,
-                    currentFriend: {
-                        garage: {
-                            garageId: null
-                        },
-                        userId: null,
-                        rideList: [],
-                        homeAddress: {},
-                        passengerList: [],
-                        friendList: []
-                    }
-                }
-            }
-            else {
-                return {
-                    ...state,
-                    currentFriend: {
-                        garage: {
-                            garageId: null
-                        },
-                        ...state.currentFriend,
-                        userId: null,
-                        rideList: [],
-                        homeAddress: {},
-                        passengerList: [],
-                        friendList: []
-                    }
-                }
-            }
-
 
         case DELETE_FRIEND:
             return {
