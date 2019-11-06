@@ -75,7 +75,7 @@ class Chat extends Component {
         this.props.deleteAllMessages(this.props.chatInfo.id, this.props.user.userId, this.props.isGroup)
         this.setState({ isVisibleOptionsModal: false })
     }
-    OnChangeMessageToBeSend = (messageToBeSend) => {
+    onChangeMessageToBeSend = (messageToBeSend) => {
         this.setState({ messageToBeSend })
     }
     sendMessage = () => {
@@ -259,161 +259,112 @@ class Chat extends Component {
                 <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
             </View>
             <View style={styles.fill}>
-                <ImageBackground style={styles.chatBackgroundImage} source={require('../../assets/img/chat-bg.jpg')}>
-                    {
-                        selectedMessage ?
-                            <View style={styles.deleteButtonChatHeader}>
-                                <IconButton titleStyle={{ color: '#fff', fontWeight: 'bold', fontSize: widthPercentageToDP(4) }} iconProps={{ name: 'window-close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }} onPress={this.unSelectAllMessage} />
-                                <View style={{ marginLeft: widthPercentageToDP(75), alignSelf: 'flex-end' }}>
-                                    <IconButton titleStyle={{ color: '#fff', fontWeight: 'bold', fontSize: widthPercentageToDP(4) }} iconProps={{ name: 'delete', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }} onPress={this.openDeleteModal} />
-                                </View>
-                            </View>
-                            :
-                            <View style={styles.chatHeader}>
-                                <View style={{ marginHorizontal: widthPercentageToDP(3), alignItems: 'center', justifyContent: 'center' }}>
-                                    <TouchableOpacity style={styles.iconPadding} onPress={this.onPressBackButton}>
-                                        <NBIcon name='md-arrow-round-back' type='Ionicons' style={{
-                                            fontSize: 25,
-                                            color: 'black'
-                                        }} />
-                                    </TouchableOpacity>
-                                </View>
-                                {
-
-
-                                    chatData !== null ?
-                                        chatData.profilePicture ?
-                                            <Thumbnail style={styles.thumbnail} source={{ uri: chatData.profilePicture }} />
-                                            :
-                                            <View style={styles.groupIconStyle}>
-                                                <IconButton iconProps={{ name: 'user', type: 'FontAwesome', style: { color: 'white', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(5), marginLeft: widthPercentageToDP(7), marginTop: heightPercentageToDP(0.8) } }} />
-                                            </View>
-                                        :
-                                        <View style={styles.groupIconStyle}>
-                                            <IconButton iconProps={{ name: 'user', type: 'FontAwesome', style: { color: 'white', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(5), marginLeft: widthPercentageToDP(7), marginTop: heightPercentageToDP(0.8) } }} />
-                                        </View>
-                                }
-
-                                {
-                                    this.props.comingFrom === PageKeys.NOTIFICATIONS ?
-                                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                                            {
-                                                this.props.chatInfo.isGroup ?
-                                                    <Text style={styles.chatHeaderName}>{this.props.chatInfo.groupName}</Text>
-                                                    :
-                                                    <View>
-                                                        <Text style={styles.chatHeaderName}>{this.props.chatInfo.senderName}</Text>
-                                                        {/* <Text style={styles.chatHeaderNickname}>randomNickname</Text> */}
-                                                    </View>
-                                            }
-
-                                        </View>
-                                        :
-                                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                                            <Text style={styles.chatHeaderName}>{this.props.chatInfo.isGroup ? this.props.chatInfo.groupName : this.props.chatInfo.name}</Text>
-                                            {/* {
-                                                this.props.chatInfo.isGroup ?
-                                                    null :
-                                                    <Text style={styles.chatHeaderNickname}>{this.props.chatInfo.nickname}</Text>
-                                            } */}
-
-                                        </View>
-                                }
-                                <IconButton style={{ marginRight: widthPercentageToDP(3) }} iconProps={{ name: 'md-more', type: 'Ionicons', style: { color: '#fff' } }} onPress={this.showOptionsModal} />
-                            </View>
-                    }
-
-                    {/* <BaseModal alignCenter={true} isVisible={isVisibleDeleteModal} onCancel={this.onCancelDeleteModal} onPressOutside={this.onCancelDeleteModal}>
-                        <View style={{ borderRadius: widthPercentageToDP(3), backgroundColor: '#fff', height: WindowDimensions.height / 3, width: WindowDimensions.width * 0.8, padding: 20, elevation: 3 }}>
-                            <Text style={{ fontSize: widthPercentageToDP(5) }}>Delete Message?</Text>
-                            <View style={{ marginTop: heightPercentageToDP(6) }}>
-                                <Text style={{ fontSize: widthPercentageToDP(4), color: '#6C6C6B', alignSelf: 'flex-end' }} onPress={this.deleteMessageForMe}>DELETE FOR ME</Text>
-                                <Text style={{ fontSize: widthPercentageToDP(4), color: '#6C6C6B', marginTop: heightPercentageToDP(3), alignSelf: 'flex-end' }} onPress={this.onCancelDeleteModal}>CANCEL</Text>
-                                <Text style={{ fontSize: widthPercentageToDP(4), color: '#6C6C6B', marginTop: heightPercentageToDP(3), alignSelf: 'flex-end' }} onPress={this.deleteMessageForEveryone}>DELETE FOR EVERYONE</Text>
-                            </View>
+                {
+                    selectedMessage
+                        ? <View style={[styles.chatHeader, { justifyContent: 'space-between' }]}>
+                            <IconButton iconProps={{ name: 'cross', type: 'Entypo', style: { fontSize: 27, color: '#fff' } }} onPress={this.unSelectAllMessage} />
+                            <IconButton iconProps={{ name: 'delete', type: 'MaterialCommunityIcons', style: { fontSize: 25, color: '#fff' } }} onPress={this.openDeleteModal} />
                         </View>
-                    </BaseModal> */}
-                    <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
-                        <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
+                        : <View style={styles.chatHeader}>
+                            <TouchableOpacity style={styles.iconPadding} onPress={this.onPressBackButton}>
+                                <NBIcon name='md-arrow-round-back' type='Ionicons' style={{
+                                    fontSize: 25,
+                                    color: 'black'
+                                }} />
+                            </TouchableOpacity>
                             {
-                                this.renderMenuOptions()
+                                // chatData !== null
+                                //     ? chatData.profilePicture
+                                //         ? <Thumbnail style={styles.thumbnail} source={{ uri: chatData.profilePicture }} />
+                                //         : <View style={styles.groupIconStyle}>
+                                //             <IconButton iconProps={{ name: 'user', type: 'FontAwesome', style: { color: 'white', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(5), marginLeft: widthPercentageToDP(7), marginTop: heightPercentageToDP(0.8) } }} />
+                                //         </View>
+                                //     : <View style={styles.groupIconStyle}>
+                                //         <IconButton iconProps={{ name: 'user', type: 'FontAwesome', style: { color: 'white', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(5), marginLeft: widthPercentageToDP(7), marginTop: heightPercentageToDP(0.8) } }} />
+                                //     </View>
                             }
-                        </View>
-                    </BaseModal>
-                    <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={[styles.fill, !IS_ANDROID && this.state.iOSKeyboardShown ? { marginBottom: 35 } : null]}>
-                        <View style={styles.rootContainer}>
-                            {
-                                chatMessages.length > 0 ?
-                                    <FlatList
-                                        ref={'flatList'}
-                                        style={styles.chatArea}
-                                        contentContainerStyle={{ paddingBottom: 10 }}
-                                        data={chatMessages}
-                                        keyExtractor={this.chatKeyExtractor}
-                                        inverted={true}
-                                        onViewableItemsChanged={this.onViewableItemsChanged}
-                                        // onContentSizeChange={() => { this.refs.flatList.scrollToEnd({ animated: false }) }}
-                                        renderItem={({ item, index }) => {
-                                            return item.senderId === user.userId
-                                                ?
-                                                <ChatBubble
-                                                    bubbleName='Me,'
-                                                    messageTime={this.getDateAndTime(item)}
-                                                    message={item.content}
-                                                    bubbleStyle={styles.friendChatBubble}
-                                                    bubbleNameStyle={styles.friendName}
-                                                    onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
-                                                    selectedMessage={selectedMessage && selectedMessage[item.messageId]}
-                                                    onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
-                                                />
-                                                : <ChatBubble
-                                                    bubbleName={item.senderName + ','}
-                                                    messageTime={this.getDateAndTime(item)}
-                                                    message={item.content}
-                                                    onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
-                                                    selectedMessage={selectedMessage && selectedMessage[item.messageId]}
-                                                    onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
-                                                />
-                                        }}
-
-                                    />
-                                    : null
-                            }
-                            {
-                                this.state.isNewMessage ?
-                                    <View>
-                                        <View style={{ backgroundColor: '#6C6C6B', position: 'absolute', bottom: heightPercentageToDP(3), right: widthPercentageToDP(2), height: heightPercentageToDP(5), width: widthPercentageToDP(8), borderRadius: widthPercentageToDP(6) }}>
-                                            <IconButton iconProps={{ name: 'angle-double-down', type: 'FontAwesome', style: { color: 'black' } }} onPress={this.goToLastMessage} />
-                                        </View>
+                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                                {
+                                    <Text style={styles.chatHeaderName}>
                                         {
-                                            this.props.comingFrom === PageKeys.NOTIFICATIONS ?
-                                                totalUnseenMessage > 0 ?
-                                                    <View style={{ backgroundColor: APP_COMMON_STYLES.infoColor, position: 'absolute', bottom: heightPercentageToDP(6), right: widthPercentageToDP(7), height: heightPercentageToDP(3), minWidth: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), textAlign: 'center', justifyContent: 'center' }}>
-                                                        <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: heightPercentageToDP(1.7) }}>{totalUnseenMessage}</Text>
-                                                    </View>
-                                                    : null
-                                                :
-                                                totalUnseenMessage > 0 ?
-                                                    <View style={{ backgroundColor: APP_COMMON_STYLES.infoColor, position: 'absolute', bottom: heightPercentageToDP(6), right: widthPercentageToDP(7), height: heightPercentageToDP(3), minWidth: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), textAlign: 'center', justifyContent: 'center' }}>
-                                                        <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: heightPercentageToDP(1.7) }}>{totalUnseenMessage}</Text>
-                                                    </View>
-                                                    : null
-
+                                            this.props.chatInfo.isGroup
+                                                ? this.props.chatInfo.groupName
+                                                : this.props.comingFrom === PageKeys.NOTIFICATIONS
+                                                    ? this.props.chatInfo.senderName
+                                                    : this.props.chatInfo.name
                                         }
-
+                                    </Text>
+                                }
+                            </View>
+                            <IconButton iconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 25 } }} onPress={this.showOptionsModal} />
+                        </View>
+                }
+                <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={[styles.fill, !IS_ANDROID && this.state.iOSKeyboardShown ? { marginBottom: 35 } : null]}>
+                    <ImageBackground style={styles.fill} source={require('../../assets/img/chat-bg.jpg')}>
+                        <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
+                            <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
+                                {
+                                    this.renderMenuOptions()
+                                }
+                            </View>
+                        </BaseModal>
+                        <View style={styles.fill}>
+                            <FlatList
+                                ref={'flatList'}
+                                contentContainerStyle={styles.chatArea}
+                                data={chatMessages}
+                                keyExtractor={this.chatKeyExtractor}
+                                inverted={true}
+                                onViewableItemsChanged={this.onViewableItemsChanged}
+                                // onContentSizeChange={() => { this.refs.flatList.scrollToEnd({ animated: false }) }}
+                                renderItem={({ item, index }) => {
+                                    return item.senderId === user.userId
+                                        ?
+                                        <ChatBubble
+                                            bubbleName='Me,'
+                                            messageTime={this.getDateAndTime(item)}
+                                            message={item.content}
+                                            bubbleStyle={styles.friendChatBubble}
+                                            bubbleNameStyle={styles.friendName}
+                                            onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
+                                            selectedMessage={selectedMessage && selectedMessage[item.messageId]}
+                                            onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
+                                        />
+                                        : <ChatBubble
+                                            bubbleName={item.senderName + ','}
+                                            messageTime={this.getDateAndTime(item)}
+                                            message={item.content}
+                                            onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
+                                            selectedMessage={selectedMessage && selectedMessage[item.messageId]}
+                                            onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
+                                        />
+                                }}
+                            />
+                            {
+                                this.state.isNewMessage
+                                    ? <View>
+                                        <IconButton style={styles.scrollToLastIcnCont} iconProps={{ name: 'angle-double-down', type: 'FontAwesome', style: { color: 'black' } }} onPress={this.goToLastMessage} />
+                                        {
+                                            totalUnseenMessage > 0 ?
+                                                <View style={{ backgroundColor: APP_COMMON_STYLES.infoColor, position: 'absolute', bottom: heightPercentageToDP(6), right: widthPercentageToDP(7), height: heightPercentageToDP(3), minWidth: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), textAlign: 'center', justifyContent: 'center' }}>
+                                                    <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: heightPercentageToDP(1.7) }}>{totalUnseenMessage}</Text>
+                                                </View>
+                                                : null
+                                        }
                                     </View>
                                     : null
                             }
 
                         </View>
-
-                        <Item style={[styles.msgInputBoxContainer, this.props.hasNetwork === false ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
-                            <TextInput value={messageToBeSend} placeholder='Type a message' style={{ flex: 1, marginRight: widthPercentageToDP(1) }} onChangeText={this.OnChangeMessageToBeSend} />
-                            <IconButton iconProps={{ name: 'md-send', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} onPress={() => this.sendMessage()} />
-                        </Item>
-                    </KeyboardAvoidingView>
-                    {/* <ShifterButton onPress={this.showAppNavigation} containerStyles={styles.shifterContainer} alignLeft={this.props.user.handDominance === 'left'} /> */}
-                </ImageBackground>
+                        <ShifterButton onPress={this.showAppNavigation} containerStyles={styles.shifterContainer} alignLeft={this.props.user.handDominance === 'left'} />
+                    </ImageBackground>
+                    <View style={[styles.footer, this.props.hasNetwork === false ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
+                        <View style={styles.inputCont}>
+                            <TextInput style={styles.inputBox} value={messageToBeSend} placeholder='Type a message...' placeholderTextColor='#3E3E3E' multiline={true} onChangeText={this.onChangeMessageToBeSend} />
+                        </View>
+                        <IconButton style={styles.footerRtIcnCont} iconProps={{ name: 'md-send', type: 'Ionicons', style: styles.footerRightIcon }} onPress={() => this.sendMessage()} />
+                    </View>
+                </KeyboardAvoidingView>
             </View>
         </View >
     }

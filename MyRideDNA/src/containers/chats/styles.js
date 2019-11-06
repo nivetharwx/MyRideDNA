@@ -1,26 +1,23 @@
 import { StyleSheet } from 'react-native';
 import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID } from '../../constants';
+import { App } from 'react-native-firebase';
 
 const THUMBNAIL_SIZE = IS_ANDROID ? heightPercentageToDP(6.5) : heightPercentageToDP(8);
 const styles = StyleSheet.create({
-    rootContainer: {
-        flex: 1,
-        padding: widthPercentageToDP(3),
-    },
     fill: {
         flex: 1
     },
-    chatBackgroundImage: {
-        width: '100%',
-        height: '100%'
-    },
     chatHeader: {
-        flexDirection: 'row',
-        position: 'absolute',
-        zIndex: 100,
-        width: '100%',
         height: APP_COMMON_STYLES.headerHeight,
-        padding: widthPercentageToDP(3)
+        backgroundColor: APP_COMMON_STYLES.headerColor,
+        flexDirection: 'row',
+        elevation: 30,
+        shadowOffset: { width: 0, height: 8 },
+        shadowColor: '#000000',
+        shadowOpacity: 0.9,
+        shadowRadius: 5,
+        zIndex: 999,
+        paddingHorizontal: 15
     },
     deleteButtonChatHeader: {
         flexDirection: 'row',
@@ -34,8 +31,9 @@ const styles = StyleSheet.create({
     chatHeaderName: {
         color: '#fff',
         fontWeight: 'bold',
-        fontSize: widthPercentageToDP(4),
-        marginLeft: widthPercentageToDP(2),
+        fontSize: 20,
+        letterSpacing: 0.2,
+        marginLeft: 15,
     },
     chatHeaderNickname: {
         color: APP_COMMON_STYLES.infoColor,
@@ -43,7 +41,8 @@ const styles = StyleSheet.create({
         marginLeft: widthPercentageToDP(2)
     },
     chatArea: {
-        marginTop: APP_COMMON_STYLES.headerHeight,
+        paddingHorizontal: 15,
+        paddingTop: 10
     },
     friendChatBubble: {
         backgroundColor: '#7AB242',
@@ -52,27 +51,40 @@ const styles = StyleSheet.create({
     friendName: {
         color: '#fff'
     },
-    msgInputBoxContainer: {
-        borderColor: 'transparent',
-        backgroundColor: '#fff',
-        borderTopWidth: 1,
-        borderLeftWidth: 1,
-        borderRightWidth: 1,
-        height: heightPercentageToDP(8),
-        borderRadius: heightPercentageToDP(4),
+    footer: {
+        backgroundColor: '#3E3E3E',
+        height: 75,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10
     },
-    shifterContainer: {
-        bottom: heightPercentageToDP(8),
+    footerRtIcnCont: {
+        backgroundColor: '#ffffff',
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        alignSelf: 'center',
+        marginLeft: 10,
     },
-    noBorder: {
-        borderWidth: 0,
-        borderBottomWidth: 0,
-        borderTopWidth: 0,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
+    footerRightIcon: {
+        fontSize: 25, 
+        color: APP_COMMON_STYLES.headerColor, 
+        paddingLeft: 6, 
+        paddingTop: 3
     },
-    footerLeftIcon: {
-        marginLeft: 10
+    inputCont: {
+        flex: 1, 
+        height: 57, 
+        justifyContent: 'center', 
+        backgroundColor: '#ffffff', 
+        borderRadius: 13, 
+        overflow: 'hidden',
+    },
+    inputBox: {
+        flex: 1, 
+        paddingHorizontal: 15, 
+        paddingTop: 10, 
+        fontSize: 15
     },
     thumbnail: {
         height: THUMBNAIL_SIZE,
@@ -87,8 +99,7 @@ const styles = StyleSheet.create({
         height: 38,
         width: 38,
         alignItems: 'center',
-        justifyContent: 'center',
-        marginTop:heightPercentageToDP(1.8)
+        alignSelf: 'center',
     },
     groupIconStyle: {
         height: THUMBNAIL_SIZE,
@@ -96,5 +107,14 @@ const styles = StyleSheet.create({
         borderRadius: THUMBNAIL_SIZE / 2,
         backgroundColor: '#6C6C6B',
     },
+    scrollToLastIcnCont: {
+        backgroundColor: '#acacac', 
+        position: 'absolute', 
+        bottom: 90, 
+        right: 15, 
+        height: 30, 
+        width: 30, 
+        borderRadius: 15
+    }
 });
 export default styles;

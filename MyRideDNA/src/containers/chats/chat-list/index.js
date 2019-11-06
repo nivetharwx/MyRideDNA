@@ -73,7 +73,7 @@ class ChatList extends Component {
 
     }
 
-    getDate = (item) => {
+    getFormattedDate = (item) => {
         console.log('newDate chatList : ', new Date(item.date).toTimeString());
         const itemDate = new Date(item.message.date).toString().substr(4, 12).split(' ')[1];
         if (new Date().getDate() == itemDate) {
@@ -86,6 +86,16 @@ class ChatList extends Component {
             return new Date(item.date).toLocaleDateString('en-IN', { day: 'numeric', year: '2-digit', month: 'short' })
         }
 
+    }
+
+    getFormattedTime = (dateTime) => {
+        const time = new Date(dateTime).toTimeString().substring(0, 5).split(':');
+        let period = 'AM';
+        if (time[0] > 12) {
+            time[0] = 24 - time[0];
+            period = 'PM'
+        }
+        return `${time.join(':')} ${period}`;
     }
 
     showAppNavigation = () => this.props.showAppNavMenu();
@@ -115,38 +125,30 @@ class ChatList extends Component {
         // }
         return (
             // <ListItem avatar style={{}} onPress={() => this.goToChatPage(item)} onLongPress={()=>this.showOptionsModal()}>
-            <ListItem avatar style={{}} onPress={() => this.goToChatPage(item)}>
+            <ListItem noIndent style={styles.itemCont} onPress={() => this.goToChatPage(item)}>
                 {
-                    item.isGroup ?
-                        <Left style={{ alignItems: 'center', justifyContent: 'center', height: heightPercentageToDP(12) }}>
-                            {/* <NBIcon active name="group" type='FontAwesome' style={{marginLeft:widthPercentageToDP(2), width: widthPercentageToDP(13), fontSize:heightPercentageToDP(6) }} /> */}
-                            <View style={styles.groupIconStyle}>
-                                <IconButton iconProps={{ name: 'users', type: 'FontAwesome', style: { color: 'white', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(5), marginLeft: widthPercentageToDP(3.5), marginTop: heightPercentageToDP(2) } }} />
+                    item.isGroup
+                        ? <Left style={styles.leftCont}>
+                            <IconButton disabled style={[styles.iconContComm, styles.groupIconCont]} iconProps={{ name: 'users', type: 'FontAwesome', style: styles.iconComm }} />
+                            <View style={styles.bodyCont}>
+                                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1D527C' }}>{item.isGroup ? item.groupName : item.name}</Text>
+                                <Text style={{ fontSize: 12, marginTop: 5, color: '#585756' }}>{item.message ? item.message.content.length > 25 ? item.message.content.substring(0, 26) + '...' : item.message.content : null}</Text>
                             </View>
                         </Left>
-                        :
-
-                        <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
-                            {item.profilePicture ?
-                                <Thumbnail style={styles.thumbnail} source={{ uri: item.profilePicture }} />
-                                :
-                                <View style={styles.groupIconStyle}>
-                                    <IconButton iconProps={{ name: 'user', type: 'FontAwesome', style: { color: 'white', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(6), marginLeft: widthPercentageToDP(6), marginTop: heightPercentageToDP(1) } }} />
-                                </View>
+                        : <Left style={styles.leftCont}>
+                            {
+                                item.profilePicture
+                                    ? <Thumbnail style={styles.iconContComm} source={{ uri: item.profilePicture }} />
+                                    : <IconButton disabled style={[styles.iconContComm, styles.userIconCont]} iconProps={{ name: 'user', type: 'FontAwesome', style: styles.iconComm }} />
                             }
+                            <View style={styles.bodyCont}>
+                                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1D527C' }}>{item.isGroup ? item.groupName : item.name}</Text>
+                                <Text style={{ fontSize: 12, marginTop: 5, color: '#585756' }}>{item.message ? item.message.content.length > 25 ? item.message.content.substring(0, 26) + '...' : item.message.content : null}</Text>
+                            </View>
                         </Left>
                 }
-                <Body style={{ height: heightPercentageToDP(12) }}>
-                    <View style={{ flexDirection: 'row' }}>
-                        <Text style={{ fontSize: heightPercentageToDP(3), fontWeight: 'bold' }}>{item.isGroup ? item.groupName : item.name}</Text>
-                        <Text>  </Text>
-                        <Text style={{ fontSize: heightPercentageToDP(3), fontWeight: 'bold' }}>{item.nickname ? item.nickname : null}</Text>
-                    </View>
-                    {/* <Text style={{ marginTop: heightPercentageToDP(1) }}>{item.messageList.length > 0 ? item.messageList[item.messageList.length - 1].content.length > 25 ? item.messageList[item.messageList.length - 1].content.substring(0, 26) + '...' : item.messageList[item.messageList.length - 1].content : null}</Text> */}
-                    <Text style={{ marginTop: heightPercentageToDP(1) }}>{item.message ? item.message.content.length > 25 ? item.message.content.substring(0, 26) + '...' : item.message.content : null}</Text>
-                </Body>
-                <Right style={{ height: heightPercentageToDP(12) }}>
-                    <Text style={{ marginTop: heightPercentageToDP(0.7) }}>{item.message ? this.getDate(item) : null}</Text>
+                <Right style={styles.rightCont}>
+                    <Text style={{ color: '#8D8D8D', letterSpacing: 0.8 }}>{item.message ? this.getFormattedTime(item.date) : null}</Text>
                     {
                         item.totalUnseenMessage > 0 ?
                             <View style={styles.messageNumber}>
@@ -193,7 +195,7 @@ class ChatList extends Component {
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={{ flex: 1 }}>
-                    <BasicHeader title='Chat' rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
+                    <BasicHeader title='Messaging' />
                     <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
                         <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
                             {
@@ -259,10 +261,32 @@ const styles = StyleSheet.create({
     },
     rootContainer: {
         flex: 1,
-        marginTop: heightPercentageToDP(8),
-        marginLeft: 0
+        marginTop: APP_COMMON_STYLES.headerHeight + 5,
+        marginLeft: 0,
+        backgroundColor: '#ffffff'
     },
-
+    itemCont: {
+        paddingBottom: 0,
+        paddingTop: 0,
+        paddingLeft: 0,
+        height: 68
+    },
+    leftCont: {
+        height: 68,
+        paddingTop: 5,
+        flexDirection: 'row'
+    },
+    rightCont: {
+        height: 68,
+        paddingTop: 10
+    },
+    bodyCont: {
+        height: 68,
+        paddingTop: 5,
+        flexDirection: 'column',
+        flex: 1,
+        marginLeft: 5
+    },
     backgroundImage: {
         height: null,
         width: null,
@@ -271,16 +295,31 @@ const styles = StyleSheet.create({
         paddingTop: heightPercentageToDP(5)
     },
     thumbnail: {
-        height: THUMBNAIL_SIZE,
-        width: THUMBNAIL_SIZE,
-        borderRadius: THUMBNAIL_SIZE / 2,
+        height: 52,
+        width: 52,
+        borderRadius: 26,
         alignSelf: 'center',
     },
-    groupIconStyle: {
-        height: THUMBNAIL_SIZE,
-        width: THUMBNAIL_SIZE,
-        borderRadius: THUMBNAIL_SIZE / 2,
+    iconContComm: {
+        marginHorizontal: 15,
+        height: 52,
+        width: 52,
+        maxWidth: 52,
+        borderRadius: 26,
+        alignSelf: 'center',
         backgroundColor: '#6C6C6B',
+    },
+    groupIconCont: {
+        padding: 12
+    },
+    userIconCont: {
+        paddingLeft: 12
+    },
+    iconComm: {
+        color: '#ffffff',
+        width: 32,
+        height: 30,
+        alignSelf: 'center',
     },
     messageNumber: {
         backgroundColor: APP_COMMON_STYLES.infoColor,
