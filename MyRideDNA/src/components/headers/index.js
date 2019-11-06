@@ -7,7 +7,7 @@ import {
     StyleSheet,
     Animated,
     TextInput,
-    Platform
+    TouchableHighlight
 } from 'react-native';
 import { Icon as NBIcon, Thumbnail } from 'native-base';
 import { WindowDimensions, APP_COMMON_STYLES, widthPercentageToDP, IS_ANDROID, heightPercentageToDP } from '../../constants';
@@ -77,26 +77,54 @@ export class BasicHeader extends React.Component {
                         ? <View style={{ flex: 1, flexDirection: 'row' }}>
                             {
                                 leftIconProps
-                                    ? <View style={{ marginLeft: 17, alignItems: 'center', justifyContent: 'center' }}>
-                                        <TouchableOpacity style={leftIconProps.reverse ? styles.iconPadding : null} onPress={leftIconProps.onPress}>
-                                            <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
-                                                fontSize: 27,
-                                                color: leftIconProps.reverse ? 'black' : 'white'
-                                            }, leftIconProps.style]} />
-                                        </TouchableOpacity>
-                                    </View>
+                                    // ? <View style={{ marginLeft: 17, alignItems: 'center', justifyContent: 'center' }}>
+                                    //     <TouchableOpacity style={leftIconProps.reverse ? styles.iconPadding : null} onPress={leftIconProps.onPress}>
+                                    //         <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
+                                    //             fontSize: 27,
+                                    //             color: leftIconProps.reverse ? 'black' : 'white'
+                                    //         }, leftIconProps.style]} />
+                                    //     </TouchableOpacity>
+                                    // </View>
+                                    ? thumbnail
+                                        ? thumbnail.picture
+                                            ? <TouchableHighlight underlayColor='rgba(0,0,0,0.3)' style={styles.buttonArea} onPress={leftIconProps.onPress}>
+                                                <View style={[leftIconProps.reverse ? styles.iconThumbPadding : null, { flexDirection: 'row', }]}>
+                                                    <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
+                                                        fontSize: 25,
+                                                        color: '#ffffff'
+                                                    }, leftIconProps.style]} />
+                                                    <Thumbnail style={styles.thumbnail} source={{ uri: thumbnail.picture }} />
+                                                </View>
+                                            </TouchableHighlight>
+                                            : <TouchableHighlight underlayColor='rgba(0,0,0,0.3)' style={styles.buttonArea} onPress={leftIconProps.onPress}>
+                                                <View style={styles.iconThumbPadding}>
+                                                    <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
+                                                        fontSize: 25,
+                                                        color: '#ffffff'
+                                                    }, leftIconProps.style]} />
+                                                    <View style={styles.groupIconStyle}>
+                                                        <NBIcon name='user' type='FontAwesome' style={{ color: 'white', fontSize: 25, alignSelf: 'center', paddingTop: 3 }} />
+                                                    </View>
+                                                </View>
+                                            </TouchableHighlight>
+                                        : <View style={{ marginLeft: 10, alignItems: 'center', justifyContent: 'center' }}>
+                                            <TouchableOpacity style={leftIconProps.reverse ? styles.iconPadding : null} onPress={leftIconProps.onPress}>
+                                                <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
+                                                    fontSize: 25,
+                                                    color: leftIconProps.reverse ? 'black' : 'white'
+                                                }, leftIconProps.style]} />
+                                            </TouchableOpacity>
+                                        </View>
                                     : null
                             }
                             {
-                                thumbnail
-                                    ?
-                                    thumbnail.picture ?
-                                        <Thumbnail style={styles.thumbnail} source={{ uri: thumbnail.picture }} />
-                                        :
-                                        <View style={styles.groupIconStyle}>
-                                            <IconButton iconProps={{ name: 'user', type: 'FontAwesome', style: { color: 'white', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(5), marginLeft: widthPercentageToDP(7), marginTop: heightPercentageToDP(0.8) } }} />
-                                        </View>
-                                    : null
+                                // thumbnail
+                                //     ? thumbnail.picture
+                                //         ? <Thumbnail style={styles.thumbnail} source={{ uri: thumbnail.picture }} />
+                                //         : <View style={styles.groupIconStyle}>
+                                //             <IconButton iconProps={{ name: 'user', type: 'FontAwesome', style: { color: 'white', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(5), marginLeft: widthPercentageToDP(7), marginTop: heightPercentageToDP(0.8) } }} />
+                                //         </View>
+                                //     : null
                             }
                             <View style={{ flex: 1, alignSelf: 'center', marginHorizontal: leftIconProps ? 0 : 20 }}>
                                 {
@@ -109,7 +137,7 @@ export class BasicHeader extends React.Component {
                                                 <IconButton style={{ paddingHorizontal: 0 }} onPress={this.toggleTitleEditingMode} iconProps={{ name: 'edit', type: 'MaterialIcons', style: { color: '#fff' } }} />
                                             </View>
                                             : <Text style={{
-                                                color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing: 0.2, marginLeft: leftIconProps ? 17 : 0
+                                                color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing: 0.2, marginLeft: leftIconProps ? 10 : 0
                                             }}>
                                                 {title}
                                             </Text>
@@ -229,20 +257,44 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center'
     },
+    buttonArea: {
+        marginLeft: 10,
+        borderRadius: 20,
+        overflow: 'hidden',
+        height: 40,
+        width: 65,
+        alignSelf: 'center'
+    },
+    iconThumbPadding: {
+        flex: 1,
+        flexDirection: 'row',
+        padding: 3,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 20,
+    },
     thumbnail: {
-        marginTop: heightPercentageToDP(1),
-        marginHorizontal: widthPercentageToDP(2),
-        height: THUMBNAIL_SIZE,
-        width: THUMBNAIL_SIZE,
-        borderRadius: THUMBNAIL_SIZE / 2,
+        // marginHorizontal: 10,
+        // height: THUMBNAIL_SIZE,
+        // width: THUMBNAIL_SIZE,
+        // borderRadius: THUMBNAIL_SIZE / 2,
+        marginLeft: 3,
+        height: 35,
+        width: 35,
+        borderRadius: 17.5,
         alignSelf: 'center'
     },
     groupIconStyle: {
-        marginTop: heightPercentageToDP(2),
-        marginHorizontal: widthPercentageToDP(2),
-        height: THUMBNAIL_SIZE,
-        width: THUMBNAIL_SIZE,
-        borderRadius: THUMBNAIL_SIZE / 2,
-        backgroundColor: '#6C6C6B',
+        // marginHorizontal: 10,
+        // height: THUMBNAIL_SIZE,
+        // width: THUMBNAIL_SIZE,
+        // borderRadius: THUMBNAIL_SIZE / 2,
+        marginLeft: 3,
+        height: 35,
+        width: 35,
+        borderRadius: 17.5,
+        alignSelf: 'center',
+        backgroundColor: '#6b6b6b'
     },
 })
