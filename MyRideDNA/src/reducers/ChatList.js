@@ -178,7 +178,6 @@ export default (state = initialState, action) => {
             }
 
         case RESET_MESSAGE_COUNT:
-            console.log('RESET_MESSAGE_COUNT : ', action.data);
             if (action.data.comingFrom === "seenMessage") {
                 const index = state.chatList.findIndex(chat => chat.id === action.data.id)
                 if (index > -1) {

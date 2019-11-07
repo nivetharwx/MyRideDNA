@@ -5,7 +5,7 @@ import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { Icon as NBIcon, Tabs, Tab, TabHeading, ScrollableTab, Item, Toast, ListItem, Left, Body, Thumbnail, Right, CheckBox } from 'native-base';
 import styles from './styles';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, RELATIONSHIP } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, RELATIONSHIP, PageKeys } from '../../constants';
 import { IconLabelPair } from '../../components/labels';
 import { IconButton } from '../../components/buttons';
 import { HorizontalCard } from '../../components/cards';
@@ -261,6 +261,12 @@ class ContactsSection extends PureComponent {
         }
     }
 
+    openChatPage = (person) => {
+        person['isGroup'] = false;
+        person['id'] = person.userId;
+        Actions.push(PageKeys.CHAT, { chatInfo: person });
+    }
+
     sendFriendRequest = (selectedMember = this.state.selectedMember) => {
         const { user } = this.props;
         const requestBody = {
@@ -393,13 +399,14 @@ class ContactsSection extends PureComponent {
                                     // style={{ marginBottom: heightPercentageToDP(20) }}
                                     data={searchResults}
                                     keyExtractor={this.searchResultsKeyExtractor}
+                                    keyboardShouldPersistTaps='handled'
                                     renderItem={({ item, index }) => (
                                         <HorizontalCard
                                             item={item}
                                             horizontalCardPlaceholder={require('../../assets/img/profile-pic.png')}
                                             cardOuterStyle={styles.horizontalCardOuterStyle}
-                                            rightProps={{ righticonImage: item.relationship === RELATIONSHIP.UNKNOWN ? require('../../assets/img/add-friend-from-community.png') : require('../../assets/img/add-frnd-frm-comm-success.png') }}
-                                            onPress={() => item.relationship === RELATIONSHIP.UNKNOWN && this.sendFriendRequest(item)}
+                                            rightProps={{ righticonImage: item.relationship === RELATIONSHIP.UNKNOWN ? require('../../assets/img/add-friend-from-community.png') : require('../../assets/img/chat-high-res.png') }}
+                                            onPress={() => item.relationship === RELATIONSHIP.UNKNOWN ? this.sendFriendRequest(item) : this.openChatPage(item)}
                                         />
                                     )}
                                     ListFooterComponent={this.renderFooter}
