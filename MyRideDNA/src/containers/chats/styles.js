@@ -44,8 +44,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingTop: 10
     },
-    friendChatBubble: {
-        backgroundColor: '#7AB242',
+    friendMsgBubble: {
+        backgroundColor: '#81BA41',
+    },
+    myMsgBubble: {
+        backgroundColor: '#00AEEF',
         alignSelf: 'flex-end',
     },
     friendName: {
@@ -59,38 +62,38 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10
     },
     footerRtIcnCont: {
-        backgroundColor: '#ffffff',
-        width: 36,
-        height: 36,
+        backgroundColor: '#00AEEF',
+        width: 20,
+        height: 20,
         borderRadius: 18,
         alignSelf: 'center',
         marginLeft: 10,
     },
     footerRightIcon: {
-        fontSize: 25, 
-        color: APP_COMMON_STYLES.headerColor, 
-        paddingLeft: 6, 
-        paddingTop: 3
+        fontSize: 18,
+        color: '#000000',
+        paddingTop: 1,
+        transform: [{ rotate: '90deg' }]
     },
     inputCont: {
-        flex: 1, 
-        height: 57, 
-        justifyContent: 'center', 
-        backgroundColor: '#ffffff', 
-        borderRadius: 13, 
+        flex: 1,
+        height: 57,
+        justifyContent: 'center',
+        backgroundColor: '#ffffff',
+        borderRadius: 13,
         overflow: 'hidden',
     },
     inputBox: {
-        flex: 1, 
-        paddingHorizontal: 15, 
-        paddingTop: 10, 
+        flex: 1,
+        paddingHorizontal: 15,
+        paddingTop: 10,
         fontSize: 15
     },
     thumbnail: {
-        height: THUMBNAIL_SIZE,
-        width: THUMBNAIL_SIZE,
-        borderRadius: THUMBNAIL_SIZE / 2,
-        alignSelf: 'center'
+        height: 34,
+        width: 34,
+        borderRadius: 17,
+        alignSelf: 'flex-end'
     },
     iconPadding: {
         padding: 5,
@@ -108,12 +111,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#6C6C6B',
     },
     scrollToLastIcnCont: {
-        backgroundColor: '#acacac', 
-        position: 'absolute', 
-        bottom: 90, 
-        right: 15, 
-        height: 30, 
-        width: 30, 
+        backgroundColor: '#acacac',
+        position: 'absolute',
+        bottom: 90,
+        right: 15,
+        height: 30,
+        width: 30,
         borderRadius: 15
     }
 });

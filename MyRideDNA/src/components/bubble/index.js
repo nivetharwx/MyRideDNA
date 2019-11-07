@@ -31,22 +31,34 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
     }}>
         {
             selectedMessage ?
-                <View style={styles.longPressColor}>
-                    <View style={[styles.chatBubble, bubbleStyle, styles.longPressColor]}>
+                <View style={{ marginTop: heightPercentageToDP(2) }}>
+                    {
+                        bubbleName
+                            ? <Text style={{ color: '#fff', padding: 5 }}>{bubbleName}</Text>
+                            : null
+                    }
+                    <View style={[styles.chatBubble, bubbleStyle, styles.highlightStyle]}>
                         <View style={[styles.chatBubbleHeader, bubbleHeaderStyle]} >
-                            <Text style={[styles.bubbleName, bubbleNameStyle]}>{bubbleName}</Text>
+                            {/* <Text style={[styles.bubbleName, bubbleNameStyle]}>{bubbleName}</Text> */}
                             <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
                         </View>
                         <Text style={[messageStyle]}>{message}</Text>
                     </View>
                 </View>
                 :
-                <View style={[styles.chatBubble, bubbleStyle]}>
-                    <View style={[styles.chatBubbleHeader, bubbleHeaderStyle]} >
-                        <Text style={[styles.bubbleName, bubbleNameStyle]}>{bubbleName}</Text>
-                        <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
+                <View style={{ marginTop: heightPercentageToDP(2) }}>
+                    {
+                        bubbleName
+                            ? <Text style={{ color: '#fff', padding: 5 }}>{bubbleName}</Text>
+                            : null
+                    }
+                    <View style={[styles.chatBubble, bubbleStyle]}>
+                        <View style={[styles.chatBubbleHeader, bubbleHeaderStyle]} >
+                            {/* <Text style={[styles.bubbleName, bubbleNameStyle]}>{bubbleName}</Text> */}
+                            <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
+                        </View>
+                        <Text style={[messageStyle]}>{message}</Text>
                     </View>
-                    <Text style={[messageStyle]}>{message}</Text>
                 </View>
         }
 
@@ -54,31 +66,32 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
 );
 
 const styles = StyleSheet.create({
-    longPressColor: {
-        backgroundColor: 'rgba(97, 155, 213,0.4)',
-        minHeight: heightPercentageToDP(8),
+    highlightStyle: {
+        backgroundColor: '#99C8F7'
     },
     chatBubble: {
-        padding: 8,
-        width: widthPercentageToDP(80),
+        paddingBottom: 13,
+        paddingTop: 8,
+        paddingHorizontal: 20,
+        width: 215,
         minHeight: heightPercentageToDP(8),
-        maxWidth: widthPercentageToDP(80),
+        maxWidth: 215,
         borderRadius: heightPercentageToDP(1),
         borderBottomLeftRadius: heightPercentageToDP(1),
         borderBottomRightRadius: heightPercentageToDP(1),
-        marginTop: heightPercentageToDP(2),
         backgroundColor: '#fff',
         alignSelf: 'flex-start',
     },
     chatBubbleHeader: {
-        flexDirection: 'row'
+        flexDirection: 'row',
+        paddingBottom: 5,
     },
     bubbleName: {
         color: APP_COMMON_STYLES.infoColor
     },
     messageTime: {
         fontStyle: 'italic',
-        marginLeft: '2%'
+        marginLeft: 2
     },
     container: {
         borderRadius: 30,

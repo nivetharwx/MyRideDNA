@@ -177,25 +177,6 @@ class Chat extends Component {
     }
 
     onViewableItemsChanged = ({ viewableItems, changed }) => {
-        // viewableItems.map(vItem => {
-        //     console.log('vItem.item.messageId  : ',vItem.item.messageId );
-        //     console.log('this.props.chatMessages[0].messageId  : ',this.props.chatMessages[0].messageId );
-        //     if (vItem.item.messageId === this.props.chatMessages[0].messageId) {
-        //         console.log('inside if ')
-        //         this.props.resetMessageCount()
-        //         this.setState({ isNewMessage: false })
-        //         return 
-        //     }
-        //     else {
-        //         if (viewableItems.length === 1) {
-        //             this.setState({ isNewMessage: false })
-        //         }
-        //         else {
-        //             this.setState({ isNewMessage: true })
-        //         }
-
-        //     }
-        // })
         if (viewableItems.length === 0) {
             this.setState({ isNewMessage: false })
         }
@@ -316,28 +297,57 @@ class Chat extends Component {
                                 keyExtractor={this.chatKeyExtractor}
                                 inverted={true}
                                 onViewableItemsChanged={this.onViewableItemsChanged}
+                                extraData={this.state.selectedMessage}
                                 // onContentSizeChange={() => { this.refs.flatList.scrollToEnd({ animated: false }) }}
                                 renderItem={({ item, index }) => {
-                                    return item.senderId === user.userId
-                                        ?
-                                        <ChatBubble
-                                            bubbleName='Me,'
-                                            messageTime={this.getDateAndTime(item)}
-                                            message={item.content}
-                                            bubbleStyle={styles.friendChatBubble}
-                                            bubbleNameStyle={styles.friendName}
-                                            onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
-                                            selectedMessage={selectedMessage && selectedMessage[item.messageId]}
-                                            onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
-                                        />
-                                        : <ChatBubble
-                                            bubbleName={item.senderName + ','}
-                                            messageTime={this.getDateAndTime(item)}
-                                            message={item.content}
-                                            onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
-                                            selectedMessage={selectedMessage && selectedMessage[item.messageId]}
-                                            onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
-                                        />
+                                    if (item.senderId === user.userId) {
+                                        let isMyLastMsg = true;
+                                        let showTime = true;
+                                        if (chatMessages[index - 1]) {
+                                            isMyLastMsg = chatMessages[index - 1].senderId !== user.userId;
+                                            // showTime = 
+                                        }
+                                        return <Item style={{ borderBottomWidth: 0, justifyContent: 'flex-end' }}>
+                                            <ChatBubble
+                                                messageTime={this.getDateAndTime(item)}
+                                                message={item.content}
+                                                bubbleStyle={[styles.myMsgBubble, isMyLastMsg ? { borderBottomRightRadius: 0 } : null]}
+                                                bubbleNameStyle={styles.friendName}
+                                                onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
+                                                selectedMessage={selectedMessage && selectedMessage[item.messageId]}
+                                                onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
+                                            />
+                                            {
+                                                isMyLastMsg
+                                                    ? <Thumbnail style={[styles.thumbnail, { marginLeft: 5 }]} source={{ uri: user.profilePicture }} />
+                                                    : <View style={{ marginRight: styles.thumbnail.width + 5 }} />
+                                            }
+                                        </Item>
+                                    } else {
+                                        let isMemberLastMsg = true;
+                                        let showTime = true;
+                                        if (chatMessages[index - 1]) {
+                                            isMemberLastMsg = chatMessages[index - 1].senderId !== item.senderId;
+                                            // showTime = 
+                                        }
+                                        return <Item style={{ borderBottomWidth: 0 }}>
+                                            {
+                                                isMemberLastMsg
+                                                    ? <Thumbnail style={[styles.thumbnail, { marginRight: 5 }]} source={{ uri: item.profilePicture }} />
+                                                    : <View style={{ marginRight: styles.thumbnail.width + 5 }} />
+                                            }
+                                            <ChatBubble
+                                                bubbleName={this.props.chatInfo.isGroup ? item.senderName : ''}
+                                                messageTime={this.getDateAndTime(item)}
+                                                message={item.content}
+                                                bubbleStyle={[styles.friendMsgBubble, isMemberLastMsg ? { borderBottomLeftRadius: 0 } : null]}
+                                                bubbleNameStyle={styles.friendName}
+                                                onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
+                                                selectedMessage={selectedMessage && selectedMessage[item.messageId]}
+                                                onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
+                                            />
+                                        </Item>
+                                    }
                                 }}
                             />
                             {
@@ -362,7 +372,8 @@ class Chat extends Component {
                         <View style={styles.inputCont}>
                             <TextInput style={styles.inputBox} value={messageToBeSend} placeholder='Type a message...' placeholderTextColor='#3E3E3E' multiline={true} onChangeText={this.onChangeMessageToBeSend} />
                         </View>
-                        <IconButton style={styles.footerRtIcnCont} iconProps={{ name: 'md-send', type: 'Ionicons', style: styles.footerRightIcon }} onPress={() => this.sendMessage()} />
+                        {/* <IconButton style={styles.footerRtIcnCont} iconProps={{ name: 'md-send', type: 'Ionicons', style: styles.footerRightIcon }} onPress={() => this.sendMessage()} /> */}
+                        <IconButton style={styles.footerRtIcnCont} iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: styles.footerRightIcon }} onPress={() => this.sendMessage()} />
                     </View>
                 </KeyboardAvoidingView>
             </View>
