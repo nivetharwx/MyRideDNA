@@ -157,10 +157,10 @@ export class SwitchIconButton extends React.Component {
     }
 }
 
-export const ImageButton = ({ onPress, styles, imageSrc }) => (
-    <TouchableOpacity activeOpacity={0.7} onPress={onPress}>
-        <View style={[{ width: 120, height: 120, borderRadius: 60 }, styles]}>
-            <Image style={{ width: null, height: null, flex: 1 }} source={imageSrc} />
+export const ImageButton = ({ onPress, imgStyles, containerStyles, imageSrc }) => (
+    <TouchableOpacity activeOpacity={0.7} onPress={onPress ? onPress : () => { }} style={containerStyles}>
+        <View style={[{ width: 120, height: 120, borderRadius: 60 }, imgStyles]}>
+            <Image style={{ width: null, height: null, flex: 1, resizeMode: 'contain' }} source={imageSrc} />
         </View>
     </TouchableOpacity>
 );

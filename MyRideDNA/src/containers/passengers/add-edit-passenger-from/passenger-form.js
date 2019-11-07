@@ -136,11 +136,11 @@ class PaasengerFormDisplay extends Component {
                     <ScrollView >
                         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 41 }}>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
-                                <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../assets/img/cam-icon.png')} styles={{ width: 45, height: 37 }} />
+                                <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../assets/img/cam-icon.png')} imgStyles={{ width: 45, height: 37 }} />
                                 <Text style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{' TAKE \nPHOTO'}</Text>
                             </View>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
-                                <ImageButton onPress={this.onPressGalleryIcon} imageSrc={require('../../../assets/img/photos-icon.png')} styles={{ width: 41, height: 33 }} />
+                                <ImageButton onPress={this.onPressGalleryIcon} imageSrc={require('../../../assets/img/photos-icon.png')} imgStyles={{ width: 41, height: 33 }} />
                                 <Text style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{'UPLOAD \n PHOTO'}</Text>
                             </View>
                         </View>

@@ -26,10 +26,10 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: hideAppNavMenu }} />
 
                     <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', marginTop: heightPercentageToDP(3), padding: widthPercentageToDP(8) }}>
-                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-rides.png')} styles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.RIDES)} />
-                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-map.png')} styles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.MAP)} />
-                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-friends.png')} styles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.FRIENDS)} />
-                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-profile.png')} styles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.PROFILE)} />
+                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-rides.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.RIDES)} />
+                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-map.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.MAP)} />
+                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-friends.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.FRIENDS)} />
+                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-profile.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.PROFILE)} />
                         <TouchableOpacity activeOpacity={0.7} onPress={() => onPressNavMenu(PageKeys.NOTIFICATIONS)}>
                             <View style={styles.navIconImage}>
                                 <ImageBackground style={{ width: null, height: null, flex: 1 }} source={require('../../assets/img/menu-notifications.png')}>
@@ -46,9 +46,9 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                                 </ImageBackground>
                             </View>
                         </TouchableOpacity>
-                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-settings.png')} styles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.SETTINGS)} />
-                        <ImageButton isRound={true} imageSrc={require('../../assets/img/chat-nav-icon.png')} styles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.CHAT_LIST)} />
-                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-offers.png')} styles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.OFFERS)} />
+                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-settings.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.SETTINGS)} />
+                        <ImageButton isRound={true} imageSrc={require('../../assets/img/chat-nav-icon.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.CHAT_LIST)} />
+                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-offers.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.OFFERS)} />
                     </View>
                 </View>
             </Modal>

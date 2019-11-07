@@ -133,14 +133,20 @@ class AllFriendsTab extends Component {
     }
 
     openFriendRideTab = () => {
+        if (this.state.searchQuery !== '')
+            this.setState(prevState => ({ searchQuery: '' }));
         const { selectedPerson } = this.state;
         this.openProfile(selectedPerson.userId)
     }
     openFriendGarageTab = () => {
+        if (this.state.searchQuery !== '')
+            this.setState(prevState => ({ searchQuery: '' }));
         const { selectedPerson } = this.state;
         this.openProfile(selectedPerson.userId)
     }
     openFriendsProfileTab = (friend) => {
+        if (this.state.searchQuery !== '')
+            this.setState(prevState => ({ searchQuery: '' }));
         friend = friend || this.state.selectedPerson;
         this.openProfile(friend.userId)
     }
@@ -217,9 +223,13 @@ class AllFriendsTab extends Component {
         Actions.push(PageKeys.CHAT, { chatInfo: person })
         if (this.state.isVisibleOptionsModal)
             this.onCancelOptionsModal();
+        if (this.state.searchQuery !== '')
+            this.setState(prevState => ({ searchQuery: '' }));
     }
 
     onPullRefresh = () => {
+        if (this.state.searchQuery !== '')
+            this.setState(prevState => ({ searchQuery: '' }));
         this.setState({ isRefreshing: true });
         // TODO: Do API call based on searchfriend or all friends
         // this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, false, (res) => {
@@ -332,6 +342,8 @@ class AllFriendsTab extends Component {
     }
 
     openProfile = (userId) => {
+        if (this.state.searchQuery !== '')
+            this.setState(prevState => ({ searchQuery: '' }));
         this.props.setCurrentFriend({ userId });
         if (this.state.isVisibleOptionsModal) {
             this.setState({ isVisibleOptionsModal: false })
@@ -512,7 +524,11 @@ class AllFriendsTab extends Component {
 
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
-                    <ImageButton imageSrc={require('../../../assets/img/add-person-icon.png')} styles={{ width: 23, height: 26 }} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)} />
+                    <ImageButton imageSrc={require('../../../assets/img/add-person-icon.png')} imgStyles={{ width: 23, height: 26 }} onPress={() => {
+                        Actions.push(PageKeys.CONTACTS_SECTION);
+                        if (this.state.searchQuery !== '')
+                            this.setState(prevState => ({ searchQuery: '' }));
+                    }} />
                     {/* <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.FAVOURITE ? '#CE0D0D' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterFavouriteFriend()} /> */}
                     <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ? '#2B77B4' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} />
                     <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapFriends()} />

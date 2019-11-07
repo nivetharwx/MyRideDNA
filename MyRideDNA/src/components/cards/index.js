@@ -228,7 +228,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                                         keyExtractor={() => actionsBar.actions.id}
                                         renderItem={({ item, index }) => {
                                             if (item.isIconImage) {
-                                                return <ImageButton imageSrc={item.imgSrc} styles={item.imgStyle} onPressActions={item.onPressActions} />
+                                                return <ImageButton imageSrc={item.imgSrc} imgStyles={item.imgStyle} onPress={item.onPressActions} />
                                             } else {
                                                 return <IconButton iconProps={{ name: item.name, type: item.type, style: { color: item.color, fontSize: 24 } }} onPress={item.onPressActions} />
                                             }
@@ -248,17 +248,11 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
             }
             {
                 // here condition is when right view is present or not
-                rightProps ?
-                    rightProps.righticonImage ?
-                        <View>
-                            <TouchableOpacity style={{ height: 74, width: 74 }} onPress={() => onPress ? onPress() : null}>
-                                <Image source={rightProps.righticonImage} style={{ height: null, width: null, flex: 1, }} />
-                            </TouchableOpacity>
-                        </View>
-                        :
-                        null
-                    :
-                    null
+                rightProps
+                    ? rightProps.righticonImage
+                        ? <ImageButton containerStyles={{ height: 74, width: 74, justifyContent: 'center', alignItems: 'center', backgroundColor: '#C4C6C8' }} imageSrc={rightProps.righticonImage} imgStyles={{ height: 27, width: 27 }} onPress={onPress} />
+                        : null
+                    : null
             }
 
             {/* {

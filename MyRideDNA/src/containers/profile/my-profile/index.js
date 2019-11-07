@@ -242,7 +242,7 @@ class MyProfileTab extends Component {
 
                     </View>
                 </View>
-                <ScrollView>
+                <ScrollView contentContainerStyle={{ paddingBottom: APP_COMMON_STYLES.tabContainer.height }}>
                     <View style={styles.profilePic}>
                         <ImageBackground source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
                             {/* <ImageBackground source={require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}> */}
