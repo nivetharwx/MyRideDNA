@@ -2438,19 +2438,14 @@ export const getCommunityFriendsList = (userId, pageNumber, preference, successC
 }
 
 
-export const getAlbum = (userId) => {
+export const getAlbum = (userId, pageNumber = 0, preference = 15) => {
 
     return dispatch => {
-        axios.get(USER_BASE_URL + `getAlbumByUserId?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.get(USER_BASE_URL + `getAlbumByUserId?userId=${userId}&pageNumber=${pageNumber}&preference${preference}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log("getAlbum success: ", res.data);
-                if (res.status === 200 && res.data.length > 0) {
-                    const pictureList = [];
-                    res.data.map(item => {
-                        item.pictureList.map(({ pictureName }) => {
-                            pictureList.push({ profilePictureId: pictureName })
-                        })
-                    })
+                if (res.status === 200 && res.data.pictureList.length > 0) {
+                    const pictureList = res.data.pictureList.map(picId => ({ profilePictureId: picId }));
                     dispatch(replaceAlbumListAction(pictureList))
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     // dispatch(toggleLoaderAction(false));
@@ -2458,7 +2453,7 @@ export const getAlbum = (userId) => {
             })
             .catch(er => {
                 console.log(`getAlbum error: `, er.response || er);
-                differentErrors(er, [userId], getAlbum, false);
+                differentErrors(er, [userId, pageNumber, preference = 15], getAlbum, false);
                 // TODO: Dispatch error info action
             })
     };
