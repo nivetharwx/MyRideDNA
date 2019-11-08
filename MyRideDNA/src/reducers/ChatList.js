@@ -1,4 +1,4 @@
-import { UPDATE_CHAT_MESSAGES, REPLACE_CHAT_MESSAGES, UPDATE_CHAT_LIST, REPLACE_CHAT_LIST, RESET_CHAT_MESSAGES, RESET_MESSAGE_COUNT, UPDATE_CHAT_DATA_LIST, UPDATE_MESSAGE_COUNT } from "../actions/actionConstants";
+import { UPDATE_CHAT_MESSAGES, REPLACE_CHAT_MESSAGES, UPDATE_CHAT_LIST, REPLACE_CHAT_LIST, RESET_CHAT_MESSAGES, RESET_MESSAGE_COUNT, UPDATE_CHAT_DATA_LIST, UPDATE_MESSAGE_COUNT, UPDATE_CHAT_PIC, UPDATE_GROUP_CHAT_PIC } from "../actions/actionConstants";
 import { PageKeys } from "../constants";
 
 
@@ -12,7 +12,6 @@ const initialState = {
 export default (state = initialState, action) => {
     switch (action.type) {
         case UPDATE_CHAT_LIST:
-            console.log('UPDATE_CHAT_LIST : ', action.data);
             if (action.data.comingFrom === 'getAllChatsApi') {
                 return {
                     ...state,
@@ -20,32 +19,30 @@ export default (state = initialState, action) => {
                 }
             }
             else if (action.data.comingFrom === 'sendMessgaeApi' && state.chatList.length > 0) {
-                console.log('action.data.comingFrom === sendMessgaeApi && state.chatList.length > 0')
                 const index = state.chatList.findIndex(list => list.id === action.data.id)
                 if (index > -1) {
-                    const newChatList = state.chatList[index];
-                    newChatList.message = action.data.newMessage
+                    const newChat = { ...state.chatList[index] };
+                    newChat.message = action.data.newMessage
                     return {
                         ...state,
                         chatList: [
                             ...state.chatList.slice(0, index),
-                            newChatList,
+                            newChat,
                             ...state.chatList.slice(index + 1)
                         ]
                     }
                 }
             }
-            else{
-                if(action.data.comingFrom === PageKeys.NOTIFICATIONS){
-                    console.log('coming from pagekey notification')
+            else {
+                if (action.data.comingFrom === PageKeys.NOTIFICATIONS) {
                     const index = state.chatList.findIndex(list => list.id === action.data.id)
                     if (index > -1) {
-                        const newChatList = state.chatList[index];
-                        newChatList.message = action.data.newMessage
+                        const newChat = { ...state.chatList[index] };
+                        newChat.message = action.data.newMessage
                         return {
                             ...state,
                             chatList: [
-                                newChatList,
+                                newChat,
                                 ...state.chatList.slice(0, index),
                                 ...state.chatList.slice(index + 1)
                             ]
@@ -58,26 +55,32 @@ export default (state = initialState, action) => {
             }
 
 
-        case REPLACE_CHAT_LIST:
-            if (action.data.pictureObj) {
-                let updatedChatLIstList = state.chatList.map(item => {
-                    if (!item.profilePictureId) return item;
-                    if (typeof action.data.pictureObj[item.profilePictureId] === 'string') {
-                        return { ...item, profilePicture: action.data.pictureObj[item.profilePictureId] }
-                    }
-                    return item;
+        case UPDATE_CHAT_PIC:
+            return {
+                ...state,
+                chatList: state.chatList.map(item => {
+                    const picId = item.profilePictureId || item.groupProfilePictureId;
+                    if (!picId) return item;
+                    return { ...item, profilePicture: action.data.pictureObj[picId] };
                 })
-                return { ...state, chatList: updatedChatLIstList }
+            }
+
+        case UPDATE_GROUP_CHAT_PIC:
+            return {
+                ...state,
+                chatList: state.chatList.map(item => {
+                    if (item.isGroup === false) return item;
+                    if (!action.data.groupPicObj[item.id]) return item;
+                    return { ...item, profilePictureList: action.data.groupPicObj[item.id] };
+                })
             }
 
         case UPDATE_CHAT_MESSAGES:
-            console.log('UPDATE_CHAT_MESSAGES')
             return {
                 ...state,
                 chatMessages: action.data
             }
         case REPLACE_CHAT_MESSAGES:
-            console.log('REPLACE_CHAT_MESSAGES : ', action.data);
             if (action.data.comingFrom === 'deleteMessage') {
                 // const updatedChatMessages = action.data.messageIds.map(deletedMessage => {
                 //     const index = state.chatMessages.findIndex(message => deletedMessage === message.messageId)
@@ -104,10 +107,8 @@ export default (state = initialState, action) => {
 
             }
             else if (action.data.comingFrom === 'deleteAllMessages') {
-                console.log('deleteAllMessages')
-                const index = state.chatList.findIndex(list => list.id === action.data.id)
-                const { ['message']: deletedKey, ...otherKeys } = state.chatList[index]
-                console.log('otherKeys : ', otherKeys);
+                const index = state.chatList.findIndex(list => list.id === action.data.id);
+                const { ['message']: deletedKey, ...otherKeys } = state.chatList[index];
 
                 return {
                     ...state,
@@ -169,7 +170,6 @@ export default (state = initialState, action) => {
             }
 
         case RESET_CHAT_MESSAGES:
-            console.log('RESET_CHAT_MESSAGES')
             return {
                 ...state,
                 chatMessages: [],
@@ -224,10 +224,8 @@ export default (state = initialState, action) => {
         //         }
         //     }
         case UPDATE_CHAT_DATA_LIST:
-            console.log('UPDATE_CHAT_DATA_LIST  : ', action.data);
             if (action.data.chatData && !action.data.chatData.profilePictureId && action.data.chatData.isGroup === false) {
-                console.log('inside UPDATE_CHAT_DATA_LIST if block')
-                action.data.chatData['profilePictureId'] = action.data.chatData.id + '_thumb'
+                action.data.chatData['profilePictureId'] = action.data.chatData.id + '_thumb';
                 return {
                     ...state,
                     chatData: action.data.chatData
