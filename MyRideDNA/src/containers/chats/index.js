@@ -28,6 +28,7 @@ class Chat extends Component {
         };
     }
     componentDidMount() {
+        lastDateTime = null;
         Keyboard.addListener('keyboardWillShow', this.toggleIOSKeyboardStatus);
         Keyboard.addListener('keyboardWillHide', this.toggleIOSKeyboardStatus);
         // if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
@@ -198,8 +199,9 @@ class Chat extends Component {
     }
 
     getDateAndTime = (item) => {
-        var dateFormat = { day: 'numeric', year: '2-digit', month: 'short' };
-        return new Date(item.date).toLocaleDateString('en-IN', dateFormat) + ', ' + new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        const dateFormat = { month: 'numeric', day: 'numeric', year: '2-digit' };
+        const newDate = new Date(item.date);
+        return newDate.toLocaleDateString('en-US', dateFormat) + ' ' + newDate.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
     }
 
     onPressBackButton = () => {
@@ -230,6 +232,7 @@ class Chat extends Component {
     componentWillUnmount() {
         Keyboard.removeListener('keyboardWillShow', this.toggleIOSKeyboardStatus);
         Keyboard.removeListener('keyboardWillHide', this.toggleIOSKeyboardStatus);
+        // TODO: Clear cached pictures of members (Need to use will unmount in many places)
     }
 
     render() {
@@ -300,53 +303,54 @@ class Chat extends Component {
                                 extraData={this.state.selectedMessage}
                                 // onContentSizeChange={() => { this.refs.flatList.scrollToEnd({ animated: false }) }}
                                 renderItem={({ item, index }) => {
+                                    // const showTime = index === chatMessages.length - 1 || (index > 0 && (new Date(chatMessages[index - 1]) - new Date(item.date)) / 1000 / 60 >= 15);
                                     if (item.senderId === user.userId) {
-                                        let isMyLastMsg = true;
-                                        let showTime = true;
-                                        if (chatMessages[index - 1]) {
-                                            isMyLastMsg = chatMessages[index - 1].senderId !== user.userId;
-                                            // showTime = 
-                                        }
-                                        return <Item style={{ borderBottomWidth: 0, justifyContent: 'flex-end' }}>
-                                            <ChatBubble
-                                                messageTime={this.getDateAndTime(item)}
-                                                message={item.content}
-                                                bubbleStyle={[styles.myMsgBubble, isMyLastMsg ? { borderBottomRightRadius: 0 } : null]}
-                                                bubbleNameStyle={styles.friendName}
-                                                onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
-                                                selectedMessage={selectedMessage && selectedMessage[item.messageId]}
-                                                onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
-                                            />
-                                            {
-                                                isMyLastMsg
-                                                    ? <Thumbnail style={[styles.thumbnail, { marginLeft: 5 }]} source={{ uri: user.profilePicture }} />
-                                                    : <View style={{ marginRight: styles.thumbnail.width + 5 }} />
-                                            }
-                                        </Item>
+                                        const isMyLastMsg = index === 0 || chatMessages[index - 1].senderId !== user.userId;
+                                        return <View style={{ flexDirection: 'column', marginTop: 20 }}>
+                                            {/* {
+                                                showTime ? <Text style={styles.time}>{this.getDateAndTime(item)}</Text> : null
+                                            } */}
+                                            <Item style={{ borderBottomWidth: 0, justifyContent: 'flex-end' }}>
+                                                <ChatBubble
+                                                    // messageTime={this.getDateAndTime(item)}
+                                                    message={item.content}
+                                                    bubbleStyle={[styles.myMsgBubble, isMyLastMsg ? { borderBottomRightRadius: 0 } : null]}
+                                                    bubbleNameStyle={styles.friendName}
+                                                    onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
+                                                    selectedMessage={selectedMessage && selectedMessage[item.messageId]}
+                                                    onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
+                                                />
+                                                {
+                                                    isMyLastMsg
+                                                        ? <Thumbnail style={[styles.thumbnail, { marginLeft: 5 }]} source={{ uri: user.profilePicture }} />
+                                                        : <View style={{ marginRight: styles.thumbnail.width + 5 }} />
+                                                }
+                                            </Item>
+                                        </View>
                                     } else {
-                                        let isMemberLastMsg = true;
-                                        let showTime = true;
-                                        if (chatMessages[index - 1]) {
-                                            isMemberLastMsg = chatMessages[index - 1].senderId !== item.senderId;
-                                            // showTime = 
-                                        }
-                                        return <Item style={{ borderBottomWidth: 0 }}>
-                                            {
-                                                isMemberLastMsg
-                                                    ? <Thumbnail style={[styles.thumbnail, { marginRight: 5 }]} source={{ uri: item.profilePicture }} />
-                                                    : <View style={{ marginRight: styles.thumbnail.width + 5 }} />
-                                            }
-                                            <ChatBubble
-                                                bubbleName={this.props.chatInfo.isGroup ? item.senderName : ''}
-                                                messageTime={this.getDateAndTime(item)}
-                                                message={item.content}
-                                                bubbleStyle={[styles.friendMsgBubble, isMemberLastMsg ? { borderBottomLeftRadius: 0 } : null]}
-                                                bubbleNameStyle={styles.friendName}
-                                                onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
-                                                selectedMessage={selectedMessage && selectedMessage[item.messageId]}
-                                                onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
-                                            />
-                                        </Item>
+                                        const isMemberLastMsg = index === 0 || chatMessages[index - 1].senderId !== item.senderId;
+                                        return <View style={{ flexDirection: 'column', marginTop: 20 }}>
+                                            {/* {
+                                                showTime ? <Text style={styles.time}>{this.getDateAndTime(item)}</Text> : null
+                                            } */}
+                                            <Item style={{ borderBottomWidth: 0 }}>
+                                                {
+                                                    isMemberLastMsg
+                                                        ? <Thumbnail style={[styles.thumbnail, { marginRight: 5 }]} source={{ uri: this.props.chatInfo.isgroup ? item.profilePicture : chatData.profilePicture }} />
+                                                        : <View style={{ marginRight: styles.thumbnail.width + 5 }} />
+                                                }
+                                                <ChatBubble
+                                                    bubbleName={this.props.chatInfo.isGroup ? item.senderName : ''}
+                                                    // messageTime={this.getDateAndTime(item)}
+                                                    message={item.content}
+                                                    bubbleStyle={[styles.friendMsgBubble, isMemberLastMsg ? { borderBottomLeftRadius: 0 } : null]}
+                                                    bubbleNameStyle={styles.friendName}
+                                                    onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)}
+                                                    selectedMessage={selectedMessage && selectedMessage[item.messageId]}
+                                                    onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
+                                                />
+                                            </Item>
+                                        </View>
                                     }
                                 }}
                             />

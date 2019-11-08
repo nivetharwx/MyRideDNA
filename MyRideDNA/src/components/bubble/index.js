@@ -31,7 +31,7 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
     }}>
         {
             selectedMessage ?
-                <View style={{ marginTop: heightPercentageToDP(2) }}>
+                <View>
                     {
                         bubbleName
                             ? <Text style={{ color: '#fff', padding: 5 }}>{bubbleName}</Text>
@@ -40,13 +40,13 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
                     <View style={[styles.chatBubble, bubbleStyle, styles.highlightStyle]}>
                         <View style={[styles.chatBubbleHeader, bubbleHeaderStyle]} >
                             {/* <Text style={[styles.bubbleName, bubbleNameStyle]}>{bubbleName}</Text> */}
-                            <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
+                            {/* <Text style={messageTimeStyle}>{messageTime}</Text> */}
                         </View>
                         <Text style={[messageStyle]}>{message}</Text>
                     </View>
                 </View>
                 :
-                <View style={{ marginTop: heightPercentageToDP(2) }}>
+                <View>
                     {
                         bubbleName
                             ? <Text style={{ color: '#fff', padding: 5 }}>{bubbleName}</Text>
@@ -55,7 +55,7 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
                     <View style={[styles.chatBubble, bubbleStyle]}>
                         <View style={[styles.chatBubbleHeader, bubbleHeaderStyle]} >
                             {/* <Text style={[styles.bubbleName, bubbleNameStyle]}>{bubbleName}</Text> */}
-                            <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
+                            {/* <Text style={messageTimeStyle}>{messageTime}</Text> */}
                         </View>
                         <Text style={[messageStyle]}>{message}</Text>
                     </View>

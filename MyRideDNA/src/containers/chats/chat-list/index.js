@@ -7,7 +7,7 @@ import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast
 import { BasicHeader } from '../../../components/headers';
 import { ShifterButton } from '../../../components/buttons';
 import { getAllChats, getPictureList, logoutUser } from '../../../api';
-import { appNavMenuVisibilityAction, replaceChatListAction } from '../../../actions';
+import { appNavMenuVisibilityAction, updateChatPicAction, updateGroupChatPicAction } from '../../../actions';
 import { getFormattedDateFromISO } from '../../../util';
 import { Actions } from 'react-native-router-flux';
 import { BaseModal } from '../../../components/modal';
@@ -15,6 +15,8 @@ const THUMBNAIL_SIZE = IS_ANDROID ? heightPercentageToDP(9) : heightPercentageTo
 const CREATE_GROUP_WIDTH = widthPercentageToDP(9);
 class ChatList extends Component {
     CHAT_LIST_OPTIONS = [{ text: 'Delete Chat', id: 'clearAll', handler: () => this.deleteFromChatList() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
+    frndChatPicLoading = false;
+    grpChatPicLoading = false;
     constructor(props) {
         super(props);
         this.state = {
@@ -27,6 +29,8 @@ class ChatList extends Component {
     }
 
     componentDidMount() {
+        this.grpChatPicLoading = false;
+        this.frndChatPicLoading = false;
         this.props.getAllChats(this.props.user.userId);
     }
 
@@ -35,13 +39,27 @@ class ChatList extends Component {
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.chatList !== this.props.chatList) {
             const chatIdList = [];
-            this.props.chatList.forEach((chatListPic) => {
-                if (!chatListPic.profilePicture && chatListPic.profilePictureId) {
-                    chatIdList.push(chatListPic.profilePictureId);
+            const grpPicObj = [];
+            this.props.chatList.forEach((chat) => {
+                if (!chat.profilePicture || (chat.isGroup && !chat.profilePictureList)) {
+                    if (chat.isGroup) {
+                        if (chat.groupProfilePictureId) {
+                            chatIdList.push(chat.groupProfilePictureId);
+                        } else if (chat.profilePictureIdList) {
+                            grpPicObj[chat.id] = chat.profilePictureIdList;
+                        }
+                    } else if (chat.profilePictureId) {
+                        chatIdList.push(chat.profilePictureId);
+                    }
                 }
             })
-            if (chatIdList.length > 0) {
-                this.props.getChatListPic(chatIdList)
+            if (chatIdList.length > 0 && !this.frndChatPicLoading) {
+                this.frndChatPicLoading = true;
+                this.props.getChatListPic(chatIdList);
+            }
+            if (Object.keys(grpPicObj).length > 0 && !this.grpChatPicLoading) {
+                this.grpChatPicLoading = true;
+                this.props.getGroupMembersPic(grpPicObj);
             }
         }
 
@@ -90,14 +108,13 @@ class ChatList extends Component {
 
     getFormattedTime = (dateTime) => {
         const time = new Date(dateTime).toTimeString().substring(0, 5).split(':');
-        let period = 'AM';
+        let period = time[0] < 12 ? 'AM' : 'PM';
         if (time[0] > 12) {
             time[0] = 24 - time[0];
-            period = 'PM'
         }
         return `${time.join(':')} ${period}`;
+        // return new Date(dateTime).toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
     }
-
     showAppNavigation = () => this.props.showAppNavMenu();
     goToChatPage = (item) => {
         if (item.isGroup) {
@@ -129,7 +146,16 @@ class ChatList extends Component {
                 {
                     item.isGroup
                         ? <Left style={styles.leftCont}>
-                            <IconButton disabled style={[styles.iconContComm, styles.groupIconCont]} iconProps={{ name: 'users', type: 'FontAwesome', style: styles.iconComm }} />
+                            {
+                                item.profilePicture
+                                    ? <Thumbnail style={styles.iconContComm} source={{ uri: item.profilePicture }} />
+                                    : item.profilePictureList
+                                        ? <View style={[styles.iconContComm, { backgroundColor: '#ffffff' }]}>
+                                            <Thumbnail style={{ height: 38, width: 38, borderRadius: 19, borderWidth: 1, borderColor: '#ffffff' }} source={{ uri: item.profilePictureList[0] }} />
+                                            <Thumbnail style={{ height: 38, width: 38, borderRadius: 19, borderWidth: 1, borderColor: '#ffffff', position: 'absolute', zIndex: 10, left: 17.5, top: 15 }} source={{ uri: item.profilePictureList[1] }} />
+                                        </View>
+                                        : <IconButton disabled style={[styles.iconContComm, styles.groupIconCont]} iconProps={{ name: 'users', type: 'FontAwesome', style: styles.iconComm }} />
+                            }
                             <View style={styles.bodyCont}>
                                 <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1D527C' }}>{item.isGroup ? item.groupName : item.name}</Text>
                                 <Text style={{ fontSize: 12, marginTop: 5, color: '#585756' }}>{item.message ? item.message.content.length > 25 ? item.message.content.substring(0, 26) + '...' : item.message.content : null}</Text>
@@ -148,11 +174,11 @@ class ChatList extends Component {
                         </Left>
                 }
                 <Right style={styles.rightCont}>
-                    <Text style={{ color: '#8D8D8D', letterSpacing: 0.8 }}>{item.message ? this.getFormattedTime(item.date) : null}</Text>
+                    <Text style={{ color: '#8D8D8D', letterSpacing: 0.8 }}>{item.message ? this.getFormattedTime(item.message.date) : null}</Text>
                     {
                         item.totalUnseenMessage > 0 ?
                             <View style={styles.messageNumber}>
-                                <Text style={{ alignSelf: 'center', color: '#FFFFFF', fontSize: heightPercentageToDP(2) }}>{item.totalUnseenMessage}</Text>
+                                <Text style={{ alignSelf: 'center', color: '#FFFFFF', fontSize: heightPercentageToDP(2) }}>{item.totalUnseenMessage > 99 ? '99+' : item.totalUnseenMessage}</Text>
                             </View>
                             : null}
                 </Right>
@@ -246,10 +272,25 @@ const mapDispatchToProps = (dispatch) => {
         getAllChats: (userId) => dispatch(getAllChats(userId)),
         getChatListPic: (chatIdList) => getPictureList(chatIdList, (pictureObj) => {
             console.log('getPictureList getChatListPic sucess :', pictureObj)
-            dispatch(replaceChatListAction({ pictureObj }))
+            dispatch(updateChatPicAction({ pictureObj }))
         }, (error) => {
             console.log('getPictureList getChatListPic error :  ', error)
         }),
+        getGroupMembersPic: (grpPicObj) => {
+            const picIds = Object.keys(grpPicObj).reduce((list, id) => {
+                list.push(...grpPicObj[id]);
+                return list;
+            }, []);
+            getPictureList(picIds, (pictureObj) => {
+                const grpChatPicObj = Object.keys(grpPicObj).reduce((obj, id) => {
+                    obj[id] = [pictureObj[grpPicObj[id][0]], pictureObj[grpPicObj[id][1]]];
+                    return obj;
+                }, {});
+                dispatch(updateGroupChatPicAction({ groupPicObj: grpChatPicObj }));
+            }, (error) => {
+                console.log('getGroupMembersPic error :  ', error);
+            })
+        },
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
     };
 };
@@ -323,10 +364,12 @@ const styles = StyleSheet.create({
     },
     messageNumber: {
         backgroundColor: APP_COMMON_STYLES.infoColor,
-        marginRight: widthPercentageToDP(8),
-        marginTop: heightPercentageToDP(1.4),
-        height: heightPercentageToDP(3),
-        minWidth: widthPercentageToDP(5),
-        borderRadius: widthPercentageToDP(5)
+        // marginRight: widthPercentageToDP(8),
+        // marginTop: heightPercentageToDP(1.4),
+        height: 30,
+        minWidth: 30,
+        borderRadius: 15,
+        justifyContent: 'center',
+        alignItems: 'center'
     }
 });

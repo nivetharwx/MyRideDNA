@@ -118,6 +118,13 @@ const styles = StyleSheet.create({
         height: 30,
         width: 30,
         borderRadius: 15
+    },
+    time: {
+        // color: '#8D8D8D', 
+        color: '#adacac', 
+        alignSelf: 'center', 
+        paddingBottom: 10,
+        letterSpacing: 0.8
     }
 });
 export default styles;

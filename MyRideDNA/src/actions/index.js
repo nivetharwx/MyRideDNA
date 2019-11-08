@@ -61,7 +61,9 @@ import {
     SET_CURRENT_FRIEND,
     UPDATE_PICTURES,
     UPDATE_SEARCH_RESULTS,
-    GO_PREV_PROFILE
+    GO_PREV_PROFILE,
+    UPDATE_GROUP_CHAT_PIC,
+    UPDATE_CHAT_PIC
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -775,9 +777,15 @@ export const updateChatDatatAction = (data) => (
         data: data
     }
 );
-export const replaceChatListAction = (data) => (
+export const updateChatPicAction = (data) => (
     {
-        type: REPLACE_CHAT_LIST,
+        type: UPDATE_CHAT_PIC,
+        data: data
+    }
+);
+export const updateGroupChatPicAction = (data) => (
+    {
+        type: UPDATE_GROUP_CHAT_PIC,
         data: data
     }
 );
