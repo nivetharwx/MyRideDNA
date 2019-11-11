@@ -2499,9 +2499,11 @@ export const getAllMessages = (id, userId, isGroup) => {
     };
 }
 
-export const sendMessgae = (isGroup, id, userId, content, userName, userNickname) => {
+export const sendMessage = (isGroup, id, userId, content, name, nickname, picId) => {
     return dispatch => {
-        axios.post(CHAT_BASE_URL + `sendMessage`, { isGroup: isGroup, id: id, senderId: userId, senderName: userName, senderNickname: userNickname, date: new Date().toISOString(), type: 'text', content: content }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        const body = { isGroup: isGroup, id: id, senderId: userId, senderName: name, senderNickname: nickname, date: new Date().toISOString(), type: 'text', content: content };
+        if (picId) body.senderPictureId = picId;
+        axios.post(CHAT_BASE_URL + `sendMessage`, body, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
                     const messageSent = {};
@@ -2510,8 +2512,9 @@ export const sendMessgae = (isGroup, id, userId, content, userName, userNickname
                     messageSent['messageId'] = res.data.messageId;
                     messageSent['senderId'] = userId;
                     messageSent['type'] = 'text';
-                    messageSent['senderName'] = userName;
-                    messageSent['senderNickname'] = userNickname;
+                    messageSent['senderName'] = name;
+                    messageSent['senderNickname'] = nickname;
+                    messageSent['senderPictureId'] = picId;
                     console.log('messageSent : ', messageSent);
                     dispatch(replaceChatMessagesAction(messageSent));
                     dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: messageSent, id: id }));

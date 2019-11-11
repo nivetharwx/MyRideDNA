@@ -239,6 +239,15 @@ export default (state = initialState, action) => {
                     chatData: updateChatData
                 }
             }
+            else if (action.data.pictureObj) {
+                return {
+                    ...state,
+                    chatData: {
+                        ...state.chatData,
+                        memberPictures: action.data.pictureObj
+                    }
+                }
+            }
             else {
                 return {
                     ...state,

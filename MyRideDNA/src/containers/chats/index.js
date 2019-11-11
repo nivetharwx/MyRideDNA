@@ -7,7 +7,7 @@ import { ShifterButton, IconButton, LinkButton } from '../../components/buttons'
 import { Thumbnail, Item, List, Icon as NBIcon } from 'native-base';
 import { APP_COMMON_STYLES, widthPercentageToDP, WindowDimensions, heightPercentageToDP, PageKeys, IS_ANDROID } from '../../constants';
 import { ChatBubble } from '../../components/bubble';
-import { sendMessgae, getAllMessages, deleteMessagesById, deleteMessagesByIdForEveryone, seenMessage, getPicture, deleteAllMessages } from '../../api';
+import { sendMessage, getAllMessages, deleteMessagesById, deleteMessagesByIdForEveryone, seenMessage, getPicture, deleteAllMessages, getPictureList } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
 import { BaseModal } from '../../components/modal';
 import { ActionConst, Actions } from 'react-native-router-flux';
@@ -27,6 +27,7 @@ class Chat extends Component {
             iOSKeyboardShown: false
         };
     }
+
     componentDidMount() {
         lastDateTime = null;
         Keyboard.addListener('keyboardWillShow', this.toggleIOSKeyboardStatus);
@@ -45,40 +46,45 @@ class Chat extends Component {
         //     this.props.updateChatData(this.props.chatInfo)
         // }
         this.props.getAllMessages(this.props.chatInfo.id, this.props.user.userId, this.props.chatInfo.isGroup)
-        this.props.updateChatData(this.props.chatInfo)
+        this.props.updateChatData(this.props.chatInfo);
         if (this.props.comingFrom === PageKeys.CHAT_LIST) {
             this.props.seenMessage(this.props.chatInfo.id, this.props.user.userId, this.props.isGroup, 'chatList')
         }
         else {
             this.props.seenMessage(this.props.chatInfo.id, this.props.user.userId, this.props.chatInfo.isGroup, 'chatPage')
         }
+        this.props.chatInfo.isGroup && this.props.getPictureList(this.props.chatInfo.memberPictureIdList);
     }
+
     componentDidUpdate(prevProps, prevState) {
         if (!prevProps.chatInfo || prevProps.chatInfo.id !== this.props.chatInfo.id) {
             this.props.getAllMessages(this.props.chatInfo.id, this.props.user.userId, this.props.chatInfo.isGroup)
             this.props.updateChatData(this.props.chatInfo)
             this.props.seenMessage(this.props.chatInfo.id, this.props.user.userId, this.props.chatInfo.isGroup, 'chatPage')
         }
+        if (this.props.chatData === null) {
+            Actions.pop();
+        }
         if (prevProps.chatData !== this.props.chatData) {
-            if (this.props.chatData === null) {
-                Actions.pop();
-            }
-            else if (this.props.chatData.profilePictureId && !this.props.chatData.profilePicture) {
-                this.props.getPicture(this.props.chatData.profilePictureId);
-            }
+            // if (this.props.chatData.profilePictureId && !this.props.chatData.profilePicture) {
+            //     this.props.getPicture(this.props.chatData.profilePictureId);
+            // }
         }
     }
 
     toggleIOSKeyboardStatus = () => this.setState(prevState => ({ iOSKeyboardShown: !prevState.iOSKeyboardShown }));
 
     showAppNavigation = () => this.props.showAppNavMenu();
+
     clearChat = () => {
         this.props.deleteAllMessages(this.props.chatInfo.id, this.props.user.userId, this.props.isGroup)
         this.setState({ isVisibleOptionsModal: false })
     }
+
     onChangeMessageToBeSend = (messageToBeSend) => {
         this.setState({ messageToBeSend })
     }
+
     sendMessage = () => {
         // if (this.props.isGroup) {
         //     this.props.sendMessage(this.props.isGroup, this.props.group.groupId, this.props.user.userId, this.state.messageToBeSend, this.props.user.name, this.props.user.nickname);
@@ -89,11 +95,12 @@ class Chat extends Component {
         //     
         // }
         if (this.state.messageToBeSend !== '') {
-            this.props.sendMessage(this.props.chatInfo.isGroup, this.props.chatInfo.id, this.props.user.userId, this.state.messageToBeSend, this.props.user.name, this.props.user.nickname);
+            this.props.sendMessage(this.props.chatInfo.isGroup, this.props.chatInfo.id, this.props.user.userId, this.state.messageToBeSend, this.props.user.name, this.props.user.nickname, this.props.user.profilePictureId);
         }
 
         this.setState({ messageToBeSend: '' })
     }
+
     chatKeyExtractor = (item) => item.messageId;
 
     changeToMessageSelectionMode = (messageId, senderId) => {
@@ -105,6 +112,7 @@ class Chat extends Component {
         if (this.state.selectedMessage[messageId]) return this.onUnselectMessage(messageId, senderId);
         this.setState(prevState => ({ selectedMessage: { ...prevState.selectedMessage, [messageId]: true }, selectedsenderId: { ...prevState.selectedsenderId, [senderId]: true } }));
     }
+
     onUnselectMessage = (messageId, senderId) => this.setState(prevState => {
         const { [messageId]: deletedKey, ...otherKeys } = prevState.selectedMessage;
         const { [senderId]: deletedKeys, ...otherIdKeys } = prevState.selectedsenderId;
@@ -114,9 +122,11 @@ class Chat extends Component {
             return { selectedMessage: { ...otherKeys }, selectedsenderId: { ...otherIdKeys } };
         }
     });
+
     unSelectAllMessage = () => {
         this.setState({ selectedMessage: null, messageSelectionMode: false })
     }
+
     openDeleteModal = () => {
         // this.setState({ isVisibleDeleteModal: true })
         if (Object.keys(this.state.selectedsenderId).every(v => v === this.props.user.userId)) {
@@ -151,8 +161,8 @@ class Chat extends Component {
         }
 
     }
-    deleteMessageForMe = () => {
 
+    deleteMessageForMe = () => {
         const newChatMessages = this.props.chatMessages.filter(msg => Object.keys(this.state.selectedMessage).indexOf(msg.messageId) === -1)
         if (newChatMessages.length > 0) {
             this.props.deleteMessagesById(this.props.chatInfo.isGroup, this.props.chatInfo.id, this.props.user.userId, Object.keys(this.state.selectedMessage), newChatMessages[0])
@@ -163,6 +173,7 @@ class Chat extends Component {
 
         this.setState({ isVisibleDeleteModal: false, selectedMessage: null })
     }
+
     deleteMessageForEveryone = () => {
         const newChatMessages = this.props.chatMessages.filter(msg => Object.keys(this.state.selectedMessage).indexOf(msg.messageId) === -1)
         if (newChatMessages.length > 0) {
@@ -173,6 +184,7 @@ class Chat extends Component {
         }
         this.setState({ isVisibleDeleteModal: false, selectedMessage: null })
     }
+
     onCancelDeleteModal = () => {
         this.setState({ isVisibleDeleteModal: false })
     }
@@ -194,6 +206,7 @@ class Chat extends Component {
             }
         }
     }
+
     goToLastMessage = () => {
         this.refs.flatList.scrollToOffset({ offset: 0, animated: true });
     }
@@ -204,10 +217,21 @@ class Chat extends Component {
         return newDate.toLocaleDateString('en-US', dateFormat) + ' ' + newDate.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
     }
 
-    onPressBackButton = () => {
-        this.props.resetChatMessage();
+    getFormattedTime = (dateTime) => {
+        const time = new Date(dateTime).toTimeString().substring(0, 5).split(':');
+        let period = time[0] < 12 ? 'AM' : 'PM';
+        if (time[0] > 12) {
+            time[0] = time[0] - 12;
+        }
+        return `${time.join(':')} ${period}`;
     }
-    onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false })
+
+    onPressBackButton = () => {
+        Actions.pop();
+    }
+
+    onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false });
+
     renderMenuOptions = () => {
         let options = null;
         options = this.CHAT_OPTIONS;
@@ -233,6 +257,7 @@ class Chat extends Component {
         Keyboard.removeListener('keyboardWillShow', this.toggleIOSKeyboardStatus);
         Keyboard.removeListener('keyboardWillHide', this.toggleIOSKeyboardStatus);
         // TODO: Clear cached pictures of members (Need to use will unmount in many places)
+        this.props.resetChatMessage();
     }
 
     render() {
@@ -303,16 +328,16 @@ class Chat extends Component {
                                 extraData={this.state.selectedMessage}
                                 // onContentSizeChange={() => { this.refs.flatList.scrollToEnd({ animated: false }) }}
                                 renderItem={({ item, index }) => {
-                                    // const showTime = index === chatMessages.length - 1 || (index > 0 && (new Date(chatMessages[index - 1]) - new Date(item.date)) / 1000 / 60 >= 15);
+                                    const showDate = index === chatMessages.length - 1 || chatMessages[index + 1].date.substring(0, 10) !== item.date.substring(0, 10);
                                     if (item.senderId === user.userId) {
                                         const isMyLastMsg = index === 0 || chatMessages[index - 1].senderId !== user.userId;
                                         return <View style={{ flexDirection: 'column', marginTop: 20 }}>
-                                            {/* {
-                                                showTime ? <Text style={styles.time}>{this.getDateAndTime(item)}</Text> : null
-                                            } */}
+                                            {
+                                                showDate ? <Text style={styles.time}>{getFormattedDateFromISO(item.date)}</Text> : null
+                                            }
                                             <Item style={{ borderBottomWidth: 0, justifyContent: 'flex-end' }}>
                                                 <ChatBubble
-                                                    // messageTime={this.getDateAndTime(item)}
+                                                    messageTime={this.getFormattedTime(item.date)}
                                                     message={item.content}
                                                     bubbleStyle={[styles.myMsgBubble, isMyLastMsg ? { borderBottomRightRadius: 0 } : null]}
                                                     bubbleNameStyle={styles.friendName}
@@ -322,7 +347,7 @@ class Chat extends Component {
                                                 />
                                                 {
                                                     isMyLastMsg
-                                                        ? <Thumbnail style={[styles.thumbnail, { marginLeft: 5 }]} source={{ uri: user.profilePicture }} />
+                                                        ? <Thumbnail style={[styles.thumbnail, { marginLeft: 5 }]} source={{ uri: user.thumbnailProfilePicture }} />
                                                         : <View style={{ marginRight: styles.thumbnail.width + 5 }} />
                                                 }
                                             </Item>
@@ -330,18 +355,22 @@ class Chat extends Component {
                                     } else {
                                         const isMemberLastMsg = index === 0 || chatMessages[index - 1].senderId !== item.senderId;
                                         return <View style={{ flexDirection: 'column', marginTop: 20 }}>
-                                            {/* {
-                                                showTime ? <Text style={styles.time}>{this.getDateAndTime(item)}</Text> : null
-                                            } */}
+                                            {
+                                                showDate ? <Text style={styles.time}>{getFormattedDateFromISO(item.date)}</Text> : null
+                                            }
                                             <Item style={{ borderBottomWidth: 0 }}>
                                                 {
                                                     isMemberLastMsg
-                                                        ? <Thumbnail style={[styles.thumbnail, { marginRight: 5 }]} source={{ uri: this.props.chatInfo.isgroup ? item.profilePicture : chatData.profilePicture }} />
+                                                        ? this.props.chatInfo.isGroup
+                                                            ? (chatData && chatData.memberPictures)
+                                                                ? <Thumbnail style={[styles.thumbnail, { marginRight: 5 }]} source={{ uri: chatData.memberPictures[item.senderPictureId] }} />
+                                                                : <View style={{ marginRight: styles.thumbnail.width + 5 }} />
+                                                            : <Thumbnail style={[styles.thumbnail, { marginRight: 5 }]} source={{ uri: chatData.profilePicture }} />
                                                         : <View style={{ marginRight: styles.thumbnail.width + 5 }} />
                                                 }
                                                 <ChatBubble
                                                     bubbleName={this.props.chatInfo.isGroup ? item.senderName : ''}
-                                                    // messageTime={this.getDateAndTime(item)}
+                                                    messageTime={this.getFormattedTime(item.date)}
                                                     message={item.content}
                                                     bubbleStyle={[styles.friendMsgBubble, isMemberLastMsg ? { borderBottomLeftRadius: 0 } : null]}
                                                     bubbleNameStyle={styles.friendName}
@@ -396,7 +425,7 @@ const mapDispatchToProps = (dispatch) => {
         getAllMessages: (id, userId, isGroup) => dispatch(getAllMessages(id, userId, isGroup)),
         seenMessage: (id, userId, isGroup, comingFrom) => dispatch(seenMessage(id, userId, isGroup, comingFrom)),
         deleteAllMessages: (id, userId, isGroup) => dispatch(deleteAllMessages(id, userId, isGroup)),
-        sendMessage: (isGroup, id, userId, content, userName, userNickname) => dispatch(sendMessgae(isGroup, id, userId, content, userName, userNickname)),
+        sendMessage: (isGroup, id, userId, content, name, nickname, picId) => dispatch(sendMessage(isGroup, id, userId, content, name, nickname, picId)),
         deleteMessagesById: (isGroup, id, userId, messageToBeDeleted, newChatMessages) => dispatch(deleteMessagesById(isGroup, id, userId, messageToBeDeleted, newChatMessages)),
         deleteMessagesByIdForEveryone: (isGroup, id, userId, messageToBeDeleted, newChatMessages) => dispatch(deleteMessagesByIdForEveryone(isGroup, id, userId, messageToBeDeleted, newChatMessages)),
         resetMessageCount: () => dispatch(resetMessageCountAction({ resetTotalUnseen: true })),
@@ -405,6 +434,11 @@ const mapDispatchToProps = (dispatch) => {
             console.log('getPicture chat : ', response);
             dispatch(updateChatDatatAction({ profilePicture: response.picture }))
         }, (error) => console.log("getPicture error: ", error)),
+        getPictureList: (idList) => getPictureList(idList, (pictureObj) => {
+            dispatch(updateChatDatatAction({ pictureObj }));
+        }, (error) => {
+            console.log('getPictureList error :  ', error);
+        }),
         resetChatMessage: () => dispatch(resetChatMessageAction())
     };
 }
