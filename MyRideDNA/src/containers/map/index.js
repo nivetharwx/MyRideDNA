@@ -24,7 +24,7 @@ import { Icon as NBIcon, Toast, ListItem, Left, Body, Right, CheckBox } from 'na
 // import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT } from '../../constants';
 // import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, resetChatMessageAction } from '../../actions';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT, UNSYNCED_RIDE } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoLastAction, redoLastAction, initUndoRedoAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, addUnsyncedRideAction, deleteUnsyncedRideAction, resetChatMessageAction, resetErrorHandlingAction, toggleNetworkStatusAction, hideMembersLocationAction, resetCurrentPassengerAction, goToPrevProfileAction } from '../../actions';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoLastAction, redoLastAction, initUndoRedoAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, addUnsyncedRideAction, deleteUnsyncedRideAction, resetChatMessageAction, resetErrorHandlingAction, toggleNetworkStatusAction, hideMembersLocationAction, resetCurrentPassengerAction, goToPrevProfileAction, updateUserAction } from '../../actions';
 import { SearchBox, IconicList } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -46,7 +46,7 @@ import DEFAULT_DESTINATION_ICON from '../../assets/img/destination-pin-red.png';
 import SELECTED_DESTINATION_ICON from '../../assets/img/destination-pin-green.png';
 import FRIENDS_LOCATION_ICON from '../../assets/img/friends-location.png';
 
-import { createRecordRide, pauseRecordRide, continueRecordRide, addTrackpoints, completeRecordRide, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser, updateLocation, getFriendsLocationList, getAllMembersLocation, getAllMembersAndFriendsLocationList, updateRide as updateRideOnServer } from '../../api';
+import { createRecordRide, pauseRecordRide, continueRecordRide, addTrackpoints, completeRecordRide, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser, updateLocation, getFriendsLocationList, getAllMembersLocation, getAllMembersAndFriendsLocationList, updateRide as updateRideOnServer, getPicture } from '../../api';
 
 import Bubble from '../../components/bubble';
 import MenuModal from '../../components/modal';
@@ -886,7 +886,7 @@ export class Map extends Component {
         });
         AppState.addEventListener('change', this.handleAppStateChange);
         BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPress);
-
+        this.props.getUserProfilePicture(this.props.user.profilePictureId);
     }
 
     onHeartbeat = (event) => {
@@ -3250,6 +3250,11 @@ const mapDispatchToProps = (dispatch) => {
         resetCurrentPassenger: () => dispatch(resetCurrentPassengerAction()),
         resetErrorHandling: (state) => dispatch(resetErrorHandlingAction({ comingFrom: 'map', isRetryApi: state })),
         goToPrevProfile: () => dispatch(goToPrevProfileAction()),
+        getUserProfilePicture: (pictureId) => getPicture(pictureId, ({ picture }) => {
+            dispatch(updateUserAction({ thumbnailProfilePicture: picture }))
+        }, (error) => {
+            dispatch(updateUserAction({}))
+        })
     }
 }
 
