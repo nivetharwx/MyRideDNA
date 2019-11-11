@@ -39,7 +39,7 @@ class ChatList extends Component {
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.chatList !== this.props.chatList) {
             const chatIdList = [];
-            const grpPicObj = [];
+            const grpPicObj = {};
             this.props.chatList.forEach((chat) => {
                 if (!chat.profilePicture || (chat.isGroup && !chat.profilePictureList)) {
                     if (chat.isGroup) {
@@ -110,7 +110,7 @@ class ChatList extends Component {
         const time = new Date(dateTime).toTimeString().substring(0, 5).split(':');
         let period = time[0] < 12 ? 'AM' : 'PM';
         if (time[0] > 12) {
-            time[0] = 24 - time[0];
+            time[0] = time[0] - 12;
         }
         return `${time.join(':')} ${period}`;
         // return new Date(dateTime).toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
@@ -125,7 +125,28 @@ class ChatList extends Component {
         }
     }
 
-    renderChatLIst = ({ item, index }) => {
+    renderGroupName = (item) => {
+        const groupNameLength = item.groupName.length;
+        if (groupNameLength > 26) return <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1D527C' }}>{item.groupName.substring(0, 17) + '...'}</Text>;
+        else {
+            const spacesLeft = 26 - groupNameLength - 6;
+            const firstNameStr = item.memberNameList.reduce((arr, name) => {
+                arr.push(name.split(' ')[0]);
+                return arr;
+            }, []).join(',');
+            return firstNameStr.length > spacesLeft
+                ? <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1D527C' }}>{item.groupName}
+                    <Text style={{ color: '#585756', fontSize: 13 }}>{`  (${firstNameStr.substring(0, spacesLeft)}...)`}</Text>
+                </Text>
+                : <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1D527C' }}>{item.groupName}
+                    {
+                        firstNameStr ? <Text style={{ color: '#585756', fontSize: 13 }}>{`  (${firstNameStr})`}</Text> : null
+                    }
+                </Text>
+        }
+    }
+
+    renderChatList = ({ item, index }) => {
         // if (item.isGroup) {
         //     return (
         //         <ListItem style={{ marginTop: 20 }} avatar onLongPress={() => console.log('onLongPressChatList')} onPress={() => console.log('onPressChatLIst')}>
@@ -157,7 +178,11 @@ class ChatList extends Component {
                                         : <IconButton disabled style={[styles.iconContComm, styles.groupIconCont]} iconProps={{ name: 'users', type: 'FontAwesome', style: styles.iconComm }} />
                             }
                             <View style={styles.bodyCont}>
-                                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1D527C' }}>{item.isGroup ? item.groupName : item.name}</Text>
+                                {
+                                    item.isGroup
+                                        ? this.renderGroupName(item)
+                                        : <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1D527C' }}>{item.name}</Text>
+                                }
                                 <Text style={{ fontSize: 12, marginTop: 5, color: '#585756' }}>{item.message ? item.message.content.length > 25 ? item.message.content.substring(0, 26) + '...' : item.message.content : null}</Text>
                             </View>
                         </Left>
@@ -168,7 +193,11 @@ class ChatList extends Component {
                                     : <IconButton disabled style={[styles.iconContComm, styles.userIconCont]} iconProps={{ name: 'user', type: 'FontAwesome', style: styles.iconComm }} />
                             }
                             <View style={styles.bodyCont}>
-                                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1D527C' }}>{item.isGroup ? item.groupName : item.name}</Text>
+                                {
+                                    item.isGroup
+                                        ? this.renderGroupName(item)
+                                        : <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1D527C' }}>{item.name}</Text>
+                                }
                                 <Text style={{ fontSize: 12, marginTop: 5, color: '#585756' }}>{item.message ? item.message.content.length > 25 ? item.message.content.substring(0, 26) + '...' : item.message.content : null}</Text>
                             </View>
                         </Left>
@@ -235,7 +264,7 @@ class ChatList extends Component {
                                 <FlatList
                                     data={chatList}
                                     keyExtractor={this.chatListKeyExtractor}
-                                    renderItem={this.renderChatLIst}
+                                    renderItem={this.renderChatList}
                                 />
                                 :
                                 hasNetwork ?
