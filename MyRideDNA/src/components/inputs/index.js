@@ -151,7 +151,6 @@ export const IconicDatePicker = ({ iconProps, outerContainer, selectedDate, date
                     modalTransparent={false}
                     animationType={"fade"}
                     androidMode={"default"}
-                    // placeHolderText={selectedDate ? getFormattedDateFromISO(new Date(selectedDate).toISOString(), '/') : placeholder ? placeholder : 'Select date'}
                     textStyle={[styles.datePickerDefaultStyles, datePickerStyle]}
                     placeHolderTextStyle={[styles.datePickerDefaultStyles, { color: selectedDate ? "black" : "#a9a9a9" }]}
                     onDateChange={onChange && onChange}

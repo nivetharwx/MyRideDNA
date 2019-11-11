@@ -43,6 +43,7 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
                             {/* <Text style={messageTimeStyle}>{messageTime}</Text> */}
                         </View>
                         <Text style={[messageStyle]}>{message}</Text>
+                        <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
                     </View>
                 </View>
                 :
@@ -58,6 +59,7 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
                             {/* <Text style={messageTimeStyle}>{messageTime}</Text> */}
                         </View>
                         <Text style={[messageStyle]}>{message}</Text>
+                        <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
                     </View>
                 </View>
         }
@@ -70,7 +72,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#99C8F7'
     },
     chatBubble: {
-        paddingBottom: 13,
+        paddingBottom: 8,
         paddingTop: 8,
         paddingHorizontal: 20,
         width: 215,
@@ -90,8 +92,12 @@ const styles = StyleSheet.create({
         color: APP_COMMON_STYLES.infoColor
     },
     messageTime: {
-        fontStyle: 'italic',
-        marginLeft: 2
+        // fontStyle: 'italic',
+        alignSelf: 'flex-end',
+        // marginRight: 5,
+        marginTop: 5,
+        color: '#FFFFFF',
+        fontSize: 11
     },
     container: {
         borderRadius: 30,

@@ -33,7 +33,10 @@ const styles = StyleSheet.create({
         zIndex: 900,
         elevation: 10,
         bottom: 0,
-        right: 0
+        right: 0,
+        maxHeight: 65, 
+        maxWidth: 75,
+
     },
     shiterImgContainer: {
         height: 60, 
