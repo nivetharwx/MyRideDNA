@@ -7,6 +7,7 @@ import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROI
 import styles from './styles';
 import AllFriendsTab from './all-friends';
 import GroupListTab from './group-list';
+import FavoriteListTab from './favorites-list';
 import { appNavMenuVisibilityAction, updateFriendInListAction, resetCurrentFriendAction, updateFriendRequestListAction } from '../../actions';
 import { ShifterButton, IconButton, LinkButton } from '../../components/buttons';
 import { IconLabelPair } from '../../components/labels';
@@ -438,6 +439,7 @@ class Friends extends Component {
                             <AllFriendsTab refreshContent={activeTab === 0} searchQuery={searchQuery} />
                         </Tab>
                         <Tab heading='FAVORITES' tabStyle={[styles.inActiveTab, styles.borderRightWhite, styles.borderLeftWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite, styles.borderLeftWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
+                            <FavoriteListTab />
                         </Tab>
                         <Tab heading='GROUPS' tabStyle={[styles.inActiveTab, styles.borderLeftWhite]} activeTabStyle={[styles.activeTab, styles.borderLeftWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
                             <GroupListTab refreshContent={activeTab === 2} onPressAddGroup={this.onPressCreateGroup} />
