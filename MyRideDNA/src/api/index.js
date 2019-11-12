@@ -1764,28 +1764,28 @@ export const getFriendsLocationList = (userId, friendsIdList) => {
 //     };
 // }
 export const getFriendGroups = (userId, toggleLoader, pageNumber, successCallback, errorCallback) => {
-    console.log('pageNumber : ', pageNumber)
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         toggleLoader && dispatch(apiLoaderActions(true))
         axios.get(FRIENDS_BASE_URL + `getFriendGroups?memberId=${userId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log('getFriendGroups : ', res.data)
-                if (res.status === 200 && res.data.length > 0) {
-                    dispatch(replaceFriendGroupListAction({ groupList: res.data, pageNumber: pageNumber }))
-                    dispatch(apiLoaderActions(false))
-                    dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
-                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    successCallback(res.data)
-
+                if (res.status === 200) {
+                    if (res.data.length > 0) {
+                        dispatch(replaceFriendGroupListAction({ groupList: res.data, pageNumber: pageNumber }))
+                        dispatch(apiLoaderActions(false))
+                        dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                        dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                        successCallback(res.data)
+                    }
                     // dispatch(toggleLoaderAction(false));
 
                     // return dispatch(replaceFriendGroupListAction(res.data))
-                }
-                else if (res.data.length === 0) {
-                    dispatch(apiLoaderActions(false));
-                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    successCallback(false)
+                    else if (res.data.length === 0) {
+                        dispatch(apiLoaderActions(false));
+                        dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                        successCallback(res.data)
+                    }
                 }
             })
             .catch(er => {
@@ -2438,23 +2438,31 @@ export const getCommunityFriendsList = (userId, pageNumber, preference, successC
 }
 
 
-export const getAlbum = (userId, pageNumber = 0, preference = 15) => {
-
+export const getAlbum = (userId, pageNumber, preference, successCallback, errorCallback) => {
     return dispatch => {
         axios.get(USER_BASE_URL + `getAlbumByUserId?userId=${userId}&pageNumber=${pageNumber}&preference${preference}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log("getAlbum success: ", res.data);
-                if (res.status === 200 && res.data.pictureList.length > 0) {
-                    const pictureList = res.data.pictureList.map(picId => ({ profilePictureId: picId }));
-                    dispatch(replaceAlbumListAction(pictureList))
-                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    // dispatch(toggleLoaderAction(false));
+                if (res.status === 200) {
+                    if (res.data.pictureList.length > 0) {
+                        const pictureList = res.data.pictureList.map(picId => ({ profilePictureId: picId }));
+                        dispatch(replaceAlbumListAction({ pageNumber, pictureList }))
+                        dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                        dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                        // dispatch(toggleLoaderAction(false));
+                        successCallback(res.data)
+                    }
+                    else {
+                        successCallback(res.data)
+                        dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    }
                 }
             })
             .catch(er => {
                 console.log(`getAlbum error: `, er.response || er);
                 differentErrors(er, [userId, pageNumber, preference = 15], getAlbum, false);
                 // TODO: Dispatch error info action
+                errorCallback(er)
             })
     };
 }
