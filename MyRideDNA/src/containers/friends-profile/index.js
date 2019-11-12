@@ -251,17 +251,17 @@ class FriendsProfile extends Component {
                                     </View>
                                     <View style={styles.usersExtraDetailContainer}>
                                         <ImageBackground source={require('../../assets/img/my-journal.png')} style={styles.usersExtraDetail}>
-                                            <Text style={styles.txtOnImg}>My Journal</Text>
+                                            <Text style={styles.txtOnImg}>Journal</Text>
                                         </ImageBackground>
                                     </View>
                                     <View style={styles.usersExtraDetailContainer}>
                                         <ImageBackground source={require('../../assets/img/my-vest.png')} style={styles.usersExtraDetail}>
-                                            <Text style={styles.txtOnImg}>My Vest</Text>
+                                            <Text style={styles.txtOnImg}>Vest</Text>
                                         </ImageBackground>
                                     </View>
                                     <View style={styles.usersExtraDetailContainer}>
                                         <ImageBackground source={require('../../assets/img/my-photos.png')} style={styles.usersExtraDetail}>
-                                            <Text style={styles.txtOnImg}>My Photos</Text>
+                                            <Text style={styles.txtOnImg}>Photos</Text>
                                         </ImageBackground>
                                     </View>
                                 </View>

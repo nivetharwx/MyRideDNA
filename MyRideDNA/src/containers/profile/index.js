@@ -37,17 +37,9 @@ class Profile extends Component {
         const { activeTab, profilePicString } = this.state;
         return (
             <View style={styles.fill}>
-                {
-                    IS_ANDROID
-                        ? <View style={APP_COMMON_STYLES.statusBar}>
-                            <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                        </View>
-                        : activeTab !== 0
-                            ? <View style={APP_COMMON_STYLES.statusBar}>
-                                <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                            </View>
-                            : null
-                }
+                <View style={APP_COMMON_STYLES.statusBar}>
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                </View>
                 <View style={[{ flex: 1 }, !this.props.hasNetwork ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
                     <Tabs tabBarPosition='bottom' tabContainerStyle={styles.bottomTabContainer} ref={elRef => this.tabsRef = elRef} onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' tabBarUnderlineStyle={{ height: 0 }}>
                         <Tab heading='MY PROFILE' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>

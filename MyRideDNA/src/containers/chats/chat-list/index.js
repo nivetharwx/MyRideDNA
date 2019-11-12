@@ -300,7 +300,6 @@ const mapDispatchToProps = (dispatch) => {
         createFriendGroup: (newGroupInfo) => dispatch(createFriendGroup(newGroupInfo)),
         getAllChats: (userId) => dispatch(getAllChats(userId)),
         getChatListPic: (chatIdList) => getPictureList(chatIdList, (pictureObj) => {
-            console.log('getPictureList getChatListPic sucess :', pictureObj)
             dispatch(updateChatPicAction({ pictureObj }))
         }, (error) => {
             console.log('getPictureList getChatListPic error :  ', error)

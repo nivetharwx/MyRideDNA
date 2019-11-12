@@ -13,6 +13,7 @@ import ImagePicker from 'react-native-image-crop-picker';
 import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo, getRoadBuddies, getPictureList, getMyWallet, getPassengerList } from '../../../api';
 import { ImageLoader } from '../../../components/loader';
 import { SmallCard } from '../../../components/cards';
+import { getFormattedDateFromISO } from '../../../util';
 
 const hasIOSAbove10 = parseInt(Platform.Version) > 10;
 const clubDummyData = [{ name: 'Black Rebel Motorcycle Club', id: "1" }, { name: 'Hell’s Angels', id: "2" }, { name: 'Milwaukee Outlaws', id: "3" }]
@@ -222,11 +223,8 @@ class MyProfileTab extends Component {
         const { isLoadingProfPic } = this.state;
         return (
             <View style={styles.fill}>
-                <View style={{ height: IS_ANDROID ? 0 : heightPercentageToDP(4), backgroundColor: 'black' }}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                </View>
-                <View style={styles.mapHeader}>
-                    <IconButton iconProps={{ name: 'bell', type: 'FontAwesome', style: { fontSize: widthPercentageToDP(5) } }}
+                <View style={styles.header}>
+                    <IconButton iconProps={{ name: 'ios-notifications', type: 'Ionicons', style: { fontSize: 26 } }}
                         style={styles.headerIconCont} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
                     <View style={{ flexDirection: 'column', marginLeft: 17, justifyContent: 'center', alignSelf: 'center' }}>
                         <Text style={styles.title}>
@@ -265,7 +263,7 @@ class MyProfileTab extends Component {
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderColor: '#0090b1', marginLeft: widthPercentageToDP(8), marginRight: widthPercentageToDP(11.22), marginTop: heightPercentageToDP(2) }}>
                         <View style={{ width: widthPercentageToDP(18) }}>
                             <Text style={{ fontSize: 11, marginTop: heightPercentageToDP(1), color: '#a8a8a8', fontWeight: '600' }}>DOB</Text>
-                            <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7) }}>{new Date(user.dob).toLocaleDateString('en-IN', { day: 'numeric', year: '2-digit', month: 'short' })}</Text>
+                            <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7) }}>{user.dob ? getFormattedDateFromISO(user.dob) : '---'}</Text>
                         </View>
                         <View style={{ borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#0090b1', width: widthPercentageToDP(28), alignItems: 'center' }}>
                             <Text style={{ fontSize: 10, marginTop: heightPercentageToDP(1), letterSpacing: 1.5, color: '#a8a8a8', fontWeight: '600' }}>YEARS RIDING</Text>
@@ -489,7 +487,7 @@ const styles = StyleSheet.create({
     },
 
     //  new Design styles
-    mapHeader: {
+    header: {
         height: APP_COMMON_STYLES.headerHeight,
         backgroundColor: APP_COMMON_STYLES.headerColor,
         flexDirection: 'row',

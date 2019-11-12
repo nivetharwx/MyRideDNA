@@ -220,7 +220,7 @@ class AllFriendsTab extends Component {
         person = person || selectedPerson;
         person['isGroup'] = false;
         person['id'] = person.userId;
-        Actions.push(PageKeys.CHAT, { chatInfo: person })
+        Actions.push(PageKeys.CHAT, { chatInfo: person });
         if (this.state.isVisibleOptionsModal)
             this.onCancelOptionsModal();
         if (this.state.searchQuery !== '')

@@ -268,7 +268,7 @@ class GroupListTab extends Component {
                 actionsBar={{
                     actions: [
                         { name: 'location-arrow', type: 'FontAwesome', color: this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId][0].isVisible ? '#81BA41' : '#C4C6C8', onPressActions: () => this.toggleMembersLocation(this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId][0].isVisible, item.groupId) },
-                        { name: 'message1', type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) },]
+                        { isIconImage: true, imgSrc: require('../../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }]
                     // { name: 'md-exit', type: 'Ionicons', color: '#707070', onPressActions: () => this.openChatPage(item) }]
                 }}
             />

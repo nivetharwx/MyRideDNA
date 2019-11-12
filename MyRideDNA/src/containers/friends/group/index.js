@@ -6,7 +6,7 @@ import { BasicHeader } from '../../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { getGroupInfoAction, resetCurrentGroupAction, updateMemberAction, setCurrentFriendAction } from '../../../actions';
 import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, WindowDimensions, PageKeys, FRIEND_TYPE, RELATIONSHIP } from '../../../constants';
-import { IconButton, LinkButton } from '../../../components/buttons';
+import { IconButton, LinkButton, ImageButton } from '../../../components/buttons';
 import { addMembers, getAllGroupMembers, dismissMemberAsAdmin, makeMemberAsAdmin, removeMember, getPicture, getPictureList, readNotification, getGroupMembers } from '../../../api';
 import { ThumbnailCard, HorizontalCard } from '../../../components/cards';
 import { BaseModal } from '../../../components/modal';
@@ -281,7 +281,7 @@ class Group extends Component {
         const userInfo = this.props.currentGroup.groupMembers[0];
         const options = [
             { text: 'Open profile', id: 'profile', handler: () => { this.openProfile(selectedMember.memberId) } },
-            { text: `Chat with ${selectedMember.name}`, id: 'chat', handler: () => { this.openChatPage() } },
+            { text: `Chat with ${selectedMember.name}`, id: 'chat', handler: () => { this.openChatPage(selectedMember) } },
         ];
         if (userInfo.isAdmin) {
             options.push(...[
@@ -305,13 +305,18 @@ class Group extends Component {
             ))
         )
     }
-    openChatPage = (groupDetail) => {
-        groupDetail = this.props.currentGroup;
-        const { groupMembers, ...otherGroupDetail } = groupDetail
-        otherGroupDetail['isGroup'] = true
-        otherGroupDetail['id'] = groupDetail.groupId
-        Actions.push(PageKeys.CHAT, { isGroup: true, chatInfo: otherGroupDetail })
-        this.setState({ isVisibleOptionsModal: false })
+    openChatPage = (info, isGroup) => {
+        if (isGroup) {
+            const { groupMembers, ...otherDetails } = this.props.currentGroup;
+            otherDetails['isGroup'] = true;
+            otherDetails['id'] = otherDetails.groupId;
+            info = otherDetails;
+        } else {
+            info['isGroup'] = false;
+            info['id'] = info.memberId;
+        }
+        Actions.push(PageKeys.CHAT, { isGroup: true, chatInfo: info });
+        this.setState({ isVisibleOptionsModal: false });
     }
     toggleFriendSelection = (index) => {
         let prevIndex = -1;
@@ -537,7 +542,7 @@ class Group extends Component {
                                 :
                                 null
                         }
-                        <IconButton iconProps={{ name: 'message1', type: 'AntDesign', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.openChatPage()} />
+                        <ImageButton imageSrc={require('../../../assets/img/chat.png')} imgStyles={{ height: 23, width: 26, marginTop: 6 }} onPress={() => this.openChatPage(undefined, true)} />
                         <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ? '#2B77B4' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableMembers()} />
                         {/* <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color:'#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapFriends()} /> */}
                     </View>
@@ -563,7 +568,7 @@ class Group extends Component {
                                                 actions: [
                                                     // { name: item.favorite ? 'star' : 'star-outlined', id: 1, type: 'Entypo', color: item.favorite ? '#CE0D0D' : '#C4C6C8', onPressActions: () => this.toggleFavouriteFriend(item) },
                                                     { name: 'search', id: 2, type: 'FontAwesome', color: item.locationEnable ? '#2B77B4' : '#C4C6C8' },
-                                                    index !== 0 ? { name: 'contacts', id: 2, type: 'AntDesign', color: item.isFriend ? '#CE0D0D' : '#C4C6C8' } : null,
+                                                    index !== 0 && item.isFriend ? { isIconImage: true, imgSrc: require('../../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } } : null,
                                                     { name: 'verified-user', id: 3, type: 'MaterialIcons', color: item.isAdmin ? '#81BA41' : '#C4C6C8' },
                                                     // { name: 'message1', id: 4, type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) }
                                                     index === 0 || item.isAdmin ? null : this.state.filteredMembers[0].isAdmin === false ? null : { name: 'remove-user', id: 4, type: 'Entypo', color: '#707070', onPressActions: () => this.removeMemberConfirmation(item) }
