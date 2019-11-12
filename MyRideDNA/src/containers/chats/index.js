@@ -260,6 +260,16 @@ class Chat extends Component {
         this.props.resetChatMessage();
     }
 
+    renderChatDate = (date) => {
+        const todaysDate = getFormattedDateFromISO();
+        let chatDate = getFormattedDateFromISO(date);
+        if (todaysDate === chatDate) chatDate = 'Today';
+        else if (todaysDate.split(' ').slice(-2).join() === chatDate.split(' ').slice(-2).join()) {
+            if (todaysDate.split(' ')[0] - chatDate.split(' ')[0] === 1) chatDate = 'Yesterday';
+        }
+        return <Text style={styles.time}>{chatDate}</Text>
+    }
+
     render() {
         const { user, chatMessages, totalUnseenMessage, chatData } = this.props;
         const { messageToBeSend, selectedMessage, isVisibleDeleteModal, isVisibleOptionsModal } = this.state;
@@ -332,9 +342,7 @@ class Chat extends Component {
                                     if (item.senderId === user.userId) {
                                         const isMyLastMsg = index === 0 || chatMessages[index - 1].senderId !== user.userId;
                                         return <View style={{ flexDirection: 'column', marginTop: 20 }}>
-                                            {
-                                                showDate ? <Text style={styles.time}>{getFormattedDateFromISO(item.date)}</Text> : null
-                                            }
+                                            {showDate && this.renderChatDate(item.date)}
                                             <Item style={{ borderBottomWidth: 0, justifyContent: 'flex-end' }}>
                                                 <ChatBubble
                                                     messageTime={this.getFormattedTime(item.date)}
@@ -355,9 +363,7 @@ class Chat extends Component {
                                     } else {
                                         const isMemberLastMsg = index === 0 || chatMessages[index - 1].senderId !== item.senderId;
                                         return <View style={{ flexDirection: 'column', marginTop: 20 }}>
-                                            {
-                                                showDate ? <Text style={styles.time}>{getFormattedDateFromISO(item.date)}</Text> : null
-                                            }
+                                            {showDate && this.renderChatDate(item.date)}
                                             <Item style={{ borderBottomWidth: 0 }}>
                                                 {
                                                     isMemberLastMsg
