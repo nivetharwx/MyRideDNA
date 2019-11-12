@@ -8,10 +8,22 @@ const initialState = {
 export default (state = initialState, action) => {
     switch (action.type) {
         case REPLACE_ALBUM_LIST:
-            return {
-                ...state,
-                albumList: action.data
+            if (action.data.pageNumber === 0) {
+                return {
+                    ...state,
+                    albumList: action.data.pictureList
+                }
             }
+            else {
+                return {
+                    ...state,
+                    albumList: [
+                        ...state.albumList,
+                        ...action.data.pictureList
+                    ]
+                }
+            }
+
 
         case UPDATE_ALBUM_LIST:
             if (action.data.pictureObj) {

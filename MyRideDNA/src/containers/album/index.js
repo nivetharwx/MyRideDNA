@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, ImageBackground, Text, Alert, StatusBar, ScrollView, FlatList, TextInput, KeyboardAvoidingView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, ImageBackground, Text, Alert, StatusBar, ScrollView, FlatList, TextInput, KeyboardAvoidingView, TouchableOpacity, StyleSheet, ActivityIndicator, Easing, Animated } from 'react-native';
 import { connect } from 'react-redux';
 import { appNavMenuVisibilityAction, updateAlbumListAction } from '../../actions';
 import { ShifterButton, IconButton, LinkButton } from '../../components/buttons';
@@ -18,26 +18,31 @@ const roadbuddiesDummyData = [{ name1: 'person1', id: '1' }, { name1: 'person2',
 
 class Album extends Component {
 
+    isLoadingData = false;
     constructor(props) {
         super(props);
         this.state = {
             isVisiblePicture: false,
-            selectedPicture: null
+            selectedPicture: null,
+            isLoading: false,
+            // isLoadingData: false,
+            spinValue: new Animated.Value(0),
         };
     }
     componentDidMount() {
-        this.props.getAlbum(this.props.user.userId);
+        this.props.getAlbum(this.props.user.userId, 0, 15, (res) => {
+        },
+            (er) => {
+            });
     }
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.albumList !== this.props.albumList) {
-            console.log('did update')
             const pictureIdList = [];
             this.props.albumList.forEach((album) => {
                 if (!album.profilePicture && album.profilePictureId) {
                     pictureIdList.push(album.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
                 }
             })
-            console.log('pictureIdList : ', pictureIdList)
             if (pictureIdList.length > 0) {
                 this.props.getPictureList(pictureIdList);
             }
@@ -48,7 +53,6 @@ class Album extends Component {
     }
 
     openPicture = (item) => {
-        console.log('openPicture : ', item);
         this.setState({ selectedPicture: item, isVisiblePicture: true });
     }
 
@@ -58,10 +62,48 @@ class Album extends Component {
 
     albumKeyExtractor = (item) => item.profilePictureId
 
+    loadMoreData = () => {
+        // this.setState({ isLoading: true, isLoadingData: false })
+        this.setState((prevState) => ({ isLoading: true }),
+            () => {
+                this.props.getAlbum(this.props.user.userId, this.props.pageNumber, 15, (res) => {
+                    this.setState({ isLoading: false })
+                },
+                    (er) => {
+                        this.setState({ isLoading: false })
+                    });
+            })
+    }
+
+    renderFooter = () => {
+        if (this.state.isLoading) {
+            return (
+                <View
+                    style={{
+                        paddingVertical: 20,
+                        borderTopWidth: 1,
+                        borderColor: "#CED0CE"
+                    }}
+                >
+                    <ActivityIndicator animating size="large" />
+                </View>
+            );
+        }
+        return null
+    }
+
+    onScrollBegin = () => {
+        // this.setState(prevState => ({ isLoadingData: true }), () => console.log('onMomemntum : ', { ...this.state }))
+        this.isLoadingData = true;
+    }
 
     render() {
         const { user, albumList } = this.props;
         const { isVisiblePicture, selectedPicture } = this.state;
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         return <View style={styles.fill}>
             <BaseModal alignCenter={true} isVisible={isVisiblePicture} onCancel={this.onCancelVisiblePicture} onPressOutside={this.onCancelVisiblePicture}>
                 <View style={{ backgroundColor: '#fff' }}>
@@ -101,7 +143,13 @@ class Album extends Component {
                                 />
 
                             </View>
+
                         )}
+                        initialNumToRender={15}
+                        // sonMomentumScrollBegin={this.onScrollBegin}
+                        ListFooterComponent={this.renderFooter}
+                        onEndReached={this.loadMoreData}
+                        onEndReachedThreshold={0.1}
                     />
 
                 </View>
@@ -111,14 +159,14 @@ class Album extends Component {
 }
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { hasNetwork } = state.PageState
+    const { hasNetwork, pageNumber } = state.PageState
     const { albumList } = state.Album
-    return { user, hasNetwork, albumList };
+    return { user, hasNetwork, albumList, pageNumber };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        getAlbum: (userId) => dispatch(getAlbum(userId)),
+        getAlbum: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getAlbum(userId, pageNumber, preference, successCallback, errorCallback)),
         getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
             dispatch(updateAlbumListAction({ pictureObj }))
         }, (error) => {
