@@ -7,12 +7,12 @@ const isIsoDate = (dateStr) => {
     return new Date(dateStr).toISOString() === dateStr;
 }
 
-export const getFormattedDateFromISO = (isoDateString, joinBy = '/') => {
+export const getFormattedDateFromISO = (isoDateString = new Date().toISOString(), joinBy = ' ') => {
     if (!isIsoDate(isoDateString)) {
         return '';
     }
     const dateInfo = new Date(isoDateString).toString().substr(4, 12).split(' ');
-    return [ShortMonthNames[dateInfo[0]], dateInfo[1], dateInfo[2]].join(joinBy);
+    return [dateInfo[1], dateInfo[0], (dateInfo[2] + '').slice(-2)].join(joinBy);
 }
 
 export const isValidEmailFormat = (email) => {
