@@ -361,7 +361,9 @@ export class Map extends Component {
                 if (Actions.prevState.routes.findIndex(route => route.routeName === currentScreen.name) > -1) {
                     Actions.popTo(currentScreen.name, {})
                 } else {
-                    Actions.replace(currentScreen.name, currentScreen.params);
+                    currentScreen.params && currentScreen.params.comingFrom
+                        ? Actions.push(currentScreen.name, currentScreen.params)
+                        : Actions.replace(currentScreen.name, currentScreen.params);
                 }
             } else {
                 currentScreen.name !== this.rootScreen
