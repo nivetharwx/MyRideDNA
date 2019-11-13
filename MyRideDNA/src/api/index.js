@@ -1616,10 +1616,12 @@ export const cancelFriendRequest = (senderId, personId, requestId) => {
         axios.delete(FRIENDS_BASE_URL + `cancelFriendRequest?senderId=${senderId}&userId=${personId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    console.log('cancelFriendRequest : ', res.data)
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(updateFriendRequestListAction({ id: requestId }))
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.UNKNOWN }));
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
                 }
             })
@@ -1658,10 +1660,12 @@ export const approveFriendRequest = (senderId, personId, actionDate, requestId) 
         axios.put(FRIENDS_BASE_URL + `approveFriendRequest?senderId=${senderId}&userId=${personId}&date=${actionDate}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    console.log('approveFriendRequest : ', res.data)
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(updateFriendRequestListAction({ id: requestId }))
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.FRIEND }));
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.FRIEND }));
                 }
             })
@@ -1681,10 +1685,12 @@ export const rejectFriendRequest = (senderId, personId, requestId) => {
         axios.put(FRIENDS_BASE_URL + `rejectFriendRequest?senderId=${senderId}&userId=${personId}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
+                    console.log('rejectFriendRequest : ', res.data)
                     dispatch(updateFriendRequestListAction({ id: requestId }))
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.UNKNOWN }));
                     return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
                 }
             })
