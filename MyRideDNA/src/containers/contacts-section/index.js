@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { View, StatusBar, Animated, Keyboard, FlatList, ActivityIndicator, Text, AppState, ScrollView } from 'react-native';
+import { View, StatusBar, Animated, Keyboard, FlatList, ActivityIndicator, Text, AppState, ScrollView, Alert } from 'react-native';
 import { connect } from 'react-redux';
 import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
@@ -11,7 +11,7 @@ import { IconButton } from '../../components/buttons';
 import { HorizontalCard } from '../../components/cards';
 import Contacts from 'react-native-contacts';
 import Permissions from 'react-native-permissions';
-import { searchForFriend, sendFriendRequest, sendInvitationOrRequest } from '../../api';
+import { searchForFriend, sendFriendRequest, sendInvitationOrRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest } from '../../api';
 import { clearSearchFriendListAction, resetFriendRequestResponseAction, resetInvitationResponseAction } from '../../actions';
 import { isValidEmailFormat } from '../../util';
 import { LabeledInputPlaceholder } from '../../components/inputs';
@@ -283,6 +283,17 @@ class ContactsSection extends PureComponent {
         this.props.sendFriendRequest(requestBody);
     }
 
+    cancelingFriendRequest = (item) => {
+        this.props.cancelRequest(this.props.user.userId, item.userId, item.id);
+    }
+
+    approvingFriendRequest = (item) => {
+        this.props.approvedRequest(this.props.user.userId, item.userId, new Date().toISOString(), item.id);
+    }
+    rejectingFriendRequest = (item) => {
+        this.props.rejectRequest(this.props.user.userId, item.userId, item.id);
+    }
+
     sendFriendInvitation = () => {
         // TODO: Pass proper params customMessage, email, userId
         // TODO: Check this.state.customMessage add default message if empty
@@ -361,6 +372,67 @@ class ContactsSection extends PureComponent {
         </View>);
     }
 
+    getRightIconProps = (item) => {
+        if (item.relationship === RELATIONSHIP.UNKNOWN) {
+            return { righticonImage: require('../../assets/img/add-friend-from-community.png') }
+        }
+        else if (item.relationship === RELATIONSHIP.SENT_REQUEST) {
+            return { righticonImage: require('../../assets/img/cancel.png') }
+        }
+        else if (item.relationship === RELATIONSHIP.RECIEVED_REQUEST) {
+            return { righticonImage: require('../../assets/img/accept-reject.png') }
+        }
+        else {
+            return { righticonImage: require('../../assets/img/chat-high-res.png') }
+        }
+        // { righticonImage: item.relationship === RELATIONSHIP.UNKNOWN ? require('../../assets/img/add-friend-from-community.png') : require('../../assets/img/chat-high-res.png') }
+    }
+
+    onPressRightIconProps = (item) => {
+        if (item.relationship === RELATIONSHIP.UNKNOWN) {
+            this.sendFriendRequest(item)
+        }
+        else if (item.relationship === RELATIONSHIP.SENT_REQUEST) {
+            Alert.alert(
+                'Do you want to cancel request ?',
+                '',
+                [
+                    {
+                        text: 'Yes ', onPress: () => {
+                            this.cancelingFriendRequest(item)
+                        }
+                    },
+                    { text: 'No', onPress: () => { }, style: 'cancel' },
+                ],
+                { cancelable: false }
+            )
+        }
+        else if (item.relationship === RELATIONSHIP.RECIEVED_REQUEST) {
+            Alert.alert(
+                'Do you want to accept request ?',
+                '',
+                [
+                    { text: 'cancel', onPress: () => { }, style: 'cancel' },
+                    {
+                        text: 'Accept ', onPress: () => {
+                            this.approvingFriendRequest(item)
+                        }
+                    },
+                    {
+                        text: 'Reject', onPress: () => {
+                            this.rejectingFriendRequest(item)
+                        }
+                    },
+                ],
+                { cancelable: false }
+            )
+        }
+        else {
+            this.openChatPage(item)
+        }
+        // () => item.relationship === RELATIONSHIP.UNKNOWN ? this.sendFriendRequest(item) : this.openChatPage(item)
+    }
+
     render() {
         const { activeTab, searchName } = this.state;
         const { user, searchResults } = this.props;
@@ -403,10 +475,11 @@ class ContactsSection extends PureComponent {
                                     renderItem={({ item, index }) => (
                                         <HorizontalCard
                                             item={item}
+                                            thumbnail={item.profilePicture}
                                             horizontalCardPlaceholder={require('../../assets/img/profile-pic.png')}
                                             cardOuterStyle={styles.horizontalCardOuterStyle}
-                                            rightProps={{ righticonImage: item.relationship === RELATIONSHIP.UNKNOWN ? require('../../assets/img/add-friend-from-community.png') : require('../../assets/img/chat-high-res.png') }}
-                                            onPress={() => item.relationship === RELATIONSHIP.UNKNOWN ? this.sendFriendRequest(item) : this.openChatPage(item)}
+                                            rightProps={this.getRightIconProps(item)}
+                                            onPress={() => this.onPressRightIconProps(item)}
                                         />
                                     )}
                                     ListFooterComponent={this.renderFooter}
@@ -443,6 +516,9 @@ const mapDispatchToProps = (dispatch) => {
         clearInvitationResponse: () => dispatch(resetInvitationResponseAction()),
         sendFriendRequest: (requestBody) => dispatch(sendFriendRequest(requestBody)),
         sendInvitationOrRequest: (requestBody) => dispatch(sendInvitationOrRequest(requestBody)),
+        cancelRequest: (userId, personId, requestId) => dispatch(cancelFriendRequest(userId, personId, requestId)),
+        approvedRequest: (userId, personId, actionDate, requestId) => dispatch(approveFriendRequest(userId, personId, actionDate, requestId)),
+        rejectRequest: (userId, personId, requestId) => dispatch(rejectFriendRequest(userId, personId, requestId)),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(ContactsSection);
