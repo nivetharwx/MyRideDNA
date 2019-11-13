@@ -234,48 +234,38 @@ class Passengers extends Component {
                     <BasicHeader
                         title='Passengers'
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                        rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.openPassengerForm, rightIconPropsStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: widthPercentageToDP(5) } }}
+                        rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.openPassengerForm, rightIconPropsStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 } }}
+                    />
+                    <FlatList
+                        contentContainerStyle={{ paddingTop: 40 + APP_COMMON_STYLES.headerHeight }}
+                        style={{ flexDirection: 'column' }}
+                        columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: heightPercentageToDP(4), marginHorizontal: 29 }}
+                        numColumns={2}
+                        data={passengerList}
+                        keyExtractor={this.passengerListKeyExtractor}
+                        renderItem={({ item, index }) => (
+                            <SquareCard
+                                // containerStyle={{ marginHorizontal: 20 }}
+                                squareCardPlaceholder={require('../../assets/img/profile-pic.png')}
+                                item={item}
+                                onLongPress={() => this.showOptionsModal(index)}
+                                onPress={() => this.openPassengerProfile(item, index)}
+                                imageStyle={{ height: 142, width: 142 }}
+                            />
+                        )}
+                        ListFooterComponent={this.renderFooter}
+                        onEndReached={this.loadMoreData}
+                        onEndReachedThreshold={0.1}
+                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
                     />
                     {
-                        passengerList.length > 0
-                            ?
-                            <View style={{ marginTop: 40 + APP_COMMON_STYLES.headerHeight, marginLeft: widthPercentageToDP(7) }}>
-                                <FlatList
-                                    style={{ flexDirection: 'column' }}
-                                    numColumns={2}
-                                    data={passengerList}
-                                    keyExtractor={this.passengerListKeyExtractor}
-                                    // contentContainerStyle={{
-                                    //     flex: 1,
-                                    //     flexDirection: 'row',
-                                    //     justifyContent: 'space-between'
-                                    // }}
-                                    renderItem={({ item, index }) => (
-                                        <SquareCard
-                                            containerStyle={{ marginRight: widthPercentageToDP(7), marginBottom: heightPercentageToDP(4) }}
-                                            squareCardPlaceholder={require('../../assets/img/profile-pic.png')}
-                                            item={item}
-                                            onLongPress={() => this.showOptionsModal(index)}
-                                            onPress={() => this.openPassengerProfile(item, index)}
-                                            imageStyle={{ height: 141, width: 141 }}
-                                        />
-                                    )}
-                                    ListFooterComponent={this.renderFooter}
-                                    onEndReached={this.loadMoreData}
-                                    onEndReachedThreshold={0.1}
-                                    onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
-                                />
-                            </View>
-                            :
-                            this.props.hasNetwork ?
-                                null :
-                                <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
-                                    <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                        <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                    </Animated.View>
-                                    <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                                    <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
-                                </View>
+                        this.props.hasNetwork === false && passengerList.length === 0 && <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                            <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                            </Animated.View>
+                            <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                            <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                        </View>
                     }
 
                 </View>
@@ -338,10 +328,10 @@ const styles = StyleSheet.create({
         marginTop: APP_COMMON_STYLES.headerHeight
     },
     rightIconPropsStyle: {
-        height: widthPercentageToDP(7),
-        width: widthPercentageToDP(7),
+        height: 27,
+        width: 27,
         backgroundColor: '#F5891F',
-        borderRadius: widthPercentageToDP(3.5),
+        borderRadius: 13.5,
         marginRight: 10
     }
 });

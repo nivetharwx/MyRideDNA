@@ -22,7 +22,7 @@ class Bubble extends React.PureComponent {
     }
 }
 
-export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, messageTimeStyle, messageStyle, bubbleName, messageTime, message, onLongPress, onPress, selectedMessage }) => (
+export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, messageTimeStyle, messageStyle, bubbleName, messageTime, messageDate, message, onLongPress, onPress, selectedMessage }) => (
 
     <TouchableWithoutFeedback onPress={() => onPress ? onPress() : null} activeOpacity={onLongPress ? 0.7 : 1} onLongPress={() => onLongPress && onLongPress()} style={{
         flex: 1,
@@ -33,34 +33,32 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
             selectedMessage ?
                 <View>
                     {
-                        bubbleName
-                            ? <Text style={{ color: '#fff', padding: 5 }}>{bubbleName}</Text>
+                        bubbleName || messageDate
+                            ? <View style={{ padding: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
+                                {bubbleName && <Text style={{ color: '#C4C4C4', fontSize: 11 }}>{bubbleName}</Text>}
+                                <Text style={[{ color: '#8D8D8D', fontSize: 11 }, bubbleName ? { marginRight: 30 } : { marginLeft: 23 }]}>{messageDate}</Text>
+                            </View>
                             : null
                     }
                     <View style={[styles.chatBubble, bubbleStyle, styles.highlightStyle]}>
-                        <View style={[styles.chatBubbleHeader, bubbleHeaderStyle]} >
-                            {/* <Text style={[styles.bubbleName, bubbleNameStyle]}>{bubbleName}</Text> */}
-                            {/* <Text style={messageTimeStyle}>{messageTime}</Text> */}
-                        </View>
                         <Text style={[messageStyle]}>{message}</Text>
-                        <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
                     </View>
+                    <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
                 </View>
                 :
                 <View>
                     {
-                        bubbleName
-                            ? <Text style={{ color: '#fff', padding: 5 }}>{bubbleName}</Text>
+                        bubbleName || messageDate
+                            ? <View style={{ padding: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
+                                {bubbleName && <Text style={{ color: '#C4C4C4', fontSize: 11 }}>{bubbleName}</Text>}
+                                <Text style={[{ color: '#8D8D8D', fontSize: 11 }, bubbleName ? { marginRight: 30 } : { marginLeft: 23 }]}>{messageDate}</Text>
+                            </View>
                             : null
                     }
                     <View style={[styles.chatBubble, bubbleStyle]}>
-                        <View style={[styles.chatBubbleHeader, bubbleHeaderStyle]} >
-                            {/* <Text style={[styles.bubbleName, bubbleNameStyle]}>{bubbleName}</Text> */}
-                            {/* <Text style={messageTimeStyle}>{messageTime}</Text> */}
-                        </View>
                         <Text style={[messageStyle]}>{message}</Text>
-                        <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
                     </View>
+                    <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
                 </View>
         }
 
@@ -72,21 +70,22 @@ const styles = StyleSheet.create({
         backgroundColor: '#99C8F7'
     },
     chatBubble: {
-        paddingBottom: 8,
-        paddingTop: 8,
+        // paddingBottom: 8,
+        // paddingTop: 8,
         paddingHorizontal: 20,
+        paddingVertical: 13,
         width: 215,
-        minHeight: heightPercentageToDP(8),
+        // minHeight: heightPercentageToDP(8),
         maxWidth: 215,
-        borderRadius: heightPercentageToDP(1),
-        borderBottomLeftRadius: heightPercentageToDP(1),
-        borderBottomRightRadius: heightPercentageToDP(1),
+        borderRadius: 9,
+        borderBottomLeftRadius: 9,
+        borderBottomRightRadius: 9,
         backgroundColor: '#fff',
         alignSelf: 'flex-start',
     },
     chatBubbleHeader: {
         flexDirection: 'row',
-        paddingBottom: 5,
+        // paddingBottom: 5,
     },
     bubbleName: {
         color: APP_COMMON_STYLES.infoColor
@@ -94,10 +93,11 @@ const styles = StyleSheet.create({
     messageTime: {
         // fontStyle: 'italic',
         alignSelf: 'flex-end',
-        // marginRight: 5,
-        marginTop: 5,
-        color: '#FFFFFF',
-        fontSize: 11
+        marginRight: 5,
+        // marginTop: 5,
+        color: '#adacac',
+        fontSize: 11,
+        height: 17
     },
     container: {
         borderRadius: 30,

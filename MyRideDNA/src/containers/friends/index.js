@@ -359,6 +359,8 @@ class Friends extends Component {
         // Actions.push(PageKeys.FRIENDS_PROFILE, { relationshipStatus: RELATIONSHIP.UNKNOWN, person: item, activeTab: 0 });
     }
 
+    onPressBackButton = () => Actions.pop();
+
     render() {
         const { headerSearchMode, searchQuery, activeTab, friendsActiveTab, isRefreshing } = this.state;
         const spin = this.state.spinValue.interpolate({
@@ -400,29 +402,10 @@ class Friends extends Component {
                 }
 
                 <View style={{ flex: 1 }}>
-                    {
-                        this.state.activeTab === 1
-                            ?
-                            // <BasicHeader title='Road Buddies' searchIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
-                            <BasicHeader title='Road Buddies' searchbarMode={headerSearchMode}
-                                searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false, searchQuery: '' })}
-                                onClearSearchValue={() => this.setState({ searchQuery: '' })}
-                                leftIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.onPressCreateGroup }}
-                            // rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} 
-                            />
-                            : this.state.activeTab === 2 ?
-                                <BasicHeader title='Road Buddies'
-                                // rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} 
-                                />
-                                :
-                                // <BasicHeader title='Road Buddies' searchIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
-                                <BasicHeader title='Road Buddies' searchbarMode={headerSearchMode}
-                                    searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false, searchQuery: '' })}
-                                    onClearSearchValue={() => this.setState({ searchQuery: '' })}
-                                // rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} 
-                                />
-                    }
-
+                    <BasicHeader
+                        title='Road Buddies'
+                        leftIconProps={this.props.comingFrom === PageKeys.PROFILE ? { reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton } : null}
+                    />
                     <BaseModal alignCenter={true} isVisible={this.state.isVisibleGroupModal} onCancel={this.onCancelGroupForm} onPressOutside={this.onCancelGroupForm}>
                         <View style={{ backgroundColor: '#fff', width: WindowDimensions.width * 0.6, padding: 20, elevation: 3 }}>
                             <LabeledInput placeholder='Enter group name here' onChange={(val) => this.setState({ newGroupName: val })}

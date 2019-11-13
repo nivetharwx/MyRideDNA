@@ -152,17 +152,13 @@ export const SmallCard = ({ item, smallardPlaceholder, onPress, onLongPress, act
         </TouchableOpacity>
     </View>
 );
-export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, actions, thumbnailRef, imageStyle, containerStyle }) => (
-    <TouchableOpacity onPress={() => onPress ? onPress() : null} onLongPress={() => onLongPress && onLongPress()} style={{
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center'
-    }}>
-        <View style={containerStyle}>
-            <View style={[{ height: heightPercentageToDP(23), width: widthPercentageToDP(39), backgroundColor: '#A9A9A9' }, imageStyle]}>
-                <Image source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : squareCardPlaceholder}
-                    style={{ width: null, height: null, flex: 1 }} />
-            </View>
+export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, actions, thumbnailRef, imageStyle, containerStyle, contentContainerStyle }) => (
+    <TouchableOpacity onPress={() => onPress ? onPress() : null} onLongPress={() => onLongPress && onLongPress()} style={[{ flexDirection: 'column' }, containerStyle]}>
+        <View style={[{ height: 150, width: 150, backgroundColor: '#A9A9A9', justifyContent: 'center' }, imageStyle]}>
+            <Image source={item.profilePicture ? { uri: item.profilePicture } : squareCardPlaceholder ? squareCardPlaceholder : null}
+                style={{ width: null, height: null, flex: 1 }} />
+        </View>
+        <View style={contentContainerStyle}>
             {
                 item.name ?
                     <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#000', marginTop: 6 }}>{item.name ? item.name : ''}</Text>
@@ -174,7 +170,6 @@ export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, 
                     :
                     null
             }
-
         </View>
     </TouchableOpacity>
 );
@@ -250,7 +245,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                 // here condition is when right view is present or not
                 rightProps
                     ? rightProps.righticonImage
-                        ? <ImageButton containerStyles={{ height: 74, width: 74, justifyContent: 'center', alignItems: 'center', backgroundColor: '#C4C6C8' }} imageSrc={rightProps.righticonImage} imgStyles={{ height: 27, width: 27 }} onPress={onPress} />
+                        ? <ImageButton containerStyles={{ height: 74, width: 74, justifyContent: 'center', alignItems: 'center', backgroundColor: rightProps.imgBGColor ? rightProps.imgBGColor : '#C4C6C8' }} imageSrc={rightProps.righticonImage} imgStyles={[{ height: 27, width: 27 }, rightProps.imgStyles]} onPress={onPress} />
                         : null
                     : null
             }

@@ -253,71 +253,46 @@ class FavoriteListTab extends Component {
                     <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ? '#2B77B4' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} />
                     <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapFriends()} />
                 </View>
-                {
-                    allFriends.length === 0
-                        ?
-                        this.props.hasNetwork === false ?
-                            <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
-                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                </Animated.View>
-                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
-                            </View>
-                            :
-                            <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
-                        :
-                        filteredFriends.length > 0
-                            ?
-                            <FlatList
-                                style={{ flexDirection: 'column' }}
-                                contentContainerStyle={styles.friendList}
-                                data={filteredFriends}
-                                refreshing={isRefreshing}
-                                onRefresh={this.onPullRefresh}
-                                keyExtractor={this.friendKeyExtractor}
-                                extraData={this.state}
-                                renderItem={({ item, index }) => (
-                                    item.favorite ?
-                                        <View style={{ flex: 1, maxWidth: widthPercentageToDP(50) }}>
-                                            <HorizontalCard
-                                                horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
-                                                item={item}
-                                                onPressLeft={() => this.openFriendsProfileTab(item)}
-                                                thumbnail={item.profilePicture}
-                                                cardOuterStyle={styles.horizontalCardOuterStyle}
-                                                actionsBar={{
-                                                    online: true,
-                                                    actions: [
-                                                        { name: 'search', id: 2, type: 'FontAwesome', color: item.locationEnable ? '#2B77B4' : '#C4C6C8' },
-                                                        { name: 'location-arrow', id: 3, type: 'FontAwesome', color: friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible ? '#81BA41' : '#C4C6C8', onPressActions: () => this.toggleFriendsLocation(friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible, item.userId) },
-                                                        { isIconImage: true, imgSrc: require('../../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }]
-                                                }}
-                                            />
-                                        </View>
-                                        : null
-                                )}
-                                ListFooterComponent={this.renderFooter}
-                                onEndReached={this.loadMoreData}
-                                onEndReachedThreshold={0.1}
-                                onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                <FlatList
+                    style={{ flexDirection: 'column' }}
+                    contentContainerStyle={styles.friendList}
+                    data={filteredFriends.filter(item => item.favorite)}
+                    refreshing={isRefreshing}
+                    onRefresh={this.onPullRefresh}
+                    keyExtractor={this.friendKeyExtractor}
+                    extraData={this.state}
+                    renderItem={({ item, index }) => (
+                        <View style={{ flex: 1, maxWidth: widthPercentageToDP(50) }}>
+                            <HorizontalCard
+                                horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
+                                item={item}
+                                onPressLeft={() => this.openFriendsProfileTab(item)}
+                                thumbnail={item.profilePicture}
+                                cardOuterStyle={styles.horizontalCardOuterStyle}
+                                actionsBar={{
+                                    online: true,
+                                    actions: [
+                                        { name: 'search', id: 2, type: 'FontAwesome', color: item.locationEnable ? '#2B77B4' : '#C4C6C8' },
+                                        { name: 'location-arrow', id: 3, type: 'FontAwesome', color: friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible ? '#81BA41' : '#C4C6C8', onPressActions: () => this.toggleFriendsLocation(friendsLocationList[item.userId] !== undefined && friendsLocationList[item.userId].isVisible, item.userId) },
+                                        { isIconImage: true, imgSrc: require('../../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }]
+                                }}
                             />
-                            :
-                            this.props.hasNetwork
-                                ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage}>
-                                    <Text style={{ color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6), fontWeight: 'bold', letterSpacing: 1 }}>{`No friends found`}</Text>
-                                </ImageBackground>
-                                :
-                                <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
-                                    <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                        <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                    </Animated.View>
-                                    <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                                    <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
-                                </View>
+                        </View>
+                    )}
+                    ListFooterComponent={this.renderFooter}
+                    onEndReached={this.loadMoreData}
+                    onEndReachedThreshold={0.1}
+                    onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                />
+                {
+                    this.props.hasNetwork === false && allFriends.length === 0 && <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                        <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                            <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                        </Animated.View>
+                        <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                        <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                    </View>
                 }
-
-
             </View>
         )
     }

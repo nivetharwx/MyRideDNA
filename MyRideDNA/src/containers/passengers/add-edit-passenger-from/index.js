@@ -185,58 +185,39 @@ class PaasengerForm extends Component {
                                         <Text style={{ marginLeft: widthPercentageToDP(3), fontSize: 12, fontWeight: 'bold', color: '#000', letterSpacing: 0.6, marginBottom: 2 }}>SEARCH RESULTS</Text>
                                     </View>
                                     <View style={{ marginTop: 16 }}>
+                                        <FlatList
+                                            style={{ marginBottom: heightPercentageToDP(20) }}
+                                            data={filteredFriends}
+                                            keyExtractor={this.communityKeyExtractor}
+                                            renderItem={({ item, index }) => (
+                                                <HorizontalCard
+                                                    item={item}
+                                                    horizontalCardPlaceholder={require('../../../assets/img/profile-pic.png')}
+                                                    cardOuterStyle={styles.horizontalCardOuterStyle}
+                                                    thumbnail={item.profilePicture}
+                                                    rightProps={
+                                                        item.isPassenger
+                                                            ? { righticonImage: require('../../../assets/img/add-passenger-from-community-true.png'), imgBGColor: '#81BA41', imgStyles: { width: 32, height: 32 } }
+                                                            : { righticonImage: require('../../../assets/img/add-passenger-from-community.png'), imgStyles: { width: 32, height: 32 } }
+                                                    }
+                                                    onPress={() => item.isPassenger === false && this.addFriendToCommunity(item)}
+                                                />
+                                            )}
+                                            ListFooterComponent={this.renderFooter}
+                                            // onTouchStart={this.loadMoreData}
+                                            onEndReached={this.loadMoreData}
+                                            onEndReachedThreshold={0.1}
+                                            onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                                        />
                                         {
-                                            communityList.length === 0
-                                                ?
-                                                this.props.hasNetwork === false
-                                                    ?
-                                                    <View style={{ flex: 1, position: 'absolute', top: 23 }}>
-                                                        <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                                            <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                                        </Animated.View>
-                                                        <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                                                        <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
-                                                    </View>
-                                                    :
-                                                    null
-                                                :
-                                                filteredFriends.length > 0
-                                                    ?
-                                                    <FlatList
-                                                        style={{ marginBottom: heightPercentageToDP(20) }}
-                                                        data={filteredFriends}
-                                                        keyExtractor={this.communityKeyExtractor}
-                                                        renderItem={({ item, index }) => (
-                                                            <HorizontalCard
-                                                                item={item}
-                                                                horizontalCardPlaceholder={require('../../../assets/img/profile-pic.png')}
-                                                                cardOuterStyle={styles.horizontalCardOuterStyle}
-                                                                thumbnail={item.profilePicture}
-                                                                rightProps={item.isPassenger ? { righticonImage: require('../../../assets/img/add-passenger-from-community-true.png') } : { righticonImage: require('../../../assets/img/add-passenger-from-community.png') }}
-                                                                onPress={() => item.isPassenger === false && this.addFriendToCommunity(item)}
-                                                            />
-                                                        )}
-                                                        ListFooterComponent={this.renderFooter}
-                                                        // onTouchStart={this.loadMoreData}
-                                                        onEndReached={this.loadMoreData}
-                                                        onEndReachedThreshold={0.1}
-                                                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
-                                                    />
-                                                    :
-                                                    this.props.hasNetwork ?
-                                                        null
-                                                        :
-                                                        <View style={{ flex: 1, position: 'absolute', top: 23 }}>
-                                                            <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                                                <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                                            </Animated.View>
-                                                            <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                                                            <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
-                                                        </View>
-
+                                            this.props.hasNetwork === false && communityList.length === 0 && <View style={{ flex: 1, position: 'absolute', top: 23 }}>
+                                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                                </Animated.View>
+                                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                            </View>
                                         }
-
-
                                     </View>
                                 </Tab>
                             </Tabs>

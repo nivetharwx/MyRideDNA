@@ -203,7 +203,7 @@ class ChatList extends Component {
                         </Left>
                 }
                 <Right style={styles.rightCont}>
-                    <Text style={{ color: '#8D8D8D', letterSpacing: 0.8 }}>{item.message ? this.getFormattedTime(item.message.date) : null}</Text>
+                    <Text style={{ color: '#8D8D8D', letterSpacing: 0.8, fontSize: 11 }}>{item.message ? this.getFormattedTime(item.message.date) : null}</Text>
                     {
                         item.totalUnseenMessage > 0 ?
                             <View style={styles.messageNumber}>

@@ -423,6 +423,7 @@ class GroupListTab extends Component {
                 <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
                     <View style={{ flex: 2.89 }}>
                         <LabeledInputPlaceholder
+                            placeholder='Name'
                             inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: 25, backgroundColor: '#fff' }}
                             returnKeyType='next'
                             onChange={this.onChangeSearchValue}
@@ -442,65 +443,30 @@ class GroupListTab extends Component {
                     {/* <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color:'#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} /> */}
                     <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapGroups()} />
                 </View>
+                <FlatList
+                    data={filteredGroups}
+                    refreshing={isRefreshing}
+                    contentContainerStyle={styles.friendList}
+                    onRefresh={this.onPullRefresh}
+                    keyExtractor={this.groupKeyExtractor}
+                    renderItem={this.renderGroup}
+                    extraData={this.state}
+                    ListFooterComponent={this.renderFooter}
+                    // onTouchMove={this.loadMoreData}
+                    // onTouchStart={this.loadMoreData}
+                    onEndReached={this.loadMoreData}
+                    onEndReachedThreshold={0.1}
+                    onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                />
                 {
-                    friendGroupList.length === 0
-                        ?
-                        this.props.hasNetwork === false
-                            ?
-                            <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
-                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                </Animated.View>
-                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
-                            </View>
-                            :
-                            <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
-                        : filteredGroups.length > 0
-                            ?
-                            <FlatList
-                                data={filteredGroups}
-                                refreshing={isRefreshing}
-                                contentContainerStyle={styles.friendList}
-                                onRefresh={this.onPullRefresh}
-                                keyExtractor={this.groupKeyExtractor}
-                                renderItem={this.renderGroup}
-                                extraData={this.state}
-                                ListFooterComponent={this.renderFooter}
-                                // onTouchMove={this.loadMoreData}
-                                // onTouchStart={this.loadMoreData}
-                                onEndReached={this.loadMoreData}
-                                onEndReachedThreshold={0.1}
-                                onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
-                            />
-                            :
-                            this.props.hasNetwork ?
-                                <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage}>
-                                    <Text style={{ color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6), fontWeight: 'bold', letterSpacing: 1 }}>{`No Groups found`}</Text>
-                                </ImageBackground>
-                                :
-                                <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
-                                    <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                        <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                    </Animated.View>
-                                    <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                                    <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
-                                </View>
+                    this.props.hasNetwork === false && friendGroupList.length === 0 && <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                        <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                            <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                        </Animated.View>
+                        <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                        <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                    </View>
                 }
-                {/* <Animated.View style={[styles.createGrpContainer, { bottom: this.state.kbdBtmOffset, width: this.createSecAnim }]}>
-                    <Animated.View style={[styles.createGrpActionSec, { backgroundColor: newGroupName === null ? 'transparent' : '#fff', borderWidth: this.borderWidthAnim }]}>
-                        {
-                            !newGroupName || newGroupName.trim().length === 0
-                                ? <Animated.View style={[styles.createGroupIcon, styles.createGrpChildSize, { transform: [{ rotate: spinAnim }] }]}>
-                                    <IconButton iconProps={{ name: 'plus', type: 'Entypo', style: { color: '#fff' } }} onPress={this.openCreateGroupSection}
-                                        style={{ flex: 1 }} />
-                                </Animated.View>
-                                : <IconButton iconProps={{ name: 'check', type: 'Entypo', style: { color: '#fff' } }} onPress={this.createGroup}
-                                    style={[styles.createGroupIcon, styles.createGrpChildSize]} />
-                        }
-                        <TextInput ref={elRef => this.createGrpInputRef = elRef} style={{ flex: 1, marginLeft: 3 }} onChangeText={this.onEnterGroupName} onSubmitEditing={this.createGroup} />
-                    </Animated.View>
-                </Animated.View> */}
             </View>
         )
     }

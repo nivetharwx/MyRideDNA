@@ -90,6 +90,7 @@ const styles = StyleSheet.create({
         fontSize: 15
     },
     thumbnail: {
+        marginBottom: 17,
         height: 34,
         width: 34,
         borderRadius: 17,
@@ -123,8 +124,16 @@ const styles = StyleSheet.create({
         // color: '#8D8D8D', 
         color: '#adacac', 
         alignSelf: 'center', 
-        paddingBottom: 10,
-        letterSpacing: 0.8
+        marginVertical: 4,
+        paddingHorizontal: 5,
+        paddingVertical: 4,
+        letterSpacing: 0.8,
+        fontSize: 12,
+        // height: 24,
+        // width: 74,
+        // borderRadius: 20,
+        // backgroundColor: 'rgba(255,255,255, 0.9)'
+
     }
 });
 export default styles;

@@ -232,7 +232,7 @@ class MyProfileTab extends Component {
                         </Text>
                         {
                             user.nickname ?
-                                <Text style={{ color: 'rgba(189, 195, 199, 1)', fontWeight: 'bold' }}>
+                                <Text style={{ color: 'rgba(189, 195, 199, 1)', fontWeight: 'bold', fontSize: 12 }}>
                                     {user.nickname.toUpperCase()}
                                 </Text>
                                 : null
@@ -298,7 +298,7 @@ class MyProfileTab extends Component {
                                 <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Road Buddies</Text>
                                 <LinkButton title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16, fontWeight: 'bold' }} onPress={this.onPressFriendsPage} />
                             </View>
-                            <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)} />
+                            <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 15, color: '#fff' } }} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)} />
                         </View>
                         <View style={{ borderTopWidth: 15, borderTopColor: '#DCDCDE' }}>
                             <FlatList
@@ -327,7 +327,7 @@ class MyProfileTab extends Component {
                                 <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Passengers</Text>
                                 <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16, fontWeight: 'bold' }} onPress={() => Actions.push(PageKeys.PASSENGERS)} />
                             </View>
-                            <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: -1 })} />
+                            <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 15, color: '#fff' } }} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: -1 })} />
                         </View>
                         <View style={{ borderTopWidth: 15, borderTopColor: '#DCDCDE' }}>
                             <FlatList
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
         marginLeft: 17
     },
     title: {
-        fontSize: widthPercentageToDP(6),
+        fontSize: 20,
         color: 'white',
         fontWeight: 'bold',
         backgroundColor: 'transparent',
@@ -515,9 +515,9 @@ const styles = StyleSheet.create({
         elevation: 20,
     },
     addBtnCont: {
-        height: widthPercentageToDP(5),
-        width: widthPercentageToDP(5),
-        borderRadius: widthPercentageToDP(2.5),
+        height: 18,
+        width: 18,
+        borderRadius: 9,
         backgroundColor: '#a8a8a8',
         marginRight: 10
     },

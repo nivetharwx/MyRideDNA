@@ -125,7 +125,7 @@ class Album extends Component {
             <View style={styles.fill}>
                 <BasicHeader title='My Photos'
                     leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                    rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', rightIconPropsStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: heightPercentageToDP(3.5) } }} />
+                    rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', rightIconPropsStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 } }} />
                 <View style={{ marginTop: heightPercentageToDP(9.6), flex: 1 }}>
                     <FlatList
                         numColumns={3}
@@ -136,7 +136,6 @@ class Album extends Component {
                             <View style={{ margin: 2, flexDirection: 'column' }}>
                                 {/* <View style={{borderWidth:2.5, borderColor:'#ffffff'}}> */}
                                 <SquareCard
-                                    squareCardPlaceholder={require('../../assets/img/profile-pic.png')}
                                     item={item}
                                     imageStyle={styles.imageStyle}
                                     onPress={() => this.openPicture(item)}
@@ -183,17 +182,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     rightIconPropsStyle: {
-        height: heightPercentageToDP(4.2),
-        width: widthPercentageToDP(7),
-        backgroundColor: '#F5891F',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 19,
-        color: 'white'
+        height: 27,
+        width:  27,
+        borderRadius: 13.5,
+        backgroundColor: '#F5891F'
     },
     imageStyle: {
-        height: heightPercentageToDP(20),
-        width: widthPercentageToDP(32.6)
+        height: widthPercentageToDP(33),
+        width:  widthPercentageToDP(33)
     },
     closeIconContainer: {
         height: heightPercentageToDP(5),

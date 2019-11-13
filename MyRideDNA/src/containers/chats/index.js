@@ -341,11 +341,12 @@ class Chat extends Component {
                                     const showDate = index === chatMessages.length - 1 || chatMessages[index + 1].date.substring(0, 10) !== item.date.substring(0, 10);
                                     if (item.senderId === user.userId) {
                                         const isMyLastMsg = index === 0 || chatMessages[index - 1].senderId !== user.userId;
-                                        return <View style={{ flexDirection: 'column', marginTop: 20 }}>
-                                            {showDate && this.renderChatDate(item.date)}
+                                        return <View style={{ flexDirection: 'column', marginTop: 2 }}>
+                                            {/* {showDate && this.renderChatDate(item.date)} */}
                                             <Item style={{ borderBottomWidth: 0, justifyContent: 'flex-end' }}>
                                                 <ChatBubble
                                                     messageTime={this.getFormattedTime(item.date)}
+                                                    messageDate={showDate && this.renderChatDate(item.date)}
                                                     message={item.content}
                                                     bubbleStyle={[styles.myMsgBubble, isMyLastMsg ? { borderBottomRightRadius: 0 } : null]}
                                                     bubbleNameStyle={styles.friendName}
@@ -362,8 +363,8 @@ class Chat extends Component {
                                         </View>
                                     } else {
                                         const isMemberLastMsg = index === 0 || chatMessages[index - 1].senderId !== item.senderId;
-                                        return <View style={{ flexDirection: 'column', marginTop: 20 }}>
-                                            {showDate && this.renderChatDate(item.date)}
+                                        return <View style={{ flexDirection: 'column', marginTop: 2 }}>
+                                            {/* {showDate && this.renderChatDate(item.date)} */}
                                             <Item style={{ borderBottomWidth: 0 }}>
                                                 {
                                                     isMemberLastMsg
@@ -375,8 +376,9 @@ class Chat extends Component {
                                                         : <View style={{ marginRight: styles.thumbnail.width + 5 }} />
                                                 }
                                                 <ChatBubble
-                                                    bubbleName={this.props.chatInfo.isGroup ? item.senderName : ''}
+                                                    bubbleName={this.props.chatInfo.isGroup ? item.senderName.split(' ')[0] : ''}
                                                     messageTime={this.getFormattedTime(item.date)}
+                                                    messageDate={showDate && this.renderChatDate(item.date)}
                                                     message={item.content}
                                                     bubbleStyle={[styles.friendMsgBubble, isMemberLastMsg ? { borderBottomLeftRadius: 0 } : null]}
                                                     bubbleNameStyle={styles.friendName}

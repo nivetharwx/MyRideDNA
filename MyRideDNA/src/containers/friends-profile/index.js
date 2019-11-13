@@ -139,7 +139,7 @@ class FriendsProfile extends Component {
                             </Text>
                             {
                                 person.nickname ?
-                                    <Text style={{ color: 'rgba(189, 195, 199, 1)', fontWeight: 'bold' }}>
+                                    <Text style={{ color: 'rgba(189, 195, 199, 1)', fontWeight: 'bold', fontSize: 12 }}>
                                         {person.nickname.toUpperCase()}
                                     </Text>
                                     : null
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
         marginLeft: 17
     },
     title: {
-        fontSize: widthPercentageToDP(6),
+        fontSize: 20,
         color: 'white',
         fontWeight: 'bold',
         backgroundColor: 'transparent',
@@ -415,13 +415,15 @@ const styles = StyleSheet.create({
         elevation: 20,
     },
     addBtnCont: {
-        height: widthPercentageToDP(5),
-        width: widthPercentageToDP(5),
-        borderRadius: widthPercentageToDP(2.5),
+        height: 18,
+        width: 18,
+        borderRadius: 9,
         backgroundColor: '#a8a8a8',
         marginRight: 10
     },
     txtOnImg: {
+        marginLeft: 45,
+        marginTop: 30,
         color: '#fff',
         fontWeight: 'bold',
         fontSize: 18,
