@@ -35,7 +35,7 @@ import Settings from '../containers/settings';
 import Offers from '../containers/offers';
 import ChatList from '../containers/chats/chat-list';
 import Album from '../containers/album';
-import BikeDetails from '../containers/profile/my-garage/bike-details';
+// import BikeDetails from '../containers/profile/my-garage/bike-details';
 
 export default class Navigation extends Component {
     render() {
@@ -72,7 +72,7 @@ export default class Navigation extends Component {
                             <Scene gesturesEnabled={false} key={PageKeys.OFFERS} component={Offers} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.CHAT_LIST} component={ChatList} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.ALBUM} component={Album} hideNavBar></Scene>
-                            <Scene gesturesEnabled={false} key={PageKeys.BIKE_DETAILS} component={BikeDetails} hideNavBar></Scene>
+                            {/* <Scene gesturesEnabled={false} key={PageKeys.BIKE_DETAILS} component={BikeDetails} hideNavBar></Scene> */}
                         </Scene>
                     </Router>
                 </Root>
