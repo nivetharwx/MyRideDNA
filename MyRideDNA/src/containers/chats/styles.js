@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
         marginLeft: widthPercentageToDP(2)
     },
     chatArea: {
-        paddingHorizontal: 15,
+        paddingHorizontal: 13,
         paddingTop: 10
     },
     friendMsgBubble: {
@@ -91,8 +91,8 @@ const styles = StyleSheet.create({
     },
     thumbnail: {
         marginBottom: 17,
-        height: 34,
-        width: 34,
+        height: widthPercentageToDP(8.5),
+        width: widthPercentageToDP(8.5),
         borderRadius: 17,
         alignSelf: 'flex-end'
     },

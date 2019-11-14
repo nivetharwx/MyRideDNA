@@ -130,19 +130,14 @@ class Album extends Component {
                     <FlatList
                         numColumns={3}
                         data={albumList}
-                        columnWrapperStyle={{ justifyContent: 'flex-start' }}
+                        columnWrapperStyle={{ justifyContent: 'flex-start', marginBottom: widthPercentageToDP(1) }}
                         keyExtractor={this.albumKeyExtractor}
                         renderItem={({ item, index }) => (
-                            <View style={{ margin: 2, flexDirection: 'column' }}>
-                                {/* <View style={{borderWidth:2.5, borderColor:'#ffffff'}}> */}
-                                <SquareCard
-                                    item={item}
-                                    imageStyle={styles.imageStyle}
-                                    onPress={() => this.openPicture(item)}
-                                />
-
-                            </View>
-
+                            <SquareCard
+                                item={item}
+                                imageStyle={[styles.imageStyle, index % 3 === 1 ? { marginHorizontal: widthPercentageToDP(1) } : null]}
+                                onPress={() => this.openPicture(item)}
+                            />
                         )}
                         initialNumToRender={15}
                         // sonMomentumScrollBegin={this.onScrollBegin}
@@ -183,13 +178,13 @@ const styles = StyleSheet.create({
     },
     rightIconPropsStyle: {
         height: 27,
-        width:  27,
+        width: 27,
         borderRadius: 13.5,
         backgroundColor: '#F5891F'
     },
     imageStyle: {
-        height: widthPercentageToDP(33),
-        width:  widthPercentageToDP(33)
+        height: widthPercentageToDP(98/3),
+        width: widthPercentageToDP(98/3)
     },
     closeIconContainer: {
         height: heightPercentageToDP(5),

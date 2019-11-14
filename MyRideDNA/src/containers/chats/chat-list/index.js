@@ -172,8 +172,8 @@ class ChatList extends Component {
                                     ? <Thumbnail style={styles.iconContComm} source={{ uri: item.profilePicture }} />
                                     : item.profilePictureList
                                         ? <View style={[styles.iconContComm, { backgroundColor: '#ffffff' }]}>
-                                            <Thumbnail style={{ height: 38, width: 38, borderRadius: 19, borderWidth: 1, borderColor: '#ffffff' }} source={{ uri: item.profilePictureList[0] }} />
-                                            <Thumbnail style={{ height: 38, width: 38, borderRadius: 19, borderWidth: 1, borderColor: '#ffffff', position: 'absolute', zIndex: 10, left: 17.5, top: 15 }} source={{ uri: item.profilePictureList[1] }} />
+                                            <Thumbnail style={styles.smallThumbanail} source={{ uri: item.profilePictureList[0] }} />
+                                            <Thumbnail style={[styles.smallThumbanail, { position: 'absolute', zIndex: 10, left: 17.5, top: 12 }]} source={{ uri: item.profilePictureList[1] }} />
                                         </View>
                                         : <IconButton disabled style={[styles.iconContComm, styles.groupIconCont]} iconProps={{ name: 'users', type: 'FontAwesome', style: styles.iconComm }} />
                             }
@@ -371,10 +371,9 @@ const styles = StyleSheet.create({
     },
     iconContComm: {
         marginHorizontal: 15,
-        height: 52,
-        width: 52,
-        maxWidth: 52,
-        borderRadius: 26,
+        height: 48,
+        width: 48,
+        borderRadius: 24,
         alignSelf: 'center',
         backgroundColor: '#6C6C6B',
     },
@@ -399,5 +398,12 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         justifyContent: 'center',
         alignItems: 'center'
+    },
+    smallThumbanail: {
+        height: 32,
+        width: 32,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#ffffff'
     }
 });
