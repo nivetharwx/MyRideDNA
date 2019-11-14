@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
         marginRight: 10
     },
     txtOnImg: {
-        marginLeft: 45,
+        marginLeft: widthPercentageToDP(5),
         marginTop: 30,
         color: '#fff',
         fontWeight: 'bold',

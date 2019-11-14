@@ -238,7 +238,7 @@ class FavoriteListTab extends Component {
                     <View style={{ flex: 2.89 }}>
                         <LabeledInputPlaceholder
                             placeholder='Name'
-                            inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
+                            inputValue={searchQuery} inputStyle={{ borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
                             returnKeyType='next'
                             onChange={this.onChangeSearchValue}
                             hideKeyboardOnSubmit={false}
@@ -333,4 +333,9 @@ const styles = StyleSheet.create({
         marginHorizontal: widthPercentageToDP(5),
         paddingTop: 16
     },
+    searchCont: {
+        marginBottom: 0,
+        flex: 1,
+        width: widthPercentageToDP(47),
+    }
 });

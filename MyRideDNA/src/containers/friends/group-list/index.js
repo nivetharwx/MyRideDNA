@@ -424,11 +424,11 @@ class GroupListTab extends Component {
                     <View style={{ flex: 2.89 }}>
                         <LabeledInputPlaceholder
                             placeholder='Name'
-                            inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: 25, backgroundColor: '#fff' }}
+                            inputValue={searchQuery} inputStyle={{ borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
                             returnKeyType='next'
                             onChange={this.onChangeSearchValue}
                             hideKeyboardOnSubmit={false}
-                            containerStyle={styles.containerStyle} />
+                            containerStyle={styles.searchCont} />
                     </View>
                     <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
                         <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
@@ -545,6 +545,11 @@ const styles = StyleSheet.create({
         marginHorizontal: widthPercentageToDP(5),
         paddingTop: widthPercentageToDP(5)
     },
+    searchCont: {
+        marginBottom: 0,
+        flex: 1,
+        width: widthPercentageToDP(47),
+    }
 });
 
 
