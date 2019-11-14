@@ -25,11 +25,15 @@ class Passengers extends Component {
             isLoadingData: false,
             isLoading: false,
             spinValue: new Animated.Value(0),
+            pageNumber: 0
         };
     }
 
     componentDidMount() {
-        this.props.getPassengerList(this.props.user.userId, 0, 10, (res) => {
+        this.props.getPassengerList(this.props.user.userId, this.state.pageNumber, 10, (res) => {
+            if (res.passengerList.length > 0) {
+                this.setState({ pageNumber: this.state.pageNumber + 1 })
+            }
         }, (err) => {
         });
     }
@@ -166,7 +170,10 @@ class Passengers extends Component {
     loadMoreData = () => {
         if (this.state.isLoadingData && this.state.isLoading === false) {
             this.setState({ isLoading: true, isLoadingData: false })
-            this.props.getPassengerList(this.props.user.userId, this.props.pageNumber, 10, (res) => {
+            this.props.getPassengerList(this.props.user.userId, this.state.pageNumber, 10, (res) => {
+                if (res.passengerList.length > 0) {
+                    this.setState({ pageNumber: this.state.pageNumber + 1 })
+                }
                 this.setState({ isLoading: false })
             }, (err) => {
                 this.setState({ isLoading: false })
@@ -281,8 +288,8 @@ class Passengers extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { passengerList } = state.PassengerList;
-    const { showLoader, pageNumber, hasNetwork, lastApi } = state.PageState;
-    return { user, passengerList, showLoader, pageNumber, hasNetwork, lastApi };
+    const { showLoader, hasNetwork, lastApi } = state.PageState;
+    return { user, passengerList, showLoader, hasNetwork, lastApi };
 }
 const mapDispatchToProps = (dispatch) => {
     return {

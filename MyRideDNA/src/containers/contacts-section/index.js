@@ -377,10 +377,10 @@ class ContactsSection extends PureComponent {
             return { righticonImage: require('../../assets/img/add-friend-from-community.png') }
         }
         else if (item.relationship === RELATIONSHIP.SENT_REQUEST) {
-            return { righticonImage: require('../../assets/img/cancel.png') }
+            return { righticonImage: require('../../assets/img/cancel.png'), imgStyles: {width:23, height:23} }
         }
         else if (item.relationship === RELATIONSHIP.RECIEVED_REQUEST) {
-            return { righticonImage: require('../../assets/img/accept-reject.png') }
+            return { righticonImage: require('../../assets/img/accept-reject.png'),imgStyles: {width:35, height:35} }
         }
         else {
             return { righticonImage: require('../../assets/img/chat-high-res.png') }
