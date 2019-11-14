@@ -522,11 +522,11 @@ class Group extends Component {
                     <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 80, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
                         <View style={{ flex: 2.89 }}>
                             <LabeledInputPlaceholder
-                                inputValue={searchQuery} inputStyle={{ paddingBottom: 0, borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, height: 25, backgroundColor: '#fff', }}
-                                returnKeyType='next'
+                                placeholder='Name'
+                                inputValue={searchQuery} inputStyle={{ borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
                                 onChange={this.onChangeSearchValue}
                                 hideKeyboardOnSubmit={false}
-                                containerStyle={styles.containerStyle} />
+                                containerStyle={styles.searchCont} />
                         </View>
                         <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
                             <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />

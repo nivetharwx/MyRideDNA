@@ -52,6 +52,11 @@ const styles = StyleSheet.create({
         marginHorizontal: widthPercentageToDP(5),
         paddingTop: 16
     },
+    searchCont: {
+        marginBottom: 0,
+        flex: 1,
+        width: widthPercentageToDP(47),
+    },
 });
 
 export default styles;

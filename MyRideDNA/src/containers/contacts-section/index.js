@@ -452,6 +452,7 @@ class ContactsSection extends PureComponent {
                             <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
                                 <View style={{ flex: 2.89 }}>
                                     <LabeledInputPlaceholder
+                                        placeholder='Name'
                                         inputValue={searchName} inputStyle={{ paddingBottom: 0, backgroundColor: '#fff', borderBottomWidth: 0 }}
                                         onChange={this.searchInCommunity}
                                         hideKeyboardOnSubmit={false}

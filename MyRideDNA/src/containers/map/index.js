@@ -2799,10 +2799,10 @@ export class Map extends Component {
                                                         </View>
                                                 } */}
                                                 {
-                                                    <View style={{ flexDirection: 'row' }}>
-                                                        <IconButton style={{ paddingHorizontal: widthPercentageToDP(4), paddingVertical: widthPercentageToDP(4) }} title='TRACKING' titleStyle={{ color: '#fff', fontSize: 16 }} iconProps={{ name: 'ios-arrow-dropdown', type: 'Ionicons', style: { color: '#fff', marginLeft: 5, fontSize: widthPercentageToDP(5) } }} iconRight onPress={this.openTrackingList} />
-                                                        <LinkButton style={{ paddingVertical: widthPercentageToDP(4) }} title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
-                                                        <LinkButton style={{ paddingVertical: widthPercentageToDP(4) }} title='RECORD' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                        <IconButton style={{ paddingHorizontal: widthPercentageToDP(4) }} title='TRACKING' titleStyle={{ color: '#fff', fontSize: 16 }} iconProps={{ name: 'ios-arrow-dropdown', type: 'Ionicons', style: { color: '#fff', marginLeft: 5, fontSize: widthPercentageToDP(5) } }} iconRight onPress={this.openTrackingList} />
+                                                        <LinkButton title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
+                                                        <LinkButton title='RECORD' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
                                                     </View>
                                                 }
                                                 <IconButton iconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }}
