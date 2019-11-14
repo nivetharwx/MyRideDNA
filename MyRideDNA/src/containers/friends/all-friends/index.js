@@ -56,6 +56,7 @@ const FLOAT_ACTIONS = [{
 },];
 
 class AllFriendsTab extends Component {
+    filteredFriends = []
     FRIEND_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => this.openFriendsProfileTab() }, { text: 'Rides', id: 'rides', handler: () => this.openFriendRideTab() }, { text: 'Chat', id: 'chat', handler: () => { this.openChatPage() } }, { text: 'Garage', id: 'garage', handler: () => this.openFriendGarageTab() }, { text: 'Unfriend', id: 'unfriend', handler: () => this.doUnfriend() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     UNKNOWN_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Send\nRequest', id: 'sendRequest', handler: () => this.sendFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     SENT_REQUEST_OPTIONS = [{ text: 'Profile', id: 'profile', handler: () => { } }, { text: 'Rides', id: 'rides', handler: () => { } }, { text: 'Cancel\nRequest', id: 'cancelRequest', handler: () => this.cancelFriendRequest() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
@@ -243,8 +244,8 @@ class AllFriendsTab extends Component {
     showOptionsModal = (userId) => {
         let person = null;
         if (this.props.searchQuery.trim().length > 0) {
-            const index = this.state.filteredFriends.findIndex(item => item.userId === userId)
-            person = this.state.filteredFriends[index];
+            const index = this.filteredFriends.findIndex(item => item.userId === userId)
+            person = this.filteredFriends[index];
         }
         else {
             const index = this.props.allFriends.findIndex(item => item.userId === userId)
@@ -465,35 +466,36 @@ class AllFriendsTab extends Component {
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
         });
+
         if (friendsFilter === FILTERED_ACTION_IDS.BTN_ALL_FRIENDS) {
-            this.state.filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
+            this.filteredFriends = searchQuery === '' ? allFriends : allFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                     (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
         } else if (friendsFilter === FILTERED_ACTION_IDS.BTN_ONLINE_FRIENDS) {
             const onlineFriends = allFriends.filter(friend => friend.isOnline);
-            this.state.filteredFriends = searchQuery === '' ? onlineFriends : onlineFriends.filter(friend => {
+            this.filteredFriends = searchQuery === '' ? onlineFriends : onlineFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                     (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
         }
         else if (friendsFilter === FILTERED_ACTION_IDS.FAVOURITE_FRIENDS) {
             const favouriteFriends = allFriends.filter(friend => friend.favorite);
-            this.state.filteredFriends = searchQuery === '' ? favouriteFriends : favouriteFriends.filter(friend => {
+            this.filteredFriends = searchQuery === '' ? favouriteFriends : favouriteFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                     (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
         }
         else if (friendsFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE_FRIENDS) {
             const locationEnabledFriends = allFriends.filter(friend => friend.locationEnable);
-            this.state.filteredFriends = searchQuery === '' ? locationEnabledFriends : locationEnabledFriends.filter(friend => {
+            this.filteredFriends = searchQuery === '' ? locationEnabledFriends : locationEnabledFriends.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                     (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
         }
         else if (friendsFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP_FRIENDS) {
             const friendsVisibleOnMap = allFriends.filter(friend => friendsLocationList[friend.userId] && friendsLocationList[friend.userId].isVisible === true);
-            this.state.filteredFriends = searchQuery === '' ? friendsVisibleOnMap : friendsVisibleOnMap.filter(friend => {
+            this.filteredFriends = searchQuery === '' ? friendsVisibleOnMap : friendsVisibleOnMap.filter(friend => {
                 return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                     (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
@@ -536,7 +538,7 @@ class AllFriendsTab extends Component {
                 <FlatList
                     style={{ flexDirection: 'column' }}
                     contentContainerStyle={styles.friendList}
-                    data={this.state.filteredFriends}
+                    data={this.filteredFriends}
                     refreshing={isRefreshing}
                     onRefresh={this.onPullRefresh}
                     keyExtractor={this.friendKeyExtractor}

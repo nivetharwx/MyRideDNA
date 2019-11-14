@@ -2321,13 +2321,12 @@ export const getPassengerList = (userId, pageNumber, preference, successCallback
                     dispatch(apiLoaderActions(false))
                     dispatch(replacePassengerListAction({ passengerList: res.data.passengerList, pageNumber: pageNumber }))
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
                     successCallback(res.data)
                 }
                 else if (res.data.passengerList.length === 0) {
                     dispatch(apiLoaderActions(false));
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    successCallback(false)
+                    successCallback(res.data)
                 }
             })
             .catch(er => {
