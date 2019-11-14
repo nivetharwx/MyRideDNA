@@ -35,7 +35,7 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
                     {
                         bubbleName || messageDate
                             ? <View style={{ padding: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                {bubbleName && <Text style={{ color: '#C4C4C4', fontSize: 11 }}>{bubbleName}</Text>}
+                                {bubbleName ? <Text style={{ color: '#C4C4C4', fontSize: 11 }}>{bubbleName}</Text> : null}
                                 <Text style={[{ color: '#8D8D8D', fontSize: 11 }, bubbleName ? { marginRight: 30 } : { marginLeft: 23 }]}>{messageDate}</Text>
                             </View>
                             : null
@@ -50,7 +50,7 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
                     {
                         bubbleName || messageDate
                             ? <View style={{ padding: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                {bubbleName && <Text style={{ color: '#C4C4C4', fontSize: 11 }}>{bubbleName}</Text>}
+                                {bubbleName ? <Text style={{ color: '#C4C4C4', fontSize: 11 }}>{bubbleName}</Text> : null}
                                 <Text style={[{ color: '#8D8D8D', fontSize: 11 }, bubbleName ? { marginRight: 30 } : { marginLeft: 23 }]}>{messageDate}</Text>
                             </View>
                             : null
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
         // paddingBottom: 8,
         // paddingTop: 8,
         paddingHorizontal: 20,
-        paddingVertical: 13,
+        paddingVertical: 11,
         width: 215,
         // minHeight: heightPercentageToDP(8),
         maxWidth: 215,

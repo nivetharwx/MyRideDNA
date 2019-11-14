@@ -237,9 +237,10 @@ class Passengers extends Component {
                         rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.openPassengerForm, rightIconPropsStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 } }}
                     />
                     <FlatList
+                        showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingTop: 40 + APP_COMMON_STYLES.headerHeight }}
                         style={{ flexDirection: 'column' }}
-                        columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: heightPercentageToDP(4), marginHorizontal: 29 }}
+                        columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: heightPercentageToDP(4), marginHorizontal: 25 }}
                         numColumns={2}
                         data={passengerList}
                         keyExtractor={this.passengerListKeyExtractor}
@@ -250,7 +251,7 @@ class Passengers extends Component {
                                 item={item}
                                 onLongPress={() => this.showOptionsModal(index)}
                                 onPress={() => this.openPassengerProfile(item, index)}
-                                imageStyle={{ height: 142, width: 142 }}
+                                imageStyle={{ height: widthPercentageToDP(40), width: widthPercentageToDP(40) }}
                             />
                         )}
                         ListFooterComponent={this.renderFooter}
