@@ -63,7 +63,10 @@ import {
     UPDATE_SEARCH_RESULTS,
     GO_PREV_PROFILE,
     UPDATE_GROUP_CHAT_PIC,
-    UPDATE_CHAT_PIC
+    UPDATE_CHAT_PIC,
+    CLEAR_RIDE_LIST,
+    CLEAR_ALBUM,
+    CLEAR_CHAT_LIST
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -153,6 +156,12 @@ export const appNavMenuVisibilityAction = (data) => (
 export const screenChangeAction = (data) => (
     {
         type: SCREEN_CHANGE,
+        data: data
+    }
+);
+export const clearRideListAction = () => (
+    {
+        type: CLEAR_RIDE_LIST,
         data: data
     }
 );
@@ -675,6 +684,12 @@ export const resetCommunityListAction = (data) => (
         data: data
     }
 );
+export const clearAlbumAction = (data) => (
+    {
+        type: CLEAR_ALBUM,
+        data: data
+    }
+);
 export const replaceAlbumListAction = (data) => (
     {
         type: REPLACE_ALBUM_LIST,
@@ -816,6 +831,12 @@ export const updateChatMessagesAction = (data) => (
 export const replaceChatMessagesAction = (data) => (
     {
         type: REPLACE_CHAT_MESSAGES,
+        data: data
+    }
+);
+export const clearChatListAction = (data) => (
+    {
+        type: CLEAR_CHAT_LIST,
         data: data
     }
 );

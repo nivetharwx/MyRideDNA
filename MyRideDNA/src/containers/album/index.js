@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { View, ImageBackground, Text, Alert, StatusBar, ScrollView, FlatList, TextInput, KeyboardAvoidingView, TouchableOpacity, StyleSheet, ActivityIndicator, Easing, Animated } from 'react-native';
 import { connect } from 'react-redux';
-import { appNavMenuVisibilityAction, updateAlbumListAction } from '../../actions';
+import { appNavMenuVisibilityAction, updateAlbumListAction, clearAlbumAction } from '../../actions';
 import { ShifterButton, IconButton, LinkButton } from '../../components/buttons';
 import { Thumbnail, Item, List, Icon as NBIcon } from 'native-base';
 import { APP_COMMON_STYLES, widthPercentageToDP, WindowDimensions, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../constants';
@@ -97,6 +97,10 @@ class Album extends Component {
         this.isLoadingData = true;
     }
 
+    componentWillUnmount() {
+        this.props.clearAlbum();
+    }
+
     render() {
         const { user, albumList } = this.props;
         const { isVisiblePicture, selectedPicture } = this.state;
@@ -167,6 +171,7 @@ const mapDispatchToProps = (dispatch) => {
             console.log('getPictureList album error : ', error)
             // dispatch(updateFriendInListAction({ userId: friendId }))
         }),
+        clearAlbum: () => dispatch(clearAlbumAction())
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Album);

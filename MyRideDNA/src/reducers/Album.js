@@ -1,4 +1,4 @@
-import { UPDATE_EMAIL_STATUS, REPLACE_ALBUM_LIST, UPDATE_ALBUM_LIST } from "../actions/actionConstants";
+import { UPDATE_EMAIL_STATUS, REPLACE_ALBUM_LIST, UPDATE_ALBUM_LIST, CLEAR_ALBUM } from "../actions/actionConstants";
 import { MEDIUM_TAIL_TAG, THUMBNAIL_TAIL_TAG } from "../constants";
 
 const initialState = {
@@ -38,6 +38,11 @@ export default (state = initialState, action) => {
                     ...state,
                     albumList: updatedAlbumList
                 }
+            }
+
+        case CLEAR_ALBUM:
+            return {
+                albumList: []
             }
         default: return state
     }

@@ -1,4 +1,4 @@
-import { UPDATE_CHAT_MESSAGES, REPLACE_CHAT_MESSAGES, UPDATE_CHAT_LIST, REPLACE_CHAT_LIST, RESET_CHAT_MESSAGES, RESET_MESSAGE_COUNT, UPDATE_CHAT_DATA_LIST, UPDATE_MESSAGE_COUNT, UPDATE_CHAT_PIC, UPDATE_GROUP_CHAT_PIC } from "../actions/actionConstants";
+import { UPDATE_CHAT_MESSAGES, REPLACE_CHAT_MESSAGES, UPDATE_CHAT_LIST, REPLACE_CHAT_LIST, RESET_CHAT_MESSAGES, RESET_MESSAGE_COUNT, UPDATE_CHAT_DATA_LIST, UPDATE_MESSAGE_COUNT, UPDATE_CHAT_PIC, UPDATE_GROUP_CHAT_PIC, CLEAR_CHAT_LIST } from "../actions/actionConstants";
 import { PageKeys } from "../constants";
 
 
@@ -270,7 +270,13 @@ export default (state = initialState, action) => {
                 }
             }
 
-
+        case CLEAR_CHAT_LIST:
+            return {
+                chatMessages: [],
+                chatList: [],
+                totalUnseenMessage: 0,
+                chatData: null
+            }
 
         default: return state
     }

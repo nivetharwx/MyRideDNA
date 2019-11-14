@@ -7,7 +7,7 @@ import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast
 import { BasicHeader } from '../../../components/headers';
 import { ShifterButton } from '../../../components/buttons';
 import { getAllChats, getPictureList, logoutUser } from '../../../api';
-import { appNavMenuVisibilityAction, updateChatPicAction, updateGroupChatPicAction } from '../../../actions';
+import { appNavMenuVisibilityAction, updateChatPicAction, updateGroupChatPicAction, clearChatListAction } from '../../../actions';
 import { getFormattedDateFromISO } from '../../../util';
 import { Actions } from 'react-native-router-flux';
 import { BaseModal } from '../../../components/modal';
@@ -85,6 +85,7 @@ class ChatList extends Component {
 
 
     componentWillUnmount() {
+        this.props.clearChatList();
     }
 
     deleteFromChatList = () => {
@@ -320,6 +321,7 @@ const mapDispatchToProps = (dispatch) => {
             })
         },
         logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
+        clearChatList: () => dispatch(clearChatListAction()),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(ChatList);
