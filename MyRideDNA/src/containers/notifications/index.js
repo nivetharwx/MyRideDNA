@@ -131,42 +131,49 @@ class Notifications extends Component {
     }
     getDateAndTime = (item) => {
         var dateFormat = { day: 'numeric', year: '2-digit', month: 'short' };
-        return new Date(item.date).toLocaleDateString('en-IN',dateFormat);
+        return new Date(item.date).toLocaleDateString('en-IN', dateFormat);
+    }
+
+    getFormattedTime =  (dateTime) => {
+        const time = new Date(dateTime).toTimeString().substring(0, 5).split(':');
+        let period = time[0] < 12 ? 'AM' : 'PM';
+        if (time[0] > 12) {
+            time[0] = time[0] - 12;
+        }
+        return `${time.join(':')} ${period}`;
+        // return new Date(dateTime).toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
     }
 
     _renderItem = ({ item, index }) => {
         return (
-            // <ListItem avatar
-            //     key={item.id}
+            // <ListItem avatar key={item.id}
             //     // style={[styles.listItem, { backgroundColor: item.status === 'unread' ? APP_COMMON_STYLES.headerColor : '#fff' }]}
-            //     style={[styles.listItem, { backgroundColor: '#fff' }]}
-            //     onPress={() => this.onPressnotification(item)}>
+            //     style={[styles.listItem, item.status === 'unread' ? { backgroundColor: '#daedf4' } : { backgroundColor: '#fff' }]}
+            //     onPress={() => this.onPressnotification(item)}  >
             //     <Left style={[styles.noBorderTB, styles.avatarContainer]}>
             //         <Thumbnail source={item.profilePicture ? { uri: item.profilePicture } : require('../../assets/img/friend-profile-pic.png')} />
             //     </Left>
-            //     <Body style={[styles.noBorderTB, styles.itemBody,]}>
-            //         {
-            //             item.status === 'unread'
-            //                 ? <Text style={[styles.name, {backgroundColor:'#e8f4f8',fontWeight:'bold',fontSize:17 }]}>{item.fromUserName + ' '}<Text style={styles.message}>{item.message}</Text></Text>
-            //                 : <Text style={[styles.name,{fontWeight:'bold', fontSize:17}]}>{item.fromUserName + ' '}<Text style={styles.message}>{item.message}</Text></Text>
-            //         }
-            //         {/* <Text style={styles.name}>{item.fromUserName + ' '}<Text style={styles.message}>{item.message}</Text></Text> */}
-            //         {/* <Text>{getFormattedDateFromISO(item.date, '/')}</Text> */}
+            //     <Body style={[styles.noBorderTB, styles.itemBody]}>
+            //         <Text style={[styles.name, { fontWeight: 'bold', fontSize: 17 }]}>{item.fromUserName + ' '}<Text style={styles.message}>{item.message}</Text></Text>
+            //         <Text>{this.getDateAndTime(item)}</Text>
             //     </Body>
+            //     <Right>
+            //         <IconButton iconProps={{ name: 'close', type: 'MaterialIcons', style: { fontSize: 25, color: '#6B7663' } }} onPress={() => this.deleteNotification(item, index)} />
+            //     </Right>
             // </ListItem>
-            <ListItem avatar key={item.id}
-                // style={[styles.listItem, { backgroundColor: item.status === 'unread' ? APP_COMMON_STYLES.headerColor : '#fff' }]}
-                style={[styles.listItem, item.status === 'unread' ? { backgroundColor: '#daedf4' } : { backgroundColor: '#fff' }]}
-                onPress={() => this.onPressnotification(item)}  >
-                <Left style={[styles.noBorderTB, styles.avatarContainer]}>
-                    <Thumbnail source={item.profilePicture ? { uri: item.profilePicture } : require('../../assets/img/friend-profile-pic.png')} />
+            <ListItem noIndent style={styles.itemCont}>
+                <Left style={styles.leftCont}>
+                    {
+                        item.profilePicture
+                            ? <Thumbnail style={styles.iconContComm} source={{ uri: item.profilePicture }} />
+                            : <IconButton disabled style={[styles.iconContComm, styles.userIconCont]} iconProps={{ name: 'user', type: 'FontAwesome', style: styles.iconComm }} />
+                    }
+                    <View style={styles.bodyCont}>
+                        <Text style={styles.name}>{item.fromUserName + ' '}<Text style={styles.message}>{item.message}</Text></Text>
+                    </View>
                 </Left>
-                <Body style={[styles.noBorderTB, styles.itemBody]}>
-                    <Text style={[styles.name, { fontWeight: 'bold', fontSize: 17 }]}>{item.fromUserName + ' '}<Text style={styles.message}>{item.message}</Text></Text>
-                    <Text>{this.getDateAndTime(item)}</Text>
-                </Body>
-                <Right>
-                    <IconButton iconProps={{ name: 'close', type: 'MaterialIcons', style: { fontSize: 25, color: '#6B7663' } }} onPress={() => this.deleteNotification(item, index)} />
+                <Right style={styles.rightCont}>
+                    <Text style={{ color: '#8D8D8D', letterSpacing: 0.8, fontSize: 11 }}>{this.getFormattedTime(item.date)}</Text>
                 </Right>
             </ListItem>
         );
@@ -212,27 +219,40 @@ class Notifications extends Component {
         return (
             <View style={{ flex: 1 }}>
                 <View style={APP_COMMON_STYLES.statusBar}>
-                <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
-                <View style={{ flex: 1 }}>
-                    <BasicHeader title='Notifications' rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
-                    {
-                        notificationList.notification.length > 0 ?
-                            <View style={[styles.scrollArea, notificationList.notification.length > 0 ? { paddingBottom: heightPercentageToDP(5) } : null]}>
-                                <FlatList
-                                    data={notificationList.notification}
-                                    keyExtractor={this._keyExtractor}
-                                    renderItem={this._renderItem}
-                                    ListFooterComponent={this.renderFooter}
-                                    // onTouchStart={this.loadMoreData}
-                                    onEndReached={this.loadMoreData}
-                                    onEndReachedThreshold={0.1}
-                                    onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
+                    <BasicHeader title='Notifications' 
+                    rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} 
+                    // leftIconProps={this.props.comingFrom === PageKeys.PROFILE ? { reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton } : null}
+                    />
+                    <View style={styles.scrollArea}>
+                        <FlatList
+                            data={notificationList.notification}
+                            keyExtractor={this._keyExtractor}
+                            renderItem={this._renderItem}
+                            ListFooterComponent={this.renderFooter}
+                            // onTouchStart={this.loadMoreData}
+                            onEndReached={this.loadMoreData}
+                            onEndReachedThreshold={0.1}
+                            onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
 
-                                />
+                        />
+
+                        {/* <Image source={require('../../assets/img/notifications-bg.png')} style={styles.bottomImage} /> */}
+                    </View>
+                    {
+                        this.props.hasNetwork === false && notificationList.notification.length === 0 && <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
+                            <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                            </Animated.View>
+                            <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
+                            <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                        </View>
+                    }
+                    {/* {
+                        notificationList.notification.length > 0 ?
                             
-                             <Image source={require('../../assets/img/notifications-bg.png')} style={styles.bottomImage} />
-                             </View>
                             :
                             hasNetwork ?
                                 <Image source={require('../../assets/img/notifications-bg.png')} style={styles.bottomImage} />
@@ -244,7 +264,7 @@ class Notifications extends Component {
                                     <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
                                     <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
                                 </View>
-                    }
+                    } */}
 
                     {/* Shifter: - Brings the app navigation menu */}
                     <ShifterButton onPress={this.toggleAppNavigation} containerStyles={this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null} alignLeft={user.handDominance === 'left'} />
@@ -289,14 +309,16 @@ const styles = StyleSheet.create({
     scrollArea: {
         marginTop: APP_COMMON_STYLES.headerHeight,
         flexShrink: 0,
-        backgroundColor: '#fff',
+        backgroundColor: '#ffffff'
     },
     name: {
         fontWeight: 'bold',
-        fontSize: 15
+        fontSize: 14,
+        color:'#000000'
     },
     message: {
-        fontSize: 13
+        fontSize: 12,
+        fontWeight:'normal'
     },
     listItem: {
         marginLeft: 0,
@@ -346,5 +368,44 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 15,
         textAlign: 'center',
+    },
+    leftCont: {
+        height: 68,
+        paddingTop: 5,
+        flexDirection: 'row'
+    },
+    itemCont: {
+        paddingBottom: 0,
+        paddingTop: 0,
+        paddingLeft: 0,
+        height: 68
+    },
+    iconContComm: {
+        marginHorizontal: 15,
+        height: 48,
+        width: 48,
+        borderRadius: 24,
+        alignSelf: 'center',
+        backgroundColor: '#6C6C6B',
+    },
+    userIconCont: {
+        paddingLeft: 12
+    },
+    iconComm: {
+        color: '#ffffff',
+        width: 32,
+        height: 30,
+        alignSelf: 'center',
+    },
+    bodyCont: {
+        height: 68,
+        paddingTop: 5,
+        flexDirection: 'column',
+        flex: 1,
+        marginLeft: 5
+    },
+    rightCont: {
+        height: 68,
+        paddingTop: 10
     },
 });
