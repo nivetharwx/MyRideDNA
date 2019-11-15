@@ -294,10 +294,10 @@ class MyProfileTab extends Component {
                     </View>
                     <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(2), marginRight: widthPercentageToDP(7) }}>
                         <View style={{ flexDirection: 'row', marginTop: heightPercentageToDP(2), justifyContent: 'space-between', paddingBottom: 3 }}>
-                            <View style={{ flexDirection: 'row' }}>
+                            <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'space-between' }} onPress={this.onPressFriendsPage}>
                                 <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Road Buddies</Text>
-                                <LinkButton title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16, fontWeight: 'bold' }} onPress={this.onPressFriendsPage} />
-                            </View>
+                                <Text style={{ color: '#f69039', fontSize: 16, fontWeight: 'bold', marginLeft: 10 }}>[see all]</Text>
+                            </TouchableOpacity>
                             <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 15, color: '#fff' } }} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)} />
                         </View>
                         <View style={{ borderTopWidth: 15, borderTopColor: '#DCDCDE' }}>
@@ -323,10 +323,10 @@ class MyProfileTab extends Component {
                     </View>
                     <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(2), marginRight: widthPercentageToDP(7) }}>
                         <View style={{ flexDirection: 'row', marginTop: heightPercentageToDP(2), justifyContent: 'space-between', paddingBottom: 3 }}>
-                            <View style={{ flexDirection: 'row' }}>
+                            <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'space-between' }} onPress={() => Actions.push(PageKeys.PASSENGERS)}>
                                 <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Passengers</Text>
-                                <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16, fontWeight: 'bold' }} onPress={() => Actions.push(PageKeys.PASSENGERS)} />
-                            </View>
+                                <Text style={{ color: '#f69039', fontSize: 16, fontWeight: 'bold', marginLeft: 10 }}>[see all]</Text>
+                            </TouchableOpacity>
                             <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 15, color: '#fff' } }} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: -1 })} />
                         </View>
                         <View style={{ borderTopWidth: 15, borderTopColor: '#DCDCDE' }}>
