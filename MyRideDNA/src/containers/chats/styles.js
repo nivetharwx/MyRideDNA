@@ -45,7 +45,8 @@ const styles = StyleSheet.create({
         paddingTop: 10
     },
     friendMsgBubble: {
-        backgroundColor: '#81BA41',
+        backgroundColor: '#81c341',
+        // backgroundColor: '#81BA41',
     },
     myMsgBubble: {
         backgroundColor: '#00AEEF',
@@ -90,11 +91,11 @@ const styles = StyleSheet.create({
         fontSize: 15
     },
     thumbnail: {
-        marginBottom: 17,
         height: widthPercentageToDP(8.5),
         width: widthPercentageToDP(8.5),
         borderRadius: 17,
         alignSelf: 'flex-end'
+        // marginBottom: 17,
     },
     iconPadding: {
         padding: 5,

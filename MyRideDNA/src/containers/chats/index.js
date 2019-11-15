@@ -354,11 +354,12 @@ class Chat extends Component {
                                                     selectedMessage={selectedMessage && selectedMessage[item.messageId]}
                                                     onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
                                                 />
-                                                {
+                                                {/* {
                                                     isMyLastMsg
                                                         ? <Thumbnail style={[styles.thumbnail, { marginLeft: 5 }]} source={{ uri: user.thumbnailProfilePicture }} />
                                                         : <View style={{ marginRight: styles.thumbnail.width + 5 }} />
-                                                }
+                                                } */}
+                                                <View style={{ marginRight: styles.thumbnail.width + 5 }} />
                                             </Item>
                                         </View>
                                     } else {

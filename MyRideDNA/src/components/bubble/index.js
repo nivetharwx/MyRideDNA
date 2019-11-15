@@ -34,31 +34,31 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
                 <View>
                     {
                         bubbleName || messageDate
-                            ? <View style={{ padding: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                {bubbleName ? <Text style={{ color: '#C4C4C4', fontSize: 11 }}>{bubbleName}</Text> : null}
-                                <Text style={[{ color: '#8D8D8D', fontSize: 11 }, bubbleName ? { marginRight: 30 } : { marginLeft: 23 }]}>{messageDate}</Text>
+                            ? <View style={{ height: 15, marginTop: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <Text style={{ color: '#C4C4C4', fontSize: 10 }}>{bubbleName || ''}</Text>
+                                <Text style={{ color: '#8D8D8D', fontSize: 10 }}>{messageDate}</Text>
                             </View>
-                            : null
+                            : <View style={{ height: 15, marginTop: 5 }} />
                     }
-                    <View style={[styles.chatBubble, bubbleStyle, styles.highlightStyle]}>
-                        <Text style={[messageStyle]}>{message}</Text>
+                    <View style={[styles.chatBubble, bubbleStyle]}>
+                        <Text style={[styles.message, messageStyle]}>{message}</Text>
+                        <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
                     </View>
-                    <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
                 </View>
                 :
                 <View>
                     {
                         bubbleName || messageDate
-                            ? <View style={{ padding: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                {bubbleName ? <Text style={{ color: '#C4C4C4', fontSize: 11 }}>{bubbleName}</Text> : null}
-                                <Text style={[{ color: '#8D8D8D', fontSize: 11 }, bubbleName ? { marginRight: 30 } : { marginLeft: 23 }]}>{messageDate}</Text>
+                            ? <View style={{ height: 15, marginTop: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <Text style={{ color: '#C4C4C4', fontSize: 10 }}>{bubbleName || ''}</Text>
+                                <Text style={{ color: '#8D8D8D', fontSize: 10 }}>{messageDate}</Text>
                             </View>
-                            : null
+                            : <View style={{ height: 15, marginTop: 5 }} />
                     }
                     <View style={[styles.chatBubble, bubbleStyle]}>
-                        <Text style={[messageStyle]}>{message}</Text>
+                        <Text style={[styles.message, messageStyle]}>{message}</Text>
+                        <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
                     </View>
-                    <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
                 </View>
         }
 
@@ -72,8 +72,8 @@ const styles = StyleSheet.create({
     chatBubble: {
         // paddingBottom: 8,
         // paddingTop: 8,
-        paddingHorizontal: 20,
-        paddingVertical: 11,
+        // paddingHorizontal: 20,
+        paddingTop: 11,
         width: 215,
         // minHeight: heightPercentageToDP(8),
         maxWidth: 215,
@@ -87,17 +87,22 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         // paddingBottom: 5,
     },
+    message: {
+        paddingHorizontal: 20
+    },
     bubbleName: {
         color: APP_COMMON_STYLES.infoColor
     },
     messageTime: {
-        // fontStyle: 'italic',
         alignSelf: 'flex-end',
-        marginRight: 5,
+        fontSize: 10,
+        paddingRight: 5,
+        paddingBottom: 2,
+        // fontStyle: 'italic',
+        // marginRight: 5,
         // marginTop: 5,
-        color: '#adacac',
-        fontSize: 11,
-        height: 17
+        // color: '#fff',
+        // height: 17
     },
     container: {
         borderRadius: 30,
