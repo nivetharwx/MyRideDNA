@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, View, Text, FlatList, ImageBackground } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, FlatList, ImageBackground, Image, StatusBar } from 'react-native';
 import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { IconButton } from '../../../../components/buttons';
@@ -8,7 +8,9 @@ import { IconButton } from '../../../../components/buttons';
 class BikeDetails extends Component {
     constructor(props) {
         super(props);
-        this.state = {};
+        this.state = {
+            bike: props.bike || {}
+        };
     }
 
     componentDidMount() {
@@ -19,10 +21,18 @@ class BikeDetails extends Component {
 
     }
 
+    componentWillUnmount() {
+        
+    }
+
     render() {
         const { user } = this.props;
+        const { bike } = this.state;
         return (
             <View style={styles.fill}>
+                <View style={APP_COMMON_STYLES.statusBar}>
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                </View>
                 <View style={styles.header}>
                     <IconButton iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: { fontSize: 27 } }}
                         style={styles.headerIconCont} onPress={() => Actions.pop()} />
@@ -40,8 +50,30 @@ class BikeDetails extends Component {
 
                     </View>
                 </View>
-                <View style={styles.pageContent}>
-                </View>
+                <ScrollView>
+                    <View style={[styles.bikePic, styles.bikeBtmBorder, bike.isDefault ? styles.activeBorder : null]}>
+                        <Image source={bike.pictureList && bike.pictureList[0] ? { uri: bike.pictureList[0] } : require('../../../../assets/img/bike_placeholder.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} />
+                    </View>
+                    <ImageBackground source={require('../../../../assets/img/odometer.png')} style={{ position: 'absolute', marginTop: styles.bikePic.height - 55.5, alignSelf: 'center', height: 111, width: 118, justifyContent: 'center' }}>
+                        <Text style={{ textAlign: 'center', color: '#fff', fontSize: 20, fontWeight: 'bold' }}>0</Text>
+                    </ImageBackground>
+                    <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-around', marginTop: 5 }}>
+                        <Text style={{ color: '#6E6E6E', letterSpacing: 2.2, fontSize: 15, fontWeight: 'bold', marginRight: 72, flex: 1, textAlign: 'right' }}>TOTAL</Text>
+                        <Text style={{ color: '#6E6E6E', letterSpacing: 2.2, fontSize: 15, fontWeight: 'bold', marginLeft: 72, flex: 1 }}>MILES</Text>
+                    </View>
+                    <View style={{ marginHorizontal: 20 }}>
+                        <IconButton iconProps={{ name: 'account-edit', type: 'MaterialCommunityIcons', style: { fontSize: 26, color: '#f69039' } }}
+                            style={{ marginTop: 20, alignSelf: 'flex-end' }} onPress={() => null} />
+                        <Text style={{ marginTop: 15, fontSize: 17, fontWeight: 'bold' }}>{bike.name}</Text>
+                        <Text style={{ marginTop: 5, fontSize: 12 }}>{`${bike.make} - ${bike.model}${bike.notes ? '    |    ' + bike.notes : ''}`}</Text>
+                    </View>
+                    {bike.isDefault ? <View style={styles.activeLabelCont}><View style={styles.activeIndicator} /><Text style={{
+                        color: '#585756', letterSpacing: 0.6, fontSize: 11, marginLeft: 4
+                    }}>Active Bike</Text></View> : null}
+                    <View style={{ marginHorizontal: 20, flex: 1 }}>
+                        <View style={{ backgroundColor: '#B1B1B1', height: 1.5, marginTop: 8 }} />
+                    </View>
+                </ScrollView>
             </View>
         );
     }
@@ -64,9 +96,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     pageContent: {
-        paddingTop: 5,
-        alignItems: 'center',
-        justifyContent: 'center',
+
     },
     header: {
         height: APP_COMMON_STYLES.headerHeight,
@@ -106,5 +136,28 @@ const styles = StyleSheet.create({
         width: widthPercentageToDP(100),
         height: 175,
         borderBottomWidth: 4
+    },
+    bikePic: {
+        height: 232,
+        width: widthPercentageToDP(100),
+    },
+    bikeBtmBorder: {
+        borderBottomWidth: 4,
+        borderBottomColor: APP_COMMON_STYLES.headerColor
+    },
+    activeBorder: {
+        borderBottomColor: APP_COMMON_STYLES.infoColor
+    },
+    activeLabelCont: {
+        marginTop: 16,
+        marginLeft: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    activeIndicator: {
+        width: 7,
+        height: 7,
+        borderRadius: 3.5,
+        backgroundColor: APP_COMMON_STYLES.infoColor
     }
 });

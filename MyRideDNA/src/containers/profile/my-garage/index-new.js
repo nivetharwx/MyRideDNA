@@ -30,7 +30,7 @@ class MyGarageTab extends Component {
         } else {
             this.props.garage.spaceList.forEach(bike => {
                 if (bike.pictureIdList.length > 0) {
-                    this.props.getBikePicture(bike.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), bike.spaceId);
+                    this.props.getBikePicture(bike.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG), bike.spaceId);
                 }
             });
         }
@@ -213,18 +213,15 @@ class MyGarageTab extends Component {
                     <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 19, color: '#fff' } }}
                         style={styles.rightIconPropsStyle} onPress={() => this.openBikeForm()} />
                 </View>
-                <View style={styles.pageContent}>
+                <View style={[styles.fill, styles.pageContent]}>
                     <FlatList
-                        contentContainerStyle={{ flex: 1 }}
+                        contentContainerStyle={{ paddingBottom: APP_COMMON_STYLES.tabContainer.height }}
                         data={garage.spaceList}
                         keyExtractor={(item, index) => item.spaceId + ''}
                         showsVerticalScrollIndicator={false}
                         extraData={this.state}
                         ref={elRef => this.spacelistRef = elRef}
                         renderItem={this.renderBike}
-                        getItemLayout={(data, index) => (
-                            { length: heightPercentageToDP(60), offset: heightPercentageToDP(60) * index, index }
-                        )}
                     />
                 </View>
             </View>
@@ -269,7 +266,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     pageContent: {
-        paddingTop: 5,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -316,7 +312,7 @@ const styles = StyleSheet.create({
     },
     imgContainer: {
         width: widthPercentageToDP(100),
-        height: 175,
+        height: 178,
         borderBottomWidth: 4
     },
     contentOvrImg: {
