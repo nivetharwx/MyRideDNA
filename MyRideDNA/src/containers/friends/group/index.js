@@ -79,10 +79,10 @@ class Group extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.currentGroup !== this.props.currentGroup) {
-            if (this.props.currentGroup.groupMembers.length === 0) {
-                Actions.pop();
-                return;
-            }
+            // if (this.props.currentGroup.groupMembers.length === 0) {
+            //     Actions.pop();
+            //     return;
+            // }
         }
         // else if (prevProps.currentGroup === null) {
         //     // this.props.getAllGroupMembers(this.props.currentGroup.groupId, this.props.user.userId);
@@ -130,6 +130,7 @@ class Group extends Component {
     }
 
     componentWillUnmount() {
+        this.props.resetCurrentGroup();
         // DOC: Remove all keyboard event listeners
         Keyboard.removeListener('keyboardDidShow', this.adjustLayoutOnKeyboardVisibility);
         Keyboard.removeListener('keyboardDidHide', this.adjustLayoutOnKeyboardVisibility);
@@ -152,7 +153,8 @@ class Group extends Component {
 
     onPressBackButton = () => {
         Keyboard.dismiss();
-        setTimeout(() => this.props.resetCurrentGroup(), 100);
+        // setTimeout(() => this.props.resetCurrentGroup(), 100);
+        Actions.pop();
     }
 
     openSearchFriendSection = () => {

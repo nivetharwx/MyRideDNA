@@ -839,7 +839,9 @@ export class Map extends Component {
                 });
             }
         }
+        // DOC: Remove cached friends profiles
         this.props.resetCurrentFriend();
+        
         this.props.changeScreen({ name: screenKey });
     }
 
@@ -1181,20 +1183,10 @@ export class Map extends Component {
     onBackButtonPress = () => {
         if (Actions.state.index !== 0) {
             if (Actions.currentScene === PageKeys.FRIENDS_PROFILE) {
-                // this.props.resetCurrentFriend()
-                // this.props.changeScreen(Actions.currentScene);
-
                 this.popToPrevProfile();
-
-            } else if (Actions.currentScene === PageKeys.GROUP) {
-                this.props.resetCurrentGroup();
-                // this.props.changeScreen(Actions.currentScene);
-            } else if (Actions.currentScene === PageKeys.CHAT) {
-                this.props.resetChatMessage();
             } else if (Actions.currentScene === PageKeys.PASSENGER_PROFILE) {
                 this.props.resetCurrentPassenger();
-            }
-            else {
+            } else {
                 Actions.pop();
                 this.props.changeScreen({ name: Actions.currentScene });
             }
