@@ -256,7 +256,6 @@ class Chat extends Component {
     componentWillUnmount() {
         Keyboard.removeListener('keyboardWillShow', this.toggleIOSKeyboardStatus);
         Keyboard.removeListener('keyboardWillHide', this.toggleIOSKeyboardStatus);
-        // TODO: Clear cached pictures of members (Need to use will unmount in many places)
         this.props.resetChatMessage();
     }
 
@@ -335,7 +334,7 @@ class Chat extends Component {
                                 keyExtractor={this.chatKeyExtractor}
                                 inverted={true}
                                 onViewableItemsChanged={this.onViewableItemsChanged}
-                                extraData={this.state.selectedMessage}
+                                extraData={{ selectedMsg: this.state.selectedMessage, thumbnailPics: this.props.memberPictures }}
                                 // onContentSizeChange={() => { this.refs.flatList.scrollToEnd({ animated: false }) }}
                                 renderItem={({ item, index }) => {
                                     const showDate = index === chatMessages.length - 1 || chatMessages[index + 1].date.substring(0, 10) !== item.date.substring(0, 10);

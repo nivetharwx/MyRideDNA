@@ -40,7 +40,7 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
                             </View>
                             : <View style={{ height: 15, marginTop: 5 }} />
                     }
-                    <View style={[styles.chatBubble, bubbleStyle]}>
+                    <View style={[styles.chatBubble, bubbleStyle, styles.highlightStyle]}>
                         <Text style={[styles.message, messageStyle]}>{message}</Text>
                         <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
                     </View>
