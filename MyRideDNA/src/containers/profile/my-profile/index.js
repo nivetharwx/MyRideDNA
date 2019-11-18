@@ -232,7 +232,7 @@ class MyProfileTab extends Component {
                         </Text>
                         {
                             user.nickname ?
-                                <Text style={{ color: 'rgba(189, 195, 199, 1)', fontWeight: 'bold', fontSize: 12 }}>
+                                <Text style={styles.subTitle}>
                                     {user.nickname.toUpperCase()}
                                 </Text>
                                 : null
@@ -254,16 +254,16 @@ class MyProfileTab extends Component {
                     <Image source={require('../../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} />
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                         <View style={{ flexDirection: 'column', marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(2) }}>
-                            <Text style={{ letterSpacing: 1, fontSize: 11, color: '#a8a8a8', fontWeight: '600' }}>LOCATION</Text>
-                            <Text style={{ fontWeight: 'bold', color: '#000' }}>{user.homeAddress.city}, {user.homeAddress.state}</Text>
+                            <Text style={{ letterSpacing: 1, fontSize: 8, color: '#707070', fontFamily: 'RobotoSlab-Regular_Bold' }}>LOCATION</Text>
+                            <Text style={{ color: '#000', fontFamily: 'RobotoSlab-Regular_Bold', fontSize: 12 }}>{user.homeAddress.city}, {user.homeAddress.state}</Text>
                         </View>
                         <IconButton iconProps={{ name: 'account-edit', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#f69039' } }}
                             style={{ marginRight: widthPercentageToDP(6), marginTop: heightPercentageToDP(1.5) }} onPress={() => Actions.push(PageKeys.EDIT_PROFILE_FORM)} />
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderColor: '#0090b1', marginLeft: widthPercentageToDP(8), marginRight: widthPercentageToDP(11.22), marginTop: heightPercentageToDP(2) }}>
-                        <View style={{ width: widthPercentageToDP(18) }}>
-                            <Text style={{ fontSize: 11, marginTop: heightPercentageToDP(1), color: '#a8a8a8', fontWeight: '600' }}>DOB</Text>
-                            <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7) }}>{user.dob ? getFormattedDateFromISO(user.dob) : '---'}</Text>
+                        <View style={{ width: widthPercentageToDP(18), marginTop: 8, height: 48, justifyContent: 'space-around' }}>
+                            <Text style={{ fontSize: 9, color: '#707070', fontFamily: 'RobotoSlab-Regular_Bold', letterSpacing: 1.6 }}>DOB</Text>
+                            <Text style={{ color: '#000', fontFamily: 'RobotoSlab-Regular_Bold', fontSize: 12, letterSpacing: 1.6  }}>{user.dob ? getFormattedDateFromISO(user.dob) : '---'}</Text>
                         </View>
                         <View style={{ borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#0090b1', width: widthPercentageToDP(28), alignItems: 'center' }}>
                             <Text style={{ fontSize: 10, marginTop: heightPercentageToDP(1), letterSpacing: 1.5, color: '#a8a8a8', fontWeight: '600' }}>YEARS RIDING</Text>
@@ -462,6 +462,13 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: 'bold',
         backgroundColor: 'transparent',
+        letterSpacing: 0.8,
+    },
+    subTitle: {
+        color: '#C4C4C4', 
+        fontWeight: 'bold', 
+        fontSize: 12, 
+        letterSpacing: 1.08
     },
     profilePicBtmBorder: {
         width: '100%',
