@@ -21,8 +21,12 @@ class BikeDetails extends Component {
 
     }
 
+    openBikeForm = () => {
+        Actions.push(PageKeys.ADD_BIKE_FORM, { bikeIndex: this.props.garage.spaceList.findIndex(item => item.spaceId === this.state.bike.spaceId) });
+    }
+
     componentWillUnmount() {
-        
+
     }
 
     render() {
@@ -37,7 +41,7 @@ class BikeDetails extends Component {
                     <IconButton iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: { fontSize: 27 } }}
                         style={styles.headerIconCont} onPress={() => Actions.pop()} />
                     <View style={{ flex: 1, flexDirection: 'column', marginLeft: 17, justifyContent: 'center', alignSelf: 'center' }}>
-                        <Text style={styles.title}>
+                        <Text style={styles.heading}>
                             {user.name}
                         </Text>
                         {
@@ -54,22 +58,20 @@ class BikeDetails extends Component {
                     <View style={[styles.bikePic, styles.bikeBtmBorder, bike.isDefault ? styles.activeBorder : null]}>
                         <Image source={bike.pictureList && bike.pictureList[0] ? { uri: bike.pictureList[0] } : require('../../../../assets/img/bike_placeholder.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} />
                     </View>
-                    <ImageBackground source={require('../../../../assets/img/odometer.png')} style={{ position: 'absolute', marginTop: styles.bikePic.height - 55.5, alignSelf: 'center', height: 111, width: 118, justifyContent: 'center' }}>
-                        <Text style={{ textAlign: 'center', color: '#fff', fontSize: 20, fontWeight: 'bold' }}>0</Text>
+                    <ImageBackground source={require('../../../../assets/img/odometer-small.png')} style={{ position: 'absolute', marginTop: styles.bikePic.height - 55.5, alignSelf: 'center', height: 111, width: 118, justifyContent: 'center' }}>
+                        <Text style={{ textAlign: 'center', color: '#fff', fontSize: 20, fontFamily: 'RobotoSlab-Regular_Bold' }}>0</Text>
                     </ImageBackground>
-                    <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-around', marginTop: 5 }}>
-                        <Text style={{ color: '#6E6E6E', letterSpacing: 2.2, fontSize: 15, fontWeight: 'bold', marginRight: 72, flex: 1, textAlign: 'right' }}>TOTAL</Text>
-                        <Text style={{ color: '#6E6E6E', letterSpacing: 2.2, fontSize: 15, fontWeight: 'bold', marginLeft: 72, flex: 1 }}>MILES</Text>
+                    <View style={styles.odometerLblContainer}>
+                        <Text style={[styles.odometerLbl, { marginRight: 72, textAlign: 'right' }]}>TOTAL</Text>
+                        <Text style={[styles.odometerLbl, { marginLeft: 72 }]}>MILES</Text>
                     </View>
-                    <View style={{ marginHorizontal: 20 }}>
+                    <View style={{ marginHorizontal: 20, marginTop: 20 }}>
                         <IconButton iconProps={{ name: 'account-edit', type: 'MaterialCommunityIcons', style: { fontSize: 26, color: '#f69039' } }}
-                            style={{ marginTop: 20, alignSelf: 'flex-end' }} onPress={() => null} />
-                        <Text style={{ marginTop: 15, fontSize: 17, fontWeight: 'bold' }}>{bike.name}</Text>
-                        <Text style={{ marginTop: 5, fontSize: 12 }}>{`${bike.make} - ${bike.model}${bike.notes ? '    |    ' + bike.notes : ''}`}</Text>
+                            style={{ alignSelf: 'flex-end' }} onPress={this.openBikeForm} />
+                        <Text style={styles.title}>{bike.name}</Text>
+                        <Text style={styles.subtitle}>{`${bike.make || ''}${bike.model ? ' - ' + bike.model : ''}${bike.notes ? '    |    ' + bike.notes.length <= 17 ? bike.notes : bike.notes.substring(0, 17) + '...' : ''}`}</Text>
                     </View>
-                    {bike.isDefault ? <View style={styles.activeLabelCont}><View style={styles.activeIndicator} /><Text style={{
-                        color: '#585756', letterSpacing: 0.6, fontSize: 11, marginLeft: 4
-                    }}>Active Bike</Text></View> : null}
+                    {bike.isDefault ? <View style={styles.activeLabelCont}><View style={styles.activeIndicator} /><Text style={styles.activeBikeTxt}>Active Bike</Text></View> : null}
                     <View style={{ marginHorizontal: 20, flex: 1 }}>
                         <View style={{ backgroundColor: '#B1B1B1', height: 1.5, marginTop: 8 }} />
                     </View>
@@ -82,7 +84,8 @@ class BikeDetails extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { hasNetwork } = state.PageState;
-    return { user, hasNetwork };
+    const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
+    return { user, hasNetwork, garage };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -118,7 +121,7 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         marginLeft: 17
     },
-    title: {
+    heading: {
         fontSize: widthPercentageToDP(6),
         color: 'white',
         fontWeight: 'bold',
@@ -159,5 +162,34 @@ const styles = StyleSheet.create({
         height: 7,
         borderRadius: 3.5,
         backgroundColor: APP_COMMON_STYLES.infoColor
+    },
+    odometerLblContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginTop: 5
+    },
+    odometerLbl: {
+        flex: 1,
+        color: '#6E6E6E',
+        letterSpacing: 2.2,
+        fontSize: 12,
+        fontFamily: 'RobotoSlab-Regular_Bold',
+    },
+    title: {
+        marginTop: 10,
+        fontSize: 19,
+        fontFamily: 'Roboto-Bold'
+    },
+    subtitle: {
+        marginTop: 5,
+        fontSize: 12,
+        fontFamily: 'Roboto'
+    },
+    activeBikeTxt: {
+        color: '#585756',
+        letterSpacing: 0.6,
+        fontSize: 11,
+        marginLeft: 4
     }
 });

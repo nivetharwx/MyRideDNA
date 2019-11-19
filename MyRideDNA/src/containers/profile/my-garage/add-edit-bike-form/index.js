@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, StatusBar, ScrollView, View, Keyboard, Alert, KeyboardAvoidingView } from 'react-native';
+import { StyleSheet, StatusBar, ScrollView, View, Keyboard, Alert, KeyboardAvoidingView, Text } from 'react-native';
 import { BasicHeader } from '../../../../components/headers';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, CUSTOM_FONTS } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
-import { LabeledInput } from '../../../../components/inputs';
-import { BasicButton } from '../../../../components/buttons';
+import { LabeledInput, LabeledInputPlaceholder, IconicList, IconicDatePicker } from '../../../../components/inputs';
+import { BasicButton, ShifterButton, ImageButton, IconButton } from '../../../../components/buttons';
 import { Thumbnail } from '../../../../components/images';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import { addBikeToGarage, editBike, addPictures } from '../../../../api';
@@ -27,17 +27,17 @@ class AddBikeForm extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.spaceList !== this.props.spaceList) {
-            // if (this.state.bikeImages.length > 0) {
-            //     const newBike = this.props.spaceList[this.props.spaceList.length - 1];
-            //     this.props.addPictures(this.props.user.userId, newBike, this.state.bikeImages);
-            //     this.setState({ bikeImages: [] });
-            // } else {
-            //     Actions.pop();
-            // }
-            this.setState({ bikeImages: [] });
-            Actions.pop();
-        }
+        // if (prevProps.spaceList !== this.props.spaceList) {
+        //     // if (this.state.bikeImages.length > 0) {
+        //     //     const newBike = this.props.spaceList[this.props.spaceList.length - 1];
+        //     //     this.props.addPictures(this.props.user.userId, newBike, this.state.bikeImages);
+        //     //     this.setState({ bikeImages: [] });
+        //     // } else {
+        //     //     Actions.pop();
+        //     // }
+        //     this.setState({ bikeImages: [] });
+        //     Actions.pop();
+        // }
     }
 
     onPressUploadImages = async () => {
@@ -65,18 +65,22 @@ class AddBikeForm extends Component {
         }
     }
 
-    onChangeName = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, name: val + '' } }));
+    onChangeNickname = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, name: val + '' } }));
 
     onChangeMake = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, make: val } }));
 
     onChangeModel = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, model: val } }));
 
     onChangeYear = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, year: val } }));
+    
+    onChangeMilage = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, milage: val } }));
 
     onChangeNotes = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, notes: val } }));
+
     hideLoader = () => {
         this.setState({ showLoader: false });
     }
+
     onSubmit = () => {
         Keyboard.dismiss();
         const { bike, bikeImages } = this.state;
@@ -100,52 +104,84 @@ class AddBikeForm extends Component {
                 this.hideLoader()
             });
         }
-        // if (!bike.spaceId) {
-        //     this.props.addBikeToGarage(this.props.user.userId, bike);
-        // } else {
-        //     this.props.editBike(this.props.user.userId, bike, this.props.bikeIndex);
-        //     if (bikeImages.length > 0) {
-        //         this.props.addPictures(this.props.user.userId, bike, bikeImages);
-        //     }
-        // }
     }
 
     render() {
         const { bikeImages, bike, showLoader } = this.state;
+        const { bikeIndex, user } = this.props;
         return (
-            <View style={styles.fill} >
+            <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
-                <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
-                    <BasicHeader headerHeight={heightPercentageToDP(8.5)} title={bike.spaceId ? 'Edit Bike' : 'Add Bike'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
-                    <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
-                        <LabeledInput inputValue={bike.name} inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
-                        <LabeledInput inputValue={bike.make} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onChangeMake} placeholder='Make' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
-                        <LabeledInput inputValue={bike.model} inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChange={this.onChangeModel} placeholder='Model' onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
-                        <LabeledInput inputValue={bike.year ? bike.year + '' : ''} inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChange={this.onChangeYear} inputType='telephoneNumber' placeholder='Year' onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
-                        <LabeledInput inputValue={bike.notes} inputRef={elRef => this.fieldRefs[4] = elRef} returnKeyType='next' onChange={this.onChangeNotes} placeholder='Notes' onSubmit={() => { }} hideKeyboardOnSubmit={true} />
-                        <BasicButton title='UPLOAD IMAGES' style={styles.imageUploadBtn} onPress={this.onPressUploadImages} />
-                        {
-                            <View style={styles.imgContainer}>
-                                {/* <FlatList
-                            data={bikeImages}
-                            keyExtractor={(item, index) => index + ''}
-                            renderItem={({ item, index }) => <Thumbnail horizontal={false} height={heightPercentageToDP(12)} width={widthPercentageToDP(28)} active={index === 0} imagePath={require('../../assets/img/harley.jpg')} />}
-                        /> */}
-                                {
-                                    bikeImages.map((imgObj, index) => (
-                                        <Thumbnail hideOverlay={true} key={index + ''} horizontal={false} containerStyle={{ height: heightPercentageToDP(12), width: widthPercentageToDP(20), marginBottom: heightPercentageToDP(1) }}
-                                            height={heightPercentageToDP(12)} width={widthPercentageToDP(20)} imagePath={{ uri: `data:${imgObj.mimeType};base64,${imgObj.picture}` }} />
-                                    ))
-                                }
+                    <BasicHeader title={bikeIndex === -1 ? 'Add Bike' : 'Edit Bike'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
+                    <ScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ marginTop: 41 + APP_COMMON_STYLES.headerHeight }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
+                            <View style={{ alignSelf: 'center', alignItems: 'center' }}>
+                                <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../../assets/img/cam-icon.png')} imgStyles={{ width: 45, height: 37 }} />
+                                <Text style={{ letterSpacing: 1.8, marginTop: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold, color: '#000', fontSize: 12 }}>{' TAKE \nPHOTO'}</Text>
                             </View>
-                        }
-                    </ScrollView>
-                    <BasicButton title='SUBMIT' style={styles.submitBtn} onPress={this.onSubmit} />
+                            <View style={{ alignSelf: 'center', alignItems: 'center' }}>
+                                <ImageButton onPress={this.onPressGalleryIcon} imageSrc={require('../../../../assets/img/photos-icon.png')} imgStyles={{ width: 41, height: 33 }} />
+                                <Text style={{ letterSpacing: 2, marginTop: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold, color: '#000', fontSize: 12 }}>{'UPLOAD \n PHOTO'}</Text>
+                            </View>
+                        </View>
+                        <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(3) }}>
 
+                            {/* <LabeledInputPlaceholder containerStyle={{ }} inputValue={user.homeAddress.country} inputRef={elRef => this.fieldRefs[5] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} /> */}
+                            <LabeledInputPlaceholder
+                                inputValue={bike.name} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
+                                inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next'
+                                onChange={this.onChangeNickname} label='NICKNAME' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
+
+                            <LabeledInputPlaceholder
+                                inputValue={bike.make} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
+                                inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next'
+                                onChange={this.onChangeMake} label='MAKE' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
+
+                            <LabeledInputPlaceholder
+                                inputValue={bike.model} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
+                                inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next'
+                                onChange={this.onChangeModel} label='MODEL' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
+
+                            <LabeledInputPlaceholder
+                                inputValue={bike.year} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
+                                inputRef={elRef => this.fieldRefs[4] = elRef} returnKeyType='next'
+                                onChange={this.onChangeYear} label='YEAR' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
+
+                            <LabeledInputPlaceholder
+                                inputValue={bike.milage} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
+                                inputRef={elRef => this.fieldRefs[5] = elRef} returnKeyType='next'
+                                onChange={this.onChangeMilage} label='MILAGE' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[6].focus()} hideKeyboardOnSubmit={false} />
+
+                            <LabeledInputPlaceholder
+                                inputValue={bike.notes} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
+                                inputRef={elRef => this.fieldRefs[6] = elRef} returnKeyType='next'
+                                onChange={this.onChangeNotes} label='NOTES' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[7].focus()} hideKeyboardOnSubmit={false} />
+
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: heightPercentageToDP(3) }}>
+                                <IconButton style={styles.roundBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={() => this.setState({ isAddingClub: true, activeClubId: null, club: '' })} />
+                            </View>
+                        </View>
+                        <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: 20, fontFamily: CUSTOM_FONTS.robotoSlabBold }} onPress={this.onSubmit} />
+                    </ScrollView>
                 </KeyboardAvoidingView>
                 <Loader isVisible={showLoader} />
+                {/* Shifter: - Brings the app navigation menu */}
+                <ShifterButton onPress={this.showAppNavMenu} size={18} alignLeft={this.props.user.handDominance === 'left'} />
             </View>
         );
     }
@@ -191,5 +227,11 @@ const styles = StyleSheet.create({
         marginTop: heightPercentageToDP(2),
         flexDirection: 'row',
         flexWrap: 'wrap',
+    },
+    labelStyle: {
+        color: '#000',
+        fontSize: 11,
+        letterSpacing: 1.1,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold
     }
 });
