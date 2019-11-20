@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { CUSTOM_FONTS } from '../../constants';
 
 const styles = StyleSheet.create({
     containerBox: {
@@ -10,7 +11,12 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         fontSize: 15,
         fontWeight: 'bold'
-    }
+    },
+    defaultText: {
+        fontFamily: CUSTOM_FONTS.roboto,
+        fontSize: 12,
+        color: '#000000'
+    } 
 });
 
 export default styles;

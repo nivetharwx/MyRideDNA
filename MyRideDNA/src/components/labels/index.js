@@ -16,6 +16,8 @@ export const IconLabelPair = ({ containerStyle, iconProps, text, textStyle }) =>
     )
 }
 
+export const DefaultText = ({ fontFamily, style, ...otherProps }) => <Text style={[styles.defaultText, style, fontFamily ? { fontFamily } : null]}>{otherProps.children}</Text>
+
 // export class IconLabelPair extends React.Component {
 
 //     render() {
