@@ -1,4 +1,4 @@
-import { WindowDimensions, widthPercentageToDP, IS_ANDROID, heightPercentageToDP } from "../../constants";
+import { WindowDimensions, widthPercentageToDP, IS_ANDROID, heightPercentageToDP, CUSTOM_FONTS } from "../../constants";
 
 
 const THUMBNAIL_SIZE = IS_ANDROID ? heightPercentageToDP(6.5) : heightPercentageToDP(8);
@@ -44,7 +44,9 @@ const styles = {
     },
     tabText: {
         fontSize: 13,
-        fontWeight: 'bold'
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        letterSpacing: 0.6
+        // fontWeight: 'bold'
     }
 };
 

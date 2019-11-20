@@ -1,8 +1,9 @@
 import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, TouchableHighlight, ImageBackground, TouchableWithoutFeedback, Image, Animated, Easing, FlatList } from 'react-native';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, CUSTOM_FONTS } from '../../constants';
 import { Icon as NBIcon, ListItem, Left, Body, Right } from 'native-base';
 import { LinkButton, IconButton, ImageButton } from '../buttons';
+import { DefaultText } from '../labels';
 
 export class BasicCard extends React.Component {
     constructor(props) {
@@ -236,8 +237,8 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                     :
                     <View style={{ flex: 1, justifyContent: 'center', backgroundColor: '#EAEAEA', height: 74 }}>
                         <View style={{ marginLeft: widthPercentageToDP(3) }}>
-                            <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#585756' }}>{item.name}</Text>
-                            <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#9A9A9A' }}>{item.nickname}</Text>
+                            <DefaultText fontFamily={CUSTOM_FONTS.robotoBold} style={{ fontSize: 13, color: '#585756' }}>{item.name}</DefaultText>
+                            <DefaultText fontFamily={CUSTOM_FONTS.robotoBold} style={{ fontSize: 10, color: '#9A9A9A' }}>{item.nickname}</DefaultText>
                         </View>
                     </View>
             }

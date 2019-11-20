@@ -5,7 +5,7 @@ import styles, { CREATE_GROUP_WIDTH } from './styles';
 import { BasicHeader } from '../../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { getGroupInfoAction, resetCurrentGroupAction, updateMemberAction, setCurrentFriendAction } from '../../../actions';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, WindowDimensions, PageKeys, FRIEND_TYPE, RELATIONSHIP } from '../../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, WindowDimensions, PageKeys, FRIEND_TYPE, RELATIONSHIP, CUSTOM_FONTS } from '../../../constants';
 import { IconButton, LinkButton, ImageButton } from '../../../components/buttons';
 import { addMembers, getAllGroupMembers, dismissMemberAsAdmin, makeMemberAsAdmin, removeMember, getPicture, getPictureList, readNotification, getGroupMembers } from '../../../api';
 import { ThumbnailCard, HorizontalCard } from '../../../components/cards';
@@ -62,12 +62,10 @@ class Group extends Component {
             this.props.readNotification(this.props.notificationBody.notifiedUserId, this.props.notificationBody.id);
         }
         else {
-            // this.props.getAllGroupMembers(this.props.friendGroupList[this.props.grpIndex].groupId, this.props.user.userId, this.props.friendGroupList[this.props.grpIndex].groupName);
             this.props.getGroupMembers(this.props.friendGroupList[this.props.grpIndex].groupId, this.props.user.userId, this.props.friendGroupList[this.props.grpIndex].groupName, true, 0, (res) => {
             }, (err) => {
             });
         }
-        // this.props.getGroupInfo(this.props.grpIndex);
         Keyboard.addListener('keyboardDidShow', this.adjustLayoutOnKeyboardVisibility);
         Keyboard.addListener('keyboardDidHide', this.adjustLayoutOnKeyboardVisibility);
     }
@@ -78,40 +76,7 @@ class Group extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.currentGroup !== this.props.currentGroup) {
-            // if (this.props.currentGroup.groupMembers.length === 0) {
-            //     Actions.pop();
-            //     return;
-            // }
-        }
-        // else if (prevProps.currentGroup === null) {
-        //     // this.props.getAllGroupMembers(this.props.currentGroup.groupId, this.props.user.userId);
-        // } 
-        // else if (this.props.currentGroup.groupMembers.length !== prevProps.currentGroup.groupMembers.length) {
-        //     // this.props.currentGroup.groupMembers.forEach(picture => {
-        //     //     if (!picture.profilePicture && picture.profilePictureId) {
-        //     //         this.props.getPicture(picture.profilePictureId, picture.memberId)
-        //     //     }
-        //     // })
-        //     const groupMemberIdList = [];
-        //     this.props.currentGroup.groupMembers.forEach(picture => {
-        //         if (!picture.profilePicture && picture.profilePictureId) {
-        //             groupMemberIdList.push(picture.profilePictureId);
-        //         }
-        //     })
-        //     if (groupMemberIdList.length > 0) {
-        //         this.props.getGroupMemberPicture(groupMemberIdList)
-        //     }
-        //     setTimeout(() => {
-        //         this.filteredFriends = this.props.allFriends.filter(friend => this.props.currentGroup.groupMembers.findIndex(member => member.memberId === friend.userId) === -1);
-        //     }, 0);
-        // }
         if (prevProps.currentGroup.groupMembers !== this.props.currentGroup.groupMembers) {
-            // this.props.currentGroup.groupMembers.forEach(picture => {
-            //     if (!picture.profilePicture && picture.profilePictureId) {
-            //         this.props.getPicture(picture.profilePictureId, picture.memberId)
-            //     }
-            // })
             const groupMemberIdList = [];
             this.props.currentGroup.groupMembers.forEach(picture => {
                 if (!picture.profilePicture && picture.profilePictureId) {
@@ -125,8 +90,6 @@ class Group extends Component {
                 this.state.filteredFriends = this.props.allFriends.filter(friend => this.props.currentGroup.groupMembers.findIndex(member => member.memberId === friend.userId) === -1);
             }, 0);
         }
-
-
     }
 
     componentWillUnmount() {
@@ -148,12 +111,10 @@ class Group extends Component {
                 this.props.getAllChats(this.props.user.userId);
             }
         });
-
     }
 
     onPressBackButton = () => {
         Keyboard.dismiss();
-        // setTimeout(() => this.props.resetCurrentGroup(), 100);
         Actions.pop();
     }
 
@@ -175,10 +136,6 @@ class Group extends Component {
             this.addMemberInputRef.focus();
             this.setState({
                 isVisibleSearchModal: true, isActiveSearch: true,
-                // searchFriendList: [
-                //     { name: 'friend 1' }, { name: 'friend 2' }, { name: 'friend 3' }, { name: 'friend 4' }, { name: 'friend 5' }, { name: 'friend 6' }, { name: 'friend 7' }, { name: 'friend 8' },
-                //     { name: 'friend 9' }, { name: 'friend 10' }, { name: 'friend 11' }, { name: 'friend 12' }, { name: 'friend 13' }, { name: 'friend 14' }, { name: 'friend 15' }, { name: 'friend 16' }
-                // ]
                 searchFriendList: this.state.filteredFriends
             });
         });
@@ -214,9 +171,6 @@ class Group extends Component {
     }
 
     addFriendsToGroup = () => {
-        // this.closeSearchFriendSection(() => {
-
-        // });
         this.props.addMembers(this.props.currentGroup.groupId, {
             joinedDate: new Date().toISOString(),
             joinedBy: this.props.user.userId,
@@ -276,8 +230,6 @@ class Group extends Component {
 
     onChangeSearchValue = (val) => { this.setState({ searchQuery: val }) }
 
-
-
     renderMenuOptions = () => {
         const { selectedMember } = this.state;
         const userInfo = this.props.currentGroup.groupMembers[0];
@@ -307,6 +259,7 @@ class Group extends Component {
             ))
         )
     }
+
     openChatPage = (info, isGroup) => {
         if (isGroup) {
             const { groupMembers, ...otherDetails } = this.props.currentGroup;
@@ -320,6 +273,7 @@ class Group extends Component {
         Actions.push(PageKeys.CHAT, { isGroup: true, chatInfo: info });
         this.setState({ isVisibleOptionsModal: false });
     }
+
     toggleFriendSelection = (index) => {
         let prevIndex = -1;
         this.setState(prevState => {
@@ -363,11 +317,11 @@ class Group extends Component {
         );
     }
 
-
     onPressAddMember = () => {
         this.setState({ isVisibleSearchModal: true });
 
     }
+
     openFriendsProfileTab = (item, index) => {
         this.setState({ isVisibleOptionsModal: false, selectedMember: null });
         if (index === 0) {
@@ -416,8 +370,6 @@ class Group extends Component {
         }
     }
 
-
-
     render() {
         const { kbdBtmOffset, isActiveSearch, selectedMember, selectedFriendList, searchFriendList, isVisibleOptionsModal, isVisibleSearchModal, searchName, searchQuery, friendsFilter } = this.state;
         const { user, currentGroup, friendGroupList, friendsLocationList } = this.props;
@@ -456,21 +408,10 @@ class Group extends Component {
                         searchValue={searchName}
                         onChangeSearchValue={this.searchForFriend} onCancelSearchMode={() => this.setState({ searchName: '', isVisibleSearchModal: false })}
                         onClearSearchValue={() => this.setState({ searchName: '' })}
-                        title={<Text>{currentGroup.groupName ? currentGroup.groupName + `\n` : '\n'}<Text style={{ fontSize: 14 }}>Members: {currentGroup.groupMembers.length ? currentGroup.groupMembers.length : ''}</Text></Text>}
+                        title={<Text style={{ fontFamily: CUSTOM_FONTS.robotoBold }}>{currentGroup.groupName ? currentGroup.groupName + `\n` : '\n'}<Text style={{ fontSize: 14, fontFamily: CUSTOM_FONTS.robotoBold }}>Members: {currentGroup.groupMembers.length ? currentGroup.groupMembers.length : ''}</Text></Text>}
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
                         thumbnail={{ picture: currentGroup.profilePicture ? currentGroup.profilePicture : null }}
-                    // rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.onPressAddMember }}
                     />
-                    {/* <BaseModal alignCenter={true} isVisible={this.state.isVisibleAddMemberModal} onCancel={this.onCancelAddMemberForm} onPressOutside={this.onCancelAddMemberForm}>
-                        <View style={{ backgroundColor: '#fff', width: WindowDimensions.width *0.8, height: WindowDimensions.height*0.8, padding: 20, elevation: 3 }}>
-                            <LabeledInput placeholder='Search name' onChange={(val) => this.setState({ addMemberToGroup: val })}
-                                onSubmit={this.onSubmitGroupForm} />
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-                                <LinkButton  title='Submit' onPress={this.onSubmitGroupForm} />
-                                <LinkButton title='Cancel' onPress={this.onCancelAddMemberForm} />
-                            </View>
-                        </View>
-                    </BaseModal> */}
                     <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
                         <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
                             {
@@ -500,7 +441,6 @@ class Group extends Component {
                                                     : null
 
                                             }
-
                                         </View>
                                     }
                                     {
@@ -520,7 +460,6 @@ class Group extends Component {
                             </View>
                             : null
                     }
-
                     <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 80, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
                         <View style={{ flex: 2.89 }}>
                             <LabeledInputPlaceholder
@@ -533,8 +472,6 @@ class Group extends Component {
                         <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
                             <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
                         </View>
-                        {/* rightIcon={{name:'user', type:'FontAwesome', style:styles.rightIconStyle}} /> */}
-
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
                         <IconButton iconProps={{ name: 'edit', type: 'FontAwesome', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => Actions.push(PageKeys.GROUP_FORM, { pageIndex: this.props.grpIndex })} />
@@ -546,7 +483,6 @@ class Group extends Component {
                         }
                         <ImageButton imageSrc={require('../../../assets/img/chat.png')} imgStyles={{ height: 23, width: 26, marginTop: 6 }} onPress={() => this.openChatPage(undefined, true)} />
                         <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ? '#2B77B4' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableMembers()} />
-                        {/* <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color:'#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapFriends()} /> */}
                     </View>
 
                     {
@@ -568,40 +504,17 @@ class Group extends Component {
                                             actionsBar={{
                                                 online: true,
                                                 actions: [
-                                                    // { name: item.favorite ? 'star' : 'star-outlined', id: 1, type: 'Entypo', color: item.favorite ? '#CE0D0D' : '#C4C6C8', onPressActions: () => this.toggleFavouriteFriend(item) },
                                                     { name: 'search', id: 2, type: 'FontAwesome', color: item.locationEnable ? '#2B77B4' : '#C4C6C8' },
                                                     index !== 0 && item.isFriend ? { isIconImage: true, imgSrc: require('../../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } } : null,
                                                     { name: 'verified-user', id: 3, type: 'MaterialIcons', color: item.isAdmin ? '#81BA41' : '#C4C6C8' },
-                                                    // { name: 'message1', id: 4, type: 'AntDesign', color: '#707070', onPressActions: () => this.openChatPage(item) }
                                                     index === 0 || item.isAdmin ? null : this.state.filteredMembers[0].isAdmin === false ? null : { name: 'remove-user', id: 4, type: 'Entypo', color: '#707070', onPressActions: () => this.removeMemberConfirmation(item) }
                                                 ]
                                             }}
                                         />
                                     </View>
-                                    // <View style={{ flex: 1, maxWidth: widthPercentageToDP(50) }}>
-                                    //     <View style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', width: '80%', height: widthPercentageToDP(15), position: 'absolute', zIndex: 100, justifyContent: 'space-between' }}>
-                                    //         {
-                                    //             item.isOnline
-                                    //                 ? <View style={{ backgroundColor: '#37B603', width: widthPercentageToDP(6), height: widthPercentageToDP(6), borderRadius: widthPercentageToDP(3), elevation: 10 }} />
-                                    //                 : null
-                                    //         }
-                                    //         {
-                                    //             item.isOnline && item.locationEnable
-                                    //                 ? <IconButton iconProps={{ name: 'location-on', type: 'MaterialIcons', style: { color: friendsLocationList && friendsLocationList[item.userId] && friendsLocationList[item.userId].isVisible ? APP_COMMON_STYLES.headerColor : '#ACACAC', fontSize: widthPercentageToDP(7) } }} />
-                                    //                 : null
-                                    //         }
-                                    //     </View>
-                                    //     <ThumbnailCard
-                                    //         thumbnailPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
-                                    //         item={item}
-                                    //         onLongPress={() => this.showOptionsModal(index)}
-                                    //         onPress={() => this.openProfile(item.memberId, FRIEND_TYPE.ALL_FRIENDS)}
-                                    //     />
-                                    // </View>
                                 )
                                 }
                                 ListFooterComponent={this.renderFooter}
-                                // onTouchStart={this.loadMoreData}
                                 onEndReached={this.loadMoreData}
                                 onEndReachedThreshold={0.1}
                                 onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
@@ -618,22 +531,6 @@ class Group extends Component {
                                     <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
                                 </View>
                     }
-
-                    {/* <Animated.View style={[styles.floatSecContainer, { bottom: kbdBtmOffset, width: this.floatSecAnim }]}>
-                        <Animated.View style={[styles.floatContnetAlign, { backgroundColor: isActiveSearch ? '#fff' : 'transparent', borderWidth: this.borderWidthAnim }]}>
-                            {
-                                selectedFriendList.length === 0
-                                    ? <Animated.View style={[styles.floatInputIcon, styles.floatSectionChild, { transform: [{ rotate: spinAnim }] }]}>
-                                        <IconButton iconProps={{ name: 'plus', type: 'Entypo', style: { color: '#fff' } }} onPress={this.openSearchFriendSection}
-                                            style={{ flex: 1 }} />
-                                    </Animated.View>
-                                    : <IconButton iconProps={{ name: 'check', type: 'Entypo', style: { color: '#fff' } }} onPress={this.addFriendsToGroup}
-                                        style={[styles.floatInputIcon, styles.floatSectionChild]} />
-                            }
-                            <TextInput pointerEvents='box-only' ref={elRef => this.addMemberInputRef = elRef} style={{ flex: 1, marginLeft: 3 }}
-                                onSubmitEditing={({ nativeEvent }) => this.searchForFriend(nativeEvent.text)} onChangeText={this.searchForFriend} />
-                        </Animated.View>
-                    </Animated.View> */}
                 </View>
                 <Loader isVisible={this.props.showLoader} />
             </View>
@@ -652,21 +549,14 @@ const mapDispatchToProps = (dispatch) => {
         getGroupInfo: (grpIdx) => dispatch(getGroupInfoAction(grpIdx)),
         resetCurrentGroup: () => dispatch(resetCurrentGroupAction()),
         addMembers: (groupId, memberDetails) => dispatch(addMembers(groupId, memberDetails)),
-        // getAllGroupMembers: (groupId, userId, groupName) => dispatch(getAllGroupMembers(groupId, userId, groupName)),
         getGroupMembers: (groupId, userId, groupName, toggleLoader, pageNumber, successCallback, errorCallback) => dispatch(getGroupMembers(groupId, userId, groupName, toggleLoader, pageNumber, successCallback, errorCallback)),
         makeMemberAsAdmin: (groupId, memberId) => dispatch(makeMemberAsAdmin(groupId, memberId)),
         dismissMemberAsAdmin: (groupId, memberId) => dispatch(dismissMemberAsAdmin(groupId, memberId)),
         removeMember: (groupId, memberId) => dispatch(removeMember(groupId, memberId)),
-        // getPicture: (pictureId, memberId) => getPicture(pictureId, ({ picture, pictureId }) => {
-        //     dispatch(updateMemberAction({ updates: { profilePicture: picture }, memberId: memberId }))
-        // }, (error) => {
-        //     dispatch(updateMemberAction({ updates: {}, memberId: memberId }))
-        // }),
         getGroupMemberPicture: (groupMemberIdList) => getPictureList(groupMemberIdList, (pictureObj) => {
             dispatch(updateMemberAction({ pictureObj }))
         }, (error) => {
             console.log('getPictureList GroupMemberPicture error : ', error)
-            // dispatch(updateMemberAction({ updates: {}, memberId: memberId }))
         }),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
         setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),

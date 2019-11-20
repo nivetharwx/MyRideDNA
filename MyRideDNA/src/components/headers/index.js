@@ -10,8 +10,9 @@ import {
     TouchableHighlight
 } from 'react-native';
 import { Icon as NBIcon, Thumbnail } from 'native-base';
-import { WindowDimensions, APP_COMMON_STYLES, widthPercentageToDP, IS_ANDROID, heightPercentageToDP } from '../../constants';
+import { WindowDimensions, APP_COMMON_STYLES, widthPercentageToDP, IS_ANDROID, heightPercentageToDP, CUSTOM_FONTS } from '../../constants';
 import { IconButton } from '../buttons';
+import { DefaultText } from '../labels';
 
 const THUMBNAIL_SIZE = IS_ANDROID ? heightPercentageToDP(6.5) : heightPercentageToDP(8);
 
@@ -58,7 +59,7 @@ export class BasicHeader extends React.Component {
 
     render() {
         const { leftIconProps, title, rightIconProps, onCancelSearchMode,
-            searchValue, onChangeSearchValue, hasEditableTitle, style, searchIconProps, rightIconPropsStyle, thumbnail } = this.props;
+            searchValue, onChangeSearchValue, hasEditableTitle, style, searchIconProps, rightIconPropsStyle, thumbnail, titleStyle } = this.props;
         const { searchbarAnim, searchbarMode, titleEditingMode } = this.state;
 
         const searchCancelAnim = searchbarAnim.interpolate({
@@ -131,21 +132,17 @@ export class BasicHeader extends React.Component {
                                     titleEditingMode === false
                                         ? hasEditableTitle
                                             ? <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing: 0.2 }}>
+                                                <DefaultText style={[{ color: 'white', fontSize: 20, letterSpacing: 0.2, fontFamily: CUSTOM_FONTS.gothamBold }, titleStyle]}>
                                                     {title}
-                                                </Text>
+                                                </DefaultText>
                                                 <IconButton style={{ paddingHorizontal: 0 }} onPress={this.toggleTitleEditingMode} iconProps={{ name: 'edit', type: 'MaterialIcons', style: { color: '#fff' } }} />
                                             </View>
-                                            : <Text style={{
-                                                color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing: 0.2, marginLeft: leftIconProps ? 10 : 0
-                                            }}>
+                                            : <DefaultText style={[{ color: 'white', fontSize: 20, letterSpacing: 0.2, marginLeft: leftIconProps ? 10 : 0, fontFamily: CUSTOM_FONTS.gothamBold }, titleStyle]}>
                                                 {title}
-                                            </Text>
+                                            </DefaultText>
                                         : <View style={{ flexDirection: 'row', marginRight: rightIconProps ? 20 : 0, justifyContent: 'space-between', alignItems: 'center' }}>
                                             <IconButton style={{ marginRight: '8%' }} onPress={this.toggleTitleEditingMode} iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: { color: '#fff' } }} />
-                                            <TextInput style={{ flex: 1, color: '#fff', borderBottomColor: '#fff', borderBottomWidth: 2, fontSize: 16 }}
-                                                defaultValue={title} maxLength={20} onSubmitEditing={this.onTitleSubmit}
-                                            />
+                                            <TextInput style={{ flex: 1, color: '#fff', borderBottomColor: '#fff', borderBottomWidth: 2, fontSize: 16 }} defaultValue={title} maxLength={20} onSubmitEditing={this.onTitleSubmit} />
                                         </View>
                                 }
                             </View>

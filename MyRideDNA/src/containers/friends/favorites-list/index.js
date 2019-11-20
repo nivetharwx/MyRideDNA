@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, TouchableWithoutFeedback, Animated, Text, Alert, Keyboard, FlatList, View, ImageBackground, ActivityIndicator, Easing } from 'react-native';
-import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast } from 'native-base';
+import { StyleSheet, Animated, FlatList, View, ActivityIndicator, Easing } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, PageKeys, FRIEND_TYPE } from '../../../constants';
 import { LabeledInputPlaceholder } from '../../../components/inputs';
@@ -9,6 +8,7 @@ import { IconButton } from '../../../components/buttons';
 import { HorizontalCard } from '../../../components/cards';
 import { getFriendsLocationList, getAllFriends } from '../../../api';
 import { hideFriendsLocationAction, setCurrentFriendAction } from '../../../actions';
+import { DefaultText } from '../../../components/labels';
 
 const FILTERED_ACTION_IDS = {
     BTN_ALL_FRIENDS: 'btn_all_friends',
@@ -35,9 +35,7 @@ class FavoriteListTab extends Component {
         };
     }
 
-    componentDidMount() {
-    }
-
+    componentDidMount() { }
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.allFriends !== this.props.allFriends) {
@@ -46,6 +44,7 @@ class FavoriteListTab extends Component {
             }
         }
     }
+
     retryApiFunction = () => {
         this.state.spinValue.setValue(0);
         Animated.timing(this.state.spinValue, {
@@ -62,24 +61,17 @@ class FavoriteListTab extends Component {
         });
 
     }
+
     onPullRefresh = () => {
         if (this.state.searchQuery !== '')
             this.setState(prevState => ({ searchQuery: '' }));
         this.setState({ isRefreshing: true });
-        // TODO: Do API call based on searchfriend or all friends
-        // this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, false, (res) => {
-        // }, (err) => {
-        // })
         this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, false, (res) => {
         }, (err) => {
         })
     }
 
-
-    componentWillUnmount() {
-    }
-
-
+    componentWillUnmount() { }
 
     openChatPage = (person) => {
         const { selectedPerson } = this.state;
@@ -99,6 +91,7 @@ class FavoriteListTab extends Component {
         friend = friend || this.state.selectedPerson;
         this.openProfile(friend.userId)
     }
+
     openProfile = (userId) => {
         if (this.state.searchQuery !== '')
             this.setState(prevState => ({ searchQuery: '' }));
@@ -108,9 +101,6 @@ class FavoriteListTab extends Component {
         }
         Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId });
     }
-
-
-
 
     toggleMembersLocation = (isVisible, groupId) => {
         groupId = groupId || this.state.selectedGroup.groupId
@@ -173,6 +163,7 @@ class FavoriteListTab extends Component {
         }
         return null
     }
+
     onChangeSearchValue = (val) => { this.setState({ searchQuery: val }) }
 
     filterLocationEnableFriends = () => {
@@ -202,7 +193,6 @@ class FavoriteListTab extends Component {
             : this.props.getFriendsLocationList(this.props.user.userId, [friendId])
     }
 
-
     render() {
         const { searchQuery, isRefreshing, friendsFilter } = this.state;
         const { allFriends, friendsLocationList } = this.props;
@@ -231,7 +221,6 @@ class FavoriteListTab extends Component {
                     (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
             });
         }
-
         return (
             <View style={styles.fill}>
                 <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
@@ -289,8 +278,8 @@ class FavoriteListTab extends Component {
                         <Animated.View style={{ transform: [{ rotate: spin }] }}>
                             <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
                         </Animated.View>
-                        <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                        <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                        <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
+                        <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet</DefaultText>
                     </View>
                 }
             </View>

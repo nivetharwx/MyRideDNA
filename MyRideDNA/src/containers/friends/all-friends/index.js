@@ -1,16 +1,16 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Animated, ScrollView, Text, Keyboard, FlatList, View, Image, ImageBackground, TouchableOpacity, TouchableHighlight, Alert, ActivityIndicator, Easing } from 'react-native';
+import { StyleSheet, Animated, FlatList, View, Alert, ActivityIndicator, Easing } from 'react-native';
 import { getAllFriends, getAllFriends1, searchForFriend, sendFriendRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, doUnfriend, getAllOnlineFriends, getPicture, getFriendsLocationList, addFavorite, removeFavorite } from '../../../api';
-import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, WindowDimensions, heightPercentageToDP, RELATIONSHIP, PageKeys } from '../../../constants';
+import { FRIEND_TYPE, widthPercentageToDP, APP_COMMON_STYLES, heightPercentageToDP, RELATIONSHIP, PageKeys } from '../../../constants';
 import { BaseModal } from '../../../components/modal';
 import { LinkButton, IconButton, ImageButton } from '../../../components/buttons';
-import { ThumbnailCard, HorizontalCard } from '../../../components/cards';
+import { HorizontalCard } from '../../../components/cards';
 import { openFriendProfileAction, updateFriendInListAction, screenChangeAction, hideFriendsLocationAction, setCurrentFriendAction } from '../../../actions';
-import { FloatingAction } from 'react-native-floating-action';
-import { Icon as NBIcon, Thumbnail } from 'native-base';
+import { Icon as NBIcon } from 'native-base';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInputPlaceholder } from '../../../components/inputs';
+import { DefaultText } from '../../../components/labels';
 
 
 const FILTERED_ACTION_IDS = {
@@ -98,24 +98,10 @@ class AllFriendsTab extends Component {
             }
         }
         if (prevProps.allFriends !== this.props.allFriends) {
-            // this.setState(prevState => ({ refreshList: !prevState.refreshList }));
             if (prevState.isRefreshing === true) {
                 this.setState({ isRefreshing: false });
             }
-            // this.props.allFriends.forEach((friend) => {
-            //     if (!friend.profilePicture && friend.profilePictureId) {
-            //         this.props.getPicture(friend.profilePictureId, friend.userId)
-            //     }
-            // })
-            // this.props.getAllOnlineFriends(this.props.user.userId);
         }
-        // if (this.props.refreshContent === true && prevProps.refreshContent === false) {
-        //     this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0);
-        // }
-        // if (prevProps.searchQuery !== this.props.searchQuery && this.props.searchQuery.slice(-1) !== '') {
-        //     Keyboard.dismiss();
-        //     this.props.searchForFriend(this.props.searchQuery, this.props.user.userId, 0);
-        // }
     }
 
     retryApiFunction = () => {
@@ -139,18 +125,21 @@ class AllFriendsTab extends Component {
         const { selectedPerson } = this.state;
         this.openProfile(selectedPerson.userId)
     }
+
     openFriendGarageTab = () => {
         if (this.state.searchQuery !== '')
             this.setState(prevState => ({ searchQuery: '' }));
         const { selectedPerson } = this.state;
         this.openProfile(selectedPerson.userId)
     }
+
     openFriendsProfileTab = (friend) => {
         if (this.state.searchQuery !== '')
             this.setState(prevState => ({ searchQuery: '' }));
         friend = friend || this.state.selectedPerson;
         this.openProfile(friend.userId)
     }
+
     sendFriendRequest = (person) => {
         const { user } = this.props;
         const { selectedPerson } = this.state;
@@ -232,10 +221,6 @@ class AllFriendsTab extends Component {
         if (this.state.searchQuery !== '')
             this.setState(prevState => ({ searchQuery: '' }));
         this.setState({ isRefreshing: true });
-        // TODO: Do API call based on searchfriend or all friends
-        // this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, false, (res) => {
-        // }, (err) => {
-        // })
         this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, false, (res) => {
         }, (err) => {
         })
@@ -251,7 +236,6 @@ class AllFriendsTab extends Component {
             const index = this.props.allFriends.findIndex(item => item.userId === userId)
             person = this.props.allFriends[index];
         }
-        // this.props.searchQuery.trim().length > 0 ? this.props.searchFriendList[index] : this.props.allFriends[index];
         this.setState({ selectedPerson: person, isVisibleOptionsModal: true });
     }
 
@@ -281,31 +265,6 @@ class AllFriendsTab extends Component {
         } else {
             options = this.FRIEND_OPTIONS;
         }
-        // switch (this.state.selectedPerson.relationship) {
-        //     case RELATIONSHIP.FRIEND:
-        //         if (this.state.selectedPerson.isOnline && this.state.selectedPerson.locationEnable) {
-        //             options = [
-        //                 ...this.FRIEND_OPTIONS.slice(0, 3),
-        //                 { text: `Show\nlocation`, id: 'location', handler: () => this.showFriendsLocation() },
-        //                 ...this.FRIEND_OPTIONS.slice(3),
-        //             ]
-        //         } else {
-        //             options = this.FRIEND_OPTIONS;
-        //         }
-        //         break;
-        //     case RELATIONSHIP.RECIEVED_REQUEST:
-        //         options = this.RECEIVED_REQUEST_OPTIONS;
-        //         break;
-        //     case RELATIONSHIP.SENT_REQUEST:
-        //         options = this.SENT_REQUEST_OPTIONS;
-        //         break;
-        //     case RELATIONSHIP.UNKNOWN:
-        //         options = this.UNKNOWN_OPTIONS;
-        //         break;
-        //     default:
-        //         options = this.FRIEND_OPTIONS;
-        //         break;
-        // }
         return (
             options.map(option => (
                 <LinkButton
@@ -322,26 +281,6 @@ class AllFriendsTab extends Component {
 
     friendKeyExtractor = (item) => item.userId;
 
-    getActionsForRelationship = (person) => {
-        switch (person.relationship) {
-            case RELATIONSHIP.FRIEND:
-                return null;
-            case RELATIONSHIP.RECIEVED_REQUEST:
-                return [
-                    { title: 'Accept', onPress: () => this.approveFriendRequest(person), titleStyle: styles.relationshipAction },
-                    { title: 'Reject', onPress: () => this.rejectFriendRequest(person), titleStyle: styles.relationshipAction },
-                ]
-            case RELATIONSHIP.SENT_REQUEST:
-                return [
-                    { title: 'Cancel Request', onPress: () => this.cancelFriendRequest(person), titleStyle: styles.relationshipAction }
-                ]
-            case RELATIONSHIP.UNKNOWN:
-                return [
-                    { title: 'Send Request', onPress: () => this.sendFriendRequest(person), titleStyle: styles.relationshipAction }
-                ]
-        }
-    }
-
     openProfile = (userId) => {
         if (this.state.searchQuery !== '')
             this.setState(prevState => ({ searchQuery: '' }));
@@ -352,48 +291,9 @@ class AllFriendsTab extends Component {
         Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId });
     }
 
-    filterOnlineFriends() {
-        this.removeFriendsFilter(false);
-        const onlineFilterIdx = FLOAT_ACTIONS.findIndex(actionBtn => actionBtn.name === FILTERED_ACTION_IDS.BTN_ONLINE_FRIENDS);
-        FLOAT_ACTIONS[onlineFilterIdx] = { ...FLOAT_ACTIONS[onlineFilterIdx], ...ACTIVE_FLOAT_ACTION_STYLE };
-        this.setState({ friendsFilter: FILTERED_ACTION_IDS.BTN_ONLINE_FRIENDS });
-    }
-
-    removeFriendsFilter(setDefaultActiveOption) {
-        // DOC: `All friends` option will be the last (bottom-most) option
-        const activeFilterIdx = FLOAT_ACTIONS.findIndex(actionBtn => actionBtn.name === this.state.friendsFilter);
-        FLOAT_ACTIONS[activeFilterIdx] = { ...FLOAT_ACTIONS[activeFilterIdx], ...DEFAULT_FLOAT_ACTION_STYLE };
-        if (setDefaultActiveOption) {
-            FLOAT_ACTIONS[FLOAT_ACTIONS.length - 1] = { ...FLOAT_ACTIONS[FLOAT_ACTIONS.length - 1], ...ACTIVE_FLOAT_ACTION_STYLE };
-            this.setState({ friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS });
-        }
-    }
-
-    onSelectFloatActionOptions = (name) => {
-        switch (name) {
-            case FILTERED_ACTION_IDS.BTN_ONLINE_FRIENDS:
-                if (this.state.friendsFilter !== FILTERED_ACTION_IDS.BTN_ONLINE_FRIENDS) {
-                    this.filterOnlineFriends();
-                }
-                break;
-            case FILTERED_ACTION_IDS.BTN_ALL_FRIENDS:
-                this.removeFriendsFilter(true);
-                break;
-            case FILTERED_ACTION_IDS.BTN_ADD_FRIEND:
-                Actions.push(PageKeys.CONTACTS_SECTION);
-                break;
-        }
-    }
-
     loadMoreData = () => {
         if (this.state.isLoadingData && this.state.isLoading === false) {
             this.setState({ isLoading: true, isLoadingData: false })
-            // this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true);
-            // this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, this.props.pageNumber, false, (res) => {
-            //     this.setState({ isLoading: false })
-            // }, (err) => {
-            //     this.setState({ isLoading: false })
-            // });
             this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, this.props.pageNumber, false, (res) => {
                 this.setState({ isLoading: false })
             }, (err) => {
@@ -440,6 +340,7 @@ class AllFriendsTab extends Component {
             this.setState({ friendsFilter: FILTERED_ACTION_IDS.FAVOURITE_FRIENDS, isFilter: FILTERED_ACTION_IDS.FAVOURITE })
         }
     }
+
     filterLocationEnableFriends = () => {
         if (this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE) {
             this.setState({ friendsFilter: FILTERED_ACTION_IDS.BTN_ALL_FRIENDS, isFilter: null })
@@ -458,10 +359,9 @@ class AllFriendsTab extends Component {
         }
     }
 
-
     render() {
         const { isRefreshing, isVisibleOptionsModal, friendsFilter, searchQuery } = this.state;
-        const { allFriends, searchFriendList, user, friendsLocationList } = this.props;
+        const { allFriends, user, friendsLocationList } = this.props;
         const spin = this.state.spinValue.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
@@ -571,8 +471,8 @@ class AllFriendsTab extends Component {
                         <Animated.View style={{ transform: [{ rotate: spin }] }}>
                             <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
                         </Animated.View>
-                        <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                        <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                        <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
+                        <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internetF</DefaultText>
                     </View>
                 }
             </View>

@@ -11,6 +11,7 @@ import ImageCropPicker from 'react-native-image-crop-picker';
 import { addBikeToGarage, editBike, addPictures } from '../../../../api';
 import { toggleLoaderAction, appNavMenuVisibilityAction } from '../../../../actions';
 import { Loader } from '../../../../components/loader';
+import { DefaultText } from '../../../../components/labels';
 
 class AddBikeForm extends Component {
     fieldRefs = [];
@@ -109,7 +110,7 @@ class AddBikeForm extends Component {
     }
 
     render() {
-        const { bikeImages, bike, showLoader } = this.state;
+        const { bike, showLoader } = this.state;
         const { bikeIndex, user } = this.props;
         return (
             <View style={styles.fill}>
@@ -122,58 +123,50 @@ class AddBikeForm extends Component {
                         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
                                 <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../../assets/img/cam-icon.png')} imgStyles={{ width: 45, height: 37 }} />
-                                <Text style={{ letterSpacing: 1.8, marginTop: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold, color: '#000', fontSize: 12 }}>{' TAKE \nPHOTO'}</Text>
+                                <DefaultText style={{ letterSpacing: 1.8, marginTop: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold }}>{' TAKE \nPHOTO'}</DefaultText>
                             </View>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
                                 <ImageButton onPress={this.onPressGalleryIcon} imageSrc={require('../../../../assets/img/photos-icon.png')} imgStyles={{ width: 41, height: 33 }} />
-                                <Text style={{ letterSpacing: 2, marginTop: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold, color: '#000', fontSize: 12 }}>{'UPLOAD \n PHOTO'}</Text>
+                                <DefaultText style={{ letterSpacing: 2, marginTop: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold }}>{'UPLOAD \n PHOTO'}</DefaultText>
                             </View>
                         </View>
                         <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(3) }}>
-
-                            {/* <LabeledInputPlaceholder containerStyle={{ }} inputValue={user.homeAddress.country} inputRef={elRef => this.fieldRefs[5] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} /> */}
                             <LabeledInputPlaceholder
                                 inputValue={bike.name || ''} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next'
                                 onChange={this.onChangeNickname} label='NICKNAME' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
-
                             <LabeledInputPlaceholder
                                 inputValue={bike.make || ''} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next'
                                 onChange={this.onChangeMake} label='MAKE' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
-
                             <LabeledInputPlaceholder
                                 inputValue={bike.model || ''} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next'
                                 onChange={this.onChangeModel} label='MODEL' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
-
                             <LabeledInputPlaceholder
-                                inputValue={bike.year} inputStyle={{ paddingBottom: 0 }} inputType={'postalCode'}
+                                inputValue={bike.year ? bike.year + '' : ''} inputStyle={{ paddingBottom: 0 }} inputType={'postalCode'}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next'
                                 onChange={this.onChangeYear} label='YEAR' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
-
                             <LabeledInputPlaceholder
-                                inputValue={bike.milage || ''} inputStyle={{ paddingBottom: 0 }} inputType={'postalCode'}
+                                inputValue={bike.milage ? bike.milage + '' : ''} inputStyle={{ paddingBottom: 0 }} inputType={'postalCode'}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[4] = elRef} returnKeyType='next'
                                 onChange={this.onChangeMilage} label='MILAGE' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
-
                             <LabeledInputPlaceholder
                                 inputValue={bike.notes} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[5] = elRef} returnKeyType='next'
                                 onChange={this.onChangeNotes} label='NOTES' labelStyle={styles.labelStyle}
                                 hideKeyboardOnSubmit={true} />
-
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: heightPercentageToDP(3) }}>
                                 <IconButton style={styles.roundBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={() => this.setState({ isAddingClub: true, activeClubId: null, club: '' })} />
                             </View>
@@ -183,7 +176,7 @@ class AddBikeForm extends Component {
                 </KeyboardAvoidingView>
                 <Loader isVisible={showLoader} />
                 {/* Shifter: - Brings the app navigation menu */}
-                <ShifterButton onPress={this.showAppNavMenu} size={18} alignLeft={this.props.user.handDominance === 'left'} />
+                <ShifterButton onPress={this.showAppNavMenu} size={18} alignLeft={user.handDominance === 'left'} />
             </View>
         );
     }
@@ -198,7 +191,6 @@ const mapDispatchToProps = (dispatch) => {
     return {
         addBikeToGarage: (userId, bike, pictureList, successCallback, errorCallback) => dispatch(addBikeToGarage(userId, bike, pictureList, successCallback, errorCallback)),
         editBike: (userId, bike, pictureList, index, successCallback, errorCallback) => dispatch(editBike(userId, bike, pictureList, index, successCallback, errorCallback)),
-        // editBike: (userId, bike, index) => dispatch(editBike(userId, bike, index)),
         toggleLoader: (toggleValue) => dispatch(toggleLoaderAction(toggleValue)),
         addPictures: (userId, bike, pictureList) => dispatch(addPictures(userId, bike, pictureList)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
@@ -215,8 +207,6 @@ const styles = StyleSheet.create({
     },
     formContent: {
         paddingTop: 20,
-        // flex: 1,
-        // justifyContent: 'space-around'
     },
     submitBtn: {
         height: heightPercentageToDP(8.5),
@@ -232,7 +222,6 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
     },
     labelStyle: {
-        color: '#000',
         fontSize: 11,
         letterSpacing: 1.1,
         fontFamily: CUSTOM_FONTS.robotoSlabBold

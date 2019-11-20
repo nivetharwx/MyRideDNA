@@ -10,6 +10,7 @@ import {
 import { Icon as NBIcon, Picker, DatePicker } from 'native-base';
 import { WindowDimensions, ShortMonthNames, heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
 import { getFormattedDateFromISO } from '../../util';
+import { DefaultText } from '../labels';
 
 const getKeyboardTypeForContentType = (contentType) => {
     if (contentType === 'telephoneNumber' || contentType === 'postalCode' || contentType === 'creditCardNumber') {
@@ -44,10 +45,10 @@ export const LabeledInputPlaceholder = ({ hideKeyboardOnSubmit, inputValue, cont
             label ?
 
                 <View style={{ flexDirection: 'row' }}>
-                    <Text style={[labelStyle]}>{label}</Text>
+                    <DefaultText style={[labelStyle]}>{label}</DefaultText>
                     {
                         secondLabel ?
-                            <Text style={[secondLabelStyle]}>{secondLabel}</Text>
+                            <DefaultText style={[secondLabelStyle]}>{secondLabel}</DefaultText>
                             : null
                     }
                 </View>

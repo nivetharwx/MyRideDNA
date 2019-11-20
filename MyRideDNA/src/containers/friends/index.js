@@ -1,20 +1,16 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StatusBar, Animated, Text, View, FlatList, Easing } from 'react-native';
+import { StatusBar, Animated, View, Easing } from 'react-native';
 import { BasicHeader } from '../../components/headers';
-import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon, Toast, Thumbnail } from 'native-base';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, USER_AUTH_TOKEN, WindowDimensions, FRIEND_TYPE, PageKeys, RELATIONSHIP } from '../../constants';
+import { Tabs, Tab } from 'native-base';
+import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, FRIEND_TYPE, PageKeys } from '../../constants';
 import styles from './styles';
 import AllFriendsTab from './all-friends';
 import GroupListTab from './group-list';
 import FavoriteListTab from './favorites-list';
 import { appNavMenuVisibilityAction, updateFriendInListAction, resetCurrentFriendAction, updateFriendRequestListAction } from '../../actions';
-import { ShifterButton, IconButton, LinkButton } from '../../components/buttons';
-import { IconLabelPair } from '../../components/labels';
-import { logoutUser, getAllFriendRequests, getPicture, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, createFriendGroup, getAllFriends, getAllFriends1, readNotification, getPictureList, getFriendGroups } from '../../api';
-import { BaseModal } from '../../components/modal';
-import { LabeledInput } from '../../components/inputs';
-import { getFormattedDateFromISO } from '../../util';
+import { ShifterButton } from '../../components/buttons';
+import { logoutUser, getAllFriendRequests, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, createFriendGroup, getAllFriends, getAllFriends1, readNotification, getPictureList, getFriendGroups } from '../../api';
 import { Loader } from '../../components/loader';
 import { Actions } from 'react-native-router-flux';
 
@@ -36,9 +32,6 @@ class Friends extends Component {
             activeTab: -1,
             groupTabPressed: false,
             friendsActiveTab: 0,
-            isVisibleGroupModal: false,
-            newGroupName: '',
-            spinValue: new Animated.Value(0),
         };
     }
 
@@ -62,9 +55,6 @@ class Friends extends Component {
             }
         }, 0);
         this.props.getAllRequest(this.props.user.userId, true);
-        // this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
-        // }, (err) => {
-        // });
         this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
         }, (err) => {
         });
@@ -96,14 +86,6 @@ class Friends extends Component {
             }
         }
 
-
-        // if (prevProps.allFriends !== this.props.allFriends) {
-        //     this.props.allFriends.forEach((friend) => {
-        //         if (!friend.profilePicture && friend.profilePictureId) {
-        //             this.props.getPicture(friend.profilePictureId, friend.userId)
-        //         }
-        //     })
-        // }
         if (prevProps.allFriends !== this.props.allFriends) {
             const pictureIdList = [];
             this.props.allFriends.forEach((friend) => {
@@ -116,16 +98,6 @@ class Friends extends Component {
             }
         }
 
-        // if (prevProps.allFriendRequests !== this.props.allFriendRequests) {
-        //     if (prevState.isRefreshing === true) {
-        //         this.setState({ isRefreshing: false });
-        //     }
-        //     this.props.allFriendRequests.forEach((friendRequestPic) => {
-        //         if (!friendRequestPic.profilePicture && friendRequestPic.profilePictureId) {
-        //             this.props.getFriendRequestPic(friendRequestPic.profilePictureId, friendRequestPic.id)
-        //         }
-        //     })
-        // }
         if (prevProps.allFriendRequests !== this.props.allFriendRequests) {
             const requestIdList = [];
             if (prevState.isRefreshing === true) {
@@ -142,27 +114,6 @@ class Friends extends Component {
         }
     }
 
-    retryApiFunction = () => {
-        this.state.spinValue.setValue(0);
-        Animated.timing(this.state.spinValue, {
-            toValue: 1,
-            duration: 300,
-            easing: Easing.linear,
-            useNativeDriver: true
-        }).start(() => {
-            if (this.props.hasNetwork === true) {
-                this.props.getAllChats(this.props.user.userId);
-            }
-        });
-
-    }
-
-    onPullRefresh = () => {
-        this.setState({ isRefreshing: true });
-        this.props.getAllRequest(this.props.user.userId, false);
-    }
-
-
     toggleAppNavigation = () => this.props.showAppNavMenu();
 
     onChangeTab = ({ from, i }) => {
@@ -174,8 +125,6 @@ class Friends extends Component {
                 this.setState({ searchQuery: '' })
             }
         });
-
-
         if (from === 2 && i === 0) {
             this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
             }, (err) => {
@@ -197,200 +146,14 @@ class Friends extends Component {
         this.setState({ friendsActiveTab: i });
     }
 
-    openProfile = () => {
-        const { pageX, pageY, width, height } = this.props.oldPosition;
-        this.position.setValue({ x: pageX, y: pageY });
-        this.dimensions.setValue({ x: width, y: height });
-
-        this.setState({ selectedPersonImg: this.props.personInfo.image }, () => {
-            this.viewImage.measure((dx, dy, dWidth, dHeight, dPageX, dPageY) => {
-                Animated.parallel([
-                    Animated.timing(this.position.x, {
-                        toValue: (dWidth / 2) - (widthPercentageToDP(100) * 65 / 200),
-                        duration: 300
-                    }),
-                    Animated.timing(this.position.y, {
-                        toValue: heightPercentageToDP(100) * 10 / 100,
-                        duration: 300
-                    }),
-                    Animated.timing(this.dimensions.x, {
-                        toValue: widthPercentageToDP(100) * 65 / 100,
-                        duration: 300
-                    }),
-                    Animated.timing(this.dimensions.y, {
-                        toValue: widthPercentageToDP(100) * 65 / 100,
-                        duration: 300
-                    }),
-                    Animated.timing(this.animation, {
-                        toValue: 1,
-                        duration: 300
-                    }),
-                ]).start(() => StatusBar.setBarStyle('light-content'));
-            });
-        });
-    }
-
-    cancelingFriendRequest = (item) => {
-        this.props.cancelRequest(this.props.user.userId, item.userId, item.id);
-    }
-
-    approvingFriendRequest = (item) => {
-        this.props.approvedRequest(this.props.user.userId, item.userId, new Date().toISOString(), item.id);
-    }
-    rejectingFriendRequest = (item) => {
-        this.props.rejectRequest(this.props.user.userId, item.userId, item.id);
-    }
-    closeProfile = () => {
-        Animated.parallel([
-            Animated.timing(this.position.x, {
-                toValue: this.props.oldPosition.pageX,
-                duration: 300
-            }),
-            Animated.timing(this.position.y, {
-                toValue: this.props.oldPosition.pageX,
-                duration: 300
-            }),
-            Animated.timing(this.dimensions.x, {
-                toValue: this.props.oldPosition.width,
-                duration: 300
-            }),
-            Animated.timing(this.dimensions.y, {
-                toValue: this.props.oldPosition.height,
-                duration: 300
-            }),
-            Animated.timing(this.animation, {
-                toValue: 0,
-                duration: 300
-            }),
-        ]).start(() => {
-            this.setState({ selectedPersonImg: null });
-        });
-    }
-
     onPressLogout = async () => {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
-    }
-
-    renderFriendRequestList = ({ item, index }) => {
-        if (item.requestType === "sentRequest") {
-            return (
-                <ListItem avatar style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }} >
-                    <Left style={{ alignItems: 'center', justifyContent: 'center' }} onPress={() => this.openUserProfile(item.userId)}>
-                        <Thumbnail style={styles.thumbnail} source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : require('../../assets/img/friend-profile-pic.png')} />
-                    </Left>
-                    <Body onPress={() => this.openUserProfile(item.userId)}>
-                        {/* <Text>{`${item.name} (${item.nickname})`}</Text> */}
-                        <View style={{ flexDirection: 'row' }}>
-                            <Text>{`${item.name}`}</Text>
-                            {item.nickname ?
-                                <Text>{` (${item.nickname})`}</Text>
-                                : null
-                            }
-                            <IconButton iconProps={{ name: 'call-made', type: 'MaterialCommunityIcons', style: { color: '#81BB41', fontSize: 13 } }} />
-                        </View>
-                        <Text>{getFormattedDateFromISO(item.actionDate, '/')}</Text>
-                    </Body>
-                    <Right>
-                        <IconButton iconProps={{ name: 'close', type: 'MaterialIcons', style: { fontSize: 25, color: '#6B7663' } }} onPress={() => this.cancelingFriendRequest(item)} />
-                    </Right>
-                </ListItem>
-            )
-        }
-        else {
-            return (
-                <ListItem avatar style={{ marginLeft: 0, paddingLeft: 10, backgroundColor: index % 2 === 0 ? '#fff' : '#F3F2F2' }}>
-                    <Left onPress={() => this.openUserProfile(item.userId)}>
-                        <Thumbnail style={styles.thumbnail} source={item.profilePicture ? { uri: item.profilePicture } : item.profilePictureId ? null : require('../../assets/img/friend-profile-pic.png')} />
-                    </Left>
-                    <Body onPress={() => this.openUserProfile(item.userId)}>
-                        <View style={{ flexDirection: 'row' }}>
-                            <Text>{`${item.name}`}</Text>
-                            {item.nickname ?
-                                <Text>{` (${item.nickname})`}</Text>
-                                : null
-                            }
-                            <IconButton iconProps={{ name: 'call-received', type: 'MaterialCommunityIcons', style: { color: '#81BB41', fontSize: 13 } }} />
-                        </View>
-                        <Text>{getFormattedDateFromISO(item.actionDate, '/')}</Text>
-                        {/* <Text>{item.senderName}</Text>
-                        <Text>({item.senderNickname})</Text> */}
-                    </Body>
-                    <Right style={{ flexDirection: 'row' }}>
-                        <IconButton iconProps={{ name: 'add-user', type: 'Entypo', style: { fontSize: 25, color: '#6B7663' } }} onPress={() => this.approvingFriendRequest(item)} />
-                        <IconButton iconProps={{ name: 'remove-user', type: 'Entypo', style: { fontSize: 25, marginLeft: widthPercentageToDP(4), color: '#6B7663' } }} onPress={() => this.rejectingFriendRequest(item)} />
-                    </Right>
-                </ListItem>
-            )
-        }
-    }
-
-    requestKeyExtractor = (item) => item.id;
-
-    onCancelGroupForm = () => {
-        this.setState({ isVisibleGroupModal: false, newGroupName: '' });
-    }
-
-    onSubmitGroupForm = () => {
-        const { newGroupName } = this.state;
-        if (newGroupName.trim().length === 0) {
-            Toast.show({
-                text: 'Please provide a group name',
-                buttonText: 'Okay'
-            });
-        } else {
-            this.isAddingGroup = true;
-            this.props.createFriendGroup({
-                groupName: newGroupName,
-                createdBy: this.props.user.userId,
-                createdDate: new Date().toISOString(),
-            });
-            this.setState({
-                isVisibleGroupModal: false
-            })
-        }
-    }
-
-    onPressCreateGroup = () => {
-        this.setState({ isVisibleGroupModal: true })
-    }
-
-    openUserProfile = (item) => {
-        console.log(item);
-        // Actions.push(PageKeys.FRIENDS_PROFILE, { relationshipStatus: RELATIONSHIP.UNKNOWN, person: item, activeTab: 0 });
     }
 
     onPressBackButton = () => Actions.pop();
 
     render() {
-        const { headerSearchMode, searchQuery, activeTab, friendsActiveTab, isRefreshing } = this.state;
-        const spin = this.state.spinValue.interpolate({
-            inputRange: [0, 1],
-            outputRange: ['0deg', '360deg']
-        });
-        const activeImageStyle = {
-            width: this.dimensions.x,
-            height: this.dimensions.y,
-            left: this.position.x,
-            top: this.position.y
-        };
-        const animatedContentY = this.animation.interpolate({
-            inputRange: [0, 1],
-            outputRange: [-150, 0]
-        });
-        const animatedContentOpacity = this.animation.interpolate({
-            inputRange: [0, 0.5, 1],
-            outputRange: [0, 1, 1]
-        });
-        const animatedContentStyle = {
-            opacity: animatedContentOpacity,
-            transform: [{
-                translateY: animatedContentY
-            }]
-        };
-        const animatedCrossOpacity = {
-            opacity: this.animation
-        };
-
+        const { searchQuery, activeTab } = this.state;
         return (
             <View style={styles.fill}>
                 {
@@ -400,23 +163,11 @@ class Friends extends Component {
                             <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                         </View>
                 }
-
                 <View style={{ flex: 1 }}>
                     <BasicHeader
                         title='Road Buddies'
                         leftIconProps={this.props.comingFrom === PageKeys.PROFILE ? { reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton } : null}
                     />
-                    <BaseModal alignCenter={true} isVisible={this.state.isVisibleGroupModal} onCancel={this.onCancelGroupForm} onPressOutside={this.onCancelGroupForm}>
-                        <View style={{ backgroundColor: '#fff', width: WindowDimensions.width * 0.6, padding: 20, elevation: 3 }}>
-                            <LabeledInput placeholder='Enter group name here' onChange={(val) => this.setState({ newGroupName: val })}
-                                onSubmit={this.onSubmitGroupForm} />
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-                                <LinkButton title='Submit' onPress={this.onSubmitGroupForm} />
-                                <LinkButton title='Cancel' onPress={this.onCancelGroupForm} />
-                            </View>
-                        </View>
-                    </BaseModal>
-
                     <Tabs tabContainerStyle={APP_COMMON_STYLES.tabContainer} ref={elRef => this.tabsRef = elRef} onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' style={{ marginTop: APP_COMMON_STYLES.headerHeight }} tabBarUnderlineStyle={{ height: 0 }}>
                         <Tab heading='ALL BUDDIES' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
                             <AllFriendsTab refreshContent={activeTab === 0} searchQuery={searchQuery} />
@@ -457,29 +208,16 @@ const mapDispatchToProps = (dispatch) => {
         cancelRequest: (userId, personId, requestId) => dispatch(cancelFriendRequest(userId, personId, requestId)),
         approvedRequest: (userId, personId, actionDate, requestId) => dispatch(approveFriendRequest(userId, personId, actionDate, requestId)),
         rejectRequest: (userId, personId, requestId) => dispatch(rejectFriendRequest(userId, personId, requestId)),
-        // getPicture: (userId, accessToken) => dispatch(getPicture(userId)),
         createFriendGroup: (newGroupInfo) => dispatch(createFriendGroup(newGroupInfo)),
-        // getPicture: (pictureId, friendId) => getPicture(pictureId, ({ picture, pictureId }) => {
-        //     dispatch(updateFriendInListAction({ profilePicture: picture, userId: friendId }))
-        // }, (error) => {
-        //     dispatch(updateFriendInListAction({ userId: friendId }))
-        // }),
         getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
             dispatch(updateFriendInListAction({ pictureObj }))
         }, (error) => {
             console.log('getPictureList all friend error : ', error)
-            // dispatch(updateFriendInListAction({ userId: friendId }))
         }),
-        // getFriendRequestPic: (pictureId, id) => getPicture(pictureId, ({ picture, pictureId }) => {
-        //     dispatch(updateFriendRequestListAction({ profilePicture: picture, id: id }))
-        // }, (error) => {
-        //     dispatch(updateFriendRequestListAction({ id: id }))
-        // }),
         getFriendRequestPic: (requestIdList) => getPictureList(requestIdList, (pictureObj) => {
             dispatch(updateFriendRequestListAction({ pictureObj }))
         }, (error) => {
             console.log('getPictureList friendRequest error :  ', error)
-            // dispatch(updateFriendRequestListAction({ id: id }))
         }),
         resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),

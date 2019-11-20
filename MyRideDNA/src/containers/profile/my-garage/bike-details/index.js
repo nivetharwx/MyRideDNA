@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, View, Text, ScrollView, FlatList, ImageBackground, Image, StatusBar } from 'react-native';
-import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys } from '../../../../constants';
+import { StyleSheet, View, ScrollView, ImageBackground, Image, StatusBar } from 'react-native';
+import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { IconButton, ShifterButton } from '../../../../components/buttons';
 import { appNavMenuVisibilityAction } from '../../../../actions';
+import { DefaultText } from '../../../../components/labels';
 
 class BikeDetails extends Component {
     constructor(props) {
@@ -44,14 +45,14 @@ class BikeDetails extends Component {
                     <IconButton iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: { fontSize: 27 } }}
                         style={styles.headerIconCont} onPress={() => Actions.pop()} />
                     <View style={{ flex: 1, flexDirection: 'column', marginLeft: 17, justifyContent: 'center', alignSelf: 'center' }}>
-                        <Text style={styles.heading}>
+                        <DefaultText style={styles.heading}>
                             {user.name}
-                        </Text>
+                        </DefaultText>
                         {
                             user.nickname ?
-                                <Text style={{ color: 'rgba(189, 195, 199, 1)', fontWeight: 'bold' }}>
+                                <DefaultText style={styles.subheading}>
                                     {user.nickname.toUpperCase()}
-                                </Text>
+                                </DefaultText>
                                 : null
                         }
 
@@ -62,19 +63,19 @@ class BikeDetails extends Component {
                         <Image source={bike.pictureList && bike.pictureList[0] ? { uri: bike.pictureList[0] } : require('../../../../assets/img/bike_placeholder.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} />
                     </View>
                     <ImageBackground source={require('../../../../assets/img/odometer-small.png')} style={{ position: 'absolute', marginTop: styles.bikePic.height - 55.5, alignSelf: 'center', height: 111, width: 118, justifyContent: 'center' }}>
-                        <Text style={{ textAlign: 'center', color: '#fff', fontSize: 20, fontFamily: 'RobotoSlab-Regular_Bold' }}>0</Text>
+                        <DefaultText style={{ textAlign: 'center', color: '#fff', fontSize: 20, fontFamily: CUSTOM_FONTS.robotoSlabBold }}>0</DefaultText>
                     </ImageBackground>
                     <View style={styles.odometerLblContainer}>
-                        <Text style={[styles.odometerLbl, { marginRight: 72, textAlign: 'right' }]}>TOTAL</Text>
-                        <Text style={[styles.odometerLbl, { marginLeft: 72 }]}>MILES</Text>
+                        <DefaultText style={[styles.odometerLbl, { marginRight: 72, textAlign: 'right' }]}>TOTAL</DefaultText>
+                        <DefaultText style={[styles.odometerLbl, { marginLeft: 72 }]}>MILES</DefaultText>
                     </View>
                     <View style={{ marginHorizontal: 20, marginTop: 20 }}>
                         <IconButton iconProps={{ name: 'account-edit', type: 'MaterialCommunityIcons', style: { fontSize: 26, color: '#f69039' } }}
                             style={{ alignSelf: 'flex-end' }} onPress={this.openBikeForm} />
-                        <Text style={styles.title}>{bike.name}</Text>
-                        <Text style={styles.subtitle}>{`${bike.make || ''}${bike.model ? ' - ' + bike.model : ''}${bike.notes ? '    |    ' + bike.notes.length <= 17 ? bike.notes : bike.notes.substring(0, 17) + '...' : ''}`}</Text>
+                        <DefaultText style={styles.title}>{bike.name}</DefaultText>
+                        <DefaultText style={styles.subtitle}>{`${bike.make || ''}${bike.model ? ' - ' + bike.model : ''}${bike.notes ? '    |    ' + bike.notes.length <= 17 ? bike.notes : bike.notes.substring(0, 17) + '...' : ''}`}</DefaultText>
                     </View>
-                    {bike.isDefault ? <View style={styles.activeLabelCont}><View style={styles.activeIndicator} /><Text style={styles.activeBikeTxt}>Active Bike</Text></View> : null}
+                    {bike.isDefault ? <View style={styles.activeLabelCont}><View style={styles.activeIndicator} /><DefaultText style={styles.activeBikeTxt}>Active Bike</DefaultText></View> : null}
                     <View style={{ marginHorizontal: 20, flex: 1 }}>
                         <View style={{ backgroundColor: '#B1B1B1', height: 1.5, marginTop: 8 }} />
                     </View>
@@ -128,10 +129,16 @@ const styles = StyleSheet.create({
         marginLeft: 17
     },
     heading: {
-        fontSize: widthPercentageToDP(6),
+        fontSize: 20,
         color: 'white',
-        fontWeight: 'bold',
         backgroundColor: 'transparent',
+        fontFamily: CUSTOM_FONTS.gothamBold,
+        letterSpacing: 0.2
+    },
+    subheading: {
+        color: '#C4C4C4',
+        fontFamily: CUSTOM_FONTS.gothamBold,
+        letterSpacing: 1.08
     },
     rightIconPropsStyle: {
         height: widthPercentageToDP(7),
@@ -179,18 +186,15 @@ const styles = StyleSheet.create({
         flex: 1,
         color: '#6E6E6E',
         letterSpacing: 2.2,
-        fontSize: 12,
-        fontFamily: 'RobotoSlab-Regular_Bold',
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
     },
     title: {
         marginTop: 10,
         fontSize: 19,
-        fontFamily: 'Roboto-Bold'
+        fontFamily: CUSTOM_FONTS.robotoBold
     },
     subtitle: {
         marginTop: 5,
-        fontSize: 12,
-        fontFamily: 'Roboto'
     },
     activeBikeTxt: {
         color: '#585756',

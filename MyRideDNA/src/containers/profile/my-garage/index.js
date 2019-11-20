@@ -1,15 +1,14 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, View, Text, FlatList, Animated, TouchableOpacity, Alert, Easing, ImageBackground } from 'react-native';
-import { BasicHeader } from '../../../components/headers';
-import { BasicCard } from '../../../components/cards';
-import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, IS_ANDROID, PORTRAIT_TAIL_TAG } from '../../../constants';
+import { StyleSheet, View, FlatList, Animated, TouchableOpacity, Alert, Easing, ImageBackground } from 'react-native';
+import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, PORTRAIT_TAIL_TAG, CUSTOM_FONTS } from '../../../constants';
 import { Actions } from 'react-native-router-flux';
-import { BasicButton, IconButton, LinkButton } from '../../../components/buttons';
-import { Icon as NBIcon, Item } from 'native-base';
+import { IconButton, LinkButton } from '../../../components/buttons';
+import { Item } from 'native-base';
 import { getPicture, getGarageInfo, setBikeAsActive, deleteBike, updateGarageName } from '../../../api';
 import { BaseModal } from '../../../components/modal';
-import { replaceGarageInfoAction, toggleLoaderAction, updateBikePictureListAction, apiLoaderActions } from '../../../actions';
+import { replaceGarageInfoAction, updateBikePictureListAction, apiLoaderActions } from '../../../actions';
+import { DefaultText } from '../../../components/labels';
 
 class MyGarageTab extends Component {
     spacelistRef = null;
@@ -162,14 +161,14 @@ class MyGarageTab extends Component {
                             ? <View style={styles.contentOvrImg}>
                                 <View style={styles.activeIndicator} />
                                 <Item style={styles.txtContainer}>
-                                    <Text style={styles.cardTitle}>{item.name}</Text>
-                                    <Text style={[styles.cardSubtitle, { color: APP_COMMON_STYLES.infoColor }]}>{`${item.make || ''}${item.model ? ' - ' + item.model : ''}`}</Text>
+                                    <DefaultText style={styles.cardTitle}>{item.name}</DefaultText>
+                                    <DefaultText style={[styles.cardSubtitle, { color: APP_COMMON_STYLES.infoColor }]}>{`${item.make || ''}${item.model ? ' - ' + item.model : ''}`}</DefaultText>
                                 </Item>
                             </View>
                             : <View style={styles.contentOvrImg}>
                                 <Item style={[styles.txtContainer, { marginLeft: styles.txtContainer.marginLeft + styles.activeIndicator.width }]}>
-                                    <Text style={styles.cardTitle}>{item.name}</Text>
-                                    <Text style={[styles.cardSubtitle, { color: '#D9D9D9' }]}>{`${item.make || ''}${item.model ? ' - ' + item.model : ''}`}</Text>
+                                    <DefaultText style={styles.cardTitle}>{item.name}</DefaultText>
+                                    <DefaultText style={[styles.cardSubtitle, { color: '#D9D9D9' }]}>{`${item.make || ''}${item.model ? ' - ' + item.model : ''}`}</DefaultText>
                                 </Item>
                             </View>
                     }
@@ -198,14 +197,14 @@ class MyGarageTab extends Component {
                     <IconButton iconProps={{ name: 'ios-notifications', type: 'Ionicons', style: { fontSize: 26 } }}
                         style={styles.headerIconCont} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
                     <View style={styles.headerTitleContainer}>
-                        <Text style={styles.title}>
+                        <DefaultText style={styles.heading}>
                             {user.name}
-                        </Text>
+                        </DefaultText>
                         {
                             user.nickname ?
-                                <Text style={styles.subtitle}>
+                                <DefaultText style={styles.subheading}>
                                     {user.nickname.toUpperCase()}
-                                </Text>
+                                </DefaultText>
                                 : null
                         }
                     </View>
@@ -227,8 +226,8 @@ class MyGarageTab extends Component {
                             <Animated.View style={{ transform: [{ rotate: spin }] }}>
                                 <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
                             </Animated.View>
-                            <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                            <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                            <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
+                            <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet</DefaultText>
                         </View>
                     }
                 </View>
@@ -246,14 +245,11 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         getGarageInfo: (userId) => {
-            // dispatch(toggleLoaderAction(true));
             dispatch(apiLoaderActions(true));
             getGarageInfo(userId, (garage) => {
-                // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
                 dispatch(replaceGarageInfoAction(garage));
             }, (error) => {
-                // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
                 console.log(`getGarage error: `, error);
             })
@@ -304,15 +300,17 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         marginLeft: 17,
     },
-    title: {
-        fontSize: widthPercentageToDP(6),
+    heading: {
+        fontSize: 20,
         color: 'white',
-        fontWeight: 'bold',
         backgroundColor: 'transparent',
+        fontFamily: CUSTOM_FONTS.gothamBold,
+        letterSpacing: 0.2
     },
-    subtitle: {
-        color: 'rgba(189, 195, 199, 1)',
-        fontWeight: 'bold'
+    subheading: {
+        color: '#C4C4C4',
+        fontFamily: CUSTOM_FONTS.gothamBold,
+        letterSpacing: 1.08
     },
     rightIconPropsStyle: {
         height: widthPercentageToDP(7),
@@ -353,13 +351,12 @@ const styles = StyleSheet.create({
     },
     cardTitle: {
         color: '#fff',
-        fontSize: 17,
-        // fontWeight: 'bold'
-        fontFamily: 'Roboto-Bold'
+        fontSize: 19,
+        fontFamily: CUSTOM_FONTS.robotoBold
     },
     cardSubtitle: {
-        fontFamily: 'Roboto',
-        fontSize: 11,
+        fontFamily: CUSTOM_FONTS.roboto,
+        letterSpacing: 0.6
     },
     headerTitleContainer: {
         flex: 1,

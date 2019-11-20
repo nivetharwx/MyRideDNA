@@ -27,7 +27,6 @@ const API_TIMEOUT = 10 * 1000; // 10 seconds
 export const getPicture = (pictureId, successCallback, errorCallback) => {
     axios.get(USER_BASE_URL + `getPicture/${pictureId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
-            console.log('getPicture success : ', res.data)
             if (res.status === 200) {
                 if (res.data.picture === '') {
                     // errorCallback(res.data);
@@ -39,7 +38,6 @@ export const getPicture = (pictureId, successCallback, errorCallback) => {
             }
         })
         .catch(er => {
-            console.log('getPicture error : ', er)
             errorCallback(er.response || er);
             differentErrors(er, [pictureId, successCallback, errorCallback], getPicture, false);
         })
