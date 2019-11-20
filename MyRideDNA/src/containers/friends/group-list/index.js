@@ -261,7 +261,7 @@ class GroupListTab extends Component {
             <HorizontalCard
                 // horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                 item={item}
-                cardOuterStyle={styles.HorizontalCardOuterStyle}
+                cardOuterStyle={styles.horizontalCardOuterStyle}
                 onPressLeft={() => this.openGroupInfo(index)}
                 leftIcon={{ name: 'group', type: 'FontAwesome' }}
                 thumbnail={item.profilePicture}
@@ -420,44 +420,47 @@ class GroupListTab extends Component {
                         }
                     </View>
                 </BaseModal>
-                <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
-                    <View style={{ flex: 2.89 }}>
-                        <LabeledInputPlaceholder
-                            placeholder='Name'
-                            inputValue={searchQuery} inputStyle={{ borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
-                            returnKeyType='next'
-                            onChange={this.onChangeSearchValue}
-                            hideKeyboardOnSubmit={false}
-                            containerStyle={styles.searchCont} />
-                    </View>
-                    <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
-                        <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
-                    </View>
-                    {/* rightIcon={{name:'user', type:'FontAwesome', style:styles.rightIconStyle}} /> */}
+                <View style={{ marginHorizontal: widthPercentageToDP(8) }}>
+                    <View style={{ marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
+                        <View style={{ flex: 2.89 }}>
+                            <LabeledInputPlaceholder
+                                placeholder='Name'
+                                inputValue={searchQuery} inputStyle={{ borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
+                                returnKeyType='next'
+                                onChange={this.onChangeSearchValue}
+                                hideKeyboardOnSubmit={false}
+                                containerStyle={styles.searchCont} />
+                        </View>
+                        <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
+                            <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
+                        </View>
+                        {/* rightIcon={{name:'user', type:'FontAwesome', style:styles.rightIconStyle}} /> */}
 
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', paddingBottom: 16 }}>
+                        {/* <IconButton iconProps={{ name: 'group-add', type: 'MaterialIcons', style: { color: '#C4C6C8', fontSize: 27 } }} onPress={() => onPressAddGroup()} /> */}
+                        <IconButton iconProps={{ name: 'group-add', type: 'MaterialIcons', style: { color: '#C4C6C8', fontSize: 27 } }} onPress={() => Actions.push(PageKeys.GROUP_FORM, { pageIndex: -1 })} />
+                        {/* <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterFavouriteFriend()} /> */}
+                        {/* <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color:'#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} /> */}
+                        <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapGroups()} />
+                    </View>
+                    <FlatList
+                        showsVerticalScrollIndicator='false'
+                        data={filteredGroups}
+                        refreshing={isRefreshing}
+                        contentContainerStyle={styles.friendList}
+                        onRefresh={this.onPullRefresh}
+                        keyExtractor={this.groupKeyExtractor}
+                        renderItem={this.renderGroup}
+                        extraData={this.state}
+                        ListFooterComponent={this.renderFooter}
+                        // onTouchMove={this.loadMoreData}
+                        // onTouchStart={this.loadMoreData}
+                        onEndReached={this.loadMoreData}
+                        onEndReachedThreshold={0.1}
+                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                    />
                 </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
-                    {/* <IconButton iconProps={{ name: 'group-add', type: 'MaterialIcons', style: { color: '#C4C6C8', fontSize: 27 } }} onPress={() => onPressAddGroup()} /> */}
-                    <IconButton iconProps={{ name: 'group-add', type: 'MaterialIcons', style: { color: '#C4C6C8', fontSize: 27 } }} onPress={() => Actions.push(PageKeys.GROUP_FORM, { pageIndex: -1 })} />
-                    {/* <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterFavouriteFriend()} /> */}
-                    {/* <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color:'#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} /> */}
-                    <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapGroups()} />
-                </View>
-                <FlatList
-                    data={filteredGroups}
-                    refreshing={isRefreshing}
-                    contentContainerStyle={styles.friendList}
-                    onRefresh={this.onPullRefresh}
-                    keyExtractor={this.groupKeyExtractor}
-                    renderItem={this.renderGroup}
-                    extraData={this.state}
-                    ListFooterComponent={this.renderFooter}
-                    // onTouchMove={this.loadMoreData}
-                    // onTouchStart={this.loadMoreData}
-                    onEndReached={this.loadMoreData}
-                    onEndReachedThreshold={0.1}
-                    onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
-                />
                 {
                     this.props.hasNetwork === false && friendGroupList.length === 0 && <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
                         <Animated.View style={{ transform: [{ rotate: spin }] }}>
@@ -537,12 +540,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingTop: heightPercentageToDP(5)
     },
-    HorizontalCardOuterStyle: {
-        marginHorizontal: widthPercentageToDP(4),
+    horizontalCardOuterStyle: {
         marginBottom: heightPercentageToDP(4),
     },
     friendList: {
-        marginHorizontal: widthPercentageToDP(5),
         paddingTop: widthPercentageToDP(5)
     },
     searchCont: {

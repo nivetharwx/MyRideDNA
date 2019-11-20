@@ -409,42 +409,43 @@ class AllFriendsTab extends Component {
                         }
                     </View>
                 </BaseModal>
-                <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
-                    <View style={{ flex: 2.89 }}>
-                        <LabeledInputPlaceholder
-                            placeholder='Name'
-                            inputValue={searchQuery} inputStyle={{ borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
-                            returnKeyType='next'
-                            onChange={this.onChangeSearchValue}
-                            hideKeyboardOnSubmit={false}
-                            containerStyle={styles.searchCont} />
-                    </View>
-                    <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
-                        <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
-                    </View>
-                    {/* rightIcon={{name:'user', type:'FontAwesome', style:styles.rightIconStyle}} /> */}
+                <View style={{ marginHorizontal: widthPercentageToDP(8) }}>
+                    <View style={{ marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
+                        <View style={{ flex: 2.89 }}>
+                            <LabeledInputPlaceholder
+                                placeholder='Name'
+                                inputValue={searchQuery} inputStyle={{ borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
+                                returnKeyType='next'
+                                onChange={this.onChangeSearchValue}
+                                hideKeyboardOnSubmit={false}
+                                containerStyle={styles.searchCont} />
+                        </View>
+                        <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
+                            <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
+                        </View>
+                        {/* rightIcon={{name:'user', type:'FontAwesome', style:styles.rightIconStyle}} /> */}
 
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
-                    <ImageButton imageSrc={require('../../../assets/img/add-person-icon.png')} imgStyles={{ width: 23, height: 26 }} onPress={() => {
-                        Actions.push(PageKeys.CONTACTS_SECTION);
-                        if (this.state.searchQuery !== '')
-                            this.setState(prevState => ({ searchQuery: '' }));
-                    }} />
-                    {/* <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.FAVOURITE ? '#CE0D0D' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterFavouriteFriend()} /> */}
-                    <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ? '#2B77B4' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} />
-                    <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapFriends()} />
-                </View>
-                <FlatList
-                    style={{ flexDirection: 'column' }}
-                    contentContainerStyle={styles.friendList}
-                    data={this.filteredFriends}
-                    refreshing={isRefreshing}
-                    onRefresh={this.onPullRefresh}
-                    keyExtractor={this.friendKeyExtractor}
-                    extraData={this.state}
-                    renderItem={({ item, index }) => (
-                        <View style={{ flex: 1, maxWidth: widthPercentageToDP(50) }}>
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', paddingBottom: 16 }}>
+                        <ImageButton imageSrc={require('../../../assets/img/add-person-icon.png')} imgStyles={{ width: 23, height: 26 }} onPress={() => {
+                            Actions.push(PageKeys.CONTACTS_SECTION);
+                            if (this.state.searchQuery !== '')
+                                this.setState(prevState => ({ searchQuery: '' }));
+                        }} />
+                        {/* <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.FAVOURITE ? '#CE0D0D' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterFavouriteFriend()} /> */}
+                        <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ? '#2B77B4' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} />
+                        <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapFriends()} />
+                    </View>
+                    <FlatList
+                        showsVerticalScrollIndicator='false'
+                        style={{ flexDirection: 'column' }}
+                        contentContainerStyle={styles.friendList}
+                        data={this.filteredFriends}
+                        refreshing={isRefreshing}
+                        onRefresh={this.onPullRefresh}
+                        keyExtractor={this.friendKeyExtractor}
+                        extraData={this.state}
+                        renderItem={({ item, index }) => (
                             <HorizontalCard
                                 horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                                 item={item}
@@ -459,13 +460,13 @@ class AllFriendsTab extends Component {
                                     { isIconImage: true, imgSrc: require('../../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }]
                                 }}
                             />
-                        </View>
-                    )}
-                    ListFooterComponent={this.renderFooter}
-                    onEndReached={this.loadMoreData}
-                    onEndReachedThreshold={0.1}
-                    onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
-                />
+                        )}
+                        ListFooterComponent={this.renderFooter}
+                        onEndReached={this.loadMoreData}
+                        onEndReachedThreshold={0.1}
+                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                    />
+                </View>
                 {
                     this.props.hasNetwork === false && allFriends.length === 0 && <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
                         <Animated.View style={{ transform: [{ rotate: spin }] }}>
@@ -525,14 +526,14 @@ const styles = StyleSheet.create({
         paddingTop: heightPercentageToDP(5)
     },
     friendList: {
-        marginHorizontal: widthPercentageToDP(5),
+        // marginHorizontal: widthPercentageToDP(3),
         paddingTop: 16
     },
     relationshipAction: {
         color: APP_COMMON_STYLES.headerColor
     },
     horizontalCardOuterStyle: {
-        marginHorizontal: widthPercentageToDP(4),
+        // marginHorizontal: widthPercentageToDP(4),
         marginBottom: heightPercentageToDP(4),
     },
     searchCont: {

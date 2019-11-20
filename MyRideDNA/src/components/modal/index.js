@@ -8,9 +8,10 @@ import {
 import { Icon as NBIcon } from 'native-base';
 import { AppMenuButton, ImageButton } from '../buttons';
 import { Actions } from 'react-native-router-flux';
-import { PageKeys, heightPercentageToDP, widthPercentageToDP, IS_ANDROID } from '../../constants';
+import { PageKeys, heightPercentageToDP, widthPercentageToDP, IS_ANDROID, APP_COMMON_STYLES } from '../../constants';
 import { BasicHeader } from '../headers';
 import { appNavMenuVisibilityAction } from '../../actions';
+import { DefaultText } from '../labels';
 
 
 export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, notificationCount, hideAppNavMenu, alignCloseIconLeft = false }) => {
@@ -22,15 +23,36 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                 visible={isVisible}
                 onRequestClose={onClose}>
                 <View style={{ flex: 1, paddingVertical: 20, backgroundColor: 'rgba(0,0,0,0.7)' }}>
-                    <BasicHeader style={[{}, IS_ANDROID ? null : { marginTop: 20 }]} headerHeight={heightPercentageToDP(8.5)}
-                        leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: hideAppNavMenu }} />
-
+                    <BasicHeader style={[{ backgroundColor: 'transparent' }, IS_ANDROID ? null : { marginTop: 20 }]} headerHeight={heightPercentageToDP(8.5)}
+                        rightIconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#AFAFAF' }, onPress: hideAppNavMenu }} />
                     <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', marginTop: heightPercentageToDP(3), padding: widthPercentageToDP(8) }}>
-                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-rides.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.RIDES)} />
-                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-map.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.MAP)} />
-                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-friends.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.FRIENDS)} />
-                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-profile.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.PROFILE)} />
-                        <TouchableOpacity activeOpacity={0.7} onPress={() => onPressNavMenu(PageKeys.NOTIFICATIONS)}>
+                        <ImageButton containerStyles={{ marginHorizontal: 35, marginVertical: 15 }} isRound={true} imageSrc={require('../../assets/img/menu-newsfeed.png')} imgStyles={styles.navIconImage} onPress={() => null} />
+                        <TouchableOpacity style={{ marginHorizontal: 35, marginVertical: 15 }} activeOpacity={0.7} onPress={() => onPressNavMenu(PageKeys.NOTIFICATIONS)}>
+                            <View style={styles.navIconImage}>
+                                <ImageBackground style={{ width: null, height: null, flex: 1 }} source={require('../../assets/img/menu-notifications.png')}>
+                                    {
+                                        notificationCount > 0
+                                            ? <View style={{
+                                                position: 'absolute', width: 29, height: 29, borderRadius: 29,
+                                                backgroundColor: '#0076B5', top: 0, right: 2, borderWidth: 2, borderColor: '#fff', justifyContent: 'center', alignItems: 'center'
+                                            }}>
+                                                <DefaultText style={{ color: '#fff', fontWeight: 'bold', fontSize: widthPercentageToDP(3) }}>{notificationCount}</DefaultText>
+                                            </View>
+                                            : null
+                                    }
+                                </ImageBackground>
+                            </View>
+                        </TouchableOpacity>
+                        <ImageButton containerStyles={{ marginHorizontal: 35, marginVertical: 15 }} isRound={true} imageSrc={require('../../assets/img/menu-road-buddies.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.FRIENDS)} />
+                        <ImageButton containerStyles={{ marginHorizontal: 35, marginVertical: 15 }} isRound={true} imageSrc={require('../../assets/img/menu-messaging.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.CHAT_LIST)} />
+                        <ImageButton containerStyles={{ marginHorizontal: 35, marginVertical: 15 }} isRound={true} imageSrc={require('../../assets/img/menu-profile.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.PROFILE)} />
+                        <ImageButton containerStyles={{ marginHorizontal: 35, marginVertical: 15 }} isRound={true} imageSrc={require('../../assets/img/menu-garage.png')} imgStyles={styles.navIconImage} onPress={() => null} />
+                        <ImageButton containerStyles={{ marginHorizontal: 35, marginVertical: 15 }} isRound={true} imageSrc={require('../../assets/img/menu-lets-ride.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.MAP)} />
+                        <ImageButton containerStyles={{ marginHorizontal: 35, marginVertical: 15 }} isRound={true} imageSrc={require('../../assets/img/menu-settings.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.SETTINGS)} />
+                        <ImageButton containerStyles={{ marginHorizontal: 35, marginVertical: 15 }} isRound={true} imageSrc={require('../../assets/img/menu-atlas.png')} imgStyles={styles.navIconImage} onPress={() => null} />
+                        <ImageButton containerStyles={{ marginHorizontal: 35, marginVertical: 15 }} isRound={true} imageSrc={require('../../assets/img/menu-offers.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.OFFERS)} />
+                        {/* <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-rides.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.RIDES)} /> */}
+                        {/* <TouchableOpacity style={{ marginHorizontal: 35, marginVertical: 15 }} activeOpacity={0.7} onPress={() => onPressNavMenu(PageKeys.NOTIFICATIONS)}>
                             <View style={styles.navIconImage}>
                                 <ImageBackground style={{ width: null, height: null, flex: 1 }} source={require('../../assets/img/menu-notifications.png')}>
                                     {
@@ -45,10 +67,8 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                                     }
                                 </ImageBackground>
                             </View>
-                        </TouchableOpacity>
-                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-settings.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.SETTINGS)} />
-                        <ImageButton isRound={true} imageSrc={require('../../assets/img/chat-nav-icon.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.CHAT_LIST)} />
-                        <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-offers.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.OFFERS)} />
+                        </TouchableOpacity> */}
+                        {/* <ImageButton containerStyles={{ marginHorizontal: 35, marginVertical: 15 }} isRound={true} imageSrc={require('../../assets/img/menu-notifications.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.NOTIFICATIONS)} /> */}
                     </View>
                 </View>
             </Modal>
@@ -107,9 +127,9 @@ export const BaseModal = (props) => {
 
 const styles = StyleSheet.create({
     navIconImage: {
-        width: widthPercentageToDP(28.5),
-        height: widthPercentageToDP(28.5),
-        borderRadius: widthPercentageToDP(14.25)
+        width: 84,
+        height: 84,
+        borderRadius: 84
     },
     fillParent: {
         width: '100%',

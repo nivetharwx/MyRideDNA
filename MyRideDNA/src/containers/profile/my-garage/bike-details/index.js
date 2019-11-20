@@ -63,7 +63,7 @@ class BikeDetails extends Component {
                         <Image source={bike.pictureList && bike.pictureList[0] ? { uri: bike.pictureList[0] } : require('../../../../assets/img/bike_placeholder.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} />
                     </View>
                     <ImageBackground source={require('../../../../assets/img/odometer-small.png')} style={{ position: 'absolute', marginTop: styles.bikePic.height - 55.5, alignSelf: 'center', height: 111, width: 118, justifyContent: 'center' }}>
-                        <DefaultText style={{ textAlign: 'center', color: '#fff', fontSize: 20, fontFamily: CUSTOM_FONTS.robotoSlabBold }}>0</DefaultText>
+                        <DefaultText style={{ letterSpacing: 0.3, textAlign: 'center', color: '#fff', fontSize: 22, fontFamily: CUSTOM_FONTS.dinCondensedBold }}>114,526</DefaultText>
                     </ImageBackground>
                     <View style={styles.odometerLblContainer}>
                         <DefaultText style={[styles.odometerLbl, { marginRight: 72, textAlign: 'right' }]}>TOTAL</DefaultText>

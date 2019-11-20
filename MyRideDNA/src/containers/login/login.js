@@ -21,10 +21,13 @@ import { LoginStyles } from './styles';
 import { Item, Icon as NBIcon } from 'native-base';
 
 export const LoginScreen = (props) => (
-    <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps='always'>
+    <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps='handled'>
         <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-        <Animatable.View iterationCount={1} style={{ width: widthPercentageToDP(100), height: heightPercentageToDP(25) }}>
+        <Animatable.View iterationCount={1} style={{ flex: 1, height: heightPercentageToDP(25) }}>
             <Image source={require('../../assets/img/logo.png')} style={{ width: null, height: null, flex: 1, resizeMode: 'contain' }}></Image>
+            {/* <ImageBackground source={require('../../assets/img/logo-sky-bg.jpg')} style={{ width: null, height: null, flex: 1, justifyContent: 'center' }}>
+                <View style={{ width: 200, height: 80, marginTop: 30 }}><Image source={require('../../assets/img/logo-high-res.png')} style={{ width: null, height: null, flex: 1, resizeMode: 'contain' }} /></View>
+            </ImageBackground> */}
         </Animatable.View>
         <View style={LoginStyles.loginForm}>
             <Item style={{ marginLeft: widthPercentageToDP(5), marginRight: widthPercentageToDP(5) }}>
