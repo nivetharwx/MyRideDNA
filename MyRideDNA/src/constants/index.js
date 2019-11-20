@@ -111,7 +111,14 @@ export const RIDE_POINT = { SOURCE: 'source', DESTINATION: 'destination', WAYPOI
 const HEADER_COLOR = '#2B77B4';
 const STATUS_BAR_COLOR = '#006297';
 
-export const CUSTOM_FONTS = { roboto: 'Roboto', robotoBold: 'Roboto-Bold', robotoSlab: 'RobotoSlab-Regular_Light', robotoSlabBold: 'RobotoSlab-Regular_Bold' };
+export const CUSTOM_FONTS = { 
+    roboto: 'Roboto', 
+    robotoBold: 'Roboto-Bold', 
+    robotoSlab: 'RobotoSlab-Regular_Light', 
+    robotoSlabBold: 'RobotoSlab-Regular_Bold',
+    gothamLight: 'Gotham-Light',
+    gothamBold: 'Gotham-Bold',
+};
 
 export const APP_COMMON_STYLES = {
     infoColor: '#EB861E',
