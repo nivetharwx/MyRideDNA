@@ -3,7 +3,8 @@ import { connect } from 'react-redux';
 import { StyleSheet, View, Text, ScrollView, FlatList, ImageBackground, Image, StatusBar } from 'react-native';
 import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
-import { IconButton } from '../../../../components/buttons';
+import { IconButton, ShifterButton } from '../../../../components/buttons';
+import { appNavMenuVisibilityAction } from '../../../../actions';
 
 class BikeDetails extends Component {
     constructor(props) {
@@ -20,6 +21,8 @@ class BikeDetails extends Component {
     componentDidUpdate(prevProps, prevState) {
 
     }
+
+    showAppNavMenu = () => this.props.showAppNavMenu();
 
     openBikeForm = () => {
         Actions.push(PageKeys.ADD_BIKE_FORM, { bikeIndex: this.props.garage.spaceList.findIndex(item => item.spaceId === this.state.bike.spaceId) });
@@ -76,6 +79,8 @@ class BikeDetails extends Component {
                         <View style={{ backgroundColor: '#B1B1B1', height: 1.5, marginTop: 8 }} />
                     </View>
                 </ScrollView>
+                {/* Shifter: - Brings the app navigation menu */}
+                <ShifterButton onPress={this.showAppNavMenu} size={18} alignLeft={this.props.user.handDominance === 'left'} />
             </View>
         );
     }
@@ -89,6 +94,7 @@ const mapStateToProps = (state) => {
 }
 const mapDispatchToProps = (dispatch) => {
     return {
+        showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BikeDetails);

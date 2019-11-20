@@ -299,10 +299,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 0,
         width: widthPercentageToDP(9),
         height: widthPercentageToDP(9),
-        borderRadius: widthPercentageToDP(9) / 2,
+        borderRadius: widthPercentageToDP(4.5),
         backgroundColor: '#fff',
         alignSelf: 'center',
-        marginLeft: 17
+        marginLeft: 17,
     },
     title: {
         fontSize: widthPercentageToDP(6),

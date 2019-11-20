@@ -9,7 +9,7 @@ import { BasicButton, ShifterButton, ImageButton, IconButton } from '../../../..
 import { Thumbnail } from '../../../../components/images';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import { addBikeToGarage, editBike, addPictures } from '../../../../api';
-import { toggleLoaderAction } from '../../../../actions';
+import { toggleLoaderAction, appNavMenuVisibilityAction } from '../../../../actions';
 import { Loader } from '../../../../components/loader';
 
 class AddBikeForm extends Component {
@@ -72,7 +72,7 @@ class AddBikeForm extends Component {
     onChangeModel = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, model: val } }));
 
     onChangeYear = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, year: val } }));
-    
+
     onChangeMilage = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, milage: val } }));
 
     onChangeNotes = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, notes: val } }));
@@ -80,6 +80,8 @@ class AddBikeForm extends Component {
     hideLoader = () => {
         this.setState({ showLoader: false });
     }
+
+    showAppNavMenu = () => this.props.showAppNavMenu();
 
     onSubmit = () => {
         Keyboard.dismiss();
@@ -131,46 +133,46 @@ class AddBikeForm extends Component {
 
                             {/* <LabeledInputPlaceholder containerStyle={{ }} inputValue={user.homeAddress.country} inputRef={elRef => this.fieldRefs[5] = elRef} onChange={this.onChangeCountry} placeholder='Country' onSubmit={() => { }} hideKeyboardOnSubmit={true} /> */}
                             <LabeledInputPlaceholder
-                                inputValue={bike.name} inputStyle={{ paddingBottom: 0 }}
+                                inputValue={bike.name || ''} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next'
                                 onChange={this.onChangeNickname} label='NICKNAME' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
-                                inputValue={bike.make} inputStyle={{ paddingBottom: 0 }}
+                                inputValue={bike.make || ''} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
+                                inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next'
+                                onChange={this.onChangeMake} label='MAKE' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
+
+                            <LabeledInputPlaceholder
+                                inputValue={bike.model || ''} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next'
-                                onChange={this.onChangeMake} label='MAKE' labelStyle={styles.labelStyle}
+                                onChange={this.onChangeModel} label='MODEL' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
-                                inputValue={bike.model} inputStyle={{ paddingBottom: 0 }}
+                                inputValue={bike.year} inputStyle={{ paddingBottom: 0 }} inputType={'postalCode'}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next'
-                                onChange={this.onChangeModel} label='MODEL' labelStyle={styles.labelStyle}
+                                onChange={this.onChangeYear} label='YEAR' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
-                                inputValue={bike.year} inputStyle={{ paddingBottom: 0 }}
+                                inputValue={bike.milage || ''} inputStyle={{ paddingBottom: 0 }} inputType={'postalCode'}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[4] = elRef} returnKeyType='next'
-                                onChange={this.onChangeYear} label='YEAR' labelStyle={styles.labelStyle}
-                                onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
-
-                            <LabeledInputPlaceholder
-                                inputValue={bike.milage} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
-                                inputRef={elRef => this.fieldRefs[5] = elRef} returnKeyType='next'
                                 onChange={this.onChangeMilage} label='MILAGE' labelStyle={styles.labelStyle}
-                                onSubmit={() => this.fieldRefs[6].focus()} hideKeyboardOnSubmit={false} />
+                                onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
                                 inputValue={bike.notes} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
-                                inputRef={elRef => this.fieldRefs[6] = elRef} returnKeyType='next'
+                                inputRef={elRef => this.fieldRefs[5] = elRef} returnKeyType='next'
                                 onChange={this.onChangeNotes} label='NOTES' labelStyle={styles.labelStyle}
-                                onSubmit={() => this.fieldRefs[7].focus()} hideKeyboardOnSubmit={false} />
+                                hideKeyboardOnSubmit={true} />
 
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: heightPercentageToDP(3) }}>
                                 <IconButton style={styles.roundBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={() => this.setState({ isAddingClub: true, activeClubId: null, club: '' })} />
@@ -199,6 +201,7 @@ const mapDispatchToProps = (dispatch) => {
         // editBike: (userId, bike, index) => dispatch(editBike(userId, bike, index)),
         toggleLoader: (toggleValue) => dispatch(toggleLoaderAction(toggleValue)),
         addPictures: (userId, bike, pictureList) => dispatch(addPictures(userId, bike, pictureList)),
+        showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(AddBikeForm);
