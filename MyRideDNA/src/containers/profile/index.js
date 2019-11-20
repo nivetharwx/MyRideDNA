@@ -15,33 +15,22 @@ class Profile extends Component {
         super(props);
         this.state = {
             profilePicString: '',
-            activeTab: 0,
         };
     }
 
-    componentDidMount() {
-        setTimeout(() => {
-            this.tabsRef.goToPage(0);
-            this.setState({ activeTab: 0 });
-        }, 50);
-    }
+    componentDidMount() { }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
 
-    onChangeTab = ({ from, i }) => {
-        this.setState({ activeTab: i });
-    }
-
     render() {
         const { user, showLoader } = this.props;
-        const { activeTab, profilePicString } = this.state;
         return (
             <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={[{ flex: 1 }, !this.props.hasNetwork ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
-                    <Tabs tabBarPosition='bottom' tabContainerStyle={styles.bottomTabContainer} ref={elRef => this.tabsRef = elRef} onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' tabBarUnderlineStyle={{ height: 0 }}>
+                    <Tabs tabBarPosition='bottom' tabContainerStyle={styles.bottomTabContainer} ref={elRef => this.tabsRef = elRef} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' tabBarUnderlineStyle={{ height: 0 }}>
                         <Tab heading='MY PROFILE' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
                             <MyProfileTab />
                         </Tab>
@@ -52,7 +41,7 @@ class Profile extends Component {
 
                     {/* Shifter: - Brings the app navigation menu */}
                     <ShifterButton onPress={this.showAppNavMenu}
-                        containerStyles={{ bottom: APP_COMMON_STYLES.tabContainer.height }} size={18} alignLeft={this.props.user.handDominance === 'left'} />
+                        containerStyles={{ bottom: APP_COMMON_STYLES.tabContainer.height }} size={18} alignLeft={user.handDominance === 'left'} />
                 </View>
                 <Loader isVisible={showLoader} />
             </View >
