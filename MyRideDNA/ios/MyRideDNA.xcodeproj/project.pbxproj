@@ -59,6 +59,8 @@
 		634A1C4E22772A9800B5DDB9 /* GoogleAppMeasurement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 634A1C4D22772A9800B5DDB9 /* GoogleAppMeasurement.framework */; };
 		6362D859238517950078F90A /* Gotham-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 6362D858238517950078F90A /* Gotham-Bold.otf */; };
 		6362D85B23851A410078F90A /* Gotham-Light.otf in Resources */ = {isa = PBXBuildFile; fileRef = 6362D85A23851A410078F90A /* Gotham-Light.otf */; };
+		6362D85D23856ADA0078F90A /* D-DINCondensed.otf in Resources */ = {isa = PBXBuildFile; fileRef = 6362D85C23856ADA0078F90A /* D-DINCondensed.otf */; };
+		6362D85F23856BA10078F90A /* D-DINCondensed-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 6362D85E23856BA10078F90A /* D-DINCondensed-Bold.otf */; };
 		63664E22233528890039877D /* libRNCAsyncStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63664E1B2335285F0039877D /* libRNCAsyncStorage.a */; };
 		63664E2C233529CA0039877D /* libRNCNetInfo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63664E29233529B30039877D /* libRNCNetInfo.a */; };
 		637CBEA82239101700D9845B /* RSKImageCropper.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 637CBEA72239101700D9845B /* RSKImageCropper.framework */; };
@@ -552,6 +554,8 @@
 		634A1C50227732F200B5DDB9 /* MyRideDNA.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = MyRideDNA.entitlements; path = MyRideDNA/MyRideDNA.entitlements; sourceTree = "<group>"; };
 		6362D858238517950078F90A /* Gotham-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Gotham-Bold.otf"; path = "../src/assets/fonts/Gotham-Bold.otf"; sourceTree = "<group>"; };
 		6362D85A23851A410078F90A /* Gotham-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Gotham-Light.otf"; path = "../src/assets/fonts/Gotham-Light.otf"; sourceTree = "<group>"; };
+		6362D85C23856ADA0078F90A /* D-DINCondensed.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "D-DINCondensed.otf"; path = "../src/assets/fonts/D-DINCondensed.otf"; sourceTree = "<group>"; };
+		6362D85E23856BA10078F90A /* D-DINCondensed-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "D-DINCondensed-Bold.otf"; path = "../src/assets/fonts/D-DINCondensed-Bold.otf"; sourceTree = "<group>"; };
 		63664DE82335285F0039877D /* RNCAsyncStorage.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RNCAsyncStorage.xcodeproj; path = "../node_modules/@react-native-community/async-storage/ios/RNCAsyncStorage.xcodeproj"; sourceTree = "<group>"; };
 		63664E23233529B30039877D /* RNCNetInfo.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RNCNetInfo.xcodeproj; path = "../node_modules/@react-native-community/netinfo/ios/RNCNetInfo.xcodeproj"; sourceTree = "<group>"; };
 		637CBEA72239101700D9845B /* RSKImageCropper.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RSKImageCropper.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1039,6 +1043,8 @@
 		978A27FA7AEB4D419779F9CB /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				6362D85E23856BA10078F90A /* D-DINCondensed-Bold.otf */,
+				6362D85C23856ADA0078F90A /* D-DINCondensed.otf */,
 				6362D85A23851A410078F90A /* Gotham-Light.otf */,
 				6362D858238517950078F90A /* Gotham-Bold.otf */,
 				632165A12382B24F006C2540 /* Roboto-Bold.ttf */,
@@ -1730,10 +1736,12 @@
 				317FF0DEC7D5432E834B7301 /* FontAwesome5_Solid.ttf in Resources */,
 				182AD973ABF14F9C8680783E /* Foundation.ttf in Resources */,
 				D268362817B545DDBA707F87 /* Ionicons.ttf in Resources */,
+				6362D85F23856BA10078F90A /* D-DINCondensed-Bold.otf in Resources */,
 				4CA04565F7E04D8F90DCE49E /* MaterialCommunityIcons.ttf in Resources */,
 				632165A22382B24F006C2540 /* Roboto-Bold.ttf in Resources */,
 				452AA2B84F074151B20F32BE /* MaterialIcons.ttf in Resources */,
 				76D36AB9760A4137975DC1CD /* Octicons.ttf in Resources */,
+				6362D85D23856ADA0078F90A /* D-DINCondensed.otf in Resources */,
 				1D47876F857042939F41B581 /* SimpleLineIcons.ttf in Resources */,
 				63F69966227433C500057FF7 /* GoogleService-Info.plist in Resources */,
 				6321659C2382AB00006C2540 /* RobotoSlab-Regular_Light.ttf in Resources */,

@@ -118,6 +118,8 @@ export const CUSTOM_FONTS = {
     robotoSlabBold: 'RobotoSlab-Regular_Bold',
     gothamLight: 'Gotham-Light',
     gothamBold: 'Gotham-Bold',
+    dinCondensed: 'D-DINCondensed',
+    dinCondensedBold: 'D-DINCondensed-Bold',
 };
 
 export const APP_COMMON_STYLES = {

@@ -90,6 +90,8 @@
     <string>GothamNarrow-Ultra.otf</string>
     <string>Gotham-Bold.otf</string>
     <string>Gotham-Light.otf</string>
+    <string>D-DINCondensed.otf</string>
+    <string>D-DINCondensed-Bold.otf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
