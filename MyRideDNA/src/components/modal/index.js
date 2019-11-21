@@ -22,10 +22,10 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                 transparent={true}
                 visible={isVisible}
                 onRequestClose={onClose}>
-                <View style={{ flex: 1, paddingVertical: 20, backgroundColor: 'rgba(0,0,0,0.7)' }}>
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)' }}>
                     <BasicHeader style={[{ backgroundColor: 'transparent' }, IS_ANDROID ? null : { marginTop: 20 }]} headerHeight={heightPercentageToDP(8.5)}
                         rightIconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#AFAFAF' }, onPress: hideAppNavMenu }} />
-                    <View style={{ flex: 1, padding: widthPercentageToDP(8) }}>
+                    <View style={{ flex: 1, marginTop: APP_COMMON_STYLES.headerHeight / 2 }}>
                         <View style={styles.rowContainer}>
                             <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-newsfeed.png')} imgStyles={styles.navIconImage} onPress={() => null} />
                             <TouchableOpacity activeOpacity={0.7} onPress={() => onPressNavMenu(PageKeys.NOTIFICATIONS)}>
@@ -139,7 +139,8 @@ const styles = StyleSheet.create({
     navIconImage: {
         width: 84,
         height: 84,
-        borderRadius: 84
+        borderRadius: 84,
+        marginHorizontal: 35
     },
     fillParent: {
         width: '100%',
@@ -156,10 +157,9 @@ const styles = StyleSheet.create({
         paddingTop: heightPercentageToDP(2)
     },
     rowContainer: {
-        flex: 1,
+        alignSelf: 'center',
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginTop: heightPercentageToDP(3)
+        marginTop: 15
     }
 });
 
