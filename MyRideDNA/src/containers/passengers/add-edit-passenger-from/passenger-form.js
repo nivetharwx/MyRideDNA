@@ -29,7 +29,6 @@ class PaasengerFormDisplay extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.passengerList !== this.props.passengerList) {
-            console.log('passengerLIst did update : ', this.props.passengerList)
             if (!this.props.passengerList[0].isFriend) {
                 Actions.pop();
             }
@@ -77,10 +76,8 @@ class PaasengerFormDisplay extends Component {
             return;
         }
         if (!passenger.passengerId) {
-            console.log('passenger submit : ', this.state.passenger)
             this.props.registerPassenger(this.props.user.userId, passenger);
         } else {
-            console.log('passenger update : ', this.state.passenger);
             this.props.updatePassengerDetails(passenger.passengerId, passenger);
         }
     }
@@ -91,7 +88,6 @@ class PaasengerFormDisplay extends Component {
     }
 
     onPressGalleryIcon = async () => {
-        console.log('onPressGalleryIcon')
         this.setState({ isLoadingProfPic: true });
         try {
             const imageObj = await ImagePicker.openPicker({
@@ -109,7 +105,6 @@ class PaasengerFormDisplay extends Component {
     }
 
     onPressCameraIcon = async () => {
-        console.log('onPressCameraIcon')
         this.setState({ isLoadingProfPic: true });
         try {
             const imageObj = await ImagePicker.openCamera({
@@ -133,7 +128,7 @@ class PaasengerFormDisplay extends Component {
         return (
             <View style={styles.fill} >
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
-                    <ScrollView >
+                    <ScrollView style={topMargin}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 41 }}>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
                                 <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../assets/img/cam-icon.png')} imgStyles={{ width: 45, height: 37 }} />

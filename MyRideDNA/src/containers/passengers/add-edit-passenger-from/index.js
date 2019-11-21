@@ -135,7 +135,6 @@ class PaasengerForm extends Component {
     render() {
         const { passenger, activeTab, searchQuery } = this.state;
         const { communityList } = this.props;
-        console.log('communityLIst : ', communityList)
         const spinAnim = this.borderWidthAnim.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '45deg']
@@ -159,11 +158,11 @@ class PaasengerForm extends Component {
                     <BasicHeader headerHeight={heightPercentageToDP(10.5)} title={passenger.passengerId ? 'Edit Passenger' : 'Add Passenger'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => this.onPressBackIcon() }} />
                     {
                         this.props.passengerIdx !== -1 ?
-                            <PaasengerFormDisplay passengerIdx={this.props.passengerIdx} topMargin={{ marginTop: heightPercentageToDP(15) }} />
+                            <PaasengerFormDisplay passengerIdx={this.props.passengerIdx} topMargin={{ marginTop: heightPercentageToDP(10) }} />
                             :
                             <Tabs tabContainerStyle={APP_COMMON_STYLES.tabContainer} onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' style={{ marginTop: APP_COMMON_STYLES.headerHeight }} tabBarUnderlineStyle={{ height: 0 }}>
                                 <Tab heading='NEW PASSENGER' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
-                                    <PaasengerFormDisplay topMargin={{ marginTop: heightPercentageToDP(6) }} />
+                                    <PaasengerFormDisplay />
                                 </Tab>
 
                                 <Tab heading='FROM COMMUNITY' tabStyle={[styles.inActiveTab, styles.borderLeftWhite]} activeTabStyle={[styles.activeTab, styles.borderLeftWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
