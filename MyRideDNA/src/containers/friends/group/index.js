@@ -408,7 +408,7 @@ class Group extends Component {
                         searchValue={searchName}
                         onChangeSearchValue={this.searchForFriend} onCancelSearchMode={() => this.setState({ searchName: '', isVisibleSearchModal: false })}
                         onClearSearchValue={() => this.setState({ searchName: '' })}
-                        title={<Text style={{ fontFamily: CUSTOM_FONTS.robotoBold }}>{currentGroup.groupName ? currentGroup.groupName + `\n` : '\n'}<Text style={{ fontSize: 14, fontFamily: CUSTOM_FONTS.robotoBold }}>Members: {currentGroup.groupMembers.length ? currentGroup.groupMembers.length : ''}</Text></Text>}
+                        title={<Text style={{ fontFamily: CUSTOM_FONTS.robotoBold }}>{this.props.comingFrom === 'notificationPage' ? this.props.notificationBody.reference.groupName + '\n' : currentGroup.groupName ? currentGroup.groupName + `\n` : '\n'}<Text style={{ fontSize: 14, fontFamily: CUSTOM_FONTS.robotoBold }}>Members: {currentGroup.groupMembers.length ? currentGroup.groupMembers.length : ''}</Text></Text>}
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
                         thumbnail={{ picture: currentGroup.profilePicture ? currentGroup.profilePicture : null }}
                     />

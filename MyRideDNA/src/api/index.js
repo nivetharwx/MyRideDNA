@@ -110,6 +110,7 @@ export const getAllNotifications = (userId, pageNumber, date, comingFrom, succes
         // dispatch(isloadingDataAction(true));
         axios.get(NOTIFICATIONS_BASE_URL + `getNotifications?userId=${userId}&pageNumber=${pageNumber}&date=${date}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
+                console.log('getAllNotifications : ', res.data)
                 if (res.status === 200 && res.data.notification.length > 0) {
                     // dispatch(isloadingDataAction(false));
                     dispatch(resetNotificationListAction(res.data));
@@ -1607,7 +1608,7 @@ export const sendFriendRequest = (requestBody) => {
             })
     };
 }
-export const cancelFriendRequest = (senderId, personId, requestId) => {
+export const cancelFriendRequest = (senderId, personId, requestId, successCallback, errorCallback) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
@@ -1619,8 +1620,9 @@ export const cancelFriendRequest = (senderId, personId, requestId) => {
                     dispatch(apiLoaderActions(false))
                     dispatch(updateFriendRequestListAction({ id: requestId }))
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.UNKNOWN }));
-                    return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
+                    // dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.UNKNOWN }));
+                    dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
+                    typeof successCallback === "function" && successCallback(res.data)
                 }
             })
             .catch(er => {
@@ -1629,6 +1631,7 @@ export const cancelFriendRequest = (senderId, personId, requestId) => {
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                typeof errorCallback === "function" && errorCallback(er);
             })
     };
 }
@@ -1651,7 +1654,7 @@ export const getAllFriendRequests = (userId, toggleLoader) => {
             })
     }
 }
-export const approveFriendRequest = (senderId, personId, actionDate, requestId) => {
+export const approveFriendRequest = (senderId, personId, actionDate, requestId, successCallback, errorCallback) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
@@ -1663,8 +1666,9 @@ export const approveFriendRequest = (senderId, personId, actionDate, requestId) 
                     dispatch(apiLoaderActions(false))
                     dispatch(updateFriendRequestListAction({ id: requestId }))
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.FRIEND }));
-                    return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.FRIEND }));
+                    // dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.FRIEND }));
+                    dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.FRIEND }));
+                    typeof successCallback === 'function' && successCallback(res.data)
                 }
             })
             .catch(er => {
@@ -1673,10 +1677,11 @@ export const approveFriendRequest = (senderId, personId, actionDate, requestId) 
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                typeof errorCallback === 'function' && errorCallback(er)
             })
     };
 }
-export const rejectFriendRequest = (senderId, personId, requestId) => {
+export const rejectFriendRequest = (senderId, personId, requestId, successCallback, errorCallback) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
@@ -1688,8 +1693,9 @@ export const rejectFriendRequest = (senderId, personId, requestId) => {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.UNKNOWN }));
-                    return dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
+                    // dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.UNKNOWN }));
+                    dispatch(updateRelationshipAction({ personId, relationship: RELATIONSHIP.UNKNOWN }));
+                    typeof successCallback === 'function' && successCallback(res.data)
                 }
             })
             .catch(er => {
@@ -1698,6 +1704,7 @@ export const rejectFriendRequest = (senderId, personId, requestId) => {
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
+                typeof errorCallback === 'function' && errorCallback(er)
             })
     };
 }
