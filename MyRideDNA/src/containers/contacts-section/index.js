@@ -12,7 +12,7 @@ import { HorizontalCard } from '../../components/cards';
 import Contacts from 'react-native-contacts';
 import Permissions from 'react-native-permissions';
 import { searchForFriend, sendFriendRequest, sendInvitationOrRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest } from '../../api';
-import { clearSearchFriendListAction, resetFriendRequestResponseAction, resetInvitationResponseAction } from '../../actions';
+import { clearSearchFriendListAction, resetFriendRequestResponseAction, resetInvitationResponseAction, updateSearchListAction } from '../../actions';
 import { isValidEmailFormat } from '../../util';
 import { LabeledInputPlaceholder } from '../../components/inputs';
 
@@ -377,10 +377,10 @@ class ContactsSection extends PureComponent {
             return { righticonImage: require('../../assets/img/add-friend-from-community.png') }
         }
         else if (item.relationship === RELATIONSHIP.SENT_REQUEST) {
-            return { righticonImage: require('../../assets/img/cancel.png'), imgStyles: {width:23, height:23} }
+            return { righticonImage: require('../../assets/img/cancel.png'), imgStyles: { width: 23, height: 23 } }
         }
         else if (item.relationship === RELATIONSHIP.RECIEVED_REQUEST) {
-            return { righticonImage: require('../../assets/img/accept-reject.png'),imgStyles: {width:35, height:35} }
+            return { righticonImage: require('../../assets/img/accept-reject.png'), imgStyles: { width: 35, height: 35 } }
         }
         else {
             return { righticonImage: require('../../assets/img/chat-high-res.png') }
@@ -517,9 +517,19 @@ const mapDispatchToProps = (dispatch) => {
         clearInvitationResponse: () => dispatch(resetInvitationResponseAction()),
         sendFriendRequest: (requestBody) => dispatch(sendFriendRequest(requestBody)),
         sendInvitationOrRequest: (requestBody) => dispatch(sendInvitationOrRequest(requestBody)),
-        cancelRequest: (userId, personId, requestId) => dispatch(cancelFriendRequest(userId, personId, requestId)),
-        approvedRequest: (userId, personId, actionDate, requestId) => dispatch(approveFriendRequest(userId, personId, actionDate, requestId)),
-        rejectRequest: (userId, personId, requestId) => dispatch(rejectFriendRequest(userId, personId, requestId)),
+        cancelRequest: (userId, personId, requestId) => dispatch(cancelFriendRequest(userId, personId, requestId, (res) => {
+            dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.UNKNOWN }))
+        }, (error) => {
+        })),
+        approvedRequest: (userId, personId, actionDate, requestId) => dispatch(approveFriendRequest(userId, personId, actionDate, requestId, (res) => {
+            dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.FRIEND }));
+        }, (error) => {
+        })),
+        rejectRequest: (userId, personId, requestId) => dispatch(rejectFriendRequest(userId, personId, requestId, (res) => {
+            dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.UNKNOWN }));
+        }, (error) => {
+        })),
+        // updateSearchList:(userId, relationship) => dispatch(updateSearchListAction({userId, relationship}))
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(ContactsSection);
