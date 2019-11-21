@@ -437,7 +437,7 @@ class AllFriendsTab extends Component {
                         <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapFriends()} />
                     </View>
                     <FlatList
-                        showsVerticalScrollIndicator='false'
+                        showsVerticalScrollIndicator={flase}
                         style={{ flexDirection: 'column' }}
                         contentContainerStyle={styles.friendList}
                         data={this.filteredFriends}

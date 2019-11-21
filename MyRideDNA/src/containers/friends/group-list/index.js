@@ -445,7 +445,7 @@ class GroupListTab extends Component {
                         <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapGroups()} />
                     </View>
                     <FlatList
-                        showsVerticalScrollIndicator='false'
+                        showsVerticalScrollIndicator={flase}
                         data={filteredGroups}
                         refreshing={isRefreshing}
                         contentContainerStyle={styles.friendList}
