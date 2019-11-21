@@ -14,6 +14,7 @@ import { Icon as NBIcon } from 'native-base';
 
 import styles from './styles';
 import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES } from '../../constants';
+import { DefaultText } from '../labels';
 
 export const LoginButton = ({ title, onPress }) => (
     <TouchableHighlight
@@ -106,10 +107,10 @@ export const LinkButton = ({ style = {}, title, titleStyle, onPress, highlightCo
     highlightColor
         ? <TouchableHighlight onPress={onPress}
             underlayColor={highlightColor} style={style}>
-            <Text style={titleStyle}>{title}</Text>
+            <DefaultText style={titleStyle}>{title}</DefaultText>
         </TouchableHighlight>
         : <TouchableOpacity activeOpacity={0.6} style={[{ paddingHorizontal: 20 }, style]} onPress={onPress}>
-            <Text style={titleStyle}>{title}</Text>
+            <DefaultText style={titleStyle}>{title}</DefaultText>
         </TouchableOpacity>
 );
 
