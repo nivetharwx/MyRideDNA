@@ -350,7 +350,6 @@ class GroupListTab extends Component {
     loadMoreData = () => {
         if (this.state.isLoadingData && this.state.isLoading === false) {
             this.setState({ isLoading: true, isLoadingData: false })
-            console.log('load more data : ', this.props.pageNumber)
             this.props.getFriendGroups(this.props.user.userId, false, this.props.pageNumber, (res) => {
                 this.setState({ isLoading: false })
             }, (err) => {
@@ -445,7 +444,7 @@ class GroupListTab extends Component {
                         <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapGroups()} />
                     </View>
                     <FlatList
-                        showsVerticalScrollIndicator={flase}
+                        showsVerticalScrollIndicator={false}
                         data={filteredGroups}
                         refreshing={isRefreshing}
                         contentContainerStyle={styles.friendList}
