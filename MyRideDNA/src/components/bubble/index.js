@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, TouchableWithoutFeedback } from 'react-native';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, CUSTOM_FONTS } from '../../constants';
+import { DefaultText } from '../labels';
 
 class Bubble extends React.PureComponent {
     render() {
@@ -35,14 +36,14 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
                     {
                         bubbleName || messageDate
                             ? <View style={{ height: 15, marginTop: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Text style={{ color: '#C4C4C4', fontSize: 10 }}>{bubbleName || ''}</Text>
-                                <Text style={{ color: '#8D8D8D', fontSize: 10 }}>{messageDate}</Text>
+                                <DefaultText style={[styles.bubbleName]}>{bubbleName || ''}</DefaultText>
+                                <DefaultText style={[styles.bubbleDate]}>{messageDate}</DefaultText>
                             </View>
                             : <View style={{ height: 15, marginTop: 5 }} />
                     }
                     <View style={[styles.chatBubble, bubbleStyle, styles.highlightStyle]}>
-                        <Text style={[styles.message, messageStyle]}>{message}</Text>
-                        <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
+                        <DefaultText style={[styles.message, messageStyle]}>{message}</DefaultText>
+                        <DefaultText style={[styles.messageTime, messageTimeStyle]}>{messageTime}</DefaultText>
                     </View>
                 </View>
                 :
@@ -50,14 +51,14 @@ export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, me
                     {
                         bubbleName || messageDate
                             ? <View style={{ height: 15, marginTop: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Text style={{ color: '#C4C4C4', fontSize: 10 }}>{bubbleName || ''}</Text>
-                                <Text style={{ color: '#8D8D8D', fontSize: 10 }}>{messageDate}</Text>
+                                <DefaultText style={[styles.bubbleName]}>{bubbleName || ''}</DefaultText>
+                                <DefaultText style={[styles.bubbleDate]}>{messageDate}</DefaultText>
                             </View>
                             : <View style={{ height: 15, marginTop: 5 }} />
                     }
                     <View style={[styles.chatBubble, bubbleStyle]}>
-                        <Text style={[styles.message, messageStyle]}>{message}</Text>
-                        <Text style={[styles.messageTime, messageTimeStyle]}>{messageTime}</Text>
+                        <DefaultText style={[styles.message, messageStyle]}>{message}</DefaultText>
+                        <DefaultText style={[styles.messageTime, messageTimeStyle]}>{messageTime}</DefaultText>
                     </View>
                 </View>
         }
@@ -88,16 +89,27 @@ const styles = StyleSheet.create({
         // paddingBottom: 5,
     },
     message: {
-        paddingHorizontal: 20
+        paddingHorizontal: 20,
+        fontFamily: CUSTOM_FONTS.roboto
     },
     bubbleName: {
-        color: APP_COMMON_STYLES.infoColor
+        color: '#C4C4C4',
+        fontSize: 10,
+        letterSpacing: 0.8,
+        fontFamily: CUSTOM_FONTS.robotoBold
+    },
+    bubbleDate: {
+        color: '#8D8D8D',
+        fontSize: 10,
+        fontFamily: CUSTOM_FONTS.robotoBold
     },
     messageTime: {
         alignSelf: 'flex-end',
         fontSize: 10,
         paddingRight: 5,
         paddingBottom: 2,
+        letterSpacing: 0.8,
+        fontFamily: CUSTOM_FONTS.robotoBold
         // fontStyle: 'italic',
         // marginRight: 5,
         // marginTop: 5,

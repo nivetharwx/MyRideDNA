@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, CUSTOM_FONTS } from '../../constants';
 import { App } from 'react-native-firebase';
 
 const THUMBNAIL_SIZE = IS_ANDROID ? heightPercentageToDP(6.5) : heightPercentageToDP(8);
@@ -30,10 +30,11 @@ const styles = StyleSheet.create({
     },
     chatHeaderName: {
         color: '#fff',
-        fontWeight: 'bold',
         fontSize: 20,
         letterSpacing: 0.2,
         marginLeft: 15,
+        marginRight: 5,
+        fontFamily: CUSTOM_FONTS.robotoBold
     },
     chatHeaderNickname: {
         color: APP_COMMON_STYLES.infoColor,
@@ -88,7 +89,8 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: 15,
         paddingTop: 10,
-        fontSize: 15
+        fontSize: 15,
+        fontFamily: CUSTOM_FONTS.roboto
     },
     thumbnail: {
         height: widthPercentageToDP(8.5),

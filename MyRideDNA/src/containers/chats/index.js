@@ -1,16 +1,17 @@
 import React, { Component } from 'react';
-import { View, Keyboard, ImageBackground, Text, Alert, StatusBar, ScrollView, FlatList, TextInput, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
+import { View, Keyboard, ImageBackground, Text, Alert, StatusBar, FlatList, TextInput, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
 import { connect } from 'react-redux';
 import styles from './styles';
 import { appNavMenuVisibilityAction, resetMessageCountAction, updateChatDatatAction, resetChatMessageAction } from '../../actions';
 import { ShifterButton, IconButton, LinkButton } from '../../components/buttons';
-import { Thumbnail, Item, List, Icon as NBIcon } from 'native-base';
-import { APP_COMMON_STYLES, widthPercentageToDP, WindowDimensions, heightPercentageToDP, PageKeys, IS_ANDROID } from '../../constants';
+import { Thumbnail, Item, Icon as NBIcon } from 'native-base';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, IS_ANDROID } from '../../constants';
 import { ChatBubble } from '../../components/bubble';
 import { sendMessage, getAllMessages, deleteMessagesById, deleteMessagesByIdForEveryone, seenMessage, getPicture, deleteAllMessages, getPictureList } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
 import { BaseModal } from '../../components/modal';
-import { ActionConst, Actions } from 'react-native-router-flux';
+import { Actions } from 'react-native-router-flux';
+import { DefaultText } from '../../components/labels';
 
 class Chat extends Component {
     CHAT_OPTIONS = [{ text: 'Clear Chat', id: 'clearAll', handler: () => this.clearChat() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
@@ -266,7 +267,7 @@ class Chat extends Component {
         else if (todaysDate.split(' ').slice(-2).join() === chatDate.split(' ').slice(-2).join()) {
             if (todaysDate.split(' ')[0] - chatDate.split(' ')[0] === 1) chatDate = 'Yesterday';
         }
-        return <Text style={styles.time}>{chatDate}</Text>
+        return chatDate; //<DefaultText style={styles.time}>{chatDate}</DefaultText>
     }
 
     render() {
@@ -303,7 +304,7 @@ class Chat extends Component {
                             }
                             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                                 {
-                                    <Text style={styles.chatHeaderName}>
+                                    <DefaultText numberOfLines={1} style={styles.chatHeaderName}>
                                         {
                                             this.props.chatInfo.isGroup
                                                 ? this.props.chatInfo.groupName
@@ -311,7 +312,7 @@ class Chat extends Component {
                                                     ? this.props.chatInfo.senderName
                                                     : this.props.chatInfo.name
                                         }
-                                    </Text>
+                                    </DefaultText>
                                 }
                             </View>
                             <IconButton iconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 25 } }} onPress={this.showOptionsModal} />
@@ -398,7 +399,7 @@ class Chat extends Component {
                                         {
                                             totalUnseenMessage > 0 ?
                                                 <View style={{ backgroundColor: APP_COMMON_STYLES.infoColor, position: 'absolute', bottom: heightPercentageToDP(6), right: widthPercentageToDP(7), height: heightPercentageToDP(3), minWidth: widthPercentageToDP(5), borderRadius: widthPercentageToDP(3), textAlign: 'center', justifyContent: 'center' }}>
-                                                    <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: heightPercentageToDP(1.7) }}>{totalUnseenMessage}</Text>
+                                                    <DefaultText style={{ color: '#FFFFFF', textAlign: 'center', fontSize: heightPercentageToDP(1.7) }}>{totalUnseenMessage}</DefaultText>
                                                 </View>
                                                 : null
                                         }
