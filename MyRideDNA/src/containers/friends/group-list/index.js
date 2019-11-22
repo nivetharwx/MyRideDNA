@@ -10,6 +10,7 @@ import { Actions } from 'react-native-router-flux';
 import { BaseModal } from '../../../components/modal';
 import { hideMembersLocationAction, screenChangeAction, createFriendGroupAction } from '../../../actions';
 import { LabeledInputPlaceholder } from '../../../components/inputs';
+import { DefaultText } from '../../../components/labels';
 
 const FILTERED_ACTION_IDS = {
     ALL_GROUPS: 'all_friends',
@@ -251,10 +252,10 @@ class GroupListTab extends Component {
             //             }
             //         </View>
             //         <View style={{ flex: 1, justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.1)' }}>
-            //             <Text>{item.groupName}</Text>
+            //             <DefaultText>{item.groupName}</DefaultText>
             //         </View>
             //         <View>
-            //             <Text note></Text>
+            //             <DefaultText note></DefaultText>
             //         </View>
             //     </View>
             // </TouchableWithoutFeedback>
@@ -295,27 +296,6 @@ class GroupListTab extends Component {
                 }
             }
         });
-    }
-
-    renderFriend = ({ item, index }) => {
-        return (
-            <ListItem avatar onPress={() => this.toggleFriendSelection(index)}>
-                <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
-                    {
-                        item.profilePictureThumbnail
-                            ? <Thumbnail source={{ uri: 'Image URL' }} />
-                            : <NBIcon active name="person" type='MaterialIcons' style={{ width: widthPercentageToDP(6), color: '#fff' }} />
-                    }
-                </Left>
-                <Body>
-                    <Text style={{ color: '#fff' }}>{item.name}</Text>
-                    <Text style={{ color: '#fff' }} note></Text>
-                </Body>
-                <Right>
-                    <CheckBox checked={this.state.selectedFriendList.findIndex(selFriend => selFriend.memberId === item.userId) > -1} />
-                </Right>
-            </ListItem>
-        );
     }
 
     groupKeyExtractor = (item) => item.groupId;
@@ -427,7 +407,7 @@ class GroupListTab extends Component {
                                 inputValue={searchQuery} inputStyle={{ borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
                                 returnKeyType='next'
                                 onChange={this.onChangeSearchValue}
-                                hideKeyboardOnSubmit={false}
+                                hideKeyboardOnSubmit={true}
                                 containerStyle={styles.searchCont} />
                         </View>
                         <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
@@ -465,8 +445,8 @@ class GroupListTab extends Component {
                         <Animated.View style={{ transform: [{ rotate: spin }] }}>
                             <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
                         </Animated.View>
-                        <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                        <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                        <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
+                        <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
                     </View>
                 }
             </View>
@@ -562,10 +542,10 @@ const styles = StyleSheet.create({
                     }
                 </Left>
                 <Body>
-                    <Text>{item.groupName}</Text>
-                    <Text note></Text>
+                    <DefaultText>{item.groupName}</DefaultText>
+                    <DefaultText note></DefaultText>
                 </Body>
                 <Right>
-                    <Text note>3</Text>
+                    <DefaultText note>3</DefaultText>
                 </Right>
             </ListItem> */}

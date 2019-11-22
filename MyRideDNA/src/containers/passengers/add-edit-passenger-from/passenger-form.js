@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, StatusBar, ScrollView, View, Keyboard, Alert, KeyboardAvoidingView, Text } from 'react-native';
 import { BasicHeader } from '../../../components/headers';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, CUSTOM_FONTS } from '../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInput, IconicList, IconicDatePicker, LabeledInputPlaceholder } from '../../../components/inputs';
 import { BasicButton, IconButton, ImageButton } from '../../../components/buttons';
@@ -11,7 +11,7 @@ import ImageCropPicker from 'react-native-image-crop-picker';
 import { addBikeToGarage, editBike, registerPassenger, updatePassengerDetails } from '../../../api';
 import { toggleLoaderAction } from '../../../actions';
 import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon, Toast } from 'native-base';
-import { IconLabelPair } from '../../../components/labels';
+import { IconLabelPair, DefaultText } from '../../../components/labels';
 import ImagePicker from 'react-native-image-crop-picker';
 
 class PaasengerFormDisplay extends Component {
@@ -128,15 +128,15 @@ class PaasengerFormDisplay extends Component {
         return (
             <View style={styles.fill} >
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
-                    <ScrollView style={topMargin}>
+                    <ScrollView style={[styles.fill, topMargin]}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 41 }}>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
                                 <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../assets/img/cam-icon.png')} imgStyles={{ width: 45, height: 37 }} />
-                                <Text style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{' TAKE \nPHOTO'}</Text>
+                                <DefaultText style={{ letterSpacing: 2, marginTop: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold, color: '#000', fontSize: 12 }}>{' TAKE \nPHOTO'}</DefaultText>
                             </View>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
                                 <ImageButton onPress={this.onPressGalleryIcon} imageSrc={require('../../../assets/img/photos-icon.png')} imgStyles={{ width: 41, height: 33 }} />
-                                <Text style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{'UPLOAD \n PHOTO'}</Text>
+                                <DefaultText style={{ letterSpacing: 2, marginTop: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold, color: '#000', fontSize: 12 }}>{'UPLOAD \n PHOTO'}</DefaultText>
                             </View>
                         </View>
                         <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(3) }}>
@@ -159,7 +159,7 @@ class PaasengerFormDisplay extends Component {
                                 onChange={this.onChangeState} label='STATE' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
                             <LabeledInputPlaceholder
-                                inputValue={passenger.phoneNumber ? + passenger.phoneNumber + "" : passenger.phoneNumber} inputStyle={{ paddingBottom: 0 }}
+                                inputValue={passenger.phoneNumber ? passenger.phoneNumber + "" : passenger.phoneNumber} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(4) }}
                                 inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next'
                                 onChange={this.onChangePhone} label='PHONE' labelStyle={styles.labelStyle}
@@ -167,6 +167,7 @@ class PaasengerFormDisplay extends Component {
                                 inputType="telephoneNumber"
                             />
                             <IconicList
+                                pickerStyle={{ borderBottomWidth: 0 }}
                                 selectedValue={passenger.gender} values={GENDER_LIST} labelPlaceHolder='GENDER'
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 labelPlaceHolderStyle={[styles.labelStyle, { marginTop: heightPercentageToDP(1) }]}
@@ -228,8 +229,8 @@ const styles = StyleSheet.create({
     labelStyle: {
         color: '#000',
         fontSize: 10,
-        fontWeight: 'bold',
-        letterSpacing: 1.1
+        letterSpacing: 1.1,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold
     },
     submitBtn: {
         height: heightPercentageToDP(9),

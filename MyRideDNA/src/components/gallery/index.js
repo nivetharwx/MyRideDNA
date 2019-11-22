@@ -21,6 +21,7 @@ import { WindowDimensions } from '../../constants';
 import { Actions } from 'react-native-router-flux';
 import { Toast } from 'native-base';
 import { ImageLoader } from '../../components/loader';
+import { DefaultText } from '../labels';
 
 const MAXIMUM_SELECTION = 10;
 const ANDROID_HEADER_HEIGHT = 50;
@@ -202,15 +203,15 @@ export class GalleryView extends Component {
                         </TouchableOpacity>
                     </View>
                     <View style={{ flex: 1 }}>
-                        <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
+                        <DefaultText style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
                             {this.state.selectedImages.size > 0 ? this.state.selectedImages.size + ' selected' : ''}
-                        </Text>
+                        </DefaultText>
                     </View>
                     <View style={{ marginHorizontal: 20, alignContent: 'flex-end' }}>
                         <TouchableOpacity onPress={this.doBeforePop}>
-                            <Text style={{ color: 'white', fontSize: 16 }}>
+                            <DefaultText style={{ color: 'white', fontSize: 16 }}>
                                 {this.state.selectedImages.size > 0 ? 'OK' : ''}
-                            </Text>
+                            </DefaultText>
                         </TouchableOpacity>
                     </View>
                 </SafeAreaView>

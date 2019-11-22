@@ -132,12 +132,12 @@ export class BasicHeader extends React.Component {
                                     titleEditingMode === false
                                         ? hasEditableTitle
                                             ? <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <DefaultText style={[{ color: 'white', fontSize: 20, letterSpacing: 0.2, fontFamily: CUSTOM_FONTS.gothamBold }, titleStyle]}>
+                                                <DefaultText numberOfLines={1} style={[{ color: 'white', fontSize: 20, letterSpacing: 0.2, fontFamily: CUSTOM_FONTS.gothamBold }, titleStyle]}>
                                                     {title}
                                                 </DefaultText>
                                                 <IconButton style={{ paddingHorizontal: 0 }} onPress={this.toggleTitleEditingMode} iconProps={{ name: 'edit', type: 'MaterialIcons', style: { color: '#fff' } }} />
                                             </View>
-                                            : <DefaultText style={[{ color: 'white', fontSize: 20, letterSpacing: 0.2, marginLeft: leftIconProps ? 10 : 0, fontFamily: CUSTOM_FONTS.gothamBold }, titleStyle]}>
+                                            : <DefaultText numberOfLines={1} style={[{ color: 'white', fontSize: 20, letterSpacing: 0.2, marginLeft: leftIconProps ? 10 : 0, fontFamily: CUSTOM_FONTS.gothamBold }, titleStyle]}>
                                                 {title}
                                             </DefaultText>
                                         : <View style={{ flexDirection: 'row', marginRight: rightIconProps ? 20 : 0, justifyContent: 'space-between', alignItems: 'center' }}>

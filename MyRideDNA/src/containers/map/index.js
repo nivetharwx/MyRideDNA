@@ -29,7 +29,7 @@ import { SearchBox, IconicList } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
 import { MapControlPair, BasicButton, IconButton, ShifterButton, LinkButton } from '../../components/buttons';
-import { IconLabelPair } from '../../components/labels';
+import { IconLabelPair, DefaultText } from '../../components/labels';
 import WaypointList from './waypoint-list';
 import CommentSection from './comment-scetion';
 import ItinerarySection from './itinerary-section';
@@ -2999,7 +2999,7 @@ export class Map extends Component {
                                             <NBIcon name='location-off' type='MaterialIcons' />
                                         </Left>
                                         <Body style={{ borderBottomWidth: 0 }}>
-                                            <Text>Hide All</Text>
+                                            <DefaultText>Hide All</DefaultText>
                                         </Body>
                                     </ListItem>
                                     : null
@@ -3027,7 +3027,7 @@ export class Map extends Component {
                                                 }
                                             </Left>
                                             <Body style={{ borderBottomWidth: 0 }}>
-                                                <Text>{item.name}</Text>
+                                                <DefaultText>{item.name}</DefaultText>
                                             </Body>
                                             <Right style={{ borderBottomWidth: 0 }}>
                                                 <CheckBox onPress={() => this.closeTrackingList(item.id, !item.isVisible, item.isGroup)} checked={item.isVisible} />
@@ -3141,7 +3141,7 @@ export class Map extends Component {
                 {
                     user.showCircle && mapRadiusCircle
                         ? <TouchableOpacity style={{ position: 'absolute', zIndex: 100, elevation: 10, bottom: 20, left: 20 }}>
-                            <Text style={{ fontSize: 50, fontWeight: 'bold' }}>{`${this.state.diameter}`}<Text style={{ fontSize: 30 }}> {user.distanceUnit.toUpperCase()}</Text></Text>
+                            <DefaultText style={{ fontSize: 50, fontWeight: 'bold' }}>{`${this.state.diameter}`}<DefaultText style={{ fontSize: 30 }}> {user.distanceUnit.toUpperCase()}</DefaultText></DefaultText>
                         </TouchableOpacity>
                         : null
                 }

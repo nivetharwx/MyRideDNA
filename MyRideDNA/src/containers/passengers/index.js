@@ -12,6 +12,7 @@ import { getPassengerList, deletePassenger, getPictureList } from '../../api';
 import { SmallCard, SquareCard } from '../../components/cards';
 import { updatePassengerInListAction, appNavMenuVisibilityAction, setCurrentFriendAction } from '../../actions';
 import { Loader } from '../../components/loader';
+import { DefaultText } from '../../components/labels';
 
 
 const roadbuddiesDummyData = [{ name: 'person1', id: '1' }, { name: 'person2', id: '2' }, { name: 'person3', id: '3' }, { name: 'person4', id: '4' }]
@@ -155,10 +156,10 @@ class Passengers extends Component {
                         }
                     </View>
                     <View style={{ flex: 1, justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.1)' }}>
-                        <Text>{item.name}</Text>
+                        <DefaultText>{item.name}</DefaultText>
                     </View>
                     <View>
-                        <Text note></Text>
+                        <DefaultText note></DefaultText>
                     </View>
                 </View>
             </TouchableWithoutFeedback>
@@ -271,8 +272,8 @@ class Passengers extends Component {
                             <Animated.View style={{ transform: [{ rotate: spin }] }}>
                                 <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
                             </Animated.View>
-                            <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                            <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                            <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
+                            <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
                         </View>
                     }
 

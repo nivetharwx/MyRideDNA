@@ -14,6 +14,7 @@ import ForgotPassword from '../../containers/forgot-password';
 import Md5 from 'react-native-md5';
 import { Actions } from 'react-native-router-flux';
 import { Loader } from '../../components/loader';
+import { DefaultText } from '../../components/labels';
 
 
 export class Settings extends Component {
@@ -243,7 +244,7 @@ export class Settings extends Component {
                                 behavior="position"
                             >
                                 <Item style={styles.containerItem}>
-                                    <Text>Share my location with friends</Text>
+                                    <DefaultText>Share my location with friends</DefaultText>
                                     <View style={{ flex: 1 }}>
                                         <SwitchIconButton
                                             activeIcon={<NBIcon name='close' type='FontAwesome' style={{ color: '#fff', alignSelf: 'flex-start', paddingHorizontal: 10 }} />}
@@ -267,7 +268,7 @@ export class Settings extends Component {
                                     />
                                 </Item>
                                 <Item style={styles.containerItem}>
-                                    <Text>Show visible map boundary circle</Text>
+                                    <DefaultText>Show visible map boundary circle</DefaultText>
                                     <View style={{ flex: 1 }}>
                                         <SwitchIconButton
                                             activeIcon={<NBIcon name='close' type='FontAwesome' style={{ color: '#fff', alignSelf: 'flex-start', paddingHorizontal: 10 }} />}

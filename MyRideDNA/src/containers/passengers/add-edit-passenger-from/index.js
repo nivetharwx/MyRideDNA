@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, StatusBar, ScrollView, View, Keyboard, Alert, KeyboardAvoidingView, Text, FlatList, Animated, ActivityIndicator, Easing } from 'react-native';
 import { BasicHeader } from '../../../components/headers';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, FRIEND_TYPE } from '../../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, FRIEND_TYPE, CUSTOM_FONTS } from '../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInput, IconicList, IconicDatePicker, LabeledInputPlaceholder } from '../../../components/inputs';
 import { BasicButton, IconButton } from '../../../components/buttons';
@@ -11,7 +11,7 @@ import ImageCropPicker from 'react-native-image-crop-picker';
 import { addBikeToGarage, editBike, registerPassenger, updatePassengerDetails, getPictureList, getCommunityFriendsList } from '../../../api';
 import { toggleLoaderAction, updateFriendInListAction, updateCommunityListAction, resetCommunityListAction } from '../../../actions';
 import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon, Toast } from 'native-base';
-import { IconLabelPair } from '../../../components/labels';
+import { IconLabelPair, DefaultText } from '../../../components/labels';
 import ImagePicker from 'react-native-image-crop-picker';
 import PaasengerFormDisplay from './passenger-form';
 import { HorizontalCard } from '../../../components/cards';
@@ -169,6 +169,7 @@ class PaasengerForm extends Component {
                                     <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
                                         <View style={{ flex: 2.89 }}>
                                             <LabeledInputPlaceholder
+                                                placeholder='Name'
                                                 inputValue={searchQuery} inputStyle={{ paddingBottom: 0, backgroundColor: '#fff', borderBottomWidth: 0 }}
                                                 inputRef={elRef => this.fieldRefs[7] = elRef} returnKeyType='next'
                                                 onChange={this.onChangeSearchFriend}
@@ -181,7 +182,7 @@ class PaasengerForm extends Component {
 
                                     </View>
                                     <View style={{ borderBottomWidth: 3, borderBottomColor: '#F5891F', marginTop: 16, marginHorizontal: widthPercentageToDP(9) }}>
-                                        <Text style={{ marginLeft: widthPercentageToDP(3), fontSize: 12, fontWeight: 'bold', color: '#000', letterSpacing: 0.6, marginBottom: 2 }}>SEARCH RESULTS</Text>
+                                        <DefaultText style={{ marginLeft: widthPercentageToDP(3), fontSize: 12, color: '#000', letterSpacing: 0.6, marginBottom: 2, fontFamily: CUSTOM_FONTS.robotoBold }}>SEARCH RESULTS</DefaultText>
                                     </View>
                                     <View style={{ marginTop: 16 }}>
                                         <FlatList
@@ -213,8 +214,8 @@ class PaasengerForm extends Component {
                                                 <Animated.View style={{ transform: [{ rotate: spin }] }}>
                                                     <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
                                                 </Animated.View>
-                                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                                <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
+                                                <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
                                             </View>
                                         }
                                     </View>
@@ -315,6 +316,7 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontSize: 13,
-        fontWeight: 'bold'
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        letterSpacing: 0.6
     }
 });

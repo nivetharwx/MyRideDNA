@@ -20,7 +20,7 @@ export const LoginButton = ({ title, onPress }) => (
     <TouchableHighlight
         style={{ marginBottom: 10 }}
         onPress={onPress}>
-        <Text style={[ButttonStyles.loginButtonText, { backgroundColor: '#555860' }]}>Login</Text>
+        <DefaultText style={[ButttonStyles.loginButtonText, { backgroundColor: '#555860' }]}>Login</DefaultText >
     </TouchableHighlight>
 );
 
@@ -38,7 +38,7 @@ export const MapControlPair = ({ firstIcon, secondIcon, containerStyle }) => (
 export const BasicButton = ({ title, titleStyle, onPress, style }) => (
     <TouchableOpacity activeOpacity={0.6} style={[{ backgroundColor: '#F5891F', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} onPress={onPress}>
         <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={[{ color: '#fff', fontSize: 15, fontWeight: 'bold' }, titleStyle]}>{title}</Text>
+            <DefaultText style={[{ color: '#fff', fontSize: 15 }, titleStyle]}>{title}</DefaultText>
         </View>
     </TouchableOpacity>
 );
@@ -46,7 +46,7 @@ export const BasicButton = ({ title, titleStyle, onPress, style }) => (
 export const RoundButton = ({ title, onPress, style, titleStyle }) => (
     <TouchableOpacity activeOpacity={0.6} onPress={onPress}>
         <View style={[{ backgroundColor: '#0083CA', borderRadius: 30, height: 30, width: 30, alignItems: 'center', justifyContent: 'center' }, style]}>
-            <Text style={[{ color: '#fff', alignSelf: 'center', fontSize: 15, fontWeight: 'bold' }, titleStyle]}>{title}</Text>
+            <DefaultText style={[{ color: '#fff', alignSelf: 'center', fontSize: 15 }, titleStyle]}>{title}</DefaultText>
         </View>
     </TouchableOpacity>
 );
@@ -57,7 +57,7 @@ export const IconButton = ({ title, titleStyle, iconRight, iconProps = {}, onPre
             ? <View style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style, { borderColor: disabledColor }]}>
                 {
                     title !== undefined || title !== null
-                        ? <Text style={titleStyle}>{title}</Text>
+                        ? <DefaultText style={titleStyle}>{title}</DefaultText >
                         : null
                 }
                 <NBIcon name={iconProps.name}
@@ -68,7 +68,7 @@ export const IconButton = ({ title, titleStyle, iconRight, iconProps = {}, onPre
                     type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style, { color: disabledColor, borderColor: disabledColor }]} />
                 {
                     title !== undefined || title !== null
-                        ? <Text style={titleStyle}>{title}</Text>
+                        ? <DefaultText style={titleStyle}>{title}</DefaultText >
                         : null
                 }
             </View>
@@ -76,7 +76,7 @@ export const IconButton = ({ title, titleStyle, iconRight, iconProps = {}, onPre
             ? <TouchableOpacity style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} activeOpacity={0.6} onPress={onPress} onPressOut={onPressOut}>
                 {
                     title !== undefined || title !== null
-                        ? <Text style={titleStyle}>{title}</Text>
+                        ? <DefaultText style={titleStyle}>{title}</DefaultText >
                         : null
                 }
                 <NBIcon name={iconProps.name}
@@ -87,7 +87,7 @@ export const IconButton = ({ title, titleStyle, iconRight, iconProps = {}, onPre
                     type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style]} />
                 {
                     title !== undefined || title !== null
-                        ? <Text style={titleStyle}>{title}</Text>
+                        ? <DefaultText style={titleStyle}>{title}</DefaultText >
                         : null
                 }
             </TouchableOpacity>

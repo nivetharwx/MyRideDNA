@@ -11,7 +11,7 @@ export const IconLabelPair = ({ containerStyle, iconProps, text, textStyle }) =>
     return (
         <View style={[styles.containerBox, containerStyle]}>
             <NBIcon {...iconProps} />
-            <Text style={[styles.textStyle, textStyle]}>{text}</Text>
+            <DefaultText style={[styles.textStyle, textStyle]}>{text}</DefaultText>
         </View>
     )
 }
@@ -26,7 +26,7 @@ export const DefaultText = ({ fontFamily, numberOfLines, style, ...otherProps })
 //         return (
 //             <View style={styles.controlPairWrapperTopLeft}>
 //                 <NBIcon name={iconProps.name} type={iconProps.type} />
-//                 <Text style={styles.textControlTopLeft}>{text}</Text>
+//                 <DefaultText  style={styles.textControlTopLeft}>{text}</DefaultText>
 //             </View>
 //         );
 //     }

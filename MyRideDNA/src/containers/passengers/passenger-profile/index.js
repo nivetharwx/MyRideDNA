@@ -4,12 +4,13 @@ import { StyleSheet, Platform, TouchableWithoutFeedback, StatusBar, FlatList, Sc
 import { Actions } from 'react-native-router-flux';
 import { DatePicker, Icon as NBIcon, Toast, ListItem, Left, Body, Right, Thumbnail } from 'native-base';
 import { BasicHeader } from '../../../components/headers';
-import { APP_COMMON_STYLES, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, heightPercentageToDP, IS_ANDROID, WindowDimensions, widthPercentageToDP } from '../../../constants';
+import { APP_COMMON_STYLES, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, heightPercentageToDP, IS_ANDROID, WindowDimensions, widthPercentageToDP, CUSTOM_FONTS } from '../../../constants';
 import { getPassengerList, getPicture } from '../../../api';
 import { BaseModal } from '../../../components/modal';
 import { getPassengerInfoAction, updateCurrentPassengerAction, resetCurrentPassengerAction } from '../../../actions';
 import { ImageLoader } from '../../../components/loader';
 import { IconButton } from '../../../components/buttons';
+import { DefaultText } from '../../../components/labels';
 
 const hasIOSAbove10 = parseInt(Platform.Version) > 10;
 
@@ -150,16 +151,16 @@ class PassengersProfile extends Component {
                         style={styles.editPassenger} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: this.props.passengerIdx })} />
                     <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(1) }}>
                         <View>
-                            <Text style={{ fontSize: 10, fontWeight: 'bold', letterSpacing: 1.6, color: '#707070' }}>DOB</Text>
-                            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#000' }}>{currentPassenger.dob ? new Date(currentPassenger.dob).toLocaleDateString('en-IN', { day: 'numeric', year: '2-digit', month: 'short' }) : ''}</Text>
+                            <DefaultText style={{ fontSize: 10, fontFamily: CUSTOM_FONTS.robotoBold, letterSpacing: 1.6, color: '#707070' }}>DOB</DefaultText>
+                            <DefaultText style={{ fontSize: 14, fontFamily: CUSTOM_FONTS.robotoBold, color: '#000' }}>{currentPassenger.dob ? new Date(currentPassenger.dob).toLocaleDateString('en-IN', { day: 'numeric', year: '2-digit', month: 'short' }) : ''}</DefaultText>
                         </View>
                         <View style={{ marginTop: heightPercentageToDP(3) }}>
-                            <Text style={{ fontSize: 10, fontWeight: 'bold', letterSpacing: 1.6, color: '#707070' }}>PHONE</Text>
-                            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#000' }}>{currentPassenger.phoneNumber ? currentPassenger.phoneNumber : ''}</Text>
+                            <DefaultText style={{ fontSize: 10, fontFamily: CUSTOM_FONTS.robotoBold, letterSpacing: 1.6, color: '#707070' }}>PHONE</DefaultText>
+                            <DefaultText style={{ fontSize: 14, fontFamily: CUSTOM_FONTS.robotoBold, color: '#000' }}>{currentPassenger.phoneNumber ? currentPassenger.phoneNumber : ''}</DefaultText>
                         </View>
                         <View style={{ marginTop: heightPercentageToDP(3) }}>
-                            <Text style={{ fontSize: 10, fontWeight: 'bold', letterSpacing: 1.6, color: '#707070' }}>ADDRESS</Text>
-                            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#000' }}>{currentPassenger.homeAddress ? currentPassenger.homeAddress.city : ''}, {currentPassenger.homeAddress ? currentPassenger.homeAddress.state : ''}</Text>
+                            <DefaultText style={{ fontSize: 10, fontFamily: CUSTOM_FONTS.robotoBold, letterSpacing: 1.6, color: '#707070' }}>ADDRESS</DefaultText>
+                            <DefaultText style={{ fontSize: 14, fontFamily: CUSTOM_FONTS.robotoBold, color: '#000' }}>{currentPassenger.homeAddress ? currentPassenger.homeAddress.city : ''}, {currentPassenger.homeAddress ? currentPassenger.homeAddress.state : ''}</DefaultText>
                         </View>
                     </View>
                 </View>

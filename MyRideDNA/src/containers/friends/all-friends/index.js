@@ -417,7 +417,7 @@ class AllFriendsTab extends Component {
                                 inputValue={searchQuery} inputStyle={{ borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
                                 returnKeyType='next'
                                 onChange={this.onChangeSearchValue}
-                                hideKeyboardOnSubmit={false}
+                                hideKeyboardOnSubmit={true}
                                 containerStyle={styles.searchCont} />
                         </View>
                         <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
