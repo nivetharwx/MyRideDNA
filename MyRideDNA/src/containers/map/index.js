@@ -356,19 +356,23 @@ export class Map extends Component {
                 }
             }
         }
-        if (this.props.currentScreen !== currentScreen && currentScreen.name !== Actions.currentScene) {
-            if (Actions.prevState.routes.length > 1) {
-                if (Actions.prevState.routes.findIndex(route => route.routeName === currentScreen.name) > -1) {
-                    Actions.popTo(currentScreen.name, {})
+        if (this.props.currentScreen !== currentScreen) {
+            if (currentScreen.name !== Actions.currentScene) {
+                if (Actions.prevState.routes.length > 1) {
+                    if (Actions.prevState.routes.findIndex(route => route.routeName === currentScreen.name) > -1) {
+                        Actions.popTo(currentScreen.name, {})
+                    } else {
+                        currentScreen.params && currentScreen.params.comingFrom
+                            ? Actions.push(currentScreen.name, currentScreen.params)
+                            : Actions.replace(currentScreen.name, currentScreen.params);
+                    }
                 } else {
-                    currentScreen.params && currentScreen.params.comingFrom
+                    currentScreen.name !== this.rootScreen
                         ? Actions.push(currentScreen.name, currentScreen.params)
-                        : Actions.replace(currentScreen.name, currentScreen.params);
+                        : Actions.popTo(currentScreen.name, {})
                 }
-            } else {
-                currentScreen.name !== this.rootScreen
-                    ? Actions.push(currentScreen.name, currentScreen.params)
-                    : Actions.popTo(currentScreen.name, {})
+            } else if (this.props.currentScreen.params !== currentScreen.params) {
+                Actions.refresh(currentScreen.params);
             }
         }
         if (Object.keys(updatedState).length > 0) {
@@ -797,7 +801,7 @@ export class Map extends Component {
 
     onCloseAppNavMenu = () => this.props.hideAppNavMenu();
 
-    onPressAppNavMenu = (screenKey) => {
+    onPressAppNavMenu = ({ screenKey, params = {} }) => {
         if (this.state.rideUpdateCount > 0 && screenKey !== PageKeys.Map) {
             if (this.state.rideUpdateCount > 0 || this.hasModifiedRide) {
                 const { ride } = this.props;
@@ -841,8 +845,8 @@ export class Map extends Component {
         }
         // DOC: Remove cached friends profiles
         this.props.resetCurrentFriend();
-        
-        this.props.changeScreen({ name: screenKey });
+
+        this.props.changeScreen({ name: screenKey, params: { ...params } });
     }
 
     async componentDidMount() {

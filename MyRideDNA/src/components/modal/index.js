@@ -23,12 +23,12 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                 visible={isVisible}
                 onRequestClose={onClose}>
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)' }}>
-                    <BasicHeader style={[{ backgroundColor: 'transparent' }, IS_ANDROID ? null : { marginTop: 20 }]} headerHeight={heightPercentageToDP(8.5)}
+                    <BasicHeader showShadow={false} style={[{ backgroundColor: 'transparent' }, IS_ANDROID ? null : { marginTop: 20 }]} headerHeight={heightPercentageToDP(8.5)}
                         rightIconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#AFAFAF' }, onPress: hideAppNavMenu }} />
                     <View style={{ flex: 1, marginTop: APP_COMMON_STYLES.headerHeight }}>
                         <View style={styles.rowContainer}>
                             <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-newsfeed.png')} imgStyles={styles.navIconImage} onPress={() => null} />
-                            <TouchableOpacity activeOpacity={0.7} onPress={() => onPressNavMenu(PageKeys.NOTIFICATIONS)}>
+                            <TouchableOpacity activeOpacity={0.7} onPress={() => onPressNavMenu({ screenKey: PageKeys.NOTIFICATIONS })}>
                                 <View style={styles.navIconImage}>
                                     <ImageBackground style={{ width: null, height: null, flex: 1 }} source={require('../../assets/img/menu-notifications.png')}>
                                         {
@@ -46,23 +46,23 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                             </TouchableOpacity>
                         </View>
                         <View style={styles.rowContainer}>
-                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-road-buddies.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.FRIENDS)} />
-                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-messaging.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.CHAT_LIST)} />
+                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-road-buddies.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.FRIENDS })} />
+                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-messaging.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.CHAT_LIST })} />
                         </View>
                         <View style={styles.rowContainer}>
-                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-profile.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.PROFILE)} />
-                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-garage.png')} imgStyles={styles.navIconImage} onPress={() => null} />
+                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-profile.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.PROFILE, params: { activeTab: 0 } })} />
+                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-garage.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.PROFILE, params: { activeTab: 1 } })} />
                         </View>
                         <View style={styles.rowContainer}>
-                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-lets-ride.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.MAP)} />
-                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-settings.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.SETTINGS)} />
+                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-lets-ride.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.MAP })} />
+                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-settings.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.SETTINGS })} />
                         </View>
                         <View style={styles.rowContainer}>
-                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-atlas.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.RIDES)} />
-                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-offers.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.OFFERS)} />
+                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-atlas.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.RIDES })} />
+                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-offers.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.OFFERS })} />
                         </View>
-                        {/* <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-rides.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.RIDES)} /> */}
-                        {/* <TouchableOpacity style={{ marginHorizontal: 35, marginVertical: 15 }} activeOpacity={0.7} onPress={() => onPressNavMenu(PageKeys.NOTIFICATIONS)}>
+                        {/* <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-rides.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.RIDES })} /> */}
+                        {/* <TouchableOpacity style={{ marginHorizontal: 35, marginVertical: 15 }} activeOpacity={0.7} onPress={() => onPressNavMenu({ screenKey: PageKeys.NOTIFICATIONS)}>
                             <View style={styles.navIconImage}>
                                 <ImageBackground style={{ width: null, height: null, flex: 1 }} source={require('../../assets/img/menu-notifications.png')}>
                                     {
@@ -78,7 +78,7 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                                 </ImageBackground>
                             </View>
                         </TouchableOpacity> */}
-                        {/* <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-notifications.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu(PageKeys.NOTIFICATIONS)} /> */}
+                        {/* <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-notifications.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.NOTIFICATIONS)} /> */}
                     </View>
                 </View>
             </Modal>
@@ -162,29 +162,3 @@ const styles = StyleSheet.create({
         marginTop: 15
     }
 });
-
-{/*                 <TouchableOpacity activeOpacity={0.4}>
-                        <Image source={require('../../assets/img/menu-rides.png')} />
-                    </TouchableOpacity>
-                    <TouchableOpacity activeOpacity={0.4}>
-                        <Image source={require('../../assets/img/menu-profile.png')} />
-                    </TouchableOpacity>
-                    <TouchableOpacity activeOpacity={0.4}>
-                        <Image source={require('../../assets/img/menu-map.png')} />
-                    </TouchableOpacity>
-                    <TouchableOpacity activeOpacity={0.4}>
-                        <Image source={require('../../assets/img/menu-friends.png')} />
-                    </TouchableOpacity>
-                    <TouchableOpacity activeOpacity={0.4}>
-                        <Image source={require('../../assets/img/menu-settings.png')} />
-                    </TouchableOpacity>
-                    <TouchableOpacity activeOpacity={0.4}>
-                        <Image source={require('../../assets/img/menu-offers.png')} />
-                    </TouchableOpacity> */}
-
-{/*                 <AppMenuButton containerStyle={{ marginBottom: 10 }} iconProps={{ name: 'motorbike', type: 'MaterialCommunityIcons' }}  onPress={() => onPressNavMenu(PageKeys.RIDES)} />
-                    <AppMenuButton containerStyle={{ marginBottom: 10 }} iconProps={{ name: 'person', type: 'MaterialIcons' }} onPress={() => onPressNavMenu(PageKeys.PROFILE)} />
-                    <AppMenuButton containerStyle={{ marginBottom: 10 }} iconProps={{ name: 'map', type: 'MaterialIcons' }} onPress={() => onPressNavMenu(PageKeys.MAP)} />
-                    <AppMenuButton containerStyle={{ marginBottom: 10 }} iconProps={{ name: 'ios-people', type: 'Ionicons' }} onPress={() => onPressNavMenu(PageKeys.FRIENDS)} />
-                    <AppMenuButton containerStyle={{ marginBottom: 10 }} iconProps={{ name: 'settings', type: 'MaterialIcons' }} onPress={() => onPressNavMenu(PageKeys.SETTINGS)} />
-                    <AppMenuButton containerStyle={{ marginBottom: 10 }} iconProps={{ name: 'card-giftcard', type: 'MaterialIcons' }} onPress={() => onPressNavMenu(PageKeys.OFFERS)} /> */}

@@ -18,7 +18,15 @@ class Profile extends Component {
         };
     }
 
-    componentDidMount() { }
+    componentDidMount() {
+        if (typeof this.props.activeTab === 'number' && this.props.activeTab !== 0) this.tabsRef.goToPage(this.props.activeTab);
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (typeof this.props.activeTab === 'number' && prevProps.activeTab !== this.props.activeTab) {
+            this.tabsRef.goToPage(this.props.activeTab);
+        }
+    }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
 
