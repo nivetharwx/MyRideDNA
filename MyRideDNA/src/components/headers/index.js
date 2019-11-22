@@ -59,7 +59,7 @@ export class BasicHeader extends React.Component {
 
     render() {
         const { leftIconProps, title, rightIconProps, onCancelSearchMode,
-            searchValue, onChangeSearchValue, hasEditableTitle, style, searchIconProps, rightIconPropsStyle, thumbnail, titleStyle } = this.props;
+            searchValue, onChangeSearchValue, hasEditableTitle, style, searchIconProps, rightIconPropsStyle, thumbnail, titleStyle, showShadow = true } = this.props;
         const { searchbarAnim, searchbarMode, titleEditingMode } = this.state;
 
         const searchCancelAnim = searchbarAnim.interpolate({
@@ -72,7 +72,7 @@ export class BasicHeader extends React.Component {
         });
 
         return (
-            <View style={[styles.header, style]}>
+            <View style={[styles.header, style, showShadow ? styles.shadowStyle : null]}>
                 {
                     searchbarMode === false || searchbarMode === undefined
                         ? <View style={{ flex: 1, flexDirection: 'row' }}>
@@ -238,6 +238,8 @@ const styles = StyleSheet.create({
         backgroundColor: APP_COMMON_STYLES.headerColor,
         flexDirection: 'row',
         height: APP_COMMON_STYLES.headerHeight,
+    },
+    shadowStyle: {
         elevation: 30,
         shadowOffset: { width: 0, height: 8 },
         shadowColor: '#000000',
