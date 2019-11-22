@@ -5,7 +5,7 @@ import { BaseModal } from '../../../components/modal';
 import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, TAB_CONTAINER_HEIGHT, JS_SDK_ACCESS_TOKEN, RIDE_POINT, APP_EVENT_TYPE } from '../../../constants';
 import { Icon as NBIcon, Tabs, ScrollableTab, TabHeading, Tab, ListItem, Left, Body, Right, Item } from 'native-base';
 import { updateWaypointNameAction, updateSourceOrDestinationNameAction, reorderRideSourceAction, reorderRideDestinationAction, reorderRideWaypointsAction, apiLoaderActions, updateRideAction, updateRideInListAction } from '../../../actions';
-import { IconLabelPair } from '../../../components/labels';
+import { IconLabelPair, DefaultText } from '../../../components/labels';
 import DraggableFlatList from 'react-native-draggable-flatlist';
 import { IconButton, SwitchIconButton, LinkButton } from '../../../components/buttons';
 import { getFormattedDateFromISO } from '../../../util';
@@ -144,7 +144,7 @@ class WaypointList extends React.Component {
                     {
                         item.description
                             ? <View style={{ flex: 1, justifyContent: 'space-around', flexDirection: 'row' }}>
-                                <Text>{item.description}</Text>
+                                <DefaultText>{item.description}</DefaultText>
                                 {/* {
                                     this.props.isEditable
                                         ? <IconButton onPress={() => this.onPressEditDescription(index - 1)} style={{ backgroundColor: 'transparent', alignSelf: 'flex-end' }}
@@ -153,7 +153,7 @@ class WaypointList extends React.Component {
                                 } */}
                             </View>
                             : <View style={{ flex: 1, justifyContent: 'space-between', flexDirection: 'row' }}>
-                                <Text style={{ color: '#ACACAC' }}>{this.props.isEditable ? 'Add description' : 'No description added for this point'}</Text>
+                                <DefaultText style={{ color: '#ACACAC' }}>{this.props.isEditable ? 'Add description' : 'No description added for this point'}</DefaultText>
                                 {/* {
                                     this.props.isEditable
                                         ? <IconButton onPress={() => this.onPressEditDescription(index - 1)} style={{ backgroundColor: 'transparent', alignSelf: 'flex-end' }}
@@ -170,25 +170,25 @@ class WaypointList extends React.Component {
                 style={{ backgroundColor: isActive ? APP_COMMON_STYLES.infoColor : '#fff' }}>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
                     <View style={[styles.itemNumber, { backgroundColor: APP_COMMON_STYLES.infoColor }]}>
-                        {/* <Text style={styles.whiteFont}>{
+                        {/* <DefaultText style={styles.whiteFont}>{
                             index === 0
                                 ? 'S'
                                 : index === this.state.points.length - 1 && this.props.ride.destination
                                     ? 'D'
                                     : index
-                        }</Text> */}
+                        }</DefaultText> */}
                         {
                             index === 0
                                 ? <NBIcon name='map-pin' type='FontAwesome' style={[styles.whiteFont, { paddingLeft: widthPercentageToDP(1) }]} />
                                 : index === this.state.points.length - 1 && this.props.ride.destination
                                     ? <NBIcon name='flag-variant' type='MaterialCommunityIcons' style={styles.whiteFont} />
-                                    : <Text style={styles.whiteFont}>{index}</Text>
+                                    : <DefaultText style={styles.whiteFont}>{index}</DefaultText>
                         }
                     </View>
                 </Left>
                 <Body style={{ height: '100%' }}>
                     <View style={{ flex: 1, justifyContent: 'center' }}>
-                        <Text>{item.name || 'Unknown'}</Text>
+                        <DefaultText>{item.name || 'Unknown'}</DefaultText>
                     </View>
                 </Body>
                 <Right>
@@ -205,7 +205,7 @@ class WaypointList extends React.Component {
                 </Left >
                 <Body style={{ height: '100%' }}>
                     <View style={{ flex: 1, justifyContent: 'center' }}>
-                        <Text>{item.name || 'Unknown'}</Text>
+                        <DefaultText>{item.name || 'Unknown'}</DefaultText>
                     </View>
                 </Body>
             </ListItem >
@@ -219,7 +219,7 @@ class WaypointList extends React.Component {
                 if (index === this.state.points.length - 1 && this.props.ride.destination) {
                     return <NBIcon name='map-pin' type='FontAwesome' style={[styles.whiteFont, { paddingLeft: widthPercentageToDP(1) }]} />;
                 } else {
-                    return <Text style={styles.whiteFont}>{index}</Text>;
+                    return <DefaultText style={styles.whiteFont}>{index}</DefaultText>;
                 }
             } else {
                 const length = this.state.points.length;
@@ -227,9 +227,9 @@ class WaypointList extends React.Component {
                     this.state.activeDescriptionIdx !== length - 1 && index === length - 1))) {
                     return <NBIcon name='flag-variant' type='MaterialCommunityIcons' style={styles.whiteFont} />;
                 } else if (index > this.state.activeDescriptionIdx) {
-                    return <Text style={styles.whiteFont}>{index - 1}</Text>;
+                    return <DefaultText style={styles.whiteFont}>{index - 1}</DefaultText>;
                 } else {
-                    return <Text style={styles.whiteFont}>{index}</Text>;
+                    return <DefaultText style={styles.whiteFont}>{index}</DefaultText>;
                 }
             }
         }
@@ -294,7 +294,7 @@ class WaypointList extends React.Component {
                         <TouchableOpacity style={styles.iconPadding} onPress={this.onCloseModal}>
                             <NBIcon name='md-arrow-round-back' type='Ionicons' />
                         </TouchableOpacity>
-                        <Text style={styles.headerText}>Waypoints</Text>
+                        <DefaultText style={styles.headerText}>Waypoints</DefaultText>
                         {/* <IconButton style={{ alignSelf: 'flex-end' }} title='Itinerary' titleStyle={{ color: '#fff' }} iconRight={true} iconProps={{ name: 'arrow-right', type: 'MaterialCommunityIcons', style: { color: '#fff' } }} onPress={this.props.changeToItineraryMode} /> */}
                         {
                             this.props.ride.isRecorded
@@ -304,12 +304,12 @@ class WaypointList extends React.Component {
                     </View>
                     {/* <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab tabsContainerStyle={{ width: BOTTOM_TAB_CONTAINER_WIDTH }} style={{ width: BOTTOM_TAB_CONTAINER_WIDTH }} ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor={APP_COMMON_STYLES.statusBarColor} underlineStyle={{ height: 0 }} />}>
                         <Tab heading={<TabHeading style={{ width: BOTTOM_TAB_CONTAINER_WIDTH / 2, backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 0.5 }}>
-                            <Text style={{ fontSize: widthPercentageToDP(2.8), fontWeight: 'bold', color: activeTab === 0 ? '#fff' : '#000' }}>WAYPOINTS</Text>
+                            <DefaultText style={{ fontSize: widthPercentageToDP(2.8), fontWeight: 'bold', color: activeTab === 0 ? '#fff' : '#000' }}>WAYPOINTS</DefaultText>
                         </TabHeading>}>
 
                         </Tab>
                         <Tab heading={<TabHeading style={{ width: BOTTOM_TAB_CONTAINER_WIDTH / 2, backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderLeftWidth: 0.5 }}>
-                            <Text style={{ fontSize: widthPercentageToDP(2.8), fontWeight: 'bold', color: activeTab === 1 ? '#fff' : '#000' }}>CURRENT RIDE</Text>
+                            <DefaultText style={{ fontSize: widthPercentageToDP(2.8), fontWeight: 'bold', color: activeTab === 1 ? '#fff' : '#000' }}>CURRENT RIDE</DefaultText>
                         </TabHeading>}>
 
                         </Tab>
@@ -361,11 +361,11 @@ class WaypointList extends React.Component {
                                         ?
                                         <IconLabelPair
                                             iconProps={{ name: 'person', type: 'MaterialIcons' }}
-                                            text={<Text>{ride.creatorName + '  '}{
+                                            text={<DefaultText>{ride.creatorName + '  '}{
                                                 ride.creatorNickname
-                                                    ? <Text style={{ color: APP_COMMON_STYLES.infoColor }}>{`${ride.creatorNickname}`}</Text>
+                                                    ? <DefaultText style={{ color: APP_COMMON_STYLES.infoColor }}>{`${ride.creatorNickname}`}</DefaultText>
                                                     : null
-                                            }</Text>}
+                                            }</DefaultText>}
                                         />
                                         : null
                                 }

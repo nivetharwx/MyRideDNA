@@ -8,6 +8,7 @@ import { IconButton, BasicButton } from '../../../components/buttons';
 import ImagePicker from 'react-native-image-crop-picker';
 import { updateSource, updateWaypoint, updateDestination, getWaypointPictureList, updateRide, deleteWaypointPicture } from '../../../api';
 import { updateRideAction, updateRideInListAction, apiLoaderActions } from '../../../actions';
+import { DefaultText } from '../../../components/labels';
 
 const BUTTONS = ["Gallery", "Camera", "Cancel"];
 const CANCEL_IDX = 2;
@@ -331,13 +332,13 @@ class ItinerarySection extends Component {
                     <View style={styles.verticalBorderView}></View>
                     <View style={{ marginVertical: heightPercentageToDP(1), width: '100%', justifyContent: 'center', alignItems: 'center' }}>
                         <NBIcon name='map-marker' type='MaterialCommunityIcons' style={styles.iconLeft} />
-                        <Text style={{ textAlign: 'center', fontSize: widthPercentageToDP(5) }}>
+                        <DefaultText style={{ textAlign: 'center', fontSize: widthPercentageToDP(5) }}>
                             {
                                 item.name
                                     ? `${index + 1}. ${item.name}`
                                     : `Unknown (${item.lat}, ${item.lng})`
                             }
-                        </Text>
+                        </DefaultText>
                     </View>
                     <View style={styles.verticalBorderView}></View>
                 </View>
@@ -351,7 +352,7 @@ class ItinerarySection extends Component {
                                 <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
                             </View>
                             : <View style={[styles.ptDescrCont, styles.descrActive]}>
-                                <Text style={{ flex: 1 }}>{item.description}</Text>
+                                <DefaultText style={{ flex: 1 }}>{item.description}</DefaultText>
                                 {
                                     this.props.isEditable
                                         ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'edit', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(index)} />
@@ -364,7 +365,7 @@ class ItinerarySection extends Component {
                                 <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
                             </View>
                             : <View style={styles.ptDescrCont}>
-                                <Text style={{ flex: 1 }}>{this.props.isEditable ? `Add description for this point` : `No description for this point`}</Text>
+                                <DefaultText style={{ flex: 1 }}>{this.props.isEditable ? `Add description for this point` : `No description for this point`}</DefaultText>
                                 {
                                     this.props.isEditable
                                         ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'add', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(index)} />
@@ -394,15 +395,15 @@ class ItinerarySection extends Component {
                             ? !item.pictureIdList || item.pictureIdList.length < 4
                                 ? this.state.uploadProgress[index] === true
                                     ? <View style={styles.photoFramePlaceholder}>
-                                        <Text style={styles.whiteFont}>Uploading</Text>
+                                        <DefaultText style={styles.whiteFont}>Uploading</DefaultText>
                                         <ActivityIndicator size='large' color='#FFF' animating={this.state.uploadProgress[index] ? true : false} />
                                     </View>
                                     : <TouchableOpacity style={styles.photoFramePlaceholder} onPress={() => this.onPressAddPhotos(index)}>
-                                        <Text style={styles.whiteFont}>Add Photo</Text>
+                                        <DefaultText style={styles.whiteFont}>Add Photo</DefaultText>
                                         <NBIcon name='add' type='MaterialIcons' style={styles.whiteFont} />
                                     </TouchableOpacity>
                                 : null
-                            : <Text>No photos added</Text>
+                            : <DefaultText>No photos added</DefaultText>
                     }
                 </View>
             </Body>
@@ -432,7 +433,7 @@ class ItinerarySection extends Component {
                         {
                             selectedImages
                                 ? <IconButton title={`${Object.keys(selectedImages).length} images`} titleStyle={[styles.whiteFont, { fontWeight: 'bold', fontSize: widthPercentageToDP(4) }]} iconProps={{ name: 'delete', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }} onPress={this.onDeletePictures} />
-                                : <Text style={styles.headerText}>{`${ride.name} - Itinerary`}</Text>
+                                : <DefaultText style={styles.headerText}>{`${ride.name} - Itinerary`}</DefaultText>
                         }
                     </View>
                     <View style={styles.headerRight}>
@@ -449,7 +450,7 @@ class ItinerarySection extends Component {
                                         <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
                                     </View>
                                     : <View style={[styles.mainDescrCont, styles.descrActive]}>
-                                        <Text style={{ flex: 1 }}>{ride.description}</Text>
+                                        <DefaultText style={{ flex: 1 }}>{ride.description}</DefaultText>
                                         {
                                             this.props.isEditable
                                                 ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'edit', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(ride.rideId)} />
@@ -462,7 +463,7 @@ class ItinerarySection extends Component {
                                         <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
                                     </View>
                                     : <View style={styles.mainDescrCont}>
-                                        <Text style={{ flex: 1 }}>{this.props.isEditable ? `Add description for ride` : `No description for ride`}</Text>
+                                        <DefaultText style={{ flex: 1 }}>{this.props.isEditable ? `Add description for ride` : `No description for ride`}</DefaultText>
                                         {
                                             this.props.isEditable
                                                 ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'add', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(ride.rideId)} />
@@ -479,13 +480,13 @@ class ItinerarySection extends Component {
                                             <View style={styles.verticalBorderView}></View>
                                             <View style={{ marginVertical: heightPercentageToDP(1), width: '100%', justifyContent: 'center', alignItems: 'center' }}>
                                                 <NBIcon name='map-pin' type='FontAwesome' style={[styles.iconLeft, { paddingLeft: widthPercentageToDP(2) }]} />
-                                                <Text style={{ textAlign: 'center', fontSize: widthPercentageToDP(5) }}>
+                                                <DefaultText style={{ textAlign: 'center', fontSize: widthPercentageToDP(5) }}>
                                                     {
                                                         ride.source.name
                                                             ? ride.source.name
                                                             : `Unknown (${ride.source.lat}, ${ride.source.lng})`
                                                     }
-                                                </Text>
+                                                </DefaultText>
                                             </View>
                                             <View style={styles.verticalBorderView}></View>
                                         </View>
@@ -499,7 +500,7 @@ class ItinerarySection extends Component {
                                                         <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
                                                     </View>
                                                     : <View style={[styles.ptDescrCont, styles.descrActive]}>
-                                                        <Text style={{ flex: 1 }}>{ride.source.description}</Text>
+                                                        <DefaultText style={{ flex: 1 }}>{ride.source.description}</DefaultText>
                                                         {
                                                             this.props.isEditable
                                                                 ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'edit', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(RIDE_POINT.SOURCE)} />
@@ -512,7 +513,7 @@ class ItinerarySection extends Component {
                                                         <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
                                                     </View>
                                                     : <View style={styles.ptDescrCont}>
-                                                        <Text style={{ flex: 1 }}>{this.props.isEditable ? `Add description for source` : `No description for source`}</Text>
+                                                        <DefaultText style={{ flex: 1 }}>{this.props.isEditable ? `Add description for source` : `No description for source`}</DefaultText>
                                                         {
                                                             this.props.isEditable
                                                                 ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'add', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(RIDE_POINT.SOURCE)} />
@@ -542,15 +543,15 @@ class ItinerarySection extends Component {
                                                     ? !ride.source.pictureIdList || ride.source.pictureIdList.length < 4
                                                         ? this.state.uploadProgress[RIDE_POINT.SOURCE] === true
                                                             ? <View style={styles.photoFramePlaceholder}>
-                                                                <Text style={styles.whiteFont}>Uploading</Text>
+                                                                <DefaultText style={styles.whiteFont}>Uploading</DefaultText>
                                                                 <ActivityIndicator size='large' color='#FFF' animating={this.state.uploadProgress[RIDE_POINT.SOURCE] ? true : false} />
                                                             </View>
                                                             : <TouchableOpacity style={styles.photoFramePlaceholder} onPress={() => this.onPressAddPhotos(RIDE_POINT.SOURCE)}>
-                                                                <Text style={styles.whiteFont}>Add Photo</Text>
+                                                                <DefaultText style={styles.whiteFont}>Add Photo</DefaultText>
                                                                 <NBIcon name='add' type='MaterialIcons' style={styles.whiteFont} />
                                                             </TouchableOpacity>
                                                         : null
-                                                    : <Text>No photos added</Text>
+                                                    : <DefaultText>No photos added</DefaultText>
                                             }
                                         </View>
                                     </Body>
@@ -572,13 +573,13 @@ class ItinerarySection extends Component {
                                             <View style={styles.verticalBorderView}></View>
                                             <View style={{ marginVertical: heightPercentageToDP(1), width: '100%', justifyContent: 'center', alignItems: 'center' }}>
                                                 <NBIcon name='flag-variant' type='MaterialCommunityIcons' style={styles.iconLeft} />
-                                                <Text style={{ textAlign: 'center', fontSize: widthPercentageToDP(5) }}>
+                                                <DefaultText style={{ textAlign: 'center', fontSize: widthPercentageToDP(5) }}>
                                                     {
                                                         ride.destination.name
                                                             ? ride.destination.name
                                                             : `Unknown (${ride.destination.lat}, ${ride.destination.lng})`
                                                     }
-                                                </Text>
+                                                </DefaultText>
                                             </View>
                                             <View style={styles.verticalBorderView}></View>
                                         </View>
@@ -592,7 +593,7 @@ class ItinerarySection extends Component {
                                                         <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
                                                     </View>
                                                     : <View style={[styles.ptDescrCont, styles.descrActive]}>
-                                                        <Text style={{ flex: 1 }}>{ride.destination.description}</Text>
+                                                        <DefaultText style={{ flex: 1 }}>{ride.destination.description}</DefaultText>
                                                         {
                                                             this.props.isEditable
                                                                 ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'edit', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(RIDE_POINT.DESTINATION)} />
@@ -605,7 +606,7 @@ class ItinerarySection extends Component {
                                                         <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
                                                     </View>
                                                     : <View style={styles.ptDescrCont}>
-                                                        <Text style={{ flex: 1 }}>{this.props.isEditable ? `Add description for destination` : `No description for destination`}</Text>
+                                                        <DefaultText style={{ flex: 1 }}>{this.props.isEditable ? `Add description for destination` : `No description for destination`}</DefaultText>
                                                         {
                                                             this.props.isEditable
                                                                 ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'add', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(RIDE_POINT.DESTINATION)} />
@@ -635,15 +636,15 @@ class ItinerarySection extends Component {
                                                     ? !ride.destination.pictureIdList || ride.destination.pictureIdList.length < 4
                                                         ? this.state.uploadProgress[RIDE_POINT.DESTINATION] === true
                                                             ? <View style={styles.photoFramePlaceholder}>
-                                                                <Text style={styles.whiteFont}>Uploading</Text>
+                                                                <DefaultText style={styles.whiteFont}>Uploading</DefaultText>
                                                                 <ActivityIndicator size='large' color='#FFF' animating={this.state.uploadProgress[RIDE_POINT.DESTINATION] ? true : false} />
                                                             </View>
                                                             : <TouchableOpacity style={styles.photoFramePlaceholder} onPress={() => this.onPressAddPhotos(RIDE_POINT.DESTINATION)}>
-                                                                <Text style={styles.whiteFont}>Add Photo</Text>
+                                                                <DefaultText style={styles.whiteFont}>Add Photo</DefaultText>
                                                                 <NBIcon name='add' type='MaterialIcons' style={styles.whiteFont} />
                                                             </TouchableOpacity>
                                                         : null
-                                                    : <Text>No photos added</Text>
+                                                    : <DefaultText>No photos added</DefaultText>
                                             }
                                         </View>
                                     </Body>
@@ -659,15 +660,15 @@ class ItinerarySection extends Component {
                         source={this.state.activeImage ? { uri: this.state.activeImage } : null}
                         style={[{ resizeMode: 'cover', top: 0, left: 0, height: null, width: null }, activeImageStyle]}
                     ></Animated.Image>
-                    {/* <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>X</Text> */}
+                    {/* <DefaultText style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>X</DefaultText> */}
                     <Animated.View style={[{ position: 'absolute', top: heightPercentageToDP(27), right: 0, backgroundColor: APP_COMMON_STYLES.infoColor, height: widthPercentageToDP(8), width: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4), alignItems: 'center' }, animatedCrossOpacity]}>
                         <TouchableOpacity onPress={this.hideLargerImage}>
-                            <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>X</Text>
+                            <DefaultText style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>X</DefaultText>
                         </TouchableOpacity>
                     </Animated.View>
                 </TouchableOpacity>
                 {/* <Animated.View style={[{ flex: 1, zIndex: 900, backgroundColor: '#fff', padding: 20, paddingTop: 50, paddingBotton: 10 }, animatedContentStyle]}>
-                    <Text>TESING TEXT CONTENT</Text>
+                    <DefaultText>TESING TEXT CONTENT</DefaultText>
                 </Animated.View> */}
             </View>
         </View >

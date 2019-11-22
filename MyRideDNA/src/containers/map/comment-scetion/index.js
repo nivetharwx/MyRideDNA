@@ -5,6 +5,7 @@ import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '..
 import { IconButton } from '../../../components/buttons';
 import { Item } from 'native-base';
 import { updateSource, updateWaypoint, updateDestination } from '../../../api';
+import { DefaultText } from '../../../components/labels';
 
 class CommentSection extends Component {
     txtInputRef = null;
@@ -90,7 +91,7 @@ class CommentSection extends Component {
             <View style={styles.modalRoot}>
                 <View style={styles.container}>
                     <View style={styles.header}>
-                        <Text style={styles.headerText}>{point.name}</Text>
+                        <DefaultText style={styles.headerText}>{point.name}</DefaultText>
                         {
                             isEditable && point.description && !showEditConentent
                                 ? <IconButton onPress={this.onPressEdit} style={{ backgroundColor: 'transparent', alignSelf: 'center', alignItems: 'flex-end', justifyContent: 'flex-end' }}
@@ -103,8 +104,8 @@ class CommentSection extends Component {
                     <View style={styles.bodyContent}>
                         {
                             isEditable
-                                ? <Text style={!point.description ? { color: '#ACACAC' } : null}>{point.description ? point.description : 'Add description'}</Text>
-                                : <Text style={!point.description ? { color: '#ACACAC' } : null}>{point.description ? point.description : 'No description added for this point'}</Text>
+                                ? <DefaultText style={!point.description ? { color: '#ACACAC' } : null}>{point.description ? point.description : 'Add description'}</DefaultText>
+                                : <DefaultText style={!point.description ? { color: '#ACACAC' } : null}>{point.description ? point.description : 'No description added for this point'}</DefaultText>
                         }
                     </View>
                     {

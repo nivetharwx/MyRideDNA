@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, SafeAreaView, View, ScrollView, FlatList, TouchableOpacity, Text } from 'react-native';
 import { Icon as NBIcon, List, ListItem, Left, Body } from 'native-base';
 import { WindowDimensions, APP_COMMON_STYLES, heightPercentageToDP, widthPercentageToDP } from '../../constants';
-
+import { DefaultText } from '../labels';
 
 const styles = StyleSheet.create({
     searchResults: {
@@ -67,8 +67,8 @@ export const SearchResults = ({ data, onPressClose, onSelectItem, style }) => (
                                 <NBIcon {...CATEGORY_ICONS.default} />
                             </Left>
                             <Body style={{ height: '100%' }}>
-                                <Text style={styles.primaryText}>{item.place_name}</Text>
-                                {/* <Text style={styles.secondaryText}>{item.properties.category || ''}</Text> */}
+                                <DefaultText style={styles.primaryText}>{item.place_name}</DefaultText>
+                                {/* <DefaultText  style={styles.secondaryText}>{item.properties.category || ''}</DefaultText> */}
                             </Body>
                         </ListItem>
                     );

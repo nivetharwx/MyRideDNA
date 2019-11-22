@@ -5,8 +5,8 @@ import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
 import { Icon as NBIcon, Tabs, Tab, TabHeading, ScrollableTab, Item, Toast, ListItem, Left, Body, Thumbnail, Right, CheckBox } from 'native-base';
 import styles from './styles';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, RELATIONSHIP, PageKeys } from '../../constants';
-import { IconLabelPair } from '../../components/labels';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, RELATIONSHIP, PageKeys, CUSTOM_FONTS } from '../../constants';
+import { IconLabelPair, DefaultText } from '../../components/labels';
 import { IconButton } from '../../components/buttons';
 import { HorizontalCard } from '../../components/cards';
 import Contacts from 'react-native-contacts';
@@ -153,15 +153,15 @@ class ContactsSection extends PureComponent {
                     item.thumbnailPath
                         ? <Thumbnail source={{ uri: item.thumbnailPath }} />
                         : <View style={{ alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(10), height: widthPercentageToDP(10), borderWidth: 2, borderColor: '#6B7663', borderRadius: widthPercentageToDP(5), backgroundColor: item.email === null ? '#6B7663' : '#FFF' }}>
-                            <Text style={{ color: item.email === null ? '#FFF' : '#6B7663', fontWeight: 'bold' }}>{item.name.charAt(0)}</Text>
+                            <DefaultText style={{ color: item.email === null ? '#FFF' : '#6B7663', fontWeight: 'bold' }}>{item.name.charAt(0)}</DefaultText>
                         </View>
                 }
             </Left>
             <Body>
-                <Text>{item.name}</Text>
+                <DefaultText>{item.name}</DefaultText>
                 {
                     item.note
-                        ? <Text note>{item.note}</Text>
+                        ? <DefaultText note>{item.note}</DefaultText>
                         : null
                 }
             </Body>
@@ -320,8 +320,8 @@ class ContactsSection extends PureComponent {
                     }
                 </Left>
                 <Body>
-                    <Text style={{ color: '#fff' }}>{item.name}</Text>
-                    <Text style={{ color: '#fff' }} note></Text>
+                    <DefaultText style={{ color: '#fff' }}>{item.name}</DefaultText>
+                    <DefaultText style={{ color: '#fff' }} note></DefaultText>
                 </Body>
                 <Right>
 
@@ -367,8 +367,8 @@ class ContactsSection extends PureComponent {
             <Animated.View style={{ transform: [{ rotate: spin }] }}>
                 <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
             </Animated.View>
-            <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-            <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+            <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
+            <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
         </View>);
     }
 
@@ -465,7 +465,7 @@ class ContactsSection extends PureComponent {
                                 </View>
                             </View>
                             <View style={{ borderBottomWidth: 3, borderBottomColor: '#F5891F', marginTop: 16, marginHorizontal: widthPercentageToDP(9) }}>
-                                <Text style={{ marginLeft: widthPercentageToDP(3), fontSize: 12, fontWeight: 'bold', color: '#000', letterSpacing: 0.6, marginBottom: 2 }}>SEARCH RESULTS</Text>
+                                <DefaultText style={{ marginLeft: widthPercentageToDP(3), fontFamily: CUSTOM_FONTS.robotoBold, letterSpacing: 0.6, marginBottom: 2 }}>SEARCH RESULTS</DefaultText>
                             </View>
                             <View style={{ marginTop: 16 }}>
                                 <FlatList

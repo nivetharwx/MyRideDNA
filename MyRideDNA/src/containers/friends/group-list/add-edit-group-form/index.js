@@ -5,11 +5,12 @@ import { Actions } from 'react-native-router-flux';
 import { DatePicker, Icon as NBIcon, Toast, ListItem, Left, Body, Right, Thumbnail } from 'native-base';
 import { BasicHeader } from '../../../../components/headers';
 import { IconButton, BasicButton, ImageButton } from '../../../../components/buttons';
-import { APP_COMMON_STYLES, heightPercentageToDP, widthPercentageToDP, IS_ANDROID } from '../../../../constants';
+import { APP_COMMON_STYLES, heightPercentageToDP, widthPercentageToDP, IS_ANDROID, CUSTOM_FONTS } from '../../../../constants';
 import { LabeledInputPlaceholder } from '../../../../components/inputs';
 import { createFriendGroup, updateFriendGroup } from '../../../../api';
 import { Loader } from '../../../../components/loader';
 import ImagePicker from 'react-native-image-crop-picker';
+import { DefaultText } from '../../../../components/labels';
 
 const hasIOSAbove10 = parseInt(Platform.Version) > 10;
 
@@ -138,11 +139,11 @@ class GroupForm extends Component {
                         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 41 + APP_COMMON_STYLES.headerHeight }}>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
                                 <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../../assets/img/cam-icon.png')} imgStyles={{ width: 45, height: 37 }} />
-                                <Text style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{' TAKE \nPHOTO'}</Text>
+                                <DefaultText style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{' TAKE \nPHOTO'}</DefaultText>
                             </View>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
                                 <ImageButton onPress={this.onPressGalleryIcon} imageSrc={require('../../../../assets/img/photos-icon.png')} imgStyles={{ width: 41, height: 33 }} />
-                                <Text style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{'UPLOAD \n PHOTO'}</Text>
+                                <DefaultText style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{'UPLOAD \n PHOTO'}</DefaultText>
                             </View>
                         </View>
                         <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(3) }}>
@@ -152,7 +153,7 @@ class GroupForm extends Component {
                                 onChange={this.onChangeGroupName} label='GROUP NAME' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
                         </View>
-                        <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: heightPercentageToDP(3.5) }} onPress={this.onSubmit} />
+                        <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: 20, fontFamily: CUSTOM_FONTS.robotoSlabBold }} onPress={this.onSubmit} />
                     </ScrollView>
                 </View>
                 <Loader isVisible={this.props.showLoader} />

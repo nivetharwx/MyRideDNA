@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Image, Text, TouchableWithoutFeedback, StyleSheet } from 'react-native';
 import { widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
+import { DefaultText } from '../labels';
 
 const THUMBNAIL_MAX_WIDTH = widthPercentageToDP(50);
 export const Thumbnail = (props) => {
@@ -10,7 +11,7 @@ export const Thumbnail = (props) => {
                 borderColor: props.selected ? '#EB861E' : props.active ? APP_COMMON_STYLES.infoColor : 'transparent',
                 borderWidth: props.selected ? 4 : props.active ? 4 : 2
             }, props.containerStyle]}>
-                {props.horizontal ? <Text style={{ alignSelf: 'center', color: 'black', fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>{props.title}</Text> : null}
+                {props.horizontal ? <DefaultText  style={{ alignSelf: 'center', color: 'black', fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>{props.title}</DefaultText> : null}
                 <View style={{
                     alignSelf: 'center',
                     height: props.height,
@@ -33,7 +34,7 @@ export const Thumbnail = (props) => {
                                 : null
                     }
                 </View>
-                {props.horizontal ? null : <Text style={{ alignSelf: 'center', color: 'black', fontSize: 16, fontWeight: 'bold' }}>{props.title && props.title.length > 12 ? `${props.title.substring(0, 12)}...` : props.title}</Text>}
+                {props.horizontal ? null : <DefaultText  style={{ alignSelf: 'center', color: 'black', fontSize: 16, fontWeight: 'bold' }}>{props.title && props.title.length > 12 ? `${props.title.substring(0, 12)}...` : props.title}</DefaultText>}
             </View>
         </TouchableWithoutFeedback>
     );

@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES } from '../../constants';
+import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, CUSTOM_FONTS } from '../../constants';
 
 const styles = StyleSheet.create({
     tabContentCont: {
@@ -88,7 +88,8 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontSize: 13,
-        fontWeight: 'bold'
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        letterSpacing: 0.6
     }
 });
 export default styles;

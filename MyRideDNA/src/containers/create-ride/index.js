@@ -25,6 +25,7 @@ import { SwitchIconButton, LinkButton } from '../../components/buttons';
 import { Icon as NBIcon, Item, Toast } from 'native-base';
 import { WindowDimensions, JS_SDK_ACCESS_TOKEN, IS_ANDROID, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES } from '../../constants';
 import { SearchResults } from '../../components/pages';
+import { DefaultText } from '../../components/labels';
 
 
 const ANDROID_HEADER_HEIGHT = 50;
@@ -234,7 +235,7 @@ export class CreateRide extends Component {
                                 
                             </Item> */}
                             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: widthPercentageToDP(4) }}>
-                                <Text style={{ alignSelf: 'center', letterSpacing: 3 }}>{ride.privacyMode === 'private' ? 'PRIVATE' : 'PUBLIC'}</Text>
+                                <DefaultText style={{ alignSelf: 'center', letterSpacing: 3 }}>{ride.privacyMode === 'private' ? 'PRIVATE' : 'PUBLIC'}</DefaultText>
                                 <SwitchIconButton
                                     activeIcon={<NBIcon name='close' type='FontAwesome' style={{ color: '#fff', alignSelf: 'flex-start', paddingHorizontal: 10, fontSize: widthPercentageToDP(6) }} />}
                                     inactiveIcon={<NBIcon name='eye' type='MaterialCommunityIcons' style={{ color: '#fff', alignSelf: 'flex-end', paddingHorizontal: 10, fontSize: widthPercentageToDP(6) }} />}
@@ -242,7 +243,7 @@ export class CreateRide extends Component {
                             </View>
                             <Item style={{ marginLeft: widthPercentageToDP(4), marginRight: widthPercentageToDP(4) }}>
                                 {/* <NBIcon name='map-pin' type='FontAwesome' style={[styles.formFieldIcon, { paddingHorizontal: widthPercentageToDP(2) }]} /> */}
-                                <Text style={{ color: '#8C8C8C' }}>Start ride from: </Text>
+                                <DefaultText style={{ color: '#8C8C8C' }}>Start ride from: </DefaultText>
                                 <SearchBox value={searchQuery} onFocus={() => this.setState({ searchQuery: '' })} hideIcon={true} onTextChange={this.onSearchPlace} onPressClear={() => this.setState({ searchQuery: '', })} />
                             </Item>
                             <LinkButton style={{ alignSelf: 'flex-end', marginRight: widthPercentageToDP(4) }} title='Use my current location' titleStyle={{ color: APP_COMMON_STYLES.headerColor }} onPress={this.onPressUseCurrentLocation} />

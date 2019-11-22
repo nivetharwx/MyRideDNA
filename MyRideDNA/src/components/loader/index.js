@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { BaseModal } from '../modal'
 import { widthPercentageToDP, IS_ANDROID, APP_COMMON_STYLES } from '../../constants';
+import { DefaultText } from '../labels';
 
 export const ImageLoader = ({ show, offsetTop }) => {
     return (
@@ -27,7 +28,7 @@ export const Loader = ({ isVisible, onCancel, title }) => {
                         ? <ActivityIndicator size={widthPercentageToDP(20)} color='#fff' animating={isVisible} />
                         : <ActivityIndicator size={1} color='#fff' animating={isVisible} />
                 }
-                <Text style={{ color: '#fff' }}>{title ? title : 'Loading...'}</Text>
+                <DefaultText style={{ color: '#fff' }}>{title ? title : 'Loading...'}</DefaultText>
             </View>
         </View>
         : null

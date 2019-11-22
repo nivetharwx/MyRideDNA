@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, KeyboardAvoidingView, StatusBar, Platform, ScrollView, View, Keyboard, Alert, TextInput, Text, FlatList } from 'react-native';
 import { BasicHeader } from '../../../../components/headers';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, CUSTOM_FONTS } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInput, IconicList, IconicDatePicker, IconicInput, LabeledInputPlaceholder } from '../../../../components/inputs';
 import { BasicButton, IconButton, ImageButton, ShifterButton } from '../../../../components/buttons';
@@ -13,6 +13,7 @@ import { toggleLoaderAction, appNavMenuVisibilityAction } from '../../../../acti
 import { DatePicker, Icon as NBIcon, Toast } from 'native-base';
 import { Loader } from '../../../../components/loader';
 import ImagePicker from 'react-native-image-crop-picker';
+import { DefaultText } from '../../../../components/labels';
 
 class EditProfileForm extends Component {
     fieldRefs = [];
@@ -224,11 +225,11 @@ class EditProfileForm extends Component {
                         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 41 + APP_COMMON_STYLES.headerHeight }}>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
                                 <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../../assets/img/cam-icon.png')} imgStyles={{ width: 45, height: 37 }} />
-                                <Text style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{' TAKE \nPHOTO'}</Text>
+                                <DefaultText style={{ letterSpacing: 2, marginTop: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold, color: '#000', fontSize: 12 }}>{' TAKE \nPHOTO'}</DefaultText>
                             </View>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
                                 <ImageButton onPress={this.onPressGalleryIcon} imageSrc={require('../../../../assets/img/photos-icon.png')} imgStyles={{ width: 41, height: 33 }} />
-                                <Text style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{'UPLOAD \n PHOTO'}</Text>
+                                <DefaultText style={{ letterSpacing: 2, marginTop: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold, color: '#000', fontSize: 12 }}>{'UPLOAD \n PHOTO'}</DefaultText>
                             </View>
                         </View>
                         <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(3) }}>
@@ -360,7 +361,7 @@ class EditProfileForm extends Component {
                                     : null
                             }
                         </View>
-                        <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: heightPercentageToDP(3.5) }} onPress={this.onSubmit} />
+                        <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: 20, fontFamily: CUSTOM_FONTS.robotoSlabBold }} onPress={this.onSubmit} />
                     </ScrollView>
                 </KeyboardAvoidingView>
                 <Loader isVisible={showLoader} />
@@ -414,11 +415,9 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1
     },
     labelStyle: {
-        color: '#000',
         fontSize: 11,
-        fontWeight: 'bold',
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
         letterSpacing: 1.1,
-        // color: '#8f8f8f'
     },
     clubList: {
         marginHorizontal: widthPercentageToDP(1),

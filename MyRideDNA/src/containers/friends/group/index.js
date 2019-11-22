@@ -13,6 +13,7 @@ import { BaseModal } from '../../../components/modal';
 import { Icon as NBIcon, ListItem, Left, Thumbnail, Body, Right, CheckBox } from 'native-base';
 import { LabeledInput, LabeledInputPlaceholder } from '../../../components/inputs';
 import { Loader } from '../../../components/loader';
+import { DefaultText } from '../../../components/labels';
 
 const FILTERED_ACTION_IDS = {
     BTN_ALL_MEMBERS: 'btn_all_members',
@@ -307,8 +308,8 @@ class Group extends Component {
                     }
                 </Left>
                 <Body>
-                    <Text style={{ color: '#fff' }}>{item.name}</Text>
-                    <Text style={{ color: '#fff' }} note></Text>
+                    <DefaultText style={{ color: '#fff' }}>{item.name}</DefaultText>
+                    <DefaultText style={{ color: '#fff' }} note></DefaultText>
                 </Body>
                 <Right>
                     <CheckBox checked={this.state.selectedFriendList.findIndex(selFriend => selFriend.memberId === item.userId) > -1} />
@@ -454,7 +455,7 @@ class Group extends Component {
                                                 renderItem={this.renderFriend}
                                                 extraData={this.state}
                                             />
-                                            : <Text style={{ alignSelf: 'center', color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(5), letterSpacing: 1, fontWeight: 'bold' }}>Not found any friends</Text>
+                                            : <DefaultText style={{ alignSelf: 'center', color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(5), letterSpacing: 1, fontWeight: 'bold' }}>Not found any friends</DefaultText>
                                     }
                                 </View>
                             </View>
@@ -466,7 +467,7 @@ class Group extends Component {
                                 placeholder='Name'
                                 inputValue={searchQuery} inputStyle={{ borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
                                 onChange={this.onChangeSearchValue}
-                                hideKeyboardOnSubmit={false}
+                                hideKeyboardOnSubmit={true}
                                 containerStyle={styles.searchCont} />
                         </View>
                         <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
@@ -527,8 +528,8 @@ class Group extends Component {
                                     <Animated.View style={{ transform: [{ rotate: spin }] }}>
                                         <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
                                     </Animated.View>
-                                    <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                                    <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                    <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
+                                    <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
                                 </View>
                     }
                 </View>

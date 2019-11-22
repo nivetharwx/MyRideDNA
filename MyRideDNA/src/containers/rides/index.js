@@ -15,7 +15,7 @@ import { BasicHeader } from '../../components/headers';
 import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide, logoutUser, getPicture, getPictureList, updateRide, getRidePictureList, pauseRecordRide, completeRecordRide } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
 import { LabeledInput } from '../../components/inputs';
-import { IconLabelPair } from '../../components/labels';
+import { IconLabelPair, DefaultText } from '../../components/labels';
 import { BaseModal } from '../../components/modal';
 import { Loader } from '../../components/loader';
 import axios from 'axios';
@@ -560,12 +560,12 @@ export class Rides extends Component {
                     <Body>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                             <View>
-                                <Text style={{ fontWeight: 'bold', fontSize: widthPercentageToDP(3.8) }}>{item.isRecorded?this.getDateAndTime(item):item.name}</Text>
-                                <Text note></Text>
+                                <DefaultText style={{ fontWeight: 'bold', fontSize: widthPercentageToDP(3.8) }}>{item.isRecorded?this.getDateAndTime(item):item.name}</DefaultText>
+                                <DefaultText note></DefaultText>
                             </View>
                             {
                                 this.state.activeTab !== 2
-                                    ? <Text style={{ color: item.privacyMode === 'private' ? '#6B7663' : APP_COMMON_STYLES.infoColor }}>{item.privacyMode.toUpperCase()}</Text>
+                                    ? <DefaultText style={{ color: item.privacyMode === 'private' ? '#6B7663' : APP_COMMON_STYLES.infoColor }}>{item.privacyMode.toUpperCase()}</DefaultText>
                                     : null
                             }
                         </View>
@@ -599,11 +599,11 @@ export class Rides extends Component {
                         ? <Left>
                             {/* <Button transparent>
                                 <NBIcon active name="thumbs-up" />
-                                <Text>{item.totalLikes !== 1 ? item.totalLikes + ' Likes' : '1 Like'}</Text>
+                                <DefaultText>{item.totalLikes !== 1 ? item.totalLikes + ' Likes' : '1 Like'}</DefaultText>
                             </Button>
                             <Button transparent>
                                 <NBIcon active name="chatbubbles" />
-                                <Text>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</Text>
+                                <DefaultText>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</DefaultText>
                             </Button> */}
                             <IconButton title={item.totalLikes !== 1 ? item.totalLikes + ' Likes' : '1 Like'} titleStyle={{ marginLeft: 8 }} iconProps={{ name: 'ios-thumbs-up', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} />
                         </Left>
@@ -614,14 +614,14 @@ export class Rides extends Component {
                         ? <Body>
                             {/* <Button transparent>
                         <NBIcon active name="chatbubbles" />
-                        <Text>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</Text>
+                        <DefaultText>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</DefaultText>
                     </Button> */}
                             <IconButton title={item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'} titleStyle={{ marginLeft: 8 }} iconProps={{ name: 'ios-chatbubbles', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} />
                         </Body>
                         : <Body></Body>
                 }
                 <Right>
-                    <Text note>{this.getDateLabel((Date.now() - new Date(item.date).getTime()) / 1000 / 60 / 60)}</Text>
+                    <DefaultText note>{this.getDateLabel((Date.now() - new Date(item.date).getTime()) / 1000 / 60 / 60)}</DefaultText>
                 </Right>
             </CardItem>
         </Card>
@@ -761,8 +761,8 @@ export class Rides extends Component {
                                                 <Animated.View style={{ transform: [{ rotate: spin }] }}>
                                                     <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
                                                 </Animated.View>
-                                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                                <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
+                                                <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
                                             </View>
                                 }
                             </View>
@@ -797,8 +797,8 @@ export class Rides extends Component {
                                                 <Animated.View style={{ transform: [{ rotate: spin }] }}>
                                                     <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
                                                 </Animated.View>
-                                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                                <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
+                                                <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
                                             </View>
                                 }
                             </View>
@@ -833,8 +833,8 @@ export class Rides extends Component {
                                                 <Animated.View style={{ transform: [{ rotate: spin }] }}>
                                                     <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
                                                 </Animated.View>
-                                                <Text style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</Text>
-                                                <Text style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </Text>
+                                                <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
+                                                <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
                                             </View>
                                 }
                             </View>

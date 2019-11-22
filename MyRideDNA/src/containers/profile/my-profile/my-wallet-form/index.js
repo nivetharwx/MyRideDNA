@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, KeyboardAvoidingView, StatusBar, Platform, ScrollView, View, Keyboard, Alert, TextInput, Text } from 'react-native';
 import { BasicHeader } from '../../../../components/headers';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID } from '../../../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, CUSTOM_FONTS } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInput, IconicList, IconicDatePicker, IconicInput, LabeledInputPlaceholder } from '../../../../components/inputs';
 import { BasicButton, IconButton, ShifterButton } from '../../../../components/buttons';
@@ -147,7 +147,7 @@ class MyWalletForm extends Component {
                                 onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
                         </View>
                     </ScrollView>
-                    <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: heightPercentageToDP(3.5) }} onPress={this.onSubmit} />
+                    <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: 20, fontFamily: CUSTOM_FONTS.robotoSlabBold }} onPress={this.onSubmit} />
                 </KeyboardAvoidingView>
                 <Loader isVisible={showLoader} />
                 {/* Shifter: - Brings the app navigation menu */}

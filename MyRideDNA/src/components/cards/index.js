@@ -45,12 +45,12 @@ export class BasicCard extends React.Component {
                             <View style={{ flex: 1 }}>
                                 {
                                     this.props.mainHeading
-                                        ? <Text style={styles.mainHeader}>{this.props.mainHeading}</Text>
+                                        ? <DefaultText  style={styles.mainHeader}>{this.props.mainHeading}</DefaultText>
                                         : null
                                 }
                                 {
                                     this.props.subHeading
-                                        ? <Text style={styles.subHeader}>{this.props.subHeading}</Text>
+                                        ? <DefaultText  style={styles.subHeader}>{this.props.subHeading}</DefaultText>
                                         : null
                                 }
                             </View>
@@ -65,7 +65,7 @@ export class BasicCard extends React.Component {
                             }
                         </View>
                         <View style={styles.notes}>
-                            <Text>{this.props.notes}</Text>
+                            <DefaultText>{this.props.notes}</DefaultText>
                         </View>
                     </View>
                     {
@@ -103,7 +103,7 @@ export const ThumbnailCard = ({ item, thumbnailPlaceholder, onPress, onLongPress
                         ? <IconButton iconProps={{ name: 'verified-user', type: 'MaterialIcons', style: { fontSize: widthPercentageToDP(6), color: APP_COMMON_STYLES.headerColor } }} />
                         : null
                 }
-                <Text style={{
+                <DefaultText  style={{
                     fontWeight: 'bold',
                     backgroundColor: 'transparent',
                     fontSize: widthPercentageToDP(4),
@@ -111,17 +111,17 @@ export const ThumbnailCard = ({ item, thumbnailPlaceholder, onPress, onLongPress
                 }}
                     renderToHardwareTextureAndroid collapsable={false}>
                     {item.name}
-                </Text>
+                </DefaultText>
                 {
                     item.nickname
                         ?
-                        <Text style={{ color: APP_COMMON_STYLES.infoColor, fontWeight: 'bold' }}>
+                        <DefaultText  style={{ color: APP_COMMON_STYLES.infoColor, fontWeight: 'bold' }}>
                             {'  '}{item.nickname}
-                        </Text>
+                        </DefaultText>
                         : null
                 }
             </View>
-            {/* <Text style={{ color: '#A1A2A6' }}>{item.email}</Text> */}
+            {/* <DefaultText  style={{ color: '#A1A2A6' }}>{item.email}</DefaultText> */}
         </TouchableOpacity>
         {
             Array.isArray(actions) && actions.length > 0
@@ -162,12 +162,12 @@ export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, 
         <View style={contentContainerStyle}>
             {
                 item.name ?
-                    <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#000', marginTop: 6 }}>{item.name ? item.name : ''}</Text>
+                    <DefaultText  style={{ fontSize: 15, fontWeight: 'bold', color: '#000', marginTop: 6 }}>{item.name ? item.name : ''}</DefaultText>
                     : null
             }
             {
                 item.homeAddress ?
-                    <Text style={{ fontSize: 11, color: '#585756', marginTop: 2 }}>{item.homeAddress.city ? item.homeAddress.city : ''}, {item.homeAddress.state ? item.homeAddress.state : ''}</Text>
+                    <DefaultText  style={{ fontSize: 11, color: '#585756', marginTop: 2 }}>{item.homeAddress.city ? item.homeAddress.city : ''}, {item.homeAddress.state ? item.homeAddress.state : ''}</DefaultText>
                     :
                     null
             }
@@ -210,7 +210,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
             actionsBar ?
                 <View style={{ flex: 1, justifyContent: 'center', borderWidth: 1, borderColor: '#EAEAEA' }}>
                     <View style={{ flex: 1, backgroundColor: '#EAEAEA', justifyContent: 'center', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#585756' }}>{item.name ? item.name : item.groupName ? item.groupName : null}</Text>
+                        <DefaultText  style={{ fontSize: 14, fontWeight: 'bold', color: '#585756' }}>{item.name ? item.name : item.groupName ? item.groupName : null}</DefaultText>
                     </View>
                     <View style={{ flex: 1 }}>
                         {
@@ -237,7 +237,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                 <View style={{ flex: 1, justifyContent: 'center', backgroundColor: '#EAEAEA', height: 74 }}>
                     <View style={{ marginLeft: widthPercentageToDP(3) }}>
                         <DefaultText fontFamily={CUSTOM_FONTS.robotoBold} style={{ fontSize: 13, color: '#585756' }}>{item.name}</DefaultText>
-                        <DefaultText fontFamily={CUSTOM_FONTS.robotoBold} style={{ fontSize: 10, color: '#9A9A9A' }}>{item.nickname}</DefaultText>
+                        <DefaultText fontFamily={CUSTOM_FONTS.robotoSlabBold} style={{ fontSize: 10, color: '#9A9A9A' }}>{item.nickname}</DefaultText>
                     </View>
                 </View>
         }

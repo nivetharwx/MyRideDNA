@@ -12,6 +12,7 @@ import { BaseModal } from '../../components/modal';
 import Md5 from 'react-native-md5';
 import { Toast, Item } from 'native-base';
 import { Loader } from '../../components/loader';
+import { DefaultText } from '../../components/labels';
 
 class ForgotPassword extends React.Component {
     initialState = {
@@ -238,7 +239,7 @@ class ForgotPassword extends React.Component {
                         {
                             this.state.isVisibleOTP
                                 ?
-                                <Text style={{ color: 'red', fontSize: 13 }}>OTP has been sent to your registerd email id</Text>
+                                <DefaultText style={{ color: 'red', fontSize: 13 }}>OTP has been sent to your registerd email id</DefaultText>
                                 : null
                         }
                         <View style={styles.buttonContainer}>

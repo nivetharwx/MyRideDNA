@@ -8,7 +8,7 @@ import {
     TouchableOpacity
 } from 'react-native';
 import { Icon as NBIcon, Picker, DatePicker } from 'native-base';
-import { WindowDimensions, ShortMonthNames, heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
+import { WindowDimensions, ShortMonthNames, heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, CUSTOM_FONTS } from '../../constants';
 import { getFormattedDateFromISO } from '../../util';
 import { DefaultText } from '../labels';
 
@@ -24,7 +24,7 @@ export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle,
     <View style={[{ flexDirection: 'row', marginBottom: 10 }, containerStyle]}>
         {
             label
-                ? <Text style={[{ alignSelf: 'center', marginRight: 10 }, labelStyle]}>{label}</Text>
+                ? <DefaultText  style={[{ alignSelf: 'center', marginRight: 10 }, labelStyle]}>{label}</DefaultText>
                 : null
         }
         <TextInput editable={editable} onFocus={onFocus && onFocus} onBlur={onBlur && onBlur} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ flex: 1, borderBottomWidth: 1, borderBottomColor: '#acacac' }, inputStyle]}
@@ -36,7 +36,7 @@ export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle,
 export const LabeledInputPlaceholder = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder = '', placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus, onBlur, editable, placeHolderStyle, secondLabelStyle, secondLabel, outerContainer }) => (
     <View style={[outerContainer, { flex: 1 }]}>
         <View style={[{ flexDirection: 'row', marginBottom: 3 }, containerStyle]}>
-            <TextInput placeholder={placeholder} editable={editable} onFocus={onFocus && onFocus} onBlur={onBlur && onBlur} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ borderBottomWidth: 1, borderBottomColor: '#000', flex: 1, fontSize: 14 }, inputStyle]}
+            <TextInput maxLength={inputType === 'telephoneNumber' ? 10 : null} placeholder={placeholder} editable={editable} onFocus={onFocus && onFocus} onBlur={onBlur && onBlur} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ borderBottomWidth: 1, borderBottomColor: '#000', flex: 1, fontSize: 14, fontFamily: CUSTOM_FONTS.roboto }, inputStyle]}
                 textContentType={inputType} keyboardType={getKeyboardTypeForContentType(inputType)}
                 onChangeText={onChange && onChange} onSubmitEditing={({ nativeEvent }) => onSubmit && onSubmit(nativeEvent.text)}
                 returnKeyType={returnKeyType || 'done'} returnKeyLabel={returnKeyLabel} ref={(el) => inputRef && inputRef(el)} />
@@ -79,7 +79,7 @@ export const IconicInput = ({ inputColor, containerStyle, iconProps, placeholder
 );
 
 // DOC: Controlled component, caller have to pass onValueChange function to persist the user selection
-export const IconicList = ({ iconProps, outerContainer, values, selectedValue, placeholder, onChange, containerStyle, style, innerContainerStyle, labelPlaceHolder, labelPlaceHolderStyle, pickerStyle }) => {
+export const IconicList = ({ iconProps, outerContainer, values, selectedValue, placeholder, onChange, containerStyle, textStyle, innerContainerStyle, labelPlaceHolder, labelPlaceHolderStyle, pickerStyle }) => {
     let options = selectedValue ? values : [{ label: placeholder || 'Select any', value: '' }, ...values];
     return (
         <View style={[outerContainer]}>
@@ -94,14 +94,14 @@ export const IconicList = ({ iconProps, outerContainer, values, selectedValue, p
                 <View style={[innerContainerStyle]}>
                     <Picker
                         mode="dropdown"
-                        iosIcon={<NBIcon name="ios-arrow-down" />}
+                        iosIcon={<NBIcon name="ios-arrow-down" style={{ color: '#acacac' }} />}
                         placeholder={placeholder}
                         placeholderStyle={{ color: "#a9a9a9", paddingLeft: 0 }}
                         placeholderIconColor="#a9a9a9"
-                        style={[{ width: iconProps ? WindowDimensions.width - 30 : WindowDimensions.width, borderBottomWidth: 1, borderBottomColor: '#000' }, pickerStyle]}
+                        style={[{ width: iconProps ? WindowDimensions.width - 30 : WindowDimensions.width, borderBottomWidth: 1, borderBottomColor: '#acacac' }, pickerStyle]}
                         selectedValue={selectedValue}
                         onValueChange={onChange && onChange}
-                        textStyle={{ paddingLeft: 0, paddingHorizontal: 0 }}
+                        textStyle={[{ paddingLeft: 0, paddingHorizontal: 0 }, textStyle]}
                     >
                         {
                             options.map((option, index) => <Picker.Item key={option.value} label={option.label} value={option.value} />)
@@ -111,7 +111,7 @@ export const IconicList = ({ iconProps, outerContainer, values, selectedValue, p
             </View>
             {
                 labelPlaceHolder ?
-                    <Text style={[labelPlaceHolderStyle]}>{labelPlaceHolder}</Text>
+                    <DefaultText  style={[labelPlaceHolderStyle]}>{labelPlaceHolder}</DefaultText>
                     : null
             }
         </View>
@@ -124,7 +124,7 @@ export const IconicSwitch = ({ iconProps, label, selectedValue, onChange }) => (
             <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, { flex: 1, marginRight: 10 }, iconProps.style]} />
         </View>
         <View style={{ flex: 1, alignSelf: 'center', flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text>{label}</Text>
+            <DefaultText>{label}</DefaultText>
             <Switch value={selectedValue} onValueChange={(value) => onChange(value)} style={{ alignSelf: 'center' }} />
         </View>
     </View>
@@ -159,7 +159,7 @@ export const IconicDatePicker = ({ iconProps, outerContainer, selectedDate, date
             </View>
             {
                 label ?
-                    <Text style={[labelStyle]}>{label}</Text>
+                    <DefaultText  style={[labelStyle]}>{label}</DefaultText>
                     : null
             }
         </View>
