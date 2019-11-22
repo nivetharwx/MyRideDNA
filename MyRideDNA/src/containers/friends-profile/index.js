@@ -1,14 +1,16 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView, BackHandler } from 'react-native';
+import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView, BackHandler, TouchableOpacity } from 'react-native';
 import { Actions } from 'react-native-router-flux';
-import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions, FRIEND_TYPE } from '../../constants/index';
+import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions, FRIEND_TYPE, CUSTOM_FONTS } from '../../constants/index';
 import { IconButton, LinkButton, ShifterButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, updateUserAction, updateBikePictureListAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction, setCurrentFriendAction, updateCurrentFriendAction, updatePicturesAction, undoLastAction, resetCurrentFriendAction, goToPrevProfileAction } from '../../actions';
 import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo, getRoadBuddies, getPictureList, getFriendInfo, getFriendProfile, getPassengersById, getRoadBuddiesById, getUserProfile } from '../../api';
 import { ImageLoader } from '../../components/loader';
 import { SmallCard } from '../../components/cards';
 import { BasicHeader } from '../../components/headers';
+import { DefaultText } from '../../components/labels';
+import { getFormattedDateFromISO } from '../../util';
 
 const hasIOSAbove10 = parseInt(Platform.Version) > 10;
 class FriendsProfile extends Component {
@@ -39,7 +41,6 @@ class FriendsProfile extends Component {
 
     async componentDidUpdate(prevProps, prevState) {
         if (prevProps.person !== this.props.person) {
-            console.log("this.props.person: ", this.props.person);
             if (prevProps.person.userId !== this.props.person.userId) {
                 this.isLoadingPassPic = false;
                 this.isLoadingFrndsPic = false;
@@ -130,27 +131,17 @@ class FriendsProfile extends Component {
                     <StatusBar translucent barStyle="light-content" />
                 </View>
                 <View style={styles.fill}>
-                    <View style={styles.mapHeader}>
+                    <View style={styles.header}>
                         <IconButton iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: { fontSize: 27 } }}
                             style={styles.headerIconCont} onPress={this.popToPrevProfile} />
-                        <View style={{ flex: 1, flexDirection: 'column', marginLeft: 17, alignSelf: 'center' }}>
-                            <Text style={styles.title}>
-                                {person.name}
-                            </Text>
-                            {
-                                person.nickname ?
-                                    <Text style={{ color: 'rgba(189, 195, 199, 1)', fontWeight: 'bold', fontSize: 12 }}>
-                                        {person.nickname.toUpperCase()}
-                                    </Text>
-                                    : null
-                            }
-
+                        <View style={styles.titleContainer}>
+                            <DefaultText style={styles.title} >{person.name}</DefaultText>
+                            <DefaultText style={styles.subTitle}>{person.nickname ? person.nickname.toUpperCase() : null}</DefaultText>
                         </View>
                     </View>
-                    <ScrollView>
+                    <ScrollView contentContainerStyle={{ paddingBottom: APP_COMMON_STYLES.tabContainer.height }}>
                         <View style={styles.profilePic}>
                             <ImageBackground source={person.profilePicture ? { uri: person.profilePicture } : require('../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
-                                {/* <ImageBackground source={require('../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}> */}
                                 {
                                     isLoadingProfPic
                                         ? <ImageLoader show={isLoadingProfPic} />
@@ -159,114 +150,125 @@ class FriendsProfile extends Component {
                             </ImageBackground>
                         </View>
                         <Image source={require('../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} />
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <View style={{ flexDirection: 'column', marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(2) }}>
-                                <Text style={{ letterSpacing: 1, fontSize: 11, color: '#a8a8a8', fontWeight: '600' }}>LOCATION</Text>
-                                <Text style={{ fontWeight: 'bold', color: '#000' }}>{person.homeAddress.city ? person.homeAddress.city : '__ '}, {person.homeAddress.state ? person.homeAddress.state : '__'}</Text>
+                        <View style={styles.container}>
+                            <View style={{ flexDirection: 'column' }}>
+                                <DefaultText style={styles.labels}>LOCATION</DefaultText>
+                                <DefaultText style={styles.labelsData}>{person.homeAddress.city ? person.homeAddress.city : '__ '}, {person.homeAddress.state ? person.homeAddress.state : '__'}</DefaultText>
                             </View>
-                        </View>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderColor: '#0090b1', marginLeft: widthPercentageToDP(8), marginRight: widthPercentageToDP(11.22), marginTop: heightPercentageToDP(2) }}>
-                            <View style={{ width: widthPercentageToDP(18) }}>
-                                <Text style={{ fontSize: 11, marginTop: heightPercentageToDP(1), color: '#a8a8a8', fontWeight: '600' }}>DOB</Text>
-                                <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7) }}>{person.dob ? new Date(person.dob).toLocaleDateString('en-IN', { day: 'numeric', year: '2-digit', month: 'short' }) : '---'}</Text>
+                            <View style={[styles.basicAlignment, styles.horizontalContainer]}>
+                                <View style={styles.individualComponent}>
+                                    <DefaultText style={styles.labels}>DOB</DefaultText>
+                                    <DefaultText style={styles.labelsData}>{person.dob ? getFormattedDateFromISO(person.dob) : '---'}</DefaultText>
+                                </View>
+                                <View style={styles.individualComponent}>
+                                    <DefaultText style={[styles.labels, { paddingHorizontal: 9 }]}>YEARS RIDING</DefaultText>
+                                    <DefaultText style={styles.labelsData}>{person.ridingSince ? new Date().getFullYear() - person.ridingSince : 0}</DefaultText>
+                                </View>
+                                <View style={styles.individualComponent}>
+                                    <DefaultText style={styles.labels}>MEMBER SINCE</DefaultText>
+                                    <DefaultText style={[styles.labelsData, { alignSelf: 'center' }]}>{new Date(person.dateOfRegistration).getFullYear()}</DefaultText>
+                                </View>
                             </View>
-                            <View style={{ borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#0090b1', width: widthPercentageToDP(28), alignItems: 'center' }}>
-                                <Text style={{ fontSize: 10, marginTop: heightPercentageToDP(1), letterSpacing: 1.5, color: '#a8a8a8', fontWeight: '600' }}>YEARS RIDING</Text>
-                                <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7) }}>{person.ridingSince ? new Date().getFullYear() - person.ridingSince : 0}</Text>
+                            <View style={styles.clubContainer}>
+                                <DefaultText style={styles.labels}>CLUBS</DefaultText>
+                                <FlatList
+                                    style={{ marginBottom: 9 }}
+                                    data={person.clubs}
+                                    keyExtractor={this.clubsKeyExtractor}
+                                    renderItem={({ item, index }) => (
+                                        <View style={{ paddingVertical: 2 }}>
+                                            <DefaultText style={styles.labelsData}>{item.clubName}</DefaultText>
+                                        </View>
+                                    )}
+                                />
                             </View>
-                            <View style={{ borderRightWidth: 1, borderColor: '#0090b1', width: widthPercentageToDP(28), alignItems: 'flex-start' }}>
-                                <Text style={{ fontSize: 10, marginTop: heightPercentageToDP(1), letterSpacing: 1.5, color: '#a8a8a8', fontWeight: '600' }}>MEMBER SINCE</Text>
-                                <Text style={{ color: '#000', fontWeight: 'bold', marginTop: heightPercentageToDP(0.7), alignSelf: 'center' }}>{new Date(person.dateOfRegistration).getFullYear()}</Text>
-                            </View>
-                        </View>
-                        <View style={{ flexDirection: 'column', marginHorizontal: widthPercentageToDP(8), marginTop: heightPercentageToDP(4), borderBottomWidth: 1, borderBottomColor: '#B1B1B1' }}   >
-                            <Text style={{ letterSpacing: 3, fontSize: 11, color: '#a8a8a8', fontWeight: '600' }}>CLUBS</Text>
+
+
                             {
-                                person.clubs ?
-                                    <FlatList
-                                        style={{ marginBottom: heightPercentageToDP(3) }}
-                                        data={person.clubs}
-                                        contentContainerStyle={styles.clubList}
-                                        keyExtractor={this.clubsKeyExtractor}
-                                        renderItem={({ item, index }) => (
-                                            <View style={{ flexDirection: 'column', paddingVertical: heightPercentageToDP(0.5) }}>
-                                                <Text style={{ color: '#000', fontWeight: '600' }}>{item.clubName}</Text>
+                                this.props.person.isFriend
+                                    ? <View>
+                                        <View style={{ marginTop: 19 }}>
+                                            <View style={styles.basicAlignment}>
+                                                <TouchableOpacity style={styles.basicAlignment} >
+                                                    <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Road Buddies</DefaultText>
+                                                    <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
+                                                </TouchableOpacity>
                                             </View>
-                                        )}
-                                    />
+                                            {
+                                                person.friendList.length > 0
+                                                    ?
+                                                    <View style={styles.greyBorder}>
+                                                        <FlatList
+                                                            style={{ flexDirection: 'column' }}
+                                                            numColumns={4}
+                                                            data={person.friendList.slice(0, 4)}
+                                                            keyExtractor={this.roadBuddiesKeyExtractor}
+                                                            renderItem={({ item, index }) => (
+                                                                <SmallCard
+                                                                    smallardPlaceholder={require('../../assets/img/profile-pic.png')}
+                                                                    item={item}
+                                                                    onPress={() => this.openRoadBuddy(item.userId)}
+                                                                    imageStyle={styles.imageStyle}
+                                                                />
+                                                            )}
+                                                        />
+
+                                                    </View>
+                                                    : null
+                                            }
+                                        </View>
+
+
+
+                                        <View style={{ marginTop: 19 }}>
+                                            <View style={styles.basicAlignment}>
+                                                <TouchableOpacity style={styles.basicAlignment}>
+                                                    <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Passengers</DefaultText>
+                                                    <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
+                                                </TouchableOpacity>
+                                            </View>
+                                            {
+                                                person.passengerList.length > 0
+                                                    ?
+                                                    <View style={styles.greyBorder}>
+                                                        <FlatList
+                                                            style={{ flexDirection: 'column' }}
+                                                            numColumns={4}
+                                                            data={person.passengerList.slice(0, 4)}
+                                                            keyExtractor={this.passengerListKeyExtractor}
+                                                            renderItem={({ item, index }) => (
+                                                                <SmallCard
+                                                                    smallardPlaceholder={require('../../assets/img/profile-pic.png')}
+                                                                    item={item}
+                                                                    onPress={() => this.openPassengerProfile(item, index)}
+                                                                    imageStyle={styles.imageStyle}
+                                                                />
+                                                            )}
+                                                        />
+                                                    </View>
+                                                    : null
+                                            }
+                                        </View>
+                                    </View>
                                     : null
                             }
                         </View>
-                        {
-                            this.props.person.isFriend
-                                ? <View>
-                                    <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(2), marginRight: widthPercentageToDP(7) }}>
-                                        <View style={{ flexDirection: 'row', marginTop: heightPercentageToDP(2), justifyContent: 'space-between', paddingBottom: 3 }}>
-                                            <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Road Buddies</Text>
-                                            {/* <LinkButton title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16, fontWeight: 'bold' }} onPress={this.onPressFriendsPage} /> */}
-                                        </View>
-                                        <View style={{ borderTopWidth: 15, borderTopColor: '#DCDCDE' }}>
-                                            <FlatList
-                                                style={{ flexDirection: 'column' }}
-                                                numColumns={4}
-                                                data={person.friendList.slice(0, 4)}
-                                                keyExtractor={this.roadBuddiesKeyExtractor}
-                                                renderItem={({ item, index }) => (
-                                                    <View style={{ marginRight: widthPercentageToDP(1.5) }}>
-                                                        {
-                                                            <SmallCard
-                                                                smallardPlaceholder={require('../../assets/img/profile-pic.png')}
-                                                                item={item}
-                                                                onPress={() => this.openRoadBuddy(item.userId)}
-                                                            />
-                                                        }
-                                                    </View>
-                                                )}
-                                            />
+                        <View style={styles.usersExtraDetailContainer}>
+                            <ImageBackground source={require('../../assets/img/my-journal.png')} style={styles.usersExtraDetail}>
+                                <DefaultText style={styles.txtOnImg}>Journal</DefaultText>
+                            </ImageBackground>
+                        </View>
+                        <View style={styles.usersExtraDetailContainer}>
+                            <ImageBackground source={require('../../assets/img/my-vest.png')} style={styles.usersExtraDetail}>
+                                <DefaultText style={styles.txtOnImg}>Vest</DefaultText>
+                            </ImageBackground>
+                        </View>
+                        <View style={styles.usersExtraDetailContainer}>
+                            <ImageBackground source={require('../../assets/img/my-photos.png')} style={styles.usersExtraDetail}>
+                                <DefaultText style={styles.txtOnImg}>Photos</DefaultText>
+                            </ImageBackground>
+                        </View>
 
-                                        </View>
-                                    </View>
-                                    <View style={{ marginLeft: widthPercentageToDP(8), marginTop: heightPercentageToDP(2), marginRight: widthPercentageToDP(7) }}>
-                                        <View style={{ flexDirection: 'row', marginTop: heightPercentageToDP(2), justifyContent: 'space-between', paddingBottom: 3 }}>
-                                            <Text style={{ letterSpacing: 3, fontSize: 15, color: '#000', fontWeight: '600' }}>Passengers</Text>
-                                            {/* <LinkButton style={{}} title='[see all]' titleStyle={{ color: '#f69039', fontSize: 16, fontWeight: 'bold' }} onPress={() => Actions.push(PageKeys.PASSENGERS)} /> */}
-                                        </View>
-                                        <View style={{ borderTopWidth: 15, borderTopColor: '#DCDCDE' }}>
-                                            <FlatList
-                                                style={{ flexDirection: 'column' }}
-                                                numColumns={4}
-                                                data={person.passengerList.slice(0, 4)}
-                                                keyExtractor={this.passengerListKeyExtractor}
-                                                renderItem={({ item, index }) => (
-                                                    <View style={{ marginRight: widthPercentageToDP(1.5) }}>
-                                                        <SmallCard
-                                                            smallardPlaceholder={require('../../assets/img/profile-pic.png')}
-                                                            item={item}
-                                                            onPress={() => this.openPassengerProfile(item, index)}
-                                                        />
-                                                    </View>
-                                                )}
-                                            />
-                                        </View>
-                                    </View>
-                                    <View style={styles.usersExtraDetailContainer}>
-                                        <ImageBackground source={require('../../assets/img/my-journal.png')} style={styles.usersExtraDetail}>
-                                            <Text style={styles.txtOnImg}>Journal</Text>
-                                        </ImageBackground>
-                                    </View>
-                                    <View style={styles.usersExtraDetailContainer}>
-                                        <ImageBackground source={require('../../assets/img/my-vest.png')} style={styles.usersExtraDetail}>
-                                            <Text style={styles.txtOnImg}>Vest</Text>
-                                        </ImageBackground>
-                                    </View>
-                                    <View style={styles.usersExtraDetailContainer}>
-                                        <ImageBackground source={require('../../assets/img/my-photos.png')} style={styles.usersExtraDetail}>
-                                            <Text style={styles.txtOnImg}>Photos</Text>
-                                        </ImageBackground>
-                                    </View>
-                                </View>
-                                : null
-                        }
                     </ScrollView>
                 </View>
                 {/* Shifter: - Brings the app navigation menu */}
@@ -359,9 +361,16 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 20,
-        color: 'white',
-        fontWeight: 'bold',
+        color: '#FFFFFF',
         backgroundColor: 'transparent',
+        letterSpacing: 0.8,
+        fontFamily: CUSTOM_FONTS.gothamBold
+    },
+    subTitle: {
+        color: '#C4C4C4',
+        fontSize: 12,
+        letterSpacing: 1.08,
+        fontFamily: CUSTOM_FONTS.gothamBold,
     },
     profilePicBtmBorder: {
         width: '100%',
@@ -370,6 +379,46 @@ const styles = StyleSheet.create({
     profilePic: {
         height: 255,
         width: WindowDimensions.width
+    },
+    container: {
+        marginHorizontal: 27,
+        marginTop: 26
+    },
+    basicAlignment: {
+        flexDirection: 'row',
+        justifyContent: 'space-between'
+    },
+    horizontalContainer: {
+        borderTopWidth: 1,
+        borderColor: '#0090b1',
+        marginTop: heightPercentageToDP(2),
+        height: 47,
+    },
+    individualComponent: {
+        borderRightWidth: 1,
+        borderColor: '#0090b1',
+        alignItems: 'center',
+        flex: 1,
+        flexDirection: 'column',
+        justifyContent: 'space-evenly'
+    },
+    clubContainer: {
+        flexDirection: 'column',
+        marginTop: 17,
+        borderBottomWidth: 1,
+        borderBottomColor: '#B1B1B1',
+    },
+    labels: {
+        letterSpacing: 1.6,
+        fontSize: 8,
+        color: '#707070',
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+    },
+    labelsData: {
+        color: '#000',
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        fontSize: 12,
+        paddingBottom: 7
     },
     scrollBottomContent: {
         flex: 1
@@ -387,7 +436,7 @@ const styles = StyleSheet.create({
     },
 
     //  new Design styles
-    mapHeader: {
+    header: {
         height: APP_COMMON_STYLES.headerHeight,
         backgroundColor: APP_COMMON_STYLES.headerColor,
         flexDirection: 'row',
@@ -397,6 +446,12 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.9,
         shadowRadius: 5,
         zIndex: 999
+    },
+    titleContainer: {
+        flexDirection: 'column',
+        marginLeft: 17,
+        justifyContent: 'center',
+        alignSelf: 'center'
     },
     clubList: {
         marginHorizontal: widthPercentageToDP(1),
@@ -422,11 +477,18 @@ const styles = StyleSheet.create({
         marginRight: 10
     },
     txtOnImg: {
-        marginLeft: widthPercentageToDP(5),
-        marginTop: 30,
         color: '#fff',
-        fontWeight: 'bold',
         fontSize: 18,
-        letterSpacing: 2
+        letterSpacing: 2.7,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+    },
+    greyBorder: {
+        borderTopWidth: 13,
+        borderTopColor: '#DCDCDE'
+    },
+    imageStyle: {
+        marginRight: widthPercentageToDP(1.8),
+        height: widthPercentageToDP(100 / 5),
+        width: widthPercentageToDP(100 / 5)
     }
 });
