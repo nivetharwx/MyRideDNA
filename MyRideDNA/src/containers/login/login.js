@@ -29,7 +29,7 @@ export const LoginScreen = (props) => (
         <View style={{ width: widthPercentageToDP(100), height: heightPercentageToDP(47) }}>
             <View style={LoginStyles.loginButtonContainer}>
                 <View style={{ borderRadius: 100, padding: 10, backgroundColor: '#fff', alignSelf: 'center' }}>
-                    <LinkButton style={LoginStyles.loginButton} title='LOGIN' titleStyle={LoginStyles.loginButtonText} />
+                    <LinkButton style={LoginStyles.loginButton} title='LOGIN' titleStyle={LoginStyles.loginButtonText} onPress={props.onSubmit} />
                 </View>
             </View>
             <View style={LoginStyles.linkPairContainer}>

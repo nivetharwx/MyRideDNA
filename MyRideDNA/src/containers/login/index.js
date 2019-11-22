@@ -79,7 +79,6 @@ class Login extends Component {
             if (deviceToken === null) {
                 try {
                     const token = await firebase.messaging().getToken();
-                    console.log("TOKEN - firebase.messaging().getToken() at login", token);
                     if (token) {
                         AsyncStorage.setItem(DEVICE_TOKEN, token);
                         this.setState({ deviceToken: token }, () => this.doLogin());
@@ -108,17 +107,15 @@ class Login extends Component {
         userData.password = Md5.hex_md5(password + '');//Md5.hex_md5(890 + ''); // FIXME: Remove static value
 
         this.setState({ spinner: !this.state.spinner });
+
         axios.post(USER_BASE_URL + 'loginUser', userData)
             .then(res => {
                 if (res.status === 200) {
-                    console.log('login : ', res.data);
                     if (!res.data.clubs) {
-                        console.log('clubs not existing')
                         res.data.clubs = [];
                     }
                     AsyncStorage.setItem(USER_AUTH_TOKEN, res.data.accessToken);
                     this.props.updateToken({ userAuthToken: res.data.accessToken, deviceToken });
-                    console.log("updateToken called: ", { userAuthToken: res.data.accessToken, deviceToken });
                     this.props.storeUser(res.data.user);
                     this.setState({ spinner: !this.state.spinner });
                     Actions.reset(PageKeys.MAP);
@@ -146,13 +143,11 @@ class Login extends Component {
         this.setState(prevState => ({ isVisiblePassword: !prevState.isVisiblePassword }));
     }
 
-
     fetchingDeviceToken = async (user) => {
         if (this.state.deviceToken === null) {
             const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
             if (deviceToken === null) {
                 const token = await firebase.messaging().getToken();
-                console.log("TOKEN (getFCMToken) at login", token);
                 AsyncStorage.setItem(DEVICE_TOKEN, token);
                 this.setState({ deviceToken: token }, () => this.thirdPartyLogin(user));
             }
@@ -167,13 +162,10 @@ class Login extends Component {
     thirdPartyLogin = async (user) => {
         axios.post(USER_BASE_URL + 'loginUserUsingThirdParty', { ...user, platform: IS_ANDROID ? 'android' : 'ios', date: new Date().toISOString(), registrationToken: this.state.deviceToken, deviceId: await DeviceInfo.getUniqueId() })
             .then(res => {
-                console.log('loginUserUsingThirdParty success: ', res)
                 AsyncStorage.setItem(USER_AUTH_TOKEN, res.data.accessToken);
                 this.props.updateToken({ userAuthToken: res.data.accessToken, deviceToken: this.state.deviceToken });
-                console.log("updateToken called: ", { userAuthToken: res.data.accessToken, deviceToken: this.state.deviceToken });
                 res.data.user.isNewUser = res.data.isNewUser
                 this.props.storeUser(res.data.user);
-                console.log('newUser : ', res.data.user)
                 if (res.data.isNewUser) {
                     Actions.reset(PageKeys.MAP);
                 }
@@ -186,48 +178,35 @@ class Login extends Component {
             })
     }
 
-    doFacebookLogin = () => {
-        console.log('facebook login')
-        LoginManager.logInWithPermissions(["public_profile", "email"]).then((result) => {
-            console.log('login data : ', result)
+    doFacebookLogin = async () => {
+        try {
+            const result = await LoginManager.logInWithPermissions(["public_profile", "email"]);
             if (result.isCancelled) {
-                console.log("Login cancelled");
             } else {
-                AccessToken.getCurrentAccessToken().then((data) => {
-                    console.log('data : ', data);
-                    const { accessToken } = data;
-                    axios.get('https://graph.facebook.com/v2.5/me?fields=email,name,friends,picture&access_token=' + accessToken)
-                        .then((res) => {
-                            var user = {};
-                            console.log('res : ', res)
-                            user.name = res.data.name;
-                            user.email = res.data.email;
-                            user.signupSource = 'facebook';
-                            this.fetchingDeviceToken(user);
-                        })
-                        .catch((error) => {
-                            console.log('error : ', error)
-                        })
-                })
+                const data = await AccessToken.getCurrentAccessToken();
+                const { accessToken } = data;
+                const res = await axios.get('https://graph.facebook.com/v2.5/me?fields=email,name,friends,picture&access_token=' + accessToken);
+                var user = {};
+                user.name = res.data.name;
+                user.email = res.data.email;
+                user.signupSource = 'facebook';
+                this.fetchingDeviceToken(user);
             }
-        })
-            .catch(error => {
-                console.log("Login fail with error: " + error);
-            })
+        } catch (error) {
+            console.log("Login fail with error: " + error);
+        }
     }
 
-    // doGoogleLogin = async () =>{
-    //     console.log('googleLogin working')
-    //     try {
-    //         await GoogleSignin.hasPlayServices();
-    //         const userInfo = await GoogleSignin.signIn();
-    //         console.log('userinfo google : ',userInfo)
-    //         userInfo.user.signUpSource='google'
-    //         this.fetchingDeviceToken(userInfo.user)
-    //       } catch (error) {
-    //           console.log('error google : ',error)
-    //       }
-    // }
+    doGoogleLogin = async () => {
+        try {
+            await GoogleSignin.hasPlayServices();
+            const userInfo = await GoogleSignin.signIn();
+            userInfo.user.signUpSource = 'google';
+            this.fetchingDeviceToken(userInfo.user);
+        } catch (error) {
+            console.log('error google : ', error);
+        }
+    }
 
     render() {
         return (
@@ -237,11 +216,6 @@ class Login extends Component {
                     backgroundColor={APP_COMMON_STYLES.statusBarColor}
                     barStyle="default"
                 />
-                {/* <Spinner
-                    visible={this.state.spinner}
-                    textContent={'Loading...'}
-                    textStyle={{ color: '#fff' }}
-                /> */}
                 <Loader isVisible={this.state.spinner} onCancel={() => this.setState({ spinner: false })} />
                 <ForgotPassword isVisible={this.state.showForgotPasswordModal} onCancel={this.toggleForgotPasswordForm} onPressOutside={this.toggleForgotPasswordForm} />
                 <LoginScreen
@@ -251,8 +225,8 @@ class Login extends Component {
                     onSubmit={this.onSubmit} onSignupPress={this.onSignupPress}
                     onForgotPasswordPress={this.toggleForgotPasswordForm}
                     isVisiblePassword={this.state.isVisiblePassword}
-                    // doGoogleLogin={this.doGoogleLogin}
-                    doFacebookLogin={this.doFacebookLogin}
+                // doGoogleLogin={this.doGoogleLogin}
+                // doFacebookLogin={this.doFacebookLogin}
                 />
             </View>
         );
