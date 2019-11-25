@@ -74,6 +74,7 @@ export const PageKeys = {
     MY_WALLET_FORM: 'myWalletForm',
     ALBUM: 'album',
     BIKE_DETAILS: 'bikeDetails',
+    POST_FORM: 'postForm',
 };
 
 export const MAP_ACCESS_TOKEN = 'pk.eyJ1IjoibWFkaGF2YW4tcmVhY3RpdmV3b3JrcyIsImEiOiJjam9qbXJybzQwNmE4M3BvODY4dXhhdGUyIn0.oPQRig3knqF_oYXrRSca7w';
