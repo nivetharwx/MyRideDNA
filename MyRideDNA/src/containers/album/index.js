@@ -1,20 +1,14 @@
 import React, { Component } from 'react';
-import { View, ImageBackground, Text, Alert, StatusBar, ScrollView, FlatList, TextInput, KeyboardAvoidingView, TouchableOpacity, StyleSheet, ActivityIndicator, Easing, Animated } from 'react-native';
+import { View, ImageBackground, StatusBar, FlatList, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import { connect } from 'react-redux';
 import { appNavMenuVisibilityAction, updateAlbumListAction, clearAlbumAction } from '../../actions';
-import { ShifterButton, IconButton, LinkButton } from '../../components/buttons';
-import { Thumbnail, Item, List, Icon as NBIcon } from 'native-base';
-import { APP_COMMON_STYLES, widthPercentageToDP, WindowDimensions, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../constants';
-import { ChatBubble } from '../../components/bubble';
-import { getFormattedDateFromISO } from '../../util';
+import { IconButton } from '../../components/buttons';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../constants';
 import { BaseModal } from '../../components/modal';
-import { ActionConst, Actions } from 'react-native-router-flux';
+import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../components/headers';
 import { SquareCard } from '../../components/cards';
 import { getAlbum, getPictureList } from '../../api';
-
-const roadbuddiesDummyData = [{ name1: 'person1', id: '1' }, { name1: 'person2', id: '2' }, { name1: 'person3', id: '3' }, { name1: 'person4', id: '4' }, { name1: 'person5', id: '6' }, { name1: 'person6', id: '6' }, { name1: 'person7', id: '7' }, { name1: 'person8', id: '8' }, { name1: 'person9', id: '9' }]
-
 
 class Album extends Component {
 
@@ -92,6 +86,8 @@ class Album extends Component {
         return null
     }
 
+    openPostForm = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene });
+
     onScrollBegin = () => {
         // this.setState(prevState => ({ isLoadingData: true }), () => console.log('onMomemntum : ', { ...this.state }))
         this.isLoadingData = true;
@@ -129,9 +125,10 @@ class Album extends Component {
             <View style={styles.fill}>
                 <BasicHeader title='My Photos'
                     leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                    rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', rightIconPropsStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 } }} />
+                    rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', rightIconPropsStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 }, onPress: this.openPostForm }} />
                 <View style={{ marginTop: heightPercentageToDP(9.6), flex: 1 }}>
                     <FlatList
+                        showsVerticalScrollIndicator={false}
                         numColumns={3}
                         data={albumList}
                         columnWrapperStyle={{ justifyContent: 'flex-start', marginBottom: widthPercentageToDP(1) }}
@@ -188,8 +185,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#F5891F'
     },
     imageStyle: {
-        height: widthPercentageToDP(98/3),
-        width: widthPercentageToDP(98/3)
+        height: widthPercentageToDP(98 / 3),
+        width: widthPercentageToDP(98 / 3)
     },
     closeIconContainer: {
         height: heightPercentageToDP(5),

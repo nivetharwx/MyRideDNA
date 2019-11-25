@@ -132,6 +132,7 @@ class EditProfileForm extends Component {
     }
 
     onPressBackButton = () => Actions.pop();
+    
     hideLoader = () => {
         this.setState({ showLoader: false });
     }
@@ -221,7 +222,7 @@ class EditProfileForm extends Component {
                 </View>
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
                     <BasicHeader title='Edit Profile' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
-                    <ScrollView keyboardShouldPersistTaps='always'>
+                    <ScrollView keyboardShouldPersistTaps='handled'>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 41 + APP_COMMON_STYLES.headerHeight }}>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
                                 <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../../assets/img/cam-icon.png')} imgStyles={{ width: 45, height: 37 }} />
@@ -271,14 +272,16 @@ class EditProfileForm extends Component {
                                 onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
-                                inputValue={user.homeAddress.zipCode || ""} inputStyle={{ paddingBottom: 0 }}
+                                inputValue={user.homeAddress.zipCode ? user.homeAddress.zipCode + '' : ''} 
+                                inputType={'postalCode'} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[5] = elRef} returnKeyType='next'
                                 onChange={this.onChangeZipCode} label='ZIP CODE' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[6].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
-                                inputValue={user.phoneNumber || ""} inputStyle={{ paddingBottom: 0 }}
+                                inputValue={user.phoneNumber ? user.phoneNumber + '' : ''} 
+                                inputType={'telephoneNumber'} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[6] = elRef} returnKeyType='next'
                                 onChange={this.onChangePhone} label='PHONE' labelStyle={styles.labelStyle}

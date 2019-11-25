@@ -231,7 +231,7 @@ class MyProfileTab extends Component {
                         <DefaultText style={styles.subTitle}>{user.nickname ? user.nickname.toUpperCase() : null}</DefaultText>
                     </View>
                 </View>
-                <ScrollView contentContainerStyle={{ paddingBottom: APP_COMMON_STYLES.tabContainer.height }}>
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: APP_COMMON_STYLES.tabContainer.height }}>
                     <View style={styles.profilePic}>
                         <ImageBackground source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
                             {

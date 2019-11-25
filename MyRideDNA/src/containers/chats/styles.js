@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.2,
         marginLeft: 15,
         marginRight: 5,
-        fontFamily: CUSTOM_FONTS.robotoBold
+        fontFamily: CUSTOM_FONTS.gothamBold
     },
     chatHeaderNickname: {
         color: APP_COMMON_STYLES.infoColor,

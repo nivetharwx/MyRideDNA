@@ -45,12 +45,12 @@ export class BasicCard extends React.Component {
                             <View style={{ flex: 1 }}>
                                 {
                                     this.props.mainHeading
-                                        ? <DefaultText  style={styles.mainHeader}>{this.props.mainHeading}</DefaultText>
+                                        ? <DefaultText style={styles.mainHeader}>{this.props.mainHeading}</DefaultText>
                                         : null
                                 }
                                 {
                                     this.props.subHeading
-                                        ? <DefaultText  style={styles.subHeader}>{this.props.subHeading}</DefaultText>
+                                        ? <DefaultText style={styles.subHeader}>{this.props.subHeading}</DefaultText>
                                         : null
                                 }
                             </View>
@@ -103,7 +103,7 @@ export const ThumbnailCard = ({ item, thumbnailPlaceholder, onPress, onLongPress
                         ? <IconButton iconProps={{ name: 'verified-user', type: 'MaterialIcons', style: { fontSize: widthPercentageToDP(6), color: APP_COMMON_STYLES.headerColor } }} />
                         : null
                 }
-                <DefaultText  style={{
+                <DefaultText style={{
                     fontWeight: 'bold',
                     backgroundColor: 'transparent',
                     fontSize: widthPercentageToDP(4),
@@ -115,7 +115,7 @@ export const ThumbnailCard = ({ item, thumbnailPlaceholder, onPress, onLongPress
                 {
                     item.nickname
                         ?
-                        <DefaultText  style={{ color: APP_COMMON_STYLES.infoColor, fontWeight: 'bold' }}>
+                        <DefaultText style={{ color: APP_COMMON_STYLES.infoColor, fontWeight: 'bold' }}>
                             {'  '}{item.nickname}
                         </DefaultText>
                         : null
@@ -137,14 +137,14 @@ export const ThumbnailCard = ({ item, thumbnailPlaceholder, onPress, onLongPress
     </View>
 );
 
-export const SmallCard = ({ item, smallardPlaceholder, onPress, onLongPress, actions, thumbnailRef,outerContainer, imageStyle }) => (
+export const SmallCard = ({ item, smallardPlaceholder, onPress, onLongPress, actions, thumbnailRef, outerContainer, imageStyle }) => (
     <View style={outerContainer}>
         <TouchableOpacity onPress={() => onPress ? onPress() : null} style={{
             flex: 1,
             alignItems: 'center',
             justifyContent: 'center'
         }}>
-            <View style={[{ height: 74, width: 74, backgroundColor: '#A9A9A9', justifyContent:'center' }, imageStyle]}>
+            <View style={[{ height: 74, width: 74, backgroundColor: '#A9A9A9', justifyContent: 'center' }, imageStyle]}>
                 <Image source={item.profilePicture ? { uri: item.profilePicture } : smallardPlaceholder}
                     style={{ width: null, height: null, flex: 1 }} />
                 {/* <Image source={smallardPlaceholder}
@@ -162,14 +162,21 @@ export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, 
         <View style={contentContainerStyle}>
             {
                 item.name ?
-                    <DefaultText  style={{ fontSize: 15, fontWeight: 'bold', color: '#000', marginTop: 6 }}>{item.name ? item.name : ''}</DefaultText>
+                    <DefaultText style={{ fontSize: 15, fontWeight: 'bold', color: '#000', marginTop: 6 }}>{item.name ? item.name : ''}</DefaultText>
                     : null
             }
             {
                 item.homeAddress ?
-                    <DefaultText  style={{ fontSize: 11, color: '#585756', marginTop: 2 }}>{item.homeAddress.city ? item.homeAddress.city : ''}, {item.homeAddress.state ? item.homeAddress.state : ''}</DefaultText>
-                    :
-                    null
+                    <DefaultText style={{ fontSize: 11, color: '#585756', marginTop: 2 }}>
+                        {
+                            item.homeAddress.city && item.homeAddress.state
+                                ? `${item.homeAddress.city}, ${item.homeAddress.state}`
+                                : item.homeAddress.city
+                                    ? item.homeAddress.city
+                                    : item.homeAddress.state
+                        }
+                    </DefaultText>
+                    : null
             }
         </View>
     </TouchableOpacity>
@@ -210,7 +217,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
             actionsBar ?
                 <View style={{ flex: 1, justifyContent: 'center', borderWidth: 1, borderColor: '#EAEAEA' }}>
                     <View style={{ flex: 1, backgroundColor: '#EAEAEA', justifyContent: 'center', alignItems: 'center' }}>
-                        <DefaultText  style={{ fontSize: 14, fontWeight: 'bold', color: '#585756' }}>{item.name ? item.name : item.groupName ? item.groupName : null}</DefaultText>
+                        <DefaultText style={{ fontSize: 14, fontWeight: 'bold', color: '#585756' }}>{item.name ? item.name : item.groupName ? item.groupName : null}</DefaultText>
                     </View>
                     <View style={{ flex: 1 }}>
                         {

@@ -177,7 +177,7 @@ class PaasengerFormDisplay extends Component {
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(4) }}
                                 onChange={this.onChangeDOB} label='BIRTHDAY' labelStyle={styles.labelStyle} />
                         </View>
-                        <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: heightPercentageToDP(3.5) }} onPress={this.onSubmit} />
+                        <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: 20, fontFamily: CUSTOM_FONTS.robotoSlabBold }} onPress={this.onSubmit} />
                     </ScrollView>
                 </KeyboardAvoidingView>
             </View>

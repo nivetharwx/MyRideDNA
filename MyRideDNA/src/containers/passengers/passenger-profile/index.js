@@ -7,10 +7,11 @@ import { BasicHeader } from '../../../components/headers';
 import { APP_COMMON_STYLES, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, heightPercentageToDP, IS_ANDROID, WindowDimensions, widthPercentageToDP, CUSTOM_FONTS } from '../../../constants';
 import { getPassengerList, getPicture } from '../../../api';
 import { BaseModal } from '../../../components/modal';
-import { getPassengerInfoAction, updateCurrentPassengerAction, resetCurrentPassengerAction } from '../../../actions';
+import { getPassengerInfoAction, updateCurrentPassengerAction, resetCurrentPassengerAction, appNavMenuVisibilityAction } from '../../../actions';
 import { ImageLoader } from '../../../components/loader';
-import { IconButton } from '../../../components/buttons';
+import { IconButton, ShifterButton } from '../../../components/buttons';
 import { DefaultText } from '../../../components/labels';
+import { getFormattedDateFromISO } from '../../../util';
 
 const hasIOSAbove10 = parseInt(Platform.Version) > 10;
 
@@ -86,8 +87,7 @@ class PassengersProfile extends Component {
         this.onCancelOptionsModal();
     }
 
-
-
+    showAppNavMenu = () => this.props.showAppNavMenu();
 
     loadMoreData = () => {
         if (this.state.isLoadingData && this.state.isLoading === false) {
@@ -117,10 +117,18 @@ class PassengersProfile extends Component {
         return null
     }
 
+    renderAddress() {
+        const { homeAddress } = this.props.currentPassenger;
+        if (!homeAddress) return null;
+        let address = '';
+        if (homeAddress.city && homeAddress.state) address = `${homeAddress.city}, ${homeAddress.state}`;
+        else address = homeAddress.city ? homeAddress.city : homeAddress.state;
+        return <DefaultText fontFamily={CUSTOM_FONTS.robotoSlabBold}>{address}</DefaultText >
+    }
 
     render() {
-        const { user, passengerList, showLoader, currentPassenger } = this.props;
-        const { isVisibleOptionsModal, passenger, isLoadingProfPic } = this.state;
+        const { user, currentPassenger } = this.props;
+        const { isLoadingProfPic } = this.state;
         const spin = this.state.spinValue.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
@@ -132,7 +140,7 @@ class PassengersProfile extends Component {
                 </View>
                 <View style={styles.fill}>
                     <BasicHeader
-                        title={currentPassenger.name ? currentPassenger.name : ''}
+                        title={currentPassenger.name || ''}
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
                     />
                     <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
@@ -149,21 +157,17 @@ class PassengersProfile extends Component {
                     </ImageBackground>
                     <IconButton iconProps={{ name: 'account-edit', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#f69039' } }}
                         style={styles.editPassenger} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: this.props.passengerIdx })} />
-                    <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(1) }}>
-                        <View>
-                            <DefaultText style={{ fontSize: 10, fontFamily: CUSTOM_FONTS.robotoBold, letterSpacing: 1.6, color: '#707070' }}>DOB</DefaultText>
-                            <DefaultText style={{ fontSize: 14, fontFamily: CUSTOM_FONTS.robotoBold, color: '#000' }}>{currentPassenger.dob ? new Date(currentPassenger.dob).toLocaleDateString('en-IN', { day: 'numeric', year: '2-digit', month: 'short' }) : ''}</DefaultText>
-                        </View>
-                        <View style={{ marginTop: heightPercentageToDP(3) }}>
-                            <DefaultText style={{ fontSize: 10, fontFamily: CUSTOM_FONTS.robotoBold, letterSpacing: 1.6, color: '#707070' }}>PHONE</DefaultText>
-                            <DefaultText style={{ fontSize: 14, fontFamily: CUSTOM_FONTS.robotoBold, color: '#000' }}>{currentPassenger.phoneNumber ? currentPassenger.phoneNumber : ''}</DefaultText>
-                        </View>
-                        <View style={{ marginTop: heightPercentageToDP(3) }}>
-                            <DefaultText style={{ fontSize: 10, fontFamily: CUSTOM_FONTS.robotoBold, letterSpacing: 1.6, color: '#707070' }}>ADDRESS</DefaultText>
-                            <DefaultText style={{ fontSize: 14, fontFamily: CUSTOM_FONTS.robotoBold, color: '#000' }}>{currentPassenger.homeAddress ? currentPassenger.homeAddress.city : ''}, {currentPassenger.homeAddress ? currentPassenger.homeAddress.state : ''}</DefaultText>
-                        </View>
+                    <View style={styles.contentContainer}>
+                        <DefaultText style={styles.fieldLabel}>DOB</DefaultText>
+                        <DefaultText fontFamily={CUSTOM_FONTS.robotoSlabBold}>{currentPassenger.dob ? getFormattedDateFromISO(currentPassenger.dob) : ''}</DefaultText>
+                        <DefaultText style={[styles.fieldLabel, styles.fieldsGapVertical]}>PHONE</DefaultText>
+                        <DefaultText fontFamily={CUSTOM_FONTS.robotoSlabBold}>{currentPassenger.phoneNumber || ''}</DefaultText>
+                        <DefaultText style={[styles.fieldLabel, styles.fieldsGapVertical]}>ADDRESS</DefaultText>
+                        {this.renderAddress()}
                     </View>
                 </View>
+                {/* Shifter: - Brings the app navigation menu */}
+                <ShifterButton onPress={this.showAppNavMenu} alignLeft={user.handDominance === 'left'} />
             </View>
         );
     }
@@ -185,6 +189,7 @@ const mapDispatchToProps = (dispatch) => {
             console.log('getPicture passenger profile error: ', error)
         }),
         resetCurrentPassenger: () => dispatch(resetCurrentPassengerAction()),
+        showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(PassengersProfile);
@@ -193,6 +198,10 @@ const styles = StyleSheet.create({
     fill: {
         flex: 1,
         backgroundColor: '#fff'
+    },
+    contentContainer: {
+        flex: 1,
+        marginHorizontal: 35
     },
     profileBG: {
         width: '100%',
@@ -205,9 +214,17 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
     editPassenger: {
-        marginTop: heightPercentageToDP(2),
+        marginTop: 15,
+        marginRight: 25,
         justifyContent: 'flex-end',
-        marginRight: widthPercentageToDP(8)
-    }
-
+    },
+    fieldLabel: {
+        fontSize: 8,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        letterSpacing: 1.6,
+        color: '#707070'
+    },
+    fieldsGapVertical: {
+        marginTop: 14
+    },
 });

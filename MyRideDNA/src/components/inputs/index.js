@@ -24,7 +24,7 @@ export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle,
     <View style={[{ flexDirection: 'row', marginBottom: 10 }, containerStyle]}>
         {
             label
-                ? <DefaultText  style={[{ alignSelf: 'center', marginRight: 10 }, labelStyle]}>{label}</DefaultText>
+                ? <DefaultText style={[{ alignSelf: 'center', marginRight: 10 }, labelStyle]}>{label}</DefaultText>
                 : null
         }
         <TextInput editable={editable} onFocus={onFocus && onFocus} onBlur={onBlur && onBlur} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ flex: 1, borderBottomWidth: 1, borderBottomColor: '#acacac' }, inputStyle]}
@@ -36,7 +36,7 @@ export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle,
 export const LabeledInputPlaceholder = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder = '', placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus, onBlur, editable, placeHolderStyle, secondLabelStyle, secondLabel, outerContainer }) => (
     <View style={[outerContainer, { flex: 1 }]}>
         <View style={[{ flexDirection: 'row', marginBottom: 3 }, containerStyle]}>
-            <TextInput maxLength={inputType === 'telephoneNumber' ? 10 : null} placeholder={placeholder} editable={editable} onFocus={onFocus && onFocus} onBlur={onBlur && onBlur} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ borderBottomWidth: 1, borderBottomColor: '#000', flex: 1, fontSize: 14, fontFamily: CUSTOM_FONTS.roboto }, inputStyle]}
+            <TextInput minLength={inputType === 'telephoneNumber' ? 10 : null} maxLength={inputType === 'telephoneNumber' ? 10 : null} placeholder={placeholder} editable={editable} onFocus={onFocus && onFocus} onBlur={onBlur && onBlur} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ borderBottomWidth: 1, borderBottomColor: '#000', flex: 1, fontSize: 14, fontFamily: CUSTOM_FONTS.roboto }, inputStyle]}
                 textContentType={inputType} keyboardType={getKeyboardTypeForContentType(inputType)}
                 onChangeText={onChange && onChange} onSubmitEditing={({ nativeEvent }) => onSubmit && onSubmit(nativeEvent.text)}
                 returnKeyType={returnKeyType || 'done'} returnKeyLabel={returnKeyLabel} ref={(el) => inputRef && inputRef(el)} />
@@ -79,7 +79,7 @@ export const IconicInput = ({ inputColor, containerStyle, iconProps, placeholder
 );
 
 // DOC: Controlled component, caller have to pass onValueChange function to persist the user selection
-export const IconicList = ({ iconProps, outerContainer, values, selectedValue, placeholder, onChange, containerStyle, textStyle, innerContainerStyle, labelPlaceHolder, labelPlaceHolderStyle, pickerStyle }) => {
+export const IconicList = ({ iconProps, dropdownIcon, outerContainer, values, selectedValue, placeholder, placeholderStyle, onChange, containerStyle, textStyle, innerContainerStyle, labelPlaceHolder, labelPlaceHolderStyle, pickerStyle }) => {
     let options = selectedValue ? values : [{ label: placeholder || 'Select any', value: '' }, ...values];
     return (
         <View style={[outerContainer]}>
@@ -94,11 +94,11 @@ export const IconicList = ({ iconProps, outerContainer, values, selectedValue, p
                 <View style={[innerContainerStyle]}>
                     <Picker
                         mode="dropdown"
-                        iosIcon={<NBIcon name="ios-arrow-down" style={{ color: '#acacac' }} />}
+                        iosIcon={dropdownIcon || <NBIcon name="ios-arrow-down" style={{ color: '#acacac' }} />}
                         placeholder={placeholder}
-                        placeholderStyle={{ color: "#a9a9a9", paddingLeft: 0 }}
+                        placeholderStyle={[{ color: "#a9a9a9", paddingLeft: 0 }, placeholderStyle]}
                         placeholderIconColor="#a9a9a9"
-                        style={[{ width: iconProps ? WindowDimensions.width - 30 : WindowDimensions.width, borderBottomWidth: 1, borderBottomColor: '#acacac' }, pickerStyle]}
+                        style={[{ borderBottomWidth: 1, borderBottomColor: '#acacac', paddingTop: 0 }, pickerStyle]}
                         selectedValue={selectedValue}
                         onValueChange={onChange && onChange}
                         textStyle={[{ paddingLeft: 0, paddingHorizontal: 0 }, textStyle]}
@@ -111,7 +111,7 @@ export const IconicList = ({ iconProps, outerContainer, values, selectedValue, p
             </View>
             {
                 labelPlaceHolder ?
-                    <DefaultText  style={[labelPlaceHolderStyle]}>{labelPlaceHolder}</DefaultText>
+                    <DefaultText style={[labelPlaceHolderStyle]}>{labelPlaceHolder}</DefaultText>
                     : null
             }
         </View>
@@ -159,7 +159,7 @@ export const IconicDatePicker = ({ iconProps, outerContainer, selectedDate, date
             </View>
             {
                 label ?
-                    <DefaultText  style={[labelStyle]}>{label}</DefaultText>
+                    <DefaultText style={[labelStyle]}>{label}</DefaultText>
                     : null
             }
         </View>

@@ -139,34 +139,7 @@ class Passengers extends Component {
         }, 100);
     }
 
-    passengerKeyExtractor = (item) => {
-        return item.passengerId
-    }
-
-    renderPassenger = ({ item, index }) => {
-        return (
-            // DOC: Removed native-base ListItem as TouchableNativeFeedback is not working in react-native 0.59.0
-            <TouchableWithoutFeedback style={{ width: widthPercentageToDP(100), marginTop: 20 }} onLongPress={() => this.showOptionsModal(index)}>
-                <View style={{ flex: 1, flexDirection: 'row', height: heightPercentageToDP(10) }}>
-                    <View style={{ width: widthPercentageToDP(15), alignItems: 'center', justifyContent: 'center' }}>
-                        {
-                            item.groupProfilePictureThumbnail
-                                ? <Thumbnail source={{ uri: 'Image URL' }} />
-                                : <NBIcon active name="person" type='MaterialIcons' style={{ width: widthPercentageToDP(7) }} />
-                        }
-                    </View>
-                    <View style={{ flex: 1, justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.1)' }}>
-                        <DefaultText>{item.name}</DefaultText>
-                    </View>
-                    <View>
-                        <DefaultText note></DefaultText>
-                    </View>
-                </View>
-            </TouchableWithoutFeedback>
-        );
-    }
-
-    passengerListKeyExtractor = (item) => item.passengerId;
+    passengerKeyExtractor = (item) => item.passengerId;
 
     loadMoreData = () => {
         if (this.state.isLoadingData && this.state.isLoading === false) {
@@ -251,7 +224,7 @@ class Passengers extends Component {
                         columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: heightPercentageToDP(4), marginHorizontal: 25 }}
                         numColumns={2}
                         data={passengerList}
-                        keyExtractor={this.passengerListKeyExtractor}
+                        keyExtractor={this.passengerKeyExtractor}
                         renderItem={({ item, index }) => (
                             <SquareCard
                                 // containerStyle={{ marginHorizontal: 20 }}
