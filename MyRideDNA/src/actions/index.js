@@ -66,7 +66,8 @@ import {
     UPDATE_CHAT_PIC,
     CLEAR_RIDE_LIST,
     CLEAR_ALBUM,
-    CLEAR_CHAT_LIST
+    CLEAR_CHAT_LIST,
+    CLEAR_GARAGE
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -337,6 +338,12 @@ export const updateBikeListAction = (data) => (
 export const updateBikePictureListAction = (data) => (
     {
         type: UPDATE_BIKE_PICTURE_LIST,
+        data: data
+    }
+);
+export const clearGarageInfoAction = (data) => (
+    {
+        type: CLEAR_GARAGE,
         data: data
     }
 );

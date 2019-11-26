@@ -3,11 +3,12 @@ import { connect } from 'react-redux';
 import { StyleSheet, SafeAreaView, View, Text, StatusBar, Platform, ImageBackground } from 'react-native';
 import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP } from '../../constants/index';
 import { ShifterButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction } from '../../actions';
+import { appNavMenuVisibilityAction, replaceGarageInfoAction, clearGarageInfoAction } from '../../actions';
 import { Tabs, Tab, ScrollableTab, TabHeading } from 'native-base';
 import MyProfileTab from './my-profile';
 import MyGarageTab from './my-garage';
 import { Loader } from '../../components/loader';
+import { getGarageInfo } from '../../api';
 
 class Profile extends Component {
     tabsRef = null;
@@ -19,6 +20,7 @@ class Profile extends Component {
     }
 
     componentDidMount() {
+        this.props.getGarageInfo(this.props.user.userId);
         if (typeof this.props.activeTab === 'number' && this.props.activeTab !== 0) this.tabsRef.goToPage(this.props.activeTab);
     }
 
@@ -29,6 +31,10 @@ class Profile extends Component {
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
+
+    componentWillUnmount() {
+        // this.props.clearGarageInfo();
+    }
 
     render() {
         const { user, showLoader } = this.props;
@@ -66,6 +72,14 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
+        getGarageInfo: (userId) => {
+            getGarageInfo(userId, (garage) => {
+                dispatch(replaceGarageInfoAction(garage));
+            }, (error) => {
+                console.log(`getGarage error: `, error);
+            })
+        },
+        clearGarageInfo: () => dispatch(clearGarageInfoAction()),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Profile);
