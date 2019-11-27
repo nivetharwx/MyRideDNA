@@ -79,7 +79,7 @@ export const IconicInput = ({ inputColor, containerStyle, iconProps, placeholder
 );
 
 // DOC: Controlled component, caller have to pass onValueChange function to persist the user selection
-export const IconicList = ({ iconProps, dropdownIcon, outerContainer, values, selectedValue, placeholder, placeholderStyle, onChange, containerStyle, textStyle, innerContainerStyle, labelPlaceHolder, labelPlaceHolderStyle, pickerStyle }) => {
+export const IconicList = ({ iconProps, dropdownIcon, outerContainer, values, selectedValue, placeholder, placeholderStyle, disabled, onChange, containerStyle, textStyle, innerContainerStyle, labelPlaceHolder, labelPlaceHolderStyle, pickerStyle }) => {
     let options = selectedValue ? values : [{ label: placeholder || 'Select any', value: '' }, ...values];
     return (
         <View style={[outerContainer]}>
@@ -93,6 +93,7 @@ export const IconicList = ({ iconProps, dropdownIcon, outerContainer, values, se
                 }
                 <View style={[innerContainerStyle]}>
                     <Picker
+                        enabled={!disabled}
                         mode="dropdown"
                         iosIcon={dropdownIcon || <NBIcon name="ios-arrow-down" style={{ color: '#acacac' }} />}
                         placeholder={placeholder}
