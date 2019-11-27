@@ -6,7 +6,7 @@ import { BasicHeader } from '../../components/headers';
 import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, RELATIONSHIP } from '../../constants';
 import { List, ListItem, Left, Thumbnail, Body, Right } from 'native-base';
 import { ShifterButton, IconButton, ImageButton, LinkButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, updateNotificationAction, screenChangeAction, isloadingDataAction, resetCurrentFriendAction, deleteNotificationsAction } from '../../actions';
+import { appNavMenuVisibilityAction, updateNotificationAction, screenChangeAction, isloadingDataAction, resetCurrentFriendAction, deleteNotificationsAction, resetPersonProfileAction } from '../../actions';
 import { connect } from 'react-redux';
 import { logoutUser, getAllNotifications, getPicture, readNotification, seenNotification, deleteNotifications, getPictureList, cancelFriendRequest, approveFriendRequest, rejectFriendRequest } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
@@ -453,7 +453,7 @@ const mapDispatchToProps = (dispatch) => {
             // dispatch(updateNotificationAction(pictureObj))
         }),
         deleteNotification: (notificationIds) => dispatch(deleteNotifications(notificationIds)),
-        resetCurrentFriend: () => dispatch(resetCurrentFriendAction({ comingFrom: PageKeys.NOTIFICATIONS })),
+        resetPersonProfile: () => dispatch(resetPersonProfileAction({ comingFrom: PageKeys.NOTIFICATIONS })),
         cancelRequest: (userId, personId, requestId, notificationIds) => dispatch(cancelFriendRequest(userId, personId, requestId, (res) => {
             dispatch(deleteNotificationsAction({ notificationIds }));
         }, (error) => {

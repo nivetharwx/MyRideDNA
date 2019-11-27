@@ -1,4 +1,4 @@
-import { SET_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND, RESET_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_PICTURES, UPDATE_FRIENDS_RIDE_SNAPSHOT, GO_PREV_PROFILE } from "../actions/actionConstants";
+import { SET_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND, RESET_PERSON_PROFILE, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_PICTURES, UPDATE_FRIENDS_RIDE_SNAPSHOT, GO_PREV_PROFILE } from "../actions/actionConstants";
 import { PageKeys } from "../constants";
 import { undoable } from "./Undoable";
 
@@ -80,7 +80,7 @@ export default (state = initialState, action) => {
                 };
             }
 
-        case RESET_CURRENT_FRIEND:
+        case RESET_PERSON_PROFILE:
             if (action.data && action.data.comingFrom === PageKeys.NOTIFICATIONS) {
                 return {
                     ...state,
