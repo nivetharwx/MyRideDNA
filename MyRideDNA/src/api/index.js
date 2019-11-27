@@ -1371,21 +1371,24 @@ export const getPassengersById = (userId, friendId, pageNumber) => {
             })
     };
 }
-export const getRoadBuddiesById = (userId, friendId, pageNumber) => {
+export const getRoadBuddiesById = (userId, friendId, pageNumber, successCallback, errorCallback) => {
     return dispatch => {
         dispatch(apiLoaderActions(true));
         axios.get(GRAPH_BASE_URL + `getRoadBuddiesById?userId=${userId}&friendId=${friendId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
+                console.log('getRoadBuddiesById : ', res.data);
                 if (res.status === 200) {
                     dispatch(apiLoaderActions(false));
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
                     res.data.friendList.length > 0 && dispatch(updateCurrentFriendAction({ friendList: res.data.friendList, userId: friendId }));
+                    successCallback(res.data)
                 }
             })
             .catch(er => {
                 console.log(`getRoadBuddiesById error: `, er.response || er);
                 dispatch(apiLoaderActions(false));
                 differentErrors(er, [userId, friendId, pageNumber], getRoadBuddiesById, false);
+                errorCallback(er)
             })
     };
 }

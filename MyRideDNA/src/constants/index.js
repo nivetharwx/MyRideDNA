@@ -75,6 +75,7 @@ export const PageKeys = {
     ALBUM: 'album',
     BIKE_DETAILS: 'bikeDetails',
     POST_FORM: 'postForm',
+    BUDDY_FRIENDS: 'buddyFriends',
 };
 
 export const MAP_ACCESS_TOKEN = 'pk.eyJ1IjoibWFkaGF2YW4tcmVhY3RpdmV3b3JrcyIsImEiOiJjam9qbXJybzQwNmE4M3BvODY4dXhhdGUyIn0.oPQRig3knqF_oYXrRSca7w';
@@ -112,10 +113,10 @@ export const RIDE_POINT = { SOURCE: 'source', DESTINATION: 'destination', WAYPOI
 const HEADER_COLOR = '#2B77B4';
 const STATUS_BAR_COLOR = '#006297';
 
-export const CUSTOM_FONTS = { 
-    roboto: 'Roboto', 
-    robotoBold: 'Roboto-Bold', 
-    robotoSlab: 'RobotoSlab-Regular_Light', 
+export const CUSTOM_FONTS = {
+    roboto: 'Roboto',
+    robotoBold: 'Roboto-Bold',
+    robotoSlab: 'RobotoSlab-Regular_Light',
     robotoSlabBold: 'RobotoSlab-Regular_Bold',
     gothamLight: 'Gotham-Light',
     gothamBold: 'Gotham-Bold',

@@ -37,6 +37,7 @@ import ChatList from '../containers/chats/chat-list';
 import Album from '../containers/album';
 import BikeDetails from '../containers/profile/my-garage/bike-details';
 import PostForm from '../containers/post-form';
+import BuddyFriends from '../containers/buddy-friends';
 
 export default class Navigation extends Component {
     render() {
@@ -75,6 +76,7 @@ export default class Navigation extends Component {
                             <Scene gesturesEnabled={false} key={PageKeys.ALBUM} component={Album} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.BIKE_DETAILS} component={BikeDetails} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.POST_FORM} component={PostForm} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.BUDDY_FRIENDS} component={BuddyFriends} hideNavBar></Scene>
                         </Scene>
                     </Router>
                 </Root>

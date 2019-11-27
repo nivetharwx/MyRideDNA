@@ -225,7 +225,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
                             actionsBar.actions && actionsBar.actions.length > 0 ?
                                 <FlatList
                                     numColumns={4}
-                                    columnWrapperStyle={{ justifyContent: actionsBar.actions.length < 3 ? 'space-around' : 'space-between', marginHorizontal: 20, marginTop: 5 }}
+                                    columnWrapperStyle={{ justifyContent: actionsBar.actions.length === 1 ? 'flex-end' : actionsBar.actions.length < 3 ? 'space-around' : 'space-between', marginHorizontal: 20, marginTop: 5 }}
                                     data={actionsBar.actions}
                                     keyExtractor={() => actionsBar.actions.id}
                                     renderItem={({ item, index }) => {
