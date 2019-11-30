@@ -2179,27 +2179,22 @@ export const editBike = (userId, bike, pictureList, index, successCallback, erro
             })
     };
 }
-export const addPictures = (userId, bike, pictureList) => {
+export const addPicturesToBike = (userId, bike, pictureList, isPrivate = true) => {
     return dispatch => {
-        // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
-        axios.put(USER_BASE_URL + `addPictures`, { userId, spaceId: bike.spaceId, pictureList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        axios.put(USER_BASE_URL + `addPicturesToSpace`, { userId, spaceId: bike.spaceId, pictureList, isPrivate }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                console.log("addPictures success: ", res.data);
-                // dispatch(toggleLoaderAction(false));
-                dispatch(apiLoaderActions(false))
+                console.log("addPicturesToSpace success: ", res.data);
+                dispatch(apiLoaderActions(false));
                 if (!bike.pictureIdList) bike.pictureIdList = [];
                 bike.pictureIdList = [...bike.pictureIdList, ...res.data.pictureIds];
                 dispatch(updateBikeListAction({ bike }));
                 dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
             })
             .catch(er => {
-                console.log(`addPictures error: `, er.response || er);
-                differentErrors(er, [userId, bike, pictureList], addPictures, true);
-                // dispatch(toggleLoaderAction(false));
+                console.log(`addPicturesToSpace error: `, er.response || er);
+                differentErrors(er, [userId, bike, pictureList], addPicturesToBike, true);
                 dispatch(apiLoaderActions(false))
-                dispatch(updateBikeListAction({}));
-                // TODO: Dispatch error info action
             })
     }
 }

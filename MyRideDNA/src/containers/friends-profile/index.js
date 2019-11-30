@@ -298,9 +298,6 @@ const mapDispatchToProps = (dispatch) => {
         }),
         getSpaceList: (userId) => dispatch(getSpaceList(userId)),
         updateProfilePicture: (profilePicStr, mimeType, userId) => dispatch(updateProfilePicture(profilePicStr, mimeType, userId)),
-        getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
-            dispatch(updateBikePictureListAction({ spaceId, ...response }))
-        }, (error) => console.log("getPicture error: ", error)),
 
         setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
         getGarageInfo: (userId) => {

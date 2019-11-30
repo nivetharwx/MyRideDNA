@@ -88,27 +88,6 @@ class MyProfileTab extends Component {
             }
             this.setState({ isLoadingProfPic: false });
         }
-        if (prevProps.garage.spaceList !== this.props.garage.spaceList) {
-            this.props.garage.spaceList.forEach((bike, index) => {
-                if (!bike.pictureList && bike.pictureIdList.length > 0) {
-                    if (!this.state.pictureLoader[bike.spaceId]) {
-                        this.setState(prevState => {
-                            const updatedPictureLoader = { ...prevState.pictureLoader };
-                            updatedPictureLoader[bike.spaceId] = true;
-                            return { pictureLoader: updatedPictureLoader }
-                        }, () => {
-                            this.props.getBikePicture(bike.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), bike.spaceId)
-                        });
-                    }
-                } else {
-                    this.setState(prevState => {
-                        const updatedPictureLoader = { ...prevState.pictureLoader };
-                        updatedPictureLoader[bike.spaceId] = false;
-                        return { pictureLoader: updatedPictureLoader }
-                    });
-                }
-            })
-        }
 
         if (prevProps.allFriends !== this.props.allFriends) {
             const pictureIdList = [];
@@ -387,9 +366,6 @@ const mapDispatchToProps = (dispatch) => {
         }),
         getSpaceList: (userId) => dispatch(getSpaceList(userId)),
         updateProfilePicture: (profilePicStr, mimeType, userId) => dispatch(updateProfilePicture(profilePicStr, mimeType, userId)),
-        getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
-            dispatch(updateBikePictureListAction({ spaceId, ...response }))
-        }, (error) => console.log("getPicture error: ", error)),
 
         setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
         getGarageInfo: (userId) => {

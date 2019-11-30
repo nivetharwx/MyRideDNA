@@ -77,6 +77,8 @@ export const PageKeys = {
     POST_FORM: 'postForm',
 };
 
+export const POST_TYPE = { IMAGE_UPLOAD: 'imageUpload' }
+
 export const MAP_ACCESS_TOKEN = 'pk.eyJ1IjoibWFkaGF2YW4tcmVhY3RpdmV3b3JrcyIsImEiOiJjam9qbXJybzQwNmE4M3BvODY4dXhhdGUyIn0.oPQRig3knqF_oYXrRSca7w';
 export const JS_SDK_ACCESS_TOKEN = 'sk.eyJ1IjoibWFkaGF2YW4tcmVhY3RpdmV3b3JrcyIsImEiOiJjam90eWlsN2wwbG1rM2tzM3pvaDlmYzh0In0.QMn07ObbKIQT_JOVprV5Dg';
 
@@ -112,10 +114,10 @@ export const RIDE_POINT = { SOURCE: 'source', DESTINATION: 'destination', WAYPOI
 const HEADER_COLOR = '#2B77B4';
 const STATUS_BAR_COLOR = '#006297';
 
-export const CUSTOM_FONTS = { 
-    roboto: 'Roboto', 
-    robotoBold: 'Roboto-Bold', 
-    robotoSlab: 'RobotoSlab-Regular_Light', 
+export const CUSTOM_FONTS = {
+    roboto: 'Roboto',
+    robotoBold: 'Roboto-Bold',
+    robotoSlab: 'RobotoSlab-Regular_Light',
     robotoSlabBold: 'RobotoSlab-Regular_Bold',
     gothamLight: 'Gotham-Light',
     gothamBold: 'Gotham-Bold',
