@@ -3,7 +3,7 @@ import { View, ImageBackground, StatusBar, FlatList, StyleSheet, ActivityIndicat
 import { connect } from 'react-redux';
 import { appNavMenuVisibilityAction, updateAlbumListAction, clearAlbumAction } from '../../actions';
 import { IconButton } from '../../components/buttons';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE } from '../../constants';
 import { BaseModal } from '../../components/modal';
 import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../components/headers';
@@ -86,7 +86,7 @@ class Album extends Component {
         return null
     }
 
-    openPostForm = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene });
+    openPostForm = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.ALBUM });
 
     onScrollBegin = () => {
         // this.setState(prevState => ({ isLoadingData: true }), () => console.log('onMomemntum : ', { ...this.state }))
@@ -189,14 +189,14 @@ const styles = StyleSheet.create({
         width: widthPercentageToDP(98 / 3)
     },
     closeIconContainer: {
-        height: heightPercentageToDP(5),
+        height: widthPercentageToDP(8),
         width: widthPercentageToDP(8),
-        borderRadius: 22,
+        borderRadius: widthPercentageToDP(4),
         backgroundColor: '#F5891F',
         marginLeft: widthPercentageToDP(16),
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'absolute',
+        alignSelf: 'flex-end',
         top: heightPercentageToDP(-1.5),
         right: widthPercentageToDP(-1.5)
     }

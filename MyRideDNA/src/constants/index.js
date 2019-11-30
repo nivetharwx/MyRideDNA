@@ -39,6 +39,7 @@ export const CHAT_BASE_URL = NOTIFICATION_URL + ':5056/';
 export const GRAPH_BASE_URL = GRAPH_URL + ':5057/';
 // export const EVENTS_BASE_URL = GRAPH_URL + ':5055/';
 export const EVENTS_BASE_URL = EVENT_URL + ':5055/';
+export const POST_TYPE_BASE_URL = NOTIFICATION_URL + ':6062/';
 
 export const PageKeys = {
     EDIT_PROFILE: 'editProfile',
@@ -79,7 +80,7 @@ export const PageKeys = {
     BUDDY_PASSENGERS: 'buddyPassengers'
 };
 
-export const POST_TYPE = { IMAGE_UPLOAD: 'imageUpload' }
+export const POST_TYPE = { WISH_LIST: 'wishList', JOURNAL: 'journal', STORIES_FROM_ROAD: 'storiesFromRoad', CUSTOMIZATION: 'customization', ALBUM: 'album' };
 
 export const MAP_ACCESS_TOKEN = 'pk.eyJ1IjoibWFkaGF2YW4tcmVhY3RpdmV3b3JrcyIsImEiOiJjam9qbXJybzQwNmE4M3BvODY4dXhhdGUyIn0.oPQRig3knqF_oYXrRSca7w';
 export const JS_SDK_ACCESS_TOKEN = 'sk.eyJ1IjoibWFkaGF2YW4tcmVhY3RpdmV3b3JrcyIsImEiOiJjam90eWlsN2wwbG1rM2tzM3pvaDlmYzh0In0.QMn07ObbKIQT_JOVprV5Dg';

@@ -5,11 +5,12 @@ import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../components/headers';
 import ImagePicker from 'react-native-image-crop-picker';
 import { DefaultText } from '../../components/labels';
-import { APP_COMMON_STYLES, PageKeys, CUSTOM_FONTS, heightPercentageToDP, widthPercentageToDP } from '../../constants';
-import { ImageButton, ShifterButton, SwitchIconButton, IconButton, LinkButton } from '../../components/buttons';
+import { APP_COMMON_STYLES, PageKeys, CUSTOM_FONTS, heightPercentageToDP, widthPercentageToDP, POST_TYPE } from '../../constants';
+import { ImageButton, ShifterButton, SwitchIconButton, IconButton, LinkButton, BasicButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { IconicList } from '../../components/inputs';
 import { Icon as NBIcon, Thumbnail } from 'native-base';
+import { addPicturesToBike } from '../../api';
 
 const CONTAINER_H_SPACE = widthPercentageToDP(6);
 
@@ -19,8 +20,16 @@ class PostForm extends Component {
         this.state = {
             selectedBike: props.activeBike || null,
             isPrivate: true,
-            selectedImgs: []
+            selectedImgs: [],
+            title: '',
+            caption: '',
         };
+    }
+
+    componentDidMount() {
+        if (this.state.selectedBike === null && this.props.bikeList.length > 0) {
+            this.setState({ selectedBike: this.props.bikeList[0].spaceId });
+        }
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
@@ -37,7 +46,7 @@ class PostForm extends Component {
                 maxFiles: 5,
                 cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
             });
-            this.setState(prevState => ({ selectedImgs: imgs.slice(0, 5).map(item => ({ mimeType: item.mime, image: item.data })) }));
+            this.setState({ selectedImgs: imgs.slice(0, 5).map(item => ({ mimeType: item.mime, picture: item.data })) });
         } catch (er) {
             console.log("Error occurd: ", er);
         }
@@ -53,7 +62,7 @@ class PostForm extends Component {
                 maxFiles: 5,
                 includeBase64: true,
             });
-            this.setState(prevState => ({ selectedImgs: imgs.slice(0, 5).map(item => ({ mimeType: item.mime, image: item.data })) }));
+            this.setState({ selectedImgs: imgs.slice(0, 5).map(item => ({ mimeType: item.mime, picture: item.data })) });
         } catch (er) {
             console.log("Error occurd: ", er);
         }
@@ -62,6 +71,10 @@ class PostForm extends Component {
     onChangeBike = (val) => this.setState({ selectedBike: val });
 
     onChangePrivacyMode = (val) => this.setState({ isPrivate: val });
+    
+    onChangeTitle = (val) => this.setState({ title: val });
+
+    onChangeCaption = (val) => this.setState({ caption: val });
 
     imgKeyExtractor = (item) => item.localIdentifier;
 
@@ -77,7 +90,7 @@ class PostForm extends Component {
 
     renderSelectedImg = ({ item, index }) => {
         return <View style={[styles.thumbnailContainer, item.isHidden ? { display: 'none' } : null]}>
-            <ImageBackground source={{ uri: `data:${item.mimeType};base64,${item.image}` }} style={styles.thumbnail}>
+            <ImageBackground source={{ uri: `data:${item.mimeType};base64,${item.picture}` }} style={styles.thumbnail}>
                 <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: styles.closeIcon }} onPress={() => this.unselectImg(index)} />
             </ImageBackground>
         </View>
@@ -87,16 +100,23 @@ class PostForm extends Component {
         // </View>
     }
 
+    onSubmit = () => {
+        if (postType !== POST_TYPE.IMAGE_UPLOAD) {
+            const bike = this.props.bikeList.find(bike => bike.spaceId === this.selectedBike);
+            this.props.addPicturesToBike(this.props.useruserId, bike, this.state.selectedImgs, this.state.isPrivate);
+        }
+    }
+
     render() {
-        const { user, bikeList, activeBike } = this.props;
-        const { selectedBike, isPrivate, selectedImgs } = this.state;
+        const { user, bikeList, activeBike, postType } = this.props;
+        const { selectedBike, isPrivate, selectedImgs, title, caption } = this.state;
         const BIKE_LIST = bikeList.map(bike => ({ label: bike.name, value: bike.spaceId }));
         return <View style={styles.fill}>
             <View style={APP_COMMON_STYLES.statusBar}>
                 <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
             </View>
             <View style={styles.fill}>
-                <BasicHeader title={'New Post'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
+                <BasicHeader title={postType === POST_TYPE.IMAGE_UPLOAD ? 'Upload Image' : 'New Post'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
                 <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps='handled' contentContainerStyle={styles.scrollView}>
                     <View style={styles.btnContainer}>
                         {/* TODO: Images below has to be changed with proper color (Need to get from the Platypus) */}
@@ -122,11 +142,15 @@ class PostForm extends Component {
                                 />
                                 : null
                         }
-                        <View style={styles.fill}>
-                            <DefaultText style={styles.postTitle}>POST TITLE</DefaultText>
-                            {/* <TextInput placeholder='Write a title' placeholderTextColor='#707070' multiline={true} style={{ fontSize: 13, borderBottomWidth: 1, borderBottomColor: '#B2B2B2' }} /> */}
-                            <TextInput placeholder='Write a caption' placeholderTextColor='#707070' multiline={true} style={styles.descrArea} />
-                        </View>
+                        {
+                            postType === POST_TYPE.IMAGE_UPLOAD
+                                ? <View style={styles.fill}>
+                                    {/* <DefaultText style={styles.postTitle}>POST TITLE</DefaultText> */}
+                                    <TextInput value={title} placeholder='POST TITLE' placeholderTextColor={APP_COMMON_STYLES.infoColor} style={styles.postTitle} autoCapitalize='characters' onChangeText={this.onChangeTitle} />
+                                    <TextInput value={caption} placeholder='Write a caption' placeholderTextColor='#707070' multiline={true} style={styles.descrArea} onChangeText={this.onChangeCaption} />
+                                </View>
+                                : null
+                        }
                     </View>
                     <View style={styles.btmContainer}>
                         <IconicList
@@ -148,6 +172,7 @@ class PostForm extends Component {
                                 value={isPrivate} onChangeValue={this.onChangePrivacyMode} />
                         </View>
                     </View>
+                    <BasicButton title={postType === POST_TYPE.IMAGE_UPLOAD ? 'SUBMIT' : 'POST'} style={styles.submitBtn} titleStyle={styles.submitBtnTxt} onPress={this.onSubmit} />
                 </ScrollView>
                 {/* Shifter: - Brings the app navigation menu */}
                 <ShifterButton onPress={this.showAppNavMenu} alignLeft={user.handDominance === 'left'} />
@@ -164,6 +189,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
+        addPicturesToBike: (userId, bike, pictureList, isPrivate) => dispatch(addPicturesToBike(userId, bike, pictureList, isPrivate))
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(PostForm);
@@ -199,7 +225,7 @@ const styles = StyleSheet.create({
         marginTop: 10
     },
     btmContainer: {
-        marginBottom: 100,
+        marginBottom: 50,
     },
     thumbnailContainer: {
         alignSelf: 'flex-start',
@@ -281,6 +307,7 @@ const styles = StyleSheet.create({
         marginRight: 0
     },
     postTitle: {
+        fontSize: 13,
         color: APP_COMMON_STYLES.infoColor,
         fontFamily: CUSTOM_FONTS.robotoSlabBold,
         letterSpacing: 1.2
@@ -288,5 +315,14 @@ const styles = StyleSheet.create({
     descrArea: {
         fontSize: 13,
         marginVertical: 5
+    },
+    submitBtn: {
+        height: heightPercentageToDP(9),
+        backgroundColor: APP_COMMON_STYLES.infoColor
+    },
+    submitBtnTxt: {
+        letterSpacing: 2,
+        fontSize: 20,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold
     }
 });

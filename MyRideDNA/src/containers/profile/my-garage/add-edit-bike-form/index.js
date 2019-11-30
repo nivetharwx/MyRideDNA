@@ -8,7 +8,7 @@ import { LabeledInput, LabeledInputPlaceholder, IconicList, IconicDatePicker } f
 import { BasicButton, ShifterButton, ImageButton, IconButton } from '../../../../components/buttons';
 import { Thumbnail } from '../../../../components/images';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import { addBikeToGarage, editBike, addPictures } from '../../../../api';
+import { addBikeToGarage, editBike } from '../../../../api';
 import { toggleLoaderAction, appNavMenuVisibilityAction } from '../../../../actions';
 import { Loader } from '../../../../components/loader';
 import { DefaultText } from '../../../../components/labels';
@@ -27,19 +27,7 @@ class AddBikeForm extends Component {
         }
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        // if (prevProps.spaceList !== this.props.spaceList) {
-        //     // if (this.state.bikeImages.length > 0) {
-        //     //     const newBike = this.props.spaceList[this.props.spaceList.length - 1];
-        //     //     this.props.addPictures(this.props.user.userId, newBike, this.state.bikeImages);
-        //     //     this.setState({ bikeImages: [] });
-        //     // } else {
-        //     //     Actions.pop();
-        //     // }
-        //     this.setState({ bikeImages: [] });
-        //     Actions.pop();
-        // }
-    }
+    componentDidUpdate(prevProps, prevState) { }
 
     onPressUploadImages = async () => {
         this.props.toggleLoader(true);
@@ -192,7 +180,6 @@ const mapDispatchToProps = (dispatch) => {
         addBikeToGarage: (userId, bike, pictureList, successCallback, errorCallback) => dispatch(addBikeToGarage(userId, bike, pictureList, successCallback, errorCallback)),
         editBike: (userId, bike, pictureList, index, successCallback, errorCallback) => dispatch(editBike(userId, bike, pictureList, index, successCallback, errorCallback)),
         toggleLoader: (toggleValue) => dispatch(toggleLoaderAction(toggleValue)),
-        addPictures: (userId, bike, pictureList) => dispatch(addPictures(userId, bike, pictureList)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
     };
 }

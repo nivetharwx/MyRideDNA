@@ -103,14 +103,18 @@ export const AppMenuButton = ({ containerStyle, iconProps, onPress }) => (
     </TouchableOpacity>
 );
 
-export const LinkButton = ({ style = {}, title, titleStyle, onPress, highlightColor }) => (
-    highlightColor
+export const LinkButton = ({ style = {}, title, titleStyle, onPress, highlightColor, ...otherProps }) => (
+    highlightColor && !otherProps.children
         ? <TouchableHighlight onPress={onPress}
             underlayColor={highlightColor} style={style}>
             <DefaultText style={titleStyle}>{title}</DefaultText>
         </TouchableHighlight>
         : <TouchableOpacity activeOpacity={0.6} style={[{ paddingHorizontal: 20 }, style]} onPress={onPress}>
-            <DefaultText style={titleStyle}>{title}</DefaultText>
+            {
+                otherProps.children
+                    ? otherProps.children
+                    : <DefaultText style={titleStyle}>{title}</DefaultText>
+            }
         </TouchableOpacity>
 );
 

@@ -7,7 +7,7 @@ import { IconButton, LinkButton } from '../../../components/buttons';
 import { Item } from 'native-base';
 import { getPicture, getGarageInfo, setBikeAsActive, deleteBike, updateGarageName } from '../../../api';
 import { BaseModal } from '../../../components/modal';
-import { replaceGarageInfoAction, updateBikePictureListAction, apiLoaderActions } from '../../../actions';
+import { replaceGarageInfoAction, updateBikePictureAction, apiLoaderActions } from '../../../actions';
 import { DefaultText } from '../../../components/labels';
 
 class MyGarageTab extends Component {
@@ -28,9 +28,10 @@ class MyGarageTab extends Component {
             this.props.getGarageInfo(this.props.user.userId);
         } else {
             this.props.garage.spaceList.forEach(bike => {
-                if (bike.pictureIdList.length > 0) {
-                    this.props.getBikePicture(bike.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG), bike.spaceId);
-                }
+                // if (bike.pictureIdList.length > 0) {
+                //     this.props.getBikePicture(bike.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG), bike.spaceId);
+                // }
+                bike.picture && this.props.getBikePicture(bike.picture.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG), bike.spaceId);
             });
         }
     }
@@ -39,9 +40,10 @@ class MyGarageTab extends Component {
         if (this.props.garage.spaceList.length > 0) {
             if (prevProps.garage.garageId === null) {
                 this.props.garage.spaceList.forEach(bike => {
-                    if (bike.pictureIdList.length > 0) {
-                        this.props.getBikePicture(bike.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), bike.spaceId);
-                    }
+                    // if (bike.pictureIdList.length > 0) {
+                    //     this.props.getBikePicture(bike.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), bike.spaceId);
+                    // }
+                    bike.picture && this.props.getBikePicture(bike.picture.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG), bike.spaceId);
                 });
                 return;
             }
@@ -50,16 +52,17 @@ class MyGarageTab extends Component {
             } else if (this.props.garage.spaceList.length > prevProps.garage.spaceList.length) {
                 this.spacelistRef.scrollToEnd();
                 const newBike = this.props.garage.spaceList[this.props.garage.spaceList.length - 1];
-                if (newBike.pictureIdList.length > 0) {
-                    this.props.getBikePicture(newBike.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), newBike.spaceId);
-                }
+                // if (newBike.pictureIdList.length > 0) {
+                //     this.props.getBikePicture(newBike.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), newBike.spaceId);
+                // }
+                newBike.picture && this.props.getBikePicture(newBike.picture.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG), newBike.spaceId);
             } else if (this.props.garage.spaceList.length === prevProps.garage.spaceList.length) {
-                prevProps.garage.spaceList.forEach(item => {
-                    const index = this.props.garage.spaceList.findIndex(val => val.spaceId === item.spaceId && val.pictureIdList !== item.pictureIdList);
-                    if (index > -1 && this.props.garage.spaceList[index].pictureIdList.length > 0) {
-                        this.props.getBikePicture(this.props.garage.spaceList[index].pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG), this.props.garage.spaceList[index].spaceId);
-                    }
-                })
+                // prevProps.garage.spaceList.forEach(item => {
+                //     const index = this.props.garage.spaceList.findIndex(val => val.spaceId === item.spaceId && val.pictureIdList !== item.pictureIdList);
+                //     if (index > -1 && this.props.garage.spaceList[index].pictureIdList.length > 0) {
+                //         this.props.getBikePicture(this.props.garage.spaceList[index].pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG), this.props.garage.spaceList[index].spaceId);
+                //     }
+                // })
             }
         }
     }
@@ -155,7 +158,7 @@ class MyGarageTab extends Component {
     renderBike = ({ item, index }) => {
         return <TouchableOpacity activeOpacity={0.7} style={{ marginBottom: 12 }} onPress={() => this.openBikeDetailsPage(item)}>
             <View style={[styles.imgContainer, { borderBottomColor: item.isDefault ? APP_COMMON_STYLES.infoColor : APP_COMMON_STYLES.headerColor }]}>
-                <ImageBackground style={{ flex: 1, width: null, height: null }} source={item.pictureList && item.pictureList[0] ? { uri: item.pictureList[0] } : require('../../../assets/img/bike_placeholder.png')}>
+                <ImageBackground style={{ flex: 1, width: null, height: null }} source={item.picture && item.picture.data ? { uri: item.picture.data } : require('../../../assets/img/bike_placeholder.png')}>
                     {
                         item.isDefault
                             ? <View style={styles.contentOvrImg}>
@@ -258,7 +261,7 @@ const mapDispatchToProps = (dispatch) => {
         setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
         deleteBike: (userId, bikeId, index) => dispatch(deleteBike(userId, bikeId, index)),
         getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
-            dispatch(updateBikePictureListAction({ spaceId, ...response }))
+            dispatch(updateBikePictureAction({ spaceId, picture: response.picture }))
         }, (error) => console.log("getPicture error: ", error)),
     }
 }

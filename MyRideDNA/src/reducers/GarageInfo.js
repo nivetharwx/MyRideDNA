@@ -1,4 +1,4 @@
-import { REPLACE_GARAGE_INFO, UPDATE_GARAGE_NAME, UPDATE_BIKE_LIST, CLEAR_GARAGE, ADD_TO_BIKE_LIST, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, UPDATE_SHORT_SPACE_LIST, REPLACE_SHORT_SPACE_LIST, UPDATE_BIKE_PICTURE_LIST } from "../actions/actionConstants";
+import { REPLACE_GARAGE_INFO, UPDATE_GARAGE_NAME, UPDATE_BIKE_LIST, CLEAR_GARAGE, ADD_TO_BIKE_LIST, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, UPDATE_SHORT_SPACE_LIST, REPLACE_SHORT_SPACE_LIST, UPDATE_BIKE_PICTURE } from "../actions/actionConstants";
 
 const initialState = {
     garageName: null,
@@ -58,7 +58,7 @@ export default (state = initialState, action) => {
                 spaceList: spaceList
             }
 
-            case UPDATE_ACTIVE_BIKE:
+        case UPDATE_ACTIVE_BIKE:
             // const updatedShortSpaceList = [...state.shortSpaceList];
             // updatedShortSpaceList[action.data.prevActiveIndex] = { ...state.shortSpaceList[action.data.prevActiveIndex], isDefault: false };
             // updatedShortSpaceList[action.data.newActiveIndex] = { ...state.shortSpaceList[action.data.newActiveIndex], isDefault: true };
@@ -106,28 +106,23 @@ export default (state = initialState, action) => {
             }
             return state;
 
-        case UPDATE_BIKE_PICTURE_LIST:
+        case UPDATE_BIKE_PICTURE:
             const bikeIndex = state.spaceList.findIndex(bike => bike.spaceId === action.data.spaceId);
             if (bikeIndex > -1) {
                 return {
                     ...state,
                     spaceList: [
                         ...state.spaceList.slice(0, bikeIndex),
-                        !state.spaceList[bikeIndex].pictureList || state.spaceList[bikeIndex].pictureList.length === 0
-                            ? {
-                                ...state.spaceList[bikeIndex],
-                                pictureList: [action.data.picture]
-                            }
-                            : {
-                                ...state.spaceList[bikeIndex],
-                                pictureList: [ action.data.picture,...state.spaceList[bikeIndex].pictureList]
-                            },
+                        {
+                            ...state.spaceList[bikeIndex],
+                            picture: { ...state.spaceList[bikeIndex].picture, data: action.data.picture }
+                        },
                         ...state.spaceList.slice(bikeIndex + 1)
                     ]
                 }
             }
             return state;
-        
+
 
         case CLEAR_GARAGE:
             return {
