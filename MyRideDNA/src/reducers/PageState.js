@@ -1,4 +1,4 @@
-import { TOGGLE_LOADER, TOGGLE_NETWORK_STATUS, UPDATE_MYPROFILE_LAST_OPTION, PROFILE_LOADER, UPDATE_APPSTATE, UPDATE_PAGENUMBER, ERROR_HANDLING, RESET_ERROR_HANDLING } from "../actions/actionConstants";
+import { TOGGLE_LOADER, TOGGLE_NETWORK_STATUS, UPDATE_MYPROFILE_LAST_OPTION, PROFILE_LOADER, UPDATE_APPSTATE, UPDATE_PAGENUMBER, ERROR_HANDLING, RESET_ERROR_HANDLING, UPDATE_POST_TYPES } from "../actions/actionConstants";
 import { Actions } from "react-native-router-flux";
 
 const initialState = {
@@ -9,7 +9,8 @@ const initialState = {
     appState: 'foreground',
     pageNumber: 0,
     lastApi: null,
-    isRetryApi: false
+    isRetryApi: false,
+    postTypes: {}
 };
 
 export default (state = initialState, action) => {
@@ -34,13 +35,17 @@ export default (state = initialState, action) => {
                 ...state,
                 appState: action.data.appState
             }
+        case UPDATE_POST_TYPES:
+            return {
+                ...state,
+                postTypes: action.data
+            }
         // case PROFILE_LOADER:
         //     return{
         //         ...state,
         //         loader:action.data
         //     } 
         case UPDATE_PAGENUMBER:
-            console.log('UPDATE_PAGENUMBER : ', action.data)
             return {
                 ...state,
                 pageNumber: action.data.pageNumber + 1,

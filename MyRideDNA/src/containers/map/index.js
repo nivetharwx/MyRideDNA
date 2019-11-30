@@ -46,7 +46,7 @@ import DEFAULT_DESTINATION_ICON from '../../assets/img/destination-pin-red.png';
 import SELECTED_DESTINATION_ICON from '../../assets/img/destination-pin-green.png';
 import FRIENDS_LOCATION_ICON from '../../assets/img/friends-location.png';
 
-import { createRecordRide, pauseRecordRide, continueRecordRide, addTrackpoints, completeRecordRide, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser, updateLocation, getFriendsLocationList, getAllMembersLocation, getAllMembersAndFriendsLocationList, updateRide as updateRideOnServer, getPicture } from '../../api';
+import { createRecordRide, pauseRecordRide, continueRecordRide, addTrackpoints, completeRecordRide, getRideByRideId, createNewRide, replaceRide, pushNotification, getAllNotifications, readNotification, publishEvent, deleteAllNotifications, deleteNotifications, logoutUser, updateLocation, getFriendsLocationList, getAllMembersLocation, getAllMembersAndFriendsLocationList, updateRide as updateRideOnServer, getPicture, getPostTypes } from '../../api';
 
 import Bubble from '../../components/bubble';
 import MenuModal from '../../components/modal';
@@ -854,6 +854,9 @@ export class Map extends Component {
     }
 
     async componentDidMount() {
+        // DOC: Get all post types:
+        this.props.getPostTypes();
+        
         this.unregisterNetworkListener = NetInfo.addEventListener(this.handleNetworkConnectivityChange);
         if (this.props.user.isNewUser) {
             this.props.changeScreen({ name: PageKeys.PROFILE })
@@ -3189,6 +3192,7 @@ const mapDispatchToProps = (dispatch) => {
         hideAppNavMenu: () => dispatch(appNavMenuVisibilityAction(false)),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         changeScreen: (screenKey) => dispatch(screenChangeAction(screenKey)),
+        getPostTypes: () => dispatch(getPostTypes()),
         clearRideFromMap: () => dispatch(initUndoRedoAction()),
         submitNewRide: (rideInfo) => dispatch(createNewRide(rideInfo)),
         updateRide: (data) => dispatch(updateRideAction(data)),

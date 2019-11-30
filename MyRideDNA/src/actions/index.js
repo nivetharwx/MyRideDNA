@@ -67,7 +67,8 @@ import {
     CLEAR_RIDE_LIST,
     CLEAR_ALBUM,
     CLEAR_CHAT_LIST,
-    CLEAR_GARAGE
+    CLEAR_GARAGE,
+    UPDATE_POST_TYPES
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -121,6 +122,12 @@ export const updateEmailStatusAction = (data) => (
 export const updateUserAction = (data) => (
     {
         type: UPDATE_USER,
+        data: data
+    }
+);
+export const updatePostTypesAction = (data) => (
+    {
+        type: UPDATE_POST_TYPES,
         data: data
     }
 );
