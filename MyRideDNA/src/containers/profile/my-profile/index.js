@@ -43,7 +43,7 @@ class MyProfileTab extends Component {
         StatusBar.setBarStyle('light-content');
         this.props.getRoadBuddies(this.props.user.userId);
         this.props.getMyWallet(this.props.user.userId);
-        this.props.getPassengerList(this.props.user.userId, 0, 4, (res) => { }, (err) => { });
+        this.props.getPassengerList(this.props.user.userId, 0, 10, (res) => { }, (err) => { });
     }
 
     async componentDidMount() {

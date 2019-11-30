@@ -46,8 +46,10 @@ class FriendsProfile extends Component {
                 this.isLoadingFrndsPic = false;
             }
             if (prevProps.person.isFriend === false && this.props.person.isFriend === true) {
-                this.props.getPassengersById(this.props.user.userId, this.props.frienduserId, 0);
-                this.props.getRoadBuddiesById(this.props.user.userId, this.props.frienduserId, 0, (res) => {
+                this.props.getPassengersById(this.props.user.userId, this.props.frienduserId, 0, this.props.person.passengerList, (res) => {
+                }, (error) => {
+                });
+                this.props.getRoadBuddiesById(this.props.user.userId, this.props.frienduserId, 0, this.props.person.friendList, (res) => {
                 }, (error) => {
                 });
             }
@@ -127,6 +129,10 @@ class FriendsProfile extends Component {
     getBuddyFriendListPage = () => {
         this.props.setCurrentFriend(this.props.person);
         Actions.push(PageKeys.BUDDY_FRIENDS);
+    }
+    getBuddyPassengerListPage = () => {
+        this.props.setCurrentFriend(this.props.person);
+        Actions.push(PageKeys.BUDDY_PASSENGERS);
     }
 
     render() {
@@ -229,7 +235,7 @@ class FriendsProfile extends Component {
 
                                         <View style={{ marginTop: 19 }}>
                                             <View style={styles.basicAlignment}>
-                                                <TouchableOpacity style={styles.basicAlignment}>
+                                                <TouchableOpacity style={styles.basicAlignment} onPress={() => this.getBuddyPassengerListPage()}>
                                                     <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Passengers</DefaultText>
                                                     <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
                                                 </TouchableOpacity>
@@ -326,8 +332,8 @@ const mapDispatchToProps = (dispatch) => {
         getFriendInfo: (friendType, userId, friendIdList) => dispatch(getFriendInfo(friendType, userId, friendIdList)),
         getFriendProfile: (userId, friendId) => dispatch(getFriendProfile(userId, friendId)),
         getUserProfile: (userId, friendId) => dispatch(getUserProfile(userId, friendId)),
-        getPassengersById: (userId, friendId, pageNumber) => dispatch(getPassengersById(userId, friendId, pageNumber)),
-        getRoadBuddiesById: (userId, friendId, pageNumber, successCallback, errorCallback) => dispatch(getRoadBuddiesById(userId, friendId, pageNumber, successCallback, errorCallback)),
+        getPassengersById: (userId, friendId, pageNumber, passengerList, successCallback, errorCallback) => dispatch(getPassengersById(userId, friendId, pageNumber, passengerList, successCallback, errorCallback)),
+        getRoadBuddiesById: (userId, friendId, pageNumber, friendList, successCallback, errorCallback) => dispatch(getRoadBuddiesById(userId, friendId, pageNumber, friendList, successCallback, errorCallback)),
         getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
             dispatch(updatePicturesAction({ pictureObj, type: callingFrom }))
         }, (error) => {
