@@ -4,7 +4,7 @@ import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, Fl
 import { Actions } from 'react-native-router-flux';
 import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions, FRIEND_TYPE, CUSTOM_FONTS } from '../../constants/index';
 import { IconButton, LinkButton, ShifterButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, updateUserAction, updateBikePictureListAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction, setCurrentFriendAction, updateCurrentFriendAction, updatePicturesAction, undoLastAction, resetCurrentFriendAction, goToPrevProfileAction } from '../../actions';
+import { appNavMenuVisibilityAction, updateUserAction, updateBikePictureListAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction, setCurrentFriendAction, updateCurrentFriendAction, updatePicturesAction, undoLastAction, resetPersonProfileAction, goToPrevProfileAction } from '../../actions';
 import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo, getRoadBuddies, getPictureList, getFriendInfo, getFriendProfile, getPassengersById, getRoadBuddiesById, getUserProfile } from '../../api';
 import { ImageLoader } from '../../components/loader';
 import { SmallCard } from '../../components/cards';
@@ -46,8 +46,12 @@ class FriendsProfile extends Component {
                 this.isLoadingFrndsPic = false;
             }
             if (prevProps.person.isFriend === false && this.props.person.isFriend === true) {
-                this.props.getPassengersById(this.props.user.userId, this.props.frienduserId, 0);
-                this.props.getRoadBuddiesById(this.props.user.userId, this.props.frienduserId, 0);
+                this.props.getPassengersById(this.props.user.userId, this.props.frienduserId, 0, this.props.person.passengerList, (res) => {
+                }, (error) => {
+                });
+                this.props.getRoadBuddiesById(this.props.user.userId, this.props.frienduserId, 0, this.props.person.friendList, (res) => {
+                }, (error) => {
+                });
             }
             if (!this.state.isLoadingProfPic && !this.props.person.profilePicture && this.props.person.profilePictureId) {
                 this.setState({ isLoadingProfPic: true });
@@ -119,7 +123,16 @@ class FriendsProfile extends Component {
         Actions.pop();
         this.props.hasPrevProfiles
             ? this.props.goToPrevProfile()
-            : this.props.resetCurrentFriend();
+            : this.props.resetPersonProfile();
+    }
+
+    getBuddyFriendListPage = () => {
+        this.props.setCurrentFriend(this.props.person);
+        Actions.push(PageKeys.BUDDY_FRIENDS);
+    }
+    getBuddyPassengerListPage = () => {
+        this.props.setCurrentFriend(this.props.person);
+        Actions.push(PageKeys.BUDDY_PASSENGERS);
     }
 
     render() {
@@ -189,7 +202,7 @@ class FriendsProfile extends Component {
                                     ? <View>
                                         <View style={{ marginTop: 19 }}>
                                             <View style={styles.basicAlignment}>
-                                                <TouchableOpacity style={styles.basicAlignment} >
+                                                <TouchableOpacity style={styles.basicAlignment} onPress={() => this.getBuddyFriendListPage()}>
                                                     <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Road Buddies</DefaultText>
                                                     <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
                                                 </TouchableOpacity>
@@ -222,7 +235,7 @@ class FriendsProfile extends Component {
 
                                         <View style={{ marginTop: 19 }}>
                                             <View style={styles.basicAlignment}>
-                                                <TouchableOpacity style={styles.basicAlignment}>
+                                                <TouchableOpacity style={styles.basicAlignment} onPress={() => this.getBuddyPassengerListPage()}>
                                                     <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Passengers</DefaultText>
                                                     <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
                                                 </TouchableOpacity>
@@ -316,15 +329,15 @@ const mapDispatchToProps = (dispatch) => {
         getFriendInfo: (friendType, userId, friendIdList) => dispatch(getFriendInfo(friendType, userId, friendIdList)),
         getFriendProfile: (userId, friendId) => dispatch(getFriendProfile(userId, friendId)),
         getUserProfile: (userId, friendId) => dispatch(getUserProfile(userId, friendId)),
-        getPassengersById: (userId, friendId, pageNumber) => dispatch(getPassengersById(userId, friendId, pageNumber)),
-        getRoadBuddiesById: (userId, friendId, pageNumber) => dispatch(getRoadBuddiesById(userId, friendId, pageNumber)),
+        getPassengersById: (userId, friendId, pageNumber, passengerList, successCallback, errorCallback) => dispatch(getPassengersById(userId, friendId, pageNumber, passengerList, successCallback, errorCallback)),
+        getRoadBuddiesById: (userId, friendId, pageNumber, friendList, successCallback, errorCallback) => dispatch(getRoadBuddiesById(userId, friendId, pageNumber, friendList, successCallback, errorCallback)),
         getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
             dispatch(updatePicturesAction({ pictureObj, type: callingFrom }))
         }, (error) => {
             console.log('getPictureList error : ', error)
         }),
         goToPrevProfile: () => dispatch(goToPrevProfileAction()),
-        resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
+        resetPersonProfile: () => dispatch(resetPersonProfileAction()),
         changeScreen: (screenProps) => dispatch(screenChangeAction(screenProps)),
     }
 }

@@ -1353,7 +1353,7 @@ export const getFriendProfile = (userId, friendId) => {
             })
     };
 }
-export const getPassengersById = (userId, friendId, pageNumber) => {
+export const getPassengersById = (userId, friendId, pageNumber, passengerList, successCallback, errorCallback) => {
     return dispatch => {
         dispatch(apiLoaderActions(true));
         axios.get(USER_BASE_URL + `getPassengersById?userId=${userId}&friendId=${friendId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
@@ -1361,31 +1361,38 @@ export const getPassengersById = (userId, friendId, pageNumber) => {
                 if (res.status === 200) {
                     dispatch(apiLoaderActions(false));
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
-                    res.data.passengerList.length > 0 && dispatch(updateCurrentFriendAction({ passengerList: res.data.passengerList, userId: friendId }));
+                    updatedPassengerList = [...passengerList, ...res.data.passengerList]
+                    res.data.passengerList.length > 0 && dispatch(updateCurrentFriendAction({ passengerList: updatedPassengerList, userId: friendId }));
+                    successCallback(res.data);
                 }
             })
             .catch(er => {
                 console.log(`getPassengersById error: `, er.response || er);
                 dispatch(apiLoaderActions(false));
                 differentErrors(er, [userId, friendId, pageNumber], getPassengersById, false);
+                errorCallback(er);
             })
     };
 }
-export const getRoadBuddiesById = (userId, friendId, pageNumber) => {
+export const getRoadBuddiesById = (userId, friendId, pageNumber, friendList, successCallback, errorCallback) => {
     return dispatch => {
         dispatch(apiLoaderActions(true));
         axios.get(GRAPH_BASE_URL + `getRoadBuddiesById?userId=${userId}&friendId=${friendId}&pageNumber=${pageNumber}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
+                console.log('getRoadBuddiesById : ', res.data);
                 if (res.status === 200) {
                     dispatch(apiLoaderActions(false));
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
-                    res.data.friendList.length > 0 && dispatch(updateCurrentFriendAction({ friendList: res.data.friendList, userId: friendId }));
+                    updatedBuddyFriendList = [...friendList, ...res.data.friendList]
+                    res.data.friendList.length > 0 && dispatch(updateCurrentFriendAction({ friendList: updatedBuddyFriendList, userId: friendId }));
+                    successCallback(res.data)
                 }
             })
             .catch(er => {
                 console.log(`getRoadBuddiesById error: `, er.response || er);
                 dispatch(apiLoaderActions(false));
                 differentErrors(er, [userId, friendId, pageNumber], getRoadBuddiesById, false);
+                errorCallback(er)
             })
     };
 }

@@ -8,7 +8,7 @@ import styles from './styles';
 import AllFriendsTab from './all-friends';
 import GroupListTab from './group-list';
 import FavoriteListTab from './favorites-list';
-import { appNavMenuVisibilityAction, updateFriendInListAction, resetCurrentFriendAction, updateFriendRequestListAction } from '../../actions';
+import { appNavMenuVisibilityAction, updateFriendInListAction, updateFriendRequestListAction } from '../../actions';
 import { ShifterButton } from '../../components/buttons';
 import { logoutUser, getAllFriendRequests, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, createFriendGroup, getAllFriends, getAllFriends1, readNotification, getPictureList, getFriendGroups } from '../../api';
 import { Loader } from '../../components/loader';
@@ -36,25 +36,25 @@ class Friends extends Component {
     }
 
     componentDidMount() {
-        setTimeout(() => {
-            if (this.props.comingFrom === PageKeys.NOTIFICATIONS || this.props.comingFrom === 'notificationPage' || this.props.comingFrom === PageKeys.FRIENDS) {
-                switch (this.props.goTo) {
-                    case 'REQUESTS':
-                        this.tabsRef.goToPage(2);
-                        this.props.readNotification(this.props.user.userId, this.props.notificationBody.id);
-                        break;
-                    case 'GROUP':
-                        this.tabsRef.goToPage(1);
-                        break;
-                    default:
-                        this.tabsRef.goToPage(0);
-                }
-            }
-            else {
-                this.tabsRef.goToPage(0)
-            }
-        }, 0);
-        this.props.getAllRequest(this.props.user.userId, true);
+        // setTimeout(() => {
+        //     if (this.props.comingFrom === PageKeys.NOTIFICATIONS || this.props.comingFrom === 'notificationPage' || this.props.comingFrom === PageKeys.FRIENDS) {
+        //         switch (this.props.goTo) {
+        //             // case 'REQUESTS':
+        //             //     this.tabsRef.goToPage(2);
+        //             //     this.props.readNotification(this.props.user.userId, this.props.notificationBody.id);
+        //             //     break;
+        //             case 'GROUP':
+        //                 this.tabsRef.goToPage(1);
+        //                 break;
+        //             default:
+        //                 this.tabsRef.goToPage(0);
+        //         }
+        //     }
+        //     else {
+        //         this.tabsRef.goToPage(0)
+        //     }
+        // }, 0);
+        // this.props.getAllRequest(this.props.user.userId, true);
         this.props.getAllFriends(FRIEND_TYPE.ALL_FRIENDS, this.props.user.userId, 0, true, (res) => {
         }, (err) => {
         });
@@ -219,7 +219,6 @@ const mapDispatchToProps = (dispatch) => {
         }, (error) => {
             console.log('getPictureList friendRequest error :  ', error)
         }),
-        resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
         readNotification: (userId, notificationId) => dispatch(readNotification(userId, notificationId)),
         getFriendGroups: (userId, toggleLoader, pageNumber, successCallback, errorCallback) => dispatch(getFriendGroups(userId, toggleLoader, pageNumber, successCallback, errorCallback)),
     };

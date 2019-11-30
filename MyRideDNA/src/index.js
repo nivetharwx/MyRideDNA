@@ -4,7 +4,7 @@ import Navigation from './navigation';
 import firebase from 'react-native-firebase';
 import { IS_ANDROID, DEVICE_TOKEN, PageKeys } from './constants';
 import store from './store';
-import { screenChangeAction, resetCurrentFriendAction, replaceChatMessagesAction, updateNotificationCountAction, updateMessageCountAction, updateChatListAction } from './actions';
+import { screenChangeAction, resetCurrentFriendAction, replaceChatMessagesAction, updateNotificationCountAction, updateMessageCountAction, updateChatListAction, resetPersonProfileAction } from './actions';
 import { Actions } from 'react-native-router-flux';
 import { Root } from "native-base";
 import { seenMessage } from './api';
@@ -230,7 +230,7 @@ export default class App extends Component {
         }
 
         if (targetScreen === "FRIENDS_PROFILE") {
-            store.dispatch(resetCurrentFriendAction({ comingFrom: PageKeys.NOTIFICATIONS }))
+            store.dispatch(resetPersonProfileAction({ comingFrom: PageKeys.NOTIFICATIONS }))
             store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));
         }
         else if (targetScreen === "CHAT") {

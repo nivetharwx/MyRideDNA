@@ -75,6 +75,8 @@ export const PageKeys = {
     ALBUM: 'album',
     BIKE_DETAILS: 'bikeDetails',
     POST_FORM: 'postForm',
+    BUDDY_FRIENDS: 'buddyFriends',
+    BUDDY_PASSENGERS: 'buddyPassengers'
 };
 
 export const POST_TYPE = { IMAGE_UPLOAD: 'imageUpload' }

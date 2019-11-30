@@ -24,7 +24,7 @@ import { Icon as NBIcon, Toast, ListItem, Left, Body, Right, CheckBox } from 'na
 // import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT } from '../../constants';
 // import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoRideAction, redoRideAction, initUndoRedoRideAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, resetChatMessageAction } from '../../actions';
 import { BULLSEYE_SIZE, MAP_ACCESS_TOKEN, JS_SDK_ACCESS_TOKEN, PageKeys, WindowDimensions, RIDE_BASE_URL, IS_ANDROID, RECORD_RIDE_STATUS, ICON_NAMES, APP_COMMON_STYLES, widthPercentageToDP, APP_EVENT_NAME, APP_EVENT_TYPE, USER_AUTH_TOKEN, heightPercentageToDP, RIDE_POINT, UNSYNCED_RIDE } from '../../constants';
-import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoLastAction, redoLastAction, initUndoRedoAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, addUnsyncedRideAction, deleteUnsyncedRideAction, resetChatMessageAction, resetErrorHandlingAction, toggleNetworkStatusAction, hideMembersLocationAction, resetCurrentPassengerAction, goToPrevProfileAction, updateUserAction } from '../../actions';
+import { clearRideAction, deviceLocationStateAction, appNavMenuVisibilityAction, screenChangeAction, undoLastAction, redoLastAction, initUndoRedoAction, addWaypointAction, updateWaypointAction, deleteWaypointAction, updateRideAction, resetCurrentFriendAction, updateSourceOrDestinationAction, updateWaypointNameAction, resetCurrentGroupAction, hideFriendsLocationAction, resetStateOnLogout, toggleLoaderAction, updateAppStateAction, addUnsyncedRideAction, deleteUnsyncedRideAction, resetChatMessageAction, resetErrorHandlingAction, toggleNetworkStatusAction, hideMembersLocationAction, resetCurrentPassengerAction, goToPrevProfileAction, updateUserAction, resetPersonProfileAction } from '../../actions';
 import { SearchBox, IconicList } from '../../components/inputs';
 import { SearchResults } from '../../components/pages';
 import { Actions } from 'react-native-router-flux';
@@ -848,7 +848,7 @@ export class Map extends Component {
             }
         }
         // DOC: Remove cached friends profiles
-        this.props.resetCurrentFriend();
+        this.props.resetPersonProfile();
 
         this.props.changeScreen({ name: screenKey, params: { ...params } });
     }
@@ -970,7 +970,7 @@ export class Map extends Component {
             return;
         }
         if (targetScreen === "FRIENDS_PROFILE") {
-            store.dispatch(resetCurrentFriendAction({ comingFrom: PageKeys.NOTIFICATIONS }))
+            store.dispatch(resetPersonProfile({ comingFrom: PageKeys.NOTIFICATIONS }))
             store.dispatch(screenChangeAction({ name: PageKeys[targetScreen], params: { comingFrom: PageKeys.NOTIFICATIONS, notificationBody: notifData } }));
         }
         else if (targetScreen === "CHAT") {
@@ -1190,7 +1190,7 @@ export class Map extends Component {
 
     onBackButtonPress = () => {
         if (Actions.state.index !== 0) {
-            if (Actions.currentScene === PageKeys.FRIENDS_PROFILE) {
+            if (this.props.hasPrevProfiles) {
                 this.popToPrevProfile();
             } else if (Actions.currentScene === PageKeys.PASSENGER_PROFILE) {
                 this.props.resetCurrentPassenger();
@@ -1198,7 +1198,7 @@ export class Map extends Component {
                 Actions.pop();
                 this.props.changeScreen({ name: Actions.currentScene });
             }
-            if (Actions.currentScene === PageKeys.MAP && this.props.hasPrevProfiles) this.props.resetCurrentFriend();
+            if (Actions.currentScene === PageKeys.MAP && this.props.hasPrevProfiles) this.props.resetPersonProfile();
             return true;
         } else {
             if (this.state.onItinerary) {
@@ -1216,7 +1216,7 @@ export class Map extends Component {
         Actions.pop();
         this.props.hasPrevProfiles
             ? this.props.goToPrevProfile()
-            : this.props.resetCurrentFriend();
+            : this.props.resetPersonProfile();
     }
 
     async fetchDirections() {
@@ -3230,7 +3230,7 @@ const mapDispatchToProps = (dispatch) => {
         continueRecordRide: (resumeTime, ride, userId) => dispatch(continueRecordRide(resumeTime, ride, userId)),
         completeRecordRide: (endTime, actualPoints, trackpoints, distance, ride, userId) => dispatch(completeRecordRide(endTime, actualPoints, trackpoints, distance, ride, userId)),
         getRideByRideId: (rideId) => dispatch(getRideByRideId(rideId)),
-        resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
+        resetPersonProfile: () => dispatch(resetPersonProfileAction()),
         resetCurrentGroup: () => dispatch(resetCurrentGroupAction()),
         doUndo: () => dispatch(undoLastAction()),
         doRedo: () => dispatch(redoLastAction()),

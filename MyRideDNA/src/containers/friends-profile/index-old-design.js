@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { StyleSheet, View, Text, StatusBar, Image, ImageBackground, Animated, ScrollView, FlatList, TouchableOpacity, Alert, Easing } from 'react-native';
 import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, THUMBNAIL_TAIL_TAG, RELATIONSHIP, PageKeys, MEDIUM_TAIL_TAG, FRIEND_TYPE, RIDE_TAIL_TAG } from '../../constants/index';
 import { ShifterButton, IconButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction, apiLoaderActions, initUndoRedoRideAction, updateFriendsRideSnapshotAction, getNotFriendsInfoAction, setCurrentFriendAction } from '../../actions';
+import { appNavMenuVisibilityAction, getFriendsInfoAction, resetCurrentFriendAction, updateCurrentFriendAction, toggleLoaderAction, screenChangeAction, updateCurrentFriendGarageAction, apiLoaderActions, initUndoRedoRideAction, updateFriendsRideSnapshotAction, getNotFriendsInfoAction, setCurrentFriendAction, resetPersonProfileAction } from '../../actions';
 import { Tabs, Tab, ScrollableTab, TabHeading, Accordion, ListItem, Left, Right, Card, CardItem, Thumbnail, Body, Button, Icon as NBIcon } from 'native-base';
 import { BasicHeader } from '../../components/headers';
 import { Actions } from 'react-native-router-flux';
@@ -194,7 +194,7 @@ class FriendsProfile extends Component {
     rideKeyExtractor = (item) => item.rideId;
 
     onPressBackButton = () => {
-        this.props.resetCurrentFriend()
+        this.props.resetPersonProfile()
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
@@ -499,7 +499,7 @@ const mapDispatchToProps = (dispatch) => {
         getFriendInfo: (friendType, userId, friendIdList) => dispatch(getFriendInfo(friendType, userId, friendIdList)),
         setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
         getFriendsNotFriend: (notFriendData) => dispatch(getNotFriendsInfoAction({ notFriendData })),
-        resetCurrentFriend: () => dispatch(resetCurrentFriendAction()),
+        resetPersonProfile: () => dispatch(resetPersonProfileAction()),
         getUserById: (userId) => dispatch(getUserById(userId)),
         getProfilePicture: (pictureId, friendId, friendType) => getPicture(pictureId, ({ picture, pictureId }) => {
             dispatch(updateCurrentFriendAction({ profilePicture: picture, userId: friendId }))
