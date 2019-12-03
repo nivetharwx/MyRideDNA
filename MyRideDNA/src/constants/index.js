@@ -39,7 +39,7 @@ export const CHAT_BASE_URL = NOTIFICATION_URL + ':5056/';
 export const GRAPH_BASE_URL = GRAPH_URL + ':5057/';
 // export const EVENTS_BASE_URL = GRAPH_URL + ':5055/';
 export const EVENTS_BASE_URL = EVENT_URL + ':5055/';
-export const POST_TYPE_BASE_URL = NOTIFICATION_URL + ':6062/';
+export const POSTS_BASE_URL = NOTIFICATION_URL + ':6062/';
 
 export const PageKeys = {
     EDIT_PROFILE: 'editProfile',
@@ -77,7 +77,8 @@ export const PageKeys = {
     BIKE_DETAILS: 'bikeDetails',
     POST_FORM: 'postForm',
     BUDDY_FRIENDS: 'buddyFriends',
-    BUDDY_PASSENGERS: 'buddyPassengers'
+    BUDDY_PASSENGERS: 'buddyPassengers',
+    BIKE_ALBUM: 'bikeAlbum',
 };
 
 export const POST_TYPE = { WISH_LIST: 'wishList', JOURNAL: 'journal', STORIES_FROM_ROAD: 'storiesFromRoad', CUSTOMIZATION: 'customization', ALBUM: 'album' };

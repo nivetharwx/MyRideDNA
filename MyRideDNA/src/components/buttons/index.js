@@ -35,13 +35,18 @@ export const MapControlPair = ({ firstIcon, secondIcon, containerStyle }) => (
     </View>
 );
 
-export const BasicButton = ({ title, titleStyle, onPress, style }) => (
-    <TouchableOpacity activeOpacity={0.6} style={[{ backgroundColor: '#F5891F', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} onPress={onPress}>
+export const BasicButton = ({ title, titleStyle, onPress, style, disabled }) => {
+    return disabled ? <View style={[{ backgroundColor: '#F5891F', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]}>
         <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
             <DefaultText style={[{ color: '#fff', fontSize: 15 }, titleStyle]}>{title}</DefaultText>
         </View>
-    </TouchableOpacity>
-);
+    </View>
+        : <TouchableOpacity activeOpacity={0.6} style={[{ backgroundColor: '#F5891F', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} onPress={onPress}>
+            <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
+                <DefaultText style={[{ color: '#fff', fontSize: 15 }, titleStyle]}>{title}</DefaultText>
+            </View>
+        </TouchableOpacity>
+};
 
 export const RoundButton = ({ title, onPress, style, titleStyle }) => (
     <TouchableOpacity activeOpacity={0.6} onPress={onPress}>

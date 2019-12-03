@@ -5,7 +5,7 @@ import {
     apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, updateFriendChatPicAction, resetMessageCountAction, storeUserAction, errorHandlingAction, resetErrorHandlingAction, addMembersLocationAction, storeUserMyWalletAction, updateUserMyWalletAction, updateFriendsLocationAction, updateGroupsLocationAction,
     replaceAlbumListAction, updateFavouriteFriendAction, replaceCommunityListAction, updateCommunityListAction, updateCurrentGroupAction, updateSearchListAction, updatePostTypesAction
 } from '../actions';
-import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN, RIDE_POINT, CHAT_BASE_URL, POST_TYPE_BASE_URL } from '../constants';
+import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN, RIDE_POINT, CHAT_BASE_URL, POSTS_BASE_URL } from '../constants';
 import axios from 'axios';
 
 import { Alert } from 'react-native';
@@ -63,9 +63,14 @@ export const getPictureList = (pictureIdList, successCallback, errorCallback) =>
         })
 }
 export const getPostTypes = () => {
-    axios.get(`${POST_TYPE_BASE_URL}/postTypes`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
-        .then(res => updatePostTypesAction(res))
-        .catch(er => differentErrors(er, [], getPostTypes, false))
+    return dispatch => {
+        axios.get(`${POSTS_BASE_URL}postTypes`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => dispatch(updatePostTypesAction(res.data)))
+            .catch(er => {
+                console.log(`${POSTS_BASE_URL}postTypes error: `, er);
+                differentErrors(er, [], getPostTypes, false);
+            })
+    }
 }
 export const getRidePictureList = (pictureIdList, successCallback, errorCallback) => {
     axios.put(RIDE_BASE_URL + `getPictureList`, { pictureIdList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
@@ -2168,27 +2173,17 @@ export const addBikeToGarage = (userId, bike, pictureList, successCallback, erro
     };
 }
 export const editBike = (userId, bike, pictureList, index, successCallback, errorCallback) => {
-    // export const editBike = (userId, bike, index) => {
     return dispatch => {
-        // dispatch(toggleLoaderAction(true));
         axios.put(USER_BASE_URL + `updateSpace/${userId}`, { ...bike, pictureList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log("updateSpace success: ", res.data);
-                bike.pictureIdList = res.data.pictureIdList || [];
-                // dispatch(toggleLoaderAction(false));
-                dispatch(updateBikeListAction({ index, bike }));
-                successCallback(true)
-                // console.log("updateSpace success: ", res.data);
-                // dispatch(toggleLoaderAction(false));
-                // dispatch(updateBikeListAction({ index, bike }))
+                dispatch(updateBikeListAction(bike));
+                successCallback(true);
             })
             .catch(er => {
                 differentErrors(er, [userId, bike, pictureList, index, successCallback, errorCallback], editBike, true);
-                errorCallback(false)
+                errorCallback(false);
                 console.log("updateSpace error: ", er.response || er);
-
-                // TODO: Dispatch error info action
-                // dispatch(toggleLoaderAction(false));
             })
     };
 }
@@ -2251,6 +2246,24 @@ export const deleteBike = (userId, bikeId, index) => {
                 dispatch(apiLoaderActions(false));
             })
     };
+}
+export const getBikeAlbum = (userId, spaceId, pageNumber, successCallback, errorCallback, preference = 15) => {
+    return dispatch => {
+        dispatch(apiLoaderActions(true));
+        axios.get(`${USER_BASE_URL}getPicturesBySpaceId/${userId}/spaceId/${spaceId}?pageNumber=${pageNumber}&preference=${preference}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(({ data }) => {
+                dispatch(apiLoaderActions(false));
+                console.log("getPicturesBySpaceId success: ", data);
+                if (data.pictures.length > 0) {
+                    typeof successCallback === 'function' && successCallback(data);
+                    dispatch(updateBikeListAction({ pictures: data.pictures }));
+                }
+            }).catch(er => {
+                console.log(`getPicturesBySpaceId error: `, er.response || er);
+                differentErrors(er, [userId, spaceId], getBikeAlbum, false);
+                dispatch(apiLoaderActions(false));
+            })
+    }
 }
 
 export const getRoadBuddies = (userId) => {
@@ -2460,7 +2473,6 @@ export const getAlbum = (userId, pageNumber, preference, successCallback, errorC
     return dispatch => {
         axios.get(USER_BASE_URL + `getAlbumByUserId?userId=${userId}&pageNumber=${pageNumber}&preference${preference}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                console.log("getAlbum success: ", res.data);
                 if (res.status === 200) {
                     if (res.data.pictureList.length > 0) {
                         const pictureList = res.data.pictureList.map(picId => ({ profilePictureId: picId }));
@@ -2630,46 +2642,25 @@ export const seenMessage = (id, userId, isGroup, comingFrom) => {
     };
 }
 
-// export const errorHandlingApi = (config) => {
-//     console.log('errorHandlingApi : ', config);
-//     if (config.method === 'post') {
-//         return dispatch => {
-//             axios({
-//                 method: config.method,
-//                 url: config.url,
-//                 data: JSON.parse(config.data),
-//                 cancelToken: axiosSource.token,
-//                 timeout: API_TIMEOUT
-//             })
-//                 .then(res => {
-//                     console.log("errorHandlingApi success: ", res.data);
-//                     if (res.status === 200) {
-//                     }
-//                 })
-//                 .catch(er => {
-//                     console.log(`errorHandlingApi error: `, er.response || er);
-//                 })
-//         }
-//     }
-//     else {
-//         return dispatch => {
-//             axios({
-//                 method: config.method,
-//                 url: config.url,
-//                 cancelToken: axiosSource.token,
-//                 timeout: API_TIMEOUT
-//             }).then(res => {
-//                 console.log("errorHandlingApi success: ", res.data);
-//                 if (res.status === 200) {
-
-//                 }
-//             })
-//                 .catch(er => {
-//                     console.log(`errorHandlingApi error: `, er.response || er);
-//                 })
-//         }
-//     }
-// }
+export const createPost = (userId, spaceId, postData, successCallback, errorCallback) => {
+    return dispatch => {
+        dispatch(apiLoaderActions(true));
+        axios.post(`${POSTS_BASE_URL}users/${userId}/posts`, { userId, metaData: { spaceId }, ...postData }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(apiLoaderActions(false));
+                    console.log("createPost success: ", res.data);
+                    typeof successCallback === 'function' && successCallback(res.data);
+                }
+            })
+            .catch(er => {
+                dispatch(apiLoaderActions(false));
+                console.log(`createPost error: `, er.response || er);
+                typeof errorCallback === 'function' && errorCallback(er.response || er);
+                differentErrors(er, [isGroup, id, userId, messageToBeDeleted, newChatMessages], deleteAllMessages, true);
+            })
+    }
+}
 
 const differentErrors = (error, params, api, isTimeout) => {
     console.log('error.message : ', error.message)
