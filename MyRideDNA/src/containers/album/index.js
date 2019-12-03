@@ -42,31 +42,27 @@ class Album extends Component {
             }
         }
     }
-    onPressBackButton = () => {
-        Actions.pop()
-    }
+    onPressBackButton = () => Actions.pop();
 
     openPicture = (item) => {
         this.setState({ selectedPicture: item, isVisiblePicture: true });
     }
 
     onCancelVisiblePicture = () => {
-        this.setState({ selectedPicture: null, isVisiblePicture: false })
+        this.setState({ selectedPicture: null, isVisiblePicture: false });
     }
 
-    albumKeyExtractor = (item) => item.profilePictureId
+    albumKeyExtractor = (item) => item.profilePictureId;
 
-    loadMoreData = () => {
-        // this.setState({ isLoading: true, isLoadingData: false })
-        this.setState((prevState) => ({ isLoading: true }),
-            () => {
-                this.props.getAlbum(this.props.user.userId, this.props.pageNumber, 15, (res) => {
-                    this.setState({ isLoading: false })
-                },
-                    (er) => {
-                        this.setState({ isLoading: false })
-                    });
-            })
+    loadMoreData = ({ distanceFromEnd }) => {
+        if (this.state.isLoading === true || distanceFromEnd < 0) return;
+        this.setState((prevState) => ({ isLoading: true }), () => {
+            this.props.getAlbum(this.props.user.userId, this.props.pageNumber, 15, (res) => {
+                this.setState({ isLoading: false })
+            }, (er) => {
+                this.setState({ isLoading: false })
+            });
+        });
     }
 
     renderFooter = () => {
@@ -141,8 +137,6 @@ class Album extends Component {
                                 onPress={() => this.openPicture(item)}
                             />
                         )}
-                        initialNumToRender={15}
-                        // sonMomentumScrollBegin={this.onScrollBegin}
                         ListFooterComponent={this.renderFooter}
                         onEndReached={this.loadMoreData}
                         onEndReachedThreshold={0.1}
