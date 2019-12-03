@@ -50,8 +50,8 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                             <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-messaging.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.CHAT_LIST })} />
                         </View>
                         <View style={styles.rowContainer}>
-                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-profile.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.PROFILE, params: { activeTab: 0 } })} />
-                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-garage.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.PROFILE, params: { activeTab: 1 } })} />
+                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-profile.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.PROFILE, params: { tabProps: { activeTab: 0 } } })} />
+                            <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-garage.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.PROFILE, params: { tabProps: { activeTab: 1 } } })} />
                         </View>
                         <View style={styles.rowContainer}>
                             <ImageButton isRound={true} imageSrc={require('../../assets/img/menu-lets-ride.png')} imgStyles={styles.navIconImage} onPress={() => onPressNavMenu({ screenKey: PageKeys.MAP })} />
