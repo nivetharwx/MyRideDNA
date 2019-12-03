@@ -135,6 +135,7 @@ class Album extends Component {
                         keyExtractor={this.albumKeyExtractor}
                         renderItem={({ item, index }) => (
                             <SquareCard
+                                thumbnail={item.profilePicture}
                                 item={item}
                                 imageStyle={[styles.imageStyle, index % 3 === 1 ? { marginHorizontal: widthPercentageToDP(1) } : null]}
                                 onPress={() => this.openPicture(item)}

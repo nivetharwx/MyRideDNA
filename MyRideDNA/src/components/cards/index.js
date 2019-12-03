@@ -153,16 +153,23 @@ export const SmallCard = ({ item, smallardPlaceholder, onPress, onLongPress, act
         </TouchableOpacity>
     </View>
 );
-export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, actions, thumbnailRef, imageStyle, containerStyle, contentContainerStyle }) => (
+export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, actions, thumbnailRef,thumbnail, imageStyle, containerStyle, contentContainerStyle }) => (
     <TouchableOpacity onPress={() => onPress ? onPress() : null} onLongPress={() => onLongPress && onLongPress()} style={[{ flexDirection: 'column' }, containerStyle]}>
         <View style={[{ height: 150, width: 150, backgroundColor: '#A9A9A9', justifyContent: 'center' }, imageStyle]}>
-            <Image source={item.profilePicture ? { uri: item.profilePicture } : squareCardPlaceholder ? squareCardPlaceholder : null}
-                style={{ width: null, height: null, flex: 1 }} />
+            {
+                thumbnail ?
+                    <Image source={{ uri:thumbnail }} style={{ width: null, height: null, flex: 1 }} />
+                    :
+                    squareCardPlaceholder ?
+                        <Image source={squareCardPlaceholder} style={{ width: null, height: null, flex: 1 }} />
+                        :
+                        null
+            }
         </View>
         <View style={contentContainerStyle}>
             {
                 item.name ?
-                    <DefaultText style={{ fontSize: 15, fontWeight: 'bold', color: '#000', marginTop: 6 }}>{item.name ? item.name : ''}</DefaultText>
+                    <DefaultText style={{ fontSize: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold, color: '#000', marginTop: 6 }}>{item.name ? item.name : ''}</DefaultText>
                     : null
             }
             {
@@ -217,7 +224,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
             actionsBar ?
                 <View style={{ flex: 1, justifyContent: 'center', borderWidth: 1, borderColor: '#EAEAEA' }}>
                     <View style={{ flex: 1, backgroundColor: '#EAEAEA', justifyContent: 'center', alignItems: 'center' }}>
-                        <DefaultText style={{ fontSize: 14, fontWeight: 'bold', color: '#585756' }}>{item.name ? item.name : item.groupName ? item.groupName : null}</DefaultText>
+                        <DefaultText style={{ fontSize: 14, fontFamily: CUSTOM_FONTS.robotoBold, color: '#585756' }}>{item.name ? item.name : item.groupName ? item.groupName : null}</DefaultText>
                     </View>
                     <View style={{ flex: 1 }}>
                         {
@@ -315,7 +322,7 @@ const styles = StyleSheet.create({
         width: '100%'
     },
     mainHeader: {
-        fontWeight: 'bold',
+        fontFamily: CUSTOM_FONTS.robotoBold,
         fontSize: widthPercentageToDP(4),
     },
     subHeader: {

@@ -155,6 +155,7 @@ class BuddyPassengers extends Component {
                         keyExtractor={this.passengerKeyExtractor}
                         renderItem={({ item, index }) => (
                             <SquareCard
+                                thumbnail={item.profilePicture}
                                 // containerStyle={{ marginHorizontal: 20 }}
                                 squareCardPlaceholder={require('../../assets/img/profile-pic.png')}
                                 item={item}
