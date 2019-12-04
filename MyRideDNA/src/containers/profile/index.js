@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, SafeAreaView, View, Text, StatusBar, Platform, ImageBackground } from 'react-native';
-import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP } from '../../constants/index';
+import { heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, widthPercentageToDP, CUSTOM_FONTS } from '../../constants/index';
 import { ShifterButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, replaceGarageInfoAction, clearGarageInfoAction } from '../../actions';
 import { Tabs, Tab, ScrollableTab, TabHeading } from 'native-base';
@@ -118,6 +118,6 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontSize: 13,
-        fontWeight: 'bold'
+        fontFamily:CUSTOM_FONTS.robotoBold,
     }
 });

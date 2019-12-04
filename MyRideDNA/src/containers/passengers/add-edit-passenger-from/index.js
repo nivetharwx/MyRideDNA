@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     labelStyle: {
         color: '#000',
         fontSize: 10,
-        fontWeight: 'bold',
+        fontFamily:CUSTOM_FONTS.robotoSlabBold,
         letterSpacing: 1.1
     },
     submitBtn: {

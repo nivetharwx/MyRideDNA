@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, SafeAreaView, View, ScrollView, FlatList, TouchableOpacity, Text } from 'react-native';
 import { Icon as NBIcon, List, ListItem, Left, Body } from 'native-base';
-import { WindowDimensions, APP_COMMON_STYLES, heightPercentageToDP, widthPercentageToDP } from '../../constants';
+import { WindowDimensions, APP_COMMON_STYLES, heightPercentageToDP, widthPercentageToDP, CUSTOM_FONTS } from '../../constants';
 import { DefaultText } from '../labels';
 
 const styles = StyleSheet.create({
@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
     },
     primaryText: {
         marginLeft: 5,
-        fontWeight: 'bold',
+        fontFamily:CUSTOM_FONTS.roboto,
         color: '#FFF'
     },
     secondaryText: {

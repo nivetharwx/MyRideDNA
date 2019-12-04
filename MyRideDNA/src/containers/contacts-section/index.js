@@ -153,7 +153,7 @@ class ContactsSection extends PureComponent {
                     item.thumbnailPath
                         ? <Thumbnail source={{ uri: item.thumbnailPath }} />
                         : <View style={{ alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(10), height: widthPercentageToDP(10), borderWidth: 2, borderColor: '#6B7663', borderRadius: widthPercentageToDP(5), backgroundColor: item.email === null ? '#6B7663' : '#FFF' }}>
-                            <DefaultText style={{ color: item.email === null ? '#FFF' : '#6B7663', fontWeight: 'bold' }}>{item.name.charAt(0)}</DefaultText>
+                            <DefaultText style={{ color: item.email === null ? '#FFF' : '#6B7663', fontFamily:CUSTOM_FONTS.robotoBold }}>{item.name.charAt(0)}</DefaultText>
                         </View>
                 }
             </Left>

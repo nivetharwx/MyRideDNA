@@ -314,6 +314,7 @@ export const registerUser = (user) => {
     };
 }
 export const updateUserInfo = (userData, successCallback, errorCallback) => {
+    console.log('userData : ', userData);
     return dispatch => {
         dispatch(toggleLoaderAction(true));
         axios.put(USER_BASE_URL + 'updateUserDetails', userData, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
@@ -2469,6 +2470,7 @@ export const getCommunityFriendsList = (userId, pageNumber, preference, successC
 }
 
 
+
 export const getAlbum = (userId, pageNumber, preference, successCallback, errorCallback) => {
     return dispatch => {
         axios.get(USER_BASE_URL + `getAlbumByUserId?userId=${userId}&pageNumber=${pageNumber}&preference${preference}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
@@ -2496,6 +2498,39 @@ export const getAlbum = (userId, pageNumber, preference, successCallback, errorC
             })
     };
 }
+export const getBuddyAlbum = (userId, friendId, pageNumber, preference, successCallback, errorCallback) => {
+    console.log('pageNumber buddyalbum : ', pageNumber)
+    return dispatch => {
+        axios.get(`${USER_BASE_URL}users/${userId}/friend/${friendId}/album?pageNumber=${pageNumber}&preference=${preference}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log("getBuddyAlbum success: ", res.data);
+                if (res.status === 200) {
+                    // if (res.data.pictureList.length > 0) {
+                    //     const pictureList = res.data.pictureList.map(picId => ({ profilePictureId: picId }));
+                    //     dispatch(replaceAlbumListAction({ pageNumber, pictureList }))
+                    //     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    //     dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    //     // dispatch(toggleLoaderAction(false));
+                    //     successCallback(res.data)
+                    // }
+                    // else {
+                    //     successCallback(res.data)
+                    //     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    // }
+                    res.data.pictures.length > 0 && dispatch(updateCurrentFriendAction({ pictures: res.data.pictures, userId: friendId }));
+                    successCallback(res.data)
+                }
+            })
+            .catch(er => {
+                console.log(`getBuddyAlbum error: `, er.response || er);
+                differentErrors(er, [userId, friendId, pageNumber, preference, successCallback, errorCallback], getBuddyAlbum, false);
+                // TODO: Dispatch error info action
+                errorCallback(er)
+            })
+    };
+}
+
+
 export const getAllChats = (userId) => {
     console.log('user id getAllChat : ', userId)
     return dispatch => {

@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
         paddingLeft: 5,
         alignSelf: 'center',
         fontSize: 15,
-        fontWeight: 'bold'
+        fontFamily: CUSTOM_FONTS.roboto,
     },
     defaultText: {
         fontFamily: CUSTOM_FONTS.roboto,

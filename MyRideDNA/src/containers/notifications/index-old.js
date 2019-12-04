@@ -3,7 +3,7 @@ import { SafeAreaView, View, Text, Platform, ImageBackground, ScrollView, StyleS
 import { Actions } from 'react-native-router-flux';
 
 import { BasicHeader } from '../../components/headers';
-import { WindowDimensions, IS_ANDROID } from '../../constants';
+import { WindowDimensions, IS_ANDROID, CUSTOM_FONTS } from '../../constants';
 import { List, ListItem, Left, Thumbnail, Body, Right } from 'native-base';
 
 const ANDROID_HEADER_HEIGHT = 50;
@@ -143,7 +143,7 @@ export class Notifications extends Component {
 const styles = StyleSheet.create({
     name: {
         color: 'white',
-        fontWeight: 'bold',
+        fontFamily:CUSTOM_FONTS.gothamBold
     },
     message: {
         color: 'white',

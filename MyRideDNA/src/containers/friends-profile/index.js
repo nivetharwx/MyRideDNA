@@ -152,7 +152,7 @@ class FriendsProfile extends Component {
                             <DefaultText style={styles.subTitle}>{person.nickname ? person.nickname.toUpperCase() : null}</DefaultText>
                         </View>
                     </View>
-                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: APP_COMMON_STYLES.tabContainer.height }}>
+                    <ScrollView showsVerticalScrollIndicator={false}>
                         <View style={styles.profilePic}>
                             <ImageBackground source={person.profilePicture ? { uri: person.profilePicture } : require('../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
                                 {
@@ -276,11 +276,11 @@ class FriendsProfile extends Component {
                                 <DefaultText style={styles.txtOnImg}>Vest</DefaultText>
                             </ImageBackground>
                         </View>
-                        <View style={styles.usersExtraDetailContainer}>
+                        <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.BUDDY_ALBUM)}>
                             <ImageBackground source={require('../../assets/img/my-photos.png')} style={styles.usersExtraDetail}>
                                 <DefaultText style={styles.txtOnImg}>Photos</DefaultText>
                             </ImageBackground>
-                        </View>
+                        </TouchableOpacity>
 
                     </ScrollView>
                 </View>

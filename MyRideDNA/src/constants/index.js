@@ -78,6 +78,7 @@ export const PageKeys = {
     POST_FORM: 'postForm',
     BUDDY_FRIENDS: 'buddyFriends',
     BUDDY_PASSENGERS: 'buddyPassengers',
+    BUDDY_ALBUM: 'buddyAlbum',
     BIKE_ALBUM: 'bikeAlbum',
 };
 

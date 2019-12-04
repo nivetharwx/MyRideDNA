@@ -46,7 +46,6 @@ const styles = {
         fontSize: 13,
         fontFamily: CUSTOM_FONTS.robotoBold,
         letterSpacing: 0.6
-        // fontWeight: 'bold'
     }
 };
 

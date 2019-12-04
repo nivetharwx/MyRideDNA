@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, StatusBar, ImageBackground } from 'react-native
 import { Actions } from 'react-native-router-flux';
 
 import { BasicHeader } from '../../components/headers';
-import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP } from '../../constants';
+import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, CUSTOM_FONTS } from '../../constants';
 import { ShifterButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { connect } from 'react-redux';
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
         flex: 1
     },
     name: {
-        fontWeight: 'bold',
+        fontFamily:CUSTOM_FONTS.gothamBold,
         fontSize: 15
     },
     message: {
