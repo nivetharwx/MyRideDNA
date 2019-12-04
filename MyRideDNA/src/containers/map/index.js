@@ -375,7 +375,7 @@ export class Map extends Component {
                         setTimeout(() => Actions.refresh(currentScreen.params || {}), 0);
                     }
                 }
-            } else if (this.props.currentScreen.params !== currentScreen.params) {
+            } else if (currentScreen.params && (this.props.currentScreen.params !== currentScreen.params)) {
                 Actions.refresh(currentScreen.params);
             }
         }

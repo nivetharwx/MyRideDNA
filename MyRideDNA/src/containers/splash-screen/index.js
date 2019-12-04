@@ -71,7 +71,7 @@ class SplashScreen extends React.Component {
                     console.log('error: ', error);
                     console.log('error: ', error.message);
                     if ((error.message === 'Network Error' || error.message === 'timeout of 15000ms exceeded') && store.getState().PageState.hasNetwork === true) {
-                        setTimeout(() => this.doAuthTokenVerfication(), 250);
+                        setTimeout(() => this.doAuthTokenVerfication(), 500);
                     }
                     else {
                         Actions.reset(PageKeys.LOGIN);

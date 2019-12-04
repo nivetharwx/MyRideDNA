@@ -36,6 +36,7 @@ import Offers from '../containers/offers';
 import ChatList from '../containers/chats/chat-list';
 import Album from '../containers/album';
 import BikeDetails from '../containers/profile/my-garage/bike-details';
+import BikeAlbum from '../containers/profile/my-garage/bike-details/bike-album';
 import PostForm from '../containers/post-form';
 import BuddyFriends from '../containers/buddy-friends';
 import BuddyPassengers from '../containers/buddy-passengers';
@@ -77,6 +78,7 @@ export default class Navigation extends Component {
                             <Scene gesturesEnabled={false} key={PageKeys.CHAT_LIST} component={ChatList} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.ALBUM} component={Album} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.BIKE_DETAILS} component={BikeDetails} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.BIKE_ALBUM} component={BikeAlbum} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.POST_FORM} component={PostForm} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.BUDDY_FRIENDS} component={BuddyFriends} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.BUDDY_PASSENGERS} component={BuddyPassengers} hideNavBar></Scene>

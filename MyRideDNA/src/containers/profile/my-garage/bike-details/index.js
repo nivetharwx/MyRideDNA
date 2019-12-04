@@ -4,15 +4,13 @@ import { StyleSheet, View, ScrollView, ImageBackground, Image, StatusBar, FlatLi
 import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, heightPercentageToDP, POST_TYPE } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { IconButton, ShifterButton, LinkButton } from '../../../../components/buttons';
-import { appNavMenuVisibilityAction } from '../../../../actions';
+import { appNavMenuVisibilityAction, setCurrentBikeIndexAction } from '../../../../actions';
 import { DefaultText } from '../../../../components/labels';
 
 class BikeDetails extends Component {
     constructor(props) {
         super(props);
-        this.state = {
-            bike: props.bike || {}
-        };
+        this.state = {};
     }
 
     componentDidMount() {
@@ -26,11 +24,12 @@ class BikeDetails extends Component {
     showAppNavMenu = () => this.props.showAppNavMenu();
 
     openBikeForm = () => {
-        Actions.push(PageKeys.ADD_BIKE_FORM, { bikeIndex: this.props.garage.spaceList.findIndex(item => item.spaceId === this.state.bike.spaceId) });
+        Actions.push(PageKeys.ADD_BIKE_FORM, {});
     }
 
-    componentWillUnmount() {
-
+    openBikeAlbum = () => {
+        this.props.setCurrentBikeIndex(this.props.garage.spaceList.findIndex(({ spaceId }) => spaceId === this.props.bike.spaceId));
+        Actions.push(PageKeys.BIKE_ALBUM, { bikeIndex: this.props.garage.spaceList.findIndex(({ spaceId }) => spaceId === this.props.bike.spaceId) });
     }
 
     addStoryFromRoad = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.STORIES_FROM_ROAD });
@@ -39,9 +38,12 @@ class BikeDetails extends Component {
 
     addCustomization = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.CUSTOMIZATION });
 
+    componentWillUnmount() {
+
+    }
+
     render() {
-        const { user } = this.props;
-        const { bike } = this.state;
+        const { user, bike } = this.props;
         return (
             <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
@@ -125,7 +127,7 @@ class BikeDetails extends Component {
                             <View style={styles.greyBorder} />
                         </View>
                     </View>
-                    <LinkButton style={styles.fullWidthImgLink}>
+                    <LinkButton style={styles.fullWidthImgLink} onPress={this.openBikeAlbum}>
                         <ImageBackground source={require('../../../../assets/img/my-photos.png')} style={styles.imgBG}>
                             <DefaultText style={styles.txtOnImg}>Photos</DefaultText>
                         </ImageBackground>
@@ -147,6 +149,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
+        setCurrentBikeIndex: (index) => dispatch(setCurrentBikeIndexAction(index))
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BikeDetails);

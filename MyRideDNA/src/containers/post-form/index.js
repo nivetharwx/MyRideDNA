@@ -9,8 +9,9 @@ import { APP_COMMON_STYLES, PageKeys, CUSTOM_FONTS, heightPercentageToDP, widthP
 import { ImageButton, ShifterButton, SwitchIconButton, IconButton, LinkButton, BasicButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { IconicList } from '../../components/inputs';
-import { Icon as NBIcon, Thumbnail } from 'native-base';
-import { addPicturesToBike } from '../../api';
+import { Icon as NBIcon, Thumbnail, Toast } from 'native-base';
+import { createPost } from '../../api';
+import { Loader } from '../../components/loader';
 
 const CONTAINER_H_SPACE = widthPercentageToDP(6);
 
@@ -18,17 +19,17 @@ class PostForm extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            selectedBike: props.activeBike || null,
+            selectedBikeId: props.currentBikeId || null,
             isPrivate: true,
             selectedImgs: [],
             title: '',
-            caption: '',
+            description: '',
         };
     }
 
     componentDidMount() {
-        if (this.state.selectedBike === null && this.props.bikeList.length > 0) {
-            this.setState({ selectedBike: this.props.bikeList[0].spaceId });
+        if (this.state.selectedBikeId === null && this.props.bikeList.length > 0) {
+            this.setState({ selectedBikeId: this.props.bikeList[0].spaceId });
         }
     }
 
@@ -68,13 +69,13 @@ class PostForm extends Component {
         }
     }
 
-    onChangeBike = (val) => this.setState({ selectedBike: val });
+    onChangeBike = (val) => this.setState({ selectedBikeId: val });
 
     onChangePrivacyMode = (val) => this.setState({ isPrivate: val });
-    
+
     onChangeTitle = (val) => this.setState({ title: val });
 
-    onChangeCaption = (val) => this.setState({ caption: val });
+    onChangeDescription = (val) => this.setState({ description: val });
 
     imgKeyExtractor = (item) => item.localIdentifier;
 
@@ -101,15 +102,22 @@ class PostForm extends Component {
     }
 
     onSubmit = () => {
-        if (postType !== POST_TYPE.IMAGE_UPLOAD) {
-            const bike = this.props.bikeList.find(bike => bike.spaceId === this.selectedBike);
-            this.props.addPicturesToBike(this.props.useruserId, bike, this.state.selectedImgs, this.state.isPrivate);
-        }
+        this.setState({ isSubmiting: true });
+        const bike = this.props.bikeList.find(({ spaceId }) => spaceId === this.state.selectedBikeId);
+        this.props.createPost(this.props.user.userId, bike.spaceId, {
+            title: this.state.title, description: this.state.description,
+            postTypeId: this.props.postTypes[this.props.postType].id,
+            isPrivate: this.state.isPrivate, pictures: this.state.selectedImgs
+        }, () => {
+            Toast.show({ text: 'Post created successfully', position: 'bottom', type: 'success', duration: 1000 });
+            const selBike = this.props.bikeList.length > 0 ? this.props.bikeList[0].spaceId : this.props.currentBikeId || null;
+            this.setState({ title: '', description: '', selectedImgs: [], selectedBikeId: selBike, isPrivate: true });
+        });
     }
 
     render() {
-        const { user, bikeList, activeBike, postType } = this.props;
-        const { selectedBike, isPrivate, selectedImgs, title, caption } = this.state;
+        const { user, bikeList, currentBikeId, postType, showLoader } = this.props;
+        const { selectedBikeId, isPrivate, selectedImgs, title, description } = this.state;
         const BIKE_LIST = bikeList.map(bike => ({ label: bike.name, value: bike.spaceId }));
         return <View style={styles.fill}>
             <View style={APP_COMMON_STYLES.statusBar}>
@@ -142,20 +150,16 @@ class PostForm extends Component {
                                 />
                                 : null
                         }
-                        {
-                            postType === POST_TYPE.IMAGE_UPLOAD
-                                ? <View style={styles.fill}>
-                                    {/* <DefaultText style={styles.postTitle}>POST TITLE</DefaultText> */}
-                                    <TextInput value={title} placeholder='POST TITLE' placeholderTextColor={APP_COMMON_STYLES.infoColor} style={styles.postTitle} autoCapitalize='characters' onChangeText={this.onChangeTitle} />
-                                    <TextInput value={caption} placeholder='Write a caption' placeholderTextColor='#707070' multiline={true} style={styles.descrArea} onChangeText={this.onChangeCaption} />
-                                </View>
-                                : null
-                        }
+                        <View style={styles.fill}>
+                            {/* <DefaultText style={styles.postTitle}>POST TITLE</DefaultText> */}
+                            <TextInput value={title} placeholder='POST TITLE' placeholderTextColor={APP_COMMON_STYLES.infoColor} style={styles.postTitle} autoCapitalize='characters' onChangeText={this.onChangeTitle} />
+                            <TextInput value={description} placeholder='Write a caption' placeholderTextColor='#707070' multiline={true} style={styles.descrArea} onChangeText={this.onChangeDescription} />
+                        </View>
                     </View>
                     <View style={styles.btmContainer}>
                         <IconicList
-                            disabled={typeof activeBike !== 'undefined'}
-                            selectedValue={selectedBike}
+                            disabled={typeof currentBikeId !== 'undefined'}
+                            selectedValue={selectedBikeId}
                             dropdownIcon={<NBIcon name='caret-down' type='FontAwesome' style={styles.dropdownIcon} />}
                             placeholder='SELECT A BIKE'
                             placeholderStyle={styles.dropdownPlaceholderTxt}
@@ -172,8 +176,9 @@ class PostForm extends Component {
                                 value={isPrivate} onChangeValue={this.onChangePrivacyMode} />
                         </View>
                     </View>
-                    <BasicButton title={postType === POST_TYPE.IMAGE_UPLOAD ? 'SUBMIT' : 'POST'} style={styles.submitBtn} titleStyle={styles.submitBtnTxt} onPress={this.onSubmit} />
+                    <BasicButton title='POST' style={styles.submitBtn} titleStyle={styles.submitBtnTxt} onPress={this.onSubmit} />
                 </ScrollView>
+                <Loader isVisible={showLoader} />
                 {/* Shifter: - Brings the app navigation menu */}
                 <ShifterButton onPress={this.showAppNavMenu} alignLeft={user.handDominance === 'left'} />
             </View>
@@ -184,12 +189,13 @@ class PostForm extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { spaceList: bikeList } = state.GarageInfo;
-    return { user, bikeList };
+    const { postTypes, showLoader } = state.PageState;
+    return { user, bikeList, postTypes, showLoader };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        addPicturesToBike: (userId, bike, pictureList, isPrivate) => dispatch(addPicturesToBike(userId, bike, pictureList, isPrivate))
+        createPost: (userId, spaceId, postData, successCallback, errorCallback) => dispatch(createPost(userId, spaceId, postData, successCallback, errorCallback)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(PostForm);

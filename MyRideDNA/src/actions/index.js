@@ -68,7 +68,10 @@ import {
     CLEAR_ALBUM,
     CLEAR_CHAT_LIST,
     CLEAR_GARAGE,
-    UPDATE_POST_TYPES
+    UPDATE_POST_TYPES,
+    UPDATE_BIKE_ALBUM,
+    CLEAR_BIKE_ALBUM,
+    SET_CURRENT_BIKE_INDEX
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -317,7 +320,12 @@ export const updateShortSpaceListAction = (data) => (
         data: data
     }
 );
-
+export const setCurrentBikeIndexAction = (data) => (
+    {
+        type: SET_CURRENT_BIKE_INDEX,
+        data: data
+    }
+);
 export const addToBikeListAction = (data) => (
     {
         type: ADD_TO_BIKE_LIST,
@@ -345,6 +353,18 @@ export const updateBikeListAction = (data) => (
 export const updateBikePictureAction = (data) => (
     {
         type: UPDATE_BIKE_PICTURE,
+        data: data
+    }
+);
+export const updateBikeAlbumAction = (data) => (
+    {
+        type: UPDATE_BIKE_ALBUM,
+        data: data
+    }
+);
+export const clearBikeAlbumAction = (data) => (
+    {
+        type: CLEAR_BIKE_ALBUM,
         data: data
     }
 );
