@@ -180,5 +180,25 @@ export const APP_COMMON_STYLES = {
     },
     tabContainer: {
         height: 43
+    },
+    optionsModal: { justifyContent: 'flex-end' },
+    optionsContainer: {
+        marginHorizontal: 15, 
+        backgroundColor: '#fff', 
+        borderColor: '#D8D8D8', 
+        borderWidth: 1, 
+        borderRadius: 30, 
+        overflow: 'hidden',
+    },
+    optionBtn: { 
+        paddingVertical: 15, 
+        borderBottomWidth: 1, 
+        borderBottomColor: '#D8D8D8',
+    },
+    optionBtnTxt: { 
+        color: '#585756', 
+        fontSize: 16, 
+        letterSpacing: 0.8, 
+        textAlign: 'center',
     }
 };

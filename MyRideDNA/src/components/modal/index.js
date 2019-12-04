@@ -95,24 +95,24 @@ const mapDispatchToProps = (dispatch) => {
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MenuModal);
 
-export const BaseModal = (props) => {
+export const BaseModal = ({ isVisible, onCancel, onPressOutside, offSpaceBackgroundColor, alignCenter, containerStyle, ...otherProps }) => {
     return (
         <Modal
-            animationType="slide"
+            animationType="fade"
             transparent={true}
-            visible={props.isVisible}
-            onRequestClose={props.onCancel}>
+            visible={isVisible}
+            onRequestClose={onCancel}>
             {
-                props.onPressOutside ?
-                    <TouchableOpacity style={[styles.fillParent, props.offSpaceBackgroundColor ? { backgroundColor: props.offSpaceBackgroundColor } : styles.modalOffSpaceBgColor]} onPress={props.onPressOutside}>
+                onPressOutside ?
+                    <TouchableOpacity style={[styles.fillParent, offSpaceBackgroundColor ? { backgroundColor: offSpaceBackgroundColor } : styles.modalOffSpaceBgColor]} onPress={onPressOutside}>
                         <ScrollView
                             directionalLockEnabled={true}
                             style={styles.fillParent}
-                            contentContainerStyle={[styles.fillParent, IS_ANDROID ? null : styles.safePadding, props.alignCenter ? styles.centerContent : null]}
+                            contentContainerStyle={[styles.fillParent, IS_ANDROID ? null : styles.safePadding, containerStyle, alignCenter ? styles.centerContent : null]}
                         >
                             <TouchableWithoutFeedback>
                                 {
-                                    props.children
+                                    otherProps.children
                                 }
                             </TouchableWithoutFeedback>
                         </ScrollView>
@@ -121,11 +121,11 @@ export const BaseModal = (props) => {
                         <ScrollView
                             directionalLockEnabled={true}
                             style={styles.fillParent}
-                            contentContainerStyle={[styles.fillParent, props.alignCenter ? styles.centerContent : null]}
+                            contentContainerStyle={[styles.fillParent, containerStyle, alignCenter ? styles.centerContent : null]}
                         >
                             <TouchableWithoutFeedback>
                                 {
-                                    props.children
+                                    otherProps.children
                                 }
                             </TouchableWithoutFeedback>
                         </ScrollView>
