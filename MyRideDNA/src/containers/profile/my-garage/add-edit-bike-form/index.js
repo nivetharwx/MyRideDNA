@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, StatusBar, ScrollView, View, Keyboard, Alert, KeyboardAvoidingView, Text } from 'react-native';
+import { StyleSheet, StatusBar, ScrollView, View, Keyboard, Alert, KeyboardAvoidingView, ImageBackground } from 'react-native';
 import { BasicHeader } from '../../../../components/headers';
 import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, CUSTOM_FONTS } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
@@ -155,9 +155,6 @@ class AddBikeForm extends Component {
                                 inputRef={elRef => this.fieldRefs[5] = elRef} returnKeyType='next'
                                 onChange={this.onChangeNotes} label='NOTES' labelStyle={styles.labelStyle}
                                 hideKeyboardOnSubmit={true} />
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: heightPercentageToDP(3) }}>
-                                <IconButton style={styles.roundBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={() => this.setState({ isAddingClub: true, activeClubId: null, club: '' })} />
-                            </View>
                         </View>
                         <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: 20, fontFamily: CUSTOM_FONTS.robotoSlabBold }} onPress={this.onSubmit} />
                     </ScrollView>
@@ -197,6 +194,7 @@ const styles = StyleSheet.create({
     },
     submitBtn: {
         height: heightPercentageToDP(8.5),
+        marginTop: heightPercentageToDP(3)
     },
     imageUploadBtn: {
         marginLeft: 10,

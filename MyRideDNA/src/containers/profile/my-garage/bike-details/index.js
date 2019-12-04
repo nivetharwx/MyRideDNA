@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, View, ScrollView, ImageBackground, Image, StatusBar, FlatList, Text } from 'react-native';
+import { StyleSheet, View, ScrollView, ImageBackground, Image, StatusBar, FlatList, Alert } from 'react-native';
 import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, heightPercentageToDP, POST_TYPE } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { IconButton, ShifterButton, LinkButton } from '../../../../components/buttons';
 import { appNavMenuVisibilityAction, setCurrentBikeIndexAction } from '../../../../actions';
 import { DefaultText } from '../../../../components/labels';
 import { BaseModal } from '../../../../components/modal';
+import { setBikeAsActive, deleteBike } from '../../../../api';
 
 class BikeDetails extends Component {
     constructor(props) {
@@ -21,18 +22,47 @@ class BikeDetails extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-
+        if (this.props.currentBikeIndex === -1) this.onPressBackButton();
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
 
     openBikeForm = () => {
+        this.hideOptionsModal();
+        Actions.push(PageKeys.ADD_BIKE_FORM, {});
+    }
+
+    openBikeForm = () => {
+        this.hideOptionsModal();
         Actions.push(PageKeys.ADD_BIKE_FORM, {});
     }
 
     openBikeAlbum = () => {
-        this.props.setCurrentBikeIndex(this.props.garage.spaceList.findIndex(({ spaceId }) => spaceId === this.props.bike.spaceId));
-        Actions.push(PageKeys.BIKE_ALBUM, { bikeIndex: this.props.garage.spaceList.findIndex(({ spaceId }) => spaceId === this.props.bike.spaceId) });
+        Actions.push(PageKeys.BIKE_ALBUM);
+    }
+
+    makeAsActiveBike = () => {
+        this.props.setBikeAsActive(this.props.user.userId, this.props.bike.spaceId, this.props.currentBikeIndex);
+    }
+
+    onPressBackButton = () => Actions.pop();
+
+    onPressDeleteBike = () => {
+        setTimeout(() => {
+            Alert.alert(
+                'Remove confirmation',
+                `Are you sure to remove ${this.props.bike.name} from your list?`,
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => console.log('Cancel Pressed'),
+                        style: 'cancel',
+                    },
+                    { text: 'Remove', onPress: () => this.props.deleteBike(this.props.user.userId, this.props.bike.spaceId, this.props.currentBikeIndex) },
+                ]
+            );
+        }, 100);
+        this.hideOptionsModal();
     }
 
     addStoryFromRoad = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.STORIES_FROM_ROAD });
@@ -56,8 +86,8 @@ class BikeDetails extends Component {
             <View style={styles.fill}>
                 <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
                     <View style={APP_COMMON_STYLES.optionsContainer}>
-                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='EDIT BIKE' titleStyle={APP_COMMON_STYLES.optionBtnTxt} />
-                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='DELETE BIKE' titleStyle={APP_COMMON_STYLES.optionBtnTxt} />
+                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='EDIT BIKE' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.openBikeForm} />
+                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='DELETE BIKE' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.onPressDeleteBike} />
                         <LinkButton style={APP_COMMON_STYLES.optionBtn} title='CANCEL' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.hideOptionsModal} />
                     </View>
                 </BaseModal>
@@ -66,7 +96,7 @@ class BikeDetails extends Component {
                 </View>
                 <View style={styles.header}>
                     <IconButton iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: { fontSize: 27 } }}
-                        style={styles.headerIconCont} onPress={() => Actions.pop()} />
+                        style={styles.headerIconCont} onPress={this.onPressBackButton} />
                     <View style={styles.headingContainer}>
                         <DefaultText style={styles.heading}>
                             {user.name}
@@ -81,77 +111,79 @@ class BikeDetails extends Component {
                     </View>
                     <IconButton style={{ padding: 10 }} iconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 20 } }} onPress={this.showOptionsModal} />
                 </View>
-                <ScrollView showsVerticalScrollIndicator={false}>
-                    <View style={[styles.bikePic, styles.bikeBtmBorder, bike.isDefault ? styles.activeBorder : null]}>
-                        <Image source={bike.picture && bike.picture.data ? { uri: bike.picture.data } : require('../../../../assets/img/bike_placeholder.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} />
-                    </View>
-                    <ImageBackground source={require('../../../../assets/img/odometer-small.png')} style={{ position: 'absolute', marginTop: styles.bikePic.height - 55.5, alignSelf: 'center', height: 111, width: 118, justifyContent: 'center' }}>
-                        <DefaultText style={styles.miles}>114,526</DefaultText>
-                    </ImageBackground>
-                    <View style={styles.odometerLblContainer}>
-                        <DefaultText style={styles.odometerLbl}>TOTAL</DefaultText>
-                        <DefaultText style={styles.odometerLbl}>MILES</DefaultText>
-                    </View>
-                    <View style={{ marginHorizontal: 20, marginTop: 20 }}>
-                        {/* <IconButton iconProps={{ name: 'account-edit', type: 'MaterialCommunityIcons', style: { fontSize: 26, color: '#f69039' } }}
-                            style={{ alignSelf: 'flex-end' }} onPress={this.openBikeForm} /> */}
-                        <DefaultText style={styles.title}>2013 Softail Fatboy</DefaultText>
-                        <DefaultText style={styles.subtitle}>{`${bike.make || ''}${bike.model ? ' - ' + bike.model : ''}${bike.notes ? '    |    ' + bike.notes.length <= 17 ? bike.notes : bike.notes.substring(0, 17) + '...' : ''}`}</DefaultText>
-                        {
-                            bike.isDefault
-                                ? <DefaultText style={styles.activeBikeTxt}>Active Bike</DefaultText>
-                                : <LinkButton style={styles.activeBikeBtn} title='Set as Active Bike' titleStyle={styles.activeBikeBtnTxt} />
-                        }
-                    </View>
-                    <View style={{ marginHorizontal: 20, flex: 1 }}>
-                        <View style={styles.hDivider} />
-                        <View style={styles.section}>
-                            <View style={styles.sectionHeader}>
-                                <LinkButton style={styles.sectionLinkBtn}>
-                                    <DefaultText style={styles.sectionLinkTxt}>My Ride</DefaultText>
-                                    <DefaultText style={[styles.sectionLinkTxt, { color: APP_COMMON_STYLES.infoColor, marginLeft: 8 }]}>[see all]</DefaultText>
-                                </LinkButton>
-                                <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={() => null} />
+                {
+                    bike === null
+                        ? null
+                        : <ScrollView showsVerticalScrollIndicator={false}>
+                            <View style={[styles.bikePic, styles.bikeBtmBorder, bike.isDefault ? styles.activeBorder : null]}>
+                                <Image source={bike.picture && bike.picture.data ? { uri: bike.picture.data } : require('../../../../assets/img/bike_placeholder.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} />
                             </View>
-                            <FlatList style={styles.list} />
-                        </View>
-                        <View style={styles.section}>
-                            <View style={styles.sectionHeader}>
-                                <LinkButton style={styles.sectionLinkBtn}>
-                                    <DefaultText style={styles.sectionLinkTxt}>Wish List</DefaultText>
-                                    <DefaultText style={[styles.sectionLinkTxt, { color: APP_COMMON_STYLES.infoColor, marginLeft: 8 }]}>[see all]</DefaultText>
-                                </LinkButton>
-                                <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={() => null} />
+                            <ImageBackground source={require('../../../../assets/img/odometer-small.png')} style={{ position: 'absolute', marginTop: styles.bikePic.height - 55.5, alignSelf: 'center', height: 111, width: 118, justifyContent: 'center' }}>
+                                <DefaultText style={styles.miles}>114,526</DefaultText>
+                            </ImageBackground>
+                            <View style={styles.odometerLblContainer}>
+                                <DefaultText style={styles.odometerLbl}>TOTAL</DefaultText>
+                                <DefaultText style={styles.odometerLbl}>MILES</DefaultText>
                             </View>
-                            <FlatList style={styles.list} />
-                        </View>
-                        <View style={styles.section}>
-                            <View style={styles.sectionHeader}>
-                                <LinkButton style={styles.sectionLinkBtn}>
-                                    <DefaultText style={styles.sectionLinkTxt}>Logged Rides</DefaultText>
-                                    <DefaultText style={[styles.sectionLinkTxt, { color: APP_COMMON_STYLES.infoColor, marginLeft: 8 }]}>[see all]</DefaultText>
-                                </LinkButton>
-                                <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={() => null} />
+                            <View style={{ marginHorizontal: 20, marginTop: 20 }}>
+                                <DefaultText style={styles.title}>{bike.name}</DefaultText>
+                                <DefaultText style={styles.subtitle}>{`${bike.make || ''}${bike.model ? ' - ' + bike.model : ''}${bike.notes ? '    |    ' + bike.notes.length <= 17 ? bike.notes : bike.notes.substring(0, 17) + '...' : ''}`}</DefaultText>
+                                {
+                                    bike.isDefault
+                                        ? <DefaultText style={styles.activeBikeTxt}>Active Bike</DefaultText>
+                                        : <LinkButton style={styles.activeBikeBtn} title='Set as Active Bike' titleStyle={styles.activeBikeBtnTxt} onPress={this.makeAsActiveBike} />
+                                }
                             </View>
-                            <FlatList style={styles.list} />
-                        </View>
-                        <View style={styles.section}>
-                            <View style={styles.sectionHeader}>
-                                <LinkButton style={styles.sectionLinkBtn}>
-                                    <DefaultText style={styles.sectionLinkTxt}>Stories from the Road</DefaultText>
-                                    <DefaultText style={[styles.sectionLinkTxt, { color: APP_COMMON_STYLES.infoColor, marginLeft: 8 }]}>[see all]</DefaultText>
-                                </LinkButton>
-                                <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={this.addStoryFromRoad} />
+                            <View style={{ marginHorizontal: 20, flex: 1 }}>
+                                <View style={styles.hDivider} />
+                                <View style={styles.section}>
+                                    <View style={styles.sectionHeader}>
+                                        <LinkButton style={styles.sectionLinkBtn}>
+                                            <DefaultText style={styles.sectionLinkTxt}>My Ride</DefaultText>
+                                            <DefaultText style={[styles.sectionLinkTxt, { color: APP_COMMON_STYLES.infoColor, marginLeft: 8 }]}>[see all]</DefaultText>
+                                        </LinkButton>
+                                        <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={() => null} />
+                                    </View>
+                                    <FlatList style={styles.list} />
+                                </View>
+                                <View style={styles.section}>
+                                    <View style={styles.sectionHeader}>
+                                        <LinkButton style={styles.sectionLinkBtn}>
+                                            <DefaultText style={styles.sectionLinkTxt}>Wish List</DefaultText>
+                                            <DefaultText style={[styles.sectionLinkTxt, { color: APP_COMMON_STYLES.infoColor, marginLeft: 8 }]}>[see all]</DefaultText>
+                                        </LinkButton>
+                                        <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={() => null} />
+                                    </View>
+                                    <FlatList style={styles.list} />
+                                </View>
+                                <View style={styles.section}>
+                                    <View style={styles.sectionHeader}>
+                                        <LinkButton style={styles.sectionLinkBtn}>
+                                            <DefaultText style={styles.sectionLinkTxt}>Logged Rides</DefaultText>
+                                            <DefaultText style={[styles.sectionLinkTxt, { color: APP_COMMON_STYLES.infoColor, marginLeft: 8 }]}>[see all]</DefaultText>
+                                        </LinkButton>
+                                        <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={() => null} />
+                                    </View>
+                                    <FlatList style={styles.list} />
+                                </View>
+                                <View style={styles.section}>
+                                    <View style={styles.sectionHeader}>
+                                        <LinkButton style={styles.sectionLinkBtn}>
+                                            <DefaultText style={styles.sectionLinkTxt}>Stories from the Road</DefaultText>
+                                            <DefaultText style={[styles.sectionLinkTxt, { color: APP_COMMON_STYLES.infoColor, marginLeft: 8 }]}>[see all]</DefaultText>
+                                        </LinkButton>
+                                        <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={this.addStoryFromRoad} />
+                                    </View>
+                                    <View style={styles.greyBorder} />
+                                </View>
                             </View>
-                            <View style={styles.greyBorder} />
-                        </View>
-                    </View>
-                    <LinkButton style={styles.fullWidthImgLink} onPress={this.openBikeAlbum}>
-                        <ImageBackground source={require('../../../../assets/img/my-photos.png')} style={styles.imgBG}>
-                            <DefaultText style={styles.txtOnImg}>Photos</DefaultText>
-                        </ImageBackground>
-                    </LinkButton>
-                </ScrollView>
+                            <LinkButton style={styles.fullWidthImgLink} onPress={this.openBikeAlbum}>
+                                <ImageBackground source={require('../../../../assets/img/my-photos.png')} style={styles.imgBG}>
+                                    <DefaultText style={styles.txtOnImg}>Photos</DefaultText>
+                                </ImageBackground>
+                            </LinkButton>
+                        </ScrollView>
+                }
                 {/* Shifter: - Brings the app navigation menu */}
                 <ShifterButton onPress={this.showAppNavMenu} size={18} alignLeft={this.props.user.handDominance === 'left'} />
             </View>
@@ -162,13 +194,16 @@ class BikeDetails extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { hasNetwork } = state.PageState;
-    const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
-    return { user, hasNetwork, garage };
+    const { currentIndex, activeBikeIndex } = state.GarageInfo;
+    const bike = currentIndex === -1 ? null : state.GarageInfo.spaceList[currentIndex];
+    return { user, hasNetwork, bike, activeBikeIndex, currentBikeIndex: currentIndex };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        setCurrentBikeIndex: (index) => dispatch(setCurrentBikeIndexAction(index))
+        setCurrentBikeIndex: (index) => dispatch(setCurrentBikeIndexAction(index)),
+        setBikeAsActive: (userId, spaceId, index) => dispatch(setBikeAsActive(userId, spaceId, index)),
+        deleteBike: (userId, bikeId, index) => dispatch(deleteBike(userId, bikeId, index)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BikeDetails);

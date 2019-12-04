@@ -141,7 +141,7 @@ const mapDispatchToProps = (dispatch) => {
         getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
             dispatch(updateBikeAlbumAction({ pictureObj }))
         }, (error) => console.log('getPictureList album error : ', error)),
-        clearBikeAlbum: () => dispatch(clearBikeAlbumAction())
+        clearBikeAlbum: () => dispatch(clearBikeAlbumAction()),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BikeAlbum);

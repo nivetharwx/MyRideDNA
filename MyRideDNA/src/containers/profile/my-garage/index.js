@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, View, FlatList, Animated, TouchableOpacity, Alert, Easing, ImageBackground } from 'react-native';
+import { StyleSheet, View, FlatList, Animated, TouchableOpacity, Easing, ImageBackground } from 'react-native';
 import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, PORTRAIT_TAIL_TAG, CUSTOM_FONTS } from '../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { Item } from 'native-base';
 import { getPicture, getGarageInfo, setBikeAsActive, deleteBike, updateGarageName } from '../../../api';
 import { BaseModal } from '../../../components/modal';
-import { replaceGarageInfoAction, updateBikePictureAction, apiLoaderActions } from '../../../actions';
+import { replaceGarageInfoAction, updateBikePictureAction, apiLoaderActions, setCurrentBikeIndexAction } from '../../../actions';
 import { DefaultText } from '../../../components/labels';
 
 class MyGarageTab extends Component {
@@ -15,10 +15,7 @@ class MyGarageTab extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            headerSearchMode: false,
-            searchQuery: '',
             isVisibleOptionsModal: false,
-            selectedBike: null,
             spinValue: new Animated.Value(0),
         };
     }
@@ -82,16 +79,7 @@ class MyGarageTab extends Component {
 
     }
 
-    onChangeActiveBike = () => {
-        const { garage } = this.props;
-        const { selectedBike } = this.state;
-        this.onCancelOptionsModal();
-        const prevActiveBikeIndex = garage.spaceList.findIndex(bike => bike.isDefault);
-        const newActiveBikeIndex = garage.spaceList.findIndex(bike => bike.spaceId === selectedBike.spaceId);
-        this.props.setBikeAsActive(this.props.user.userId, selectedBike.spaceId, prevActiveBikeIndex, newActiveBikeIndex);
-    }
-
-    openBikeForm = (bike = this.state.selectedBike) => {
+    openBikeForm = (bike) => {
         if (bike) {
             Actions.push(PageKeys.ADD_BIKE_FORM, { bikeIndex: this.props.garage.spaceList.findIndex(item => item.spaceId === bike.spaceId) });
             this.onCancelOptionsModal();
@@ -100,59 +88,9 @@ class MyGarageTab extends Component {
         }
     }
 
-    onUpdateGarageName = (garageName) => {
-        this.props.updateGarageName(garageName, this.props.garage.garageId);
-    }
-
-    showOptionsModal = (index) => {
-        this.setState({ selectedBike: this.props.garage.spaceList[index], isVisibleOptionsModal: true });
-    }
-
-    onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false, selectedBike: null })
-
-    renderMenuOptions = () => {
-        if (this.state.selectedBike === null) return;
-        let options = [{ text: 'Edit', id: 'editBike', handler: () => this.openBikeForm() }];
-        if (!this.state.selectedBike.isDefault) {
-            options.push({ text: 'Select as active', id: 'activeBike', handler: () => this.onChangeActiveBike() })
-        }
-        options.push({ text: 'Remove bike', id: 'removeBike', handler: () => this.onPressDeleteBike() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() });
-        return (
-            options.map(option => (
-                <LinkButton
-                    key={option.id}
-                    onPress={option.handler}
-                    highlightColor={APP_COMMON_STYLES.infoColor}
-                    style={APP_COMMON_STYLES.menuOptHighlight}
-                    title={option.text}
-                    titleStyle={APP_COMMON_STYLES.menuOptTxt}
-                />
-            ))
-        )
-    }
-
     openBikeDetailsPage = (bike) => {
-        Actions.push(PageKeys.BIKE_DETAILS, { bike });
-    }
-
-    onPressDeleteBike = () => {
-        const { selectedBike } = this.state;
-        const index = this.props.garage.spaceList.findIndex(bike => bike.spaceId === selectedBike.spaceId);
-        setTimeout(() => {
-            Alert.alert(
-                'Remove confirmation',
-                `Are you sure to remove ${selectedBike.name} from your list?`,
-                [
-                    {
-                        text: 'Cancel',
-                        onPress: () => console.log('Cancel Pressed'),
-                        style: 'cancel',
-                    },
-                    { text: 'Remove', onPress: () => this.props.deleteBike(this.props.user.userId, selectedBike.spaceId, index) },
-                ]
-            );
-        }, 100);
-        this.onCancelOptionsModal();
+        this.props.setCurrentBikeIndex(this.props.garage.spaceList.findIndex(({ spaceId }) => spaceId === bike.spaceId));
+        Actions.push(PageKeys.BIKE_DETAILS, {});
     }
 
     renderBike = ({ item, index }) => {
@@ -189,13 +127,6 @@ class MyGarageTab extends Component {
         });
         return (
             <View style={styles.fill}>
-                <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
-                    <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
-                        {
-                            this.renderMenuOptions()
-                        }
-                    </View>
-                </BaseModal>
                 <View style={styles.header}>
                     <IconButton iconProps={{ name: 'ios-notifications', type: 'Ionicons', style: { fontSize: 26 } }}
                         style={styles.headerIconCont} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
@@ -220,7 +151,7 @@ class MyGarageTab extends Component {
                         data={garage.spaceList}
                         keyExtractor={(item, index) => item.spaceId + ''}
                         showsVerticalScrollIndicator={false}
-                        extraData={this.state}
+                        extraData={{ activeBikeIndex: garage.activeBikeIndex }}
                         ref={elRef => this.spacelistRef = elRef}
                         renderItem={this.renderBike}
                     />
@@ -241,7 +172,7 @@ class MyGarageTab extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
+    const garage = { garageId, garageName, spaceList } = state.GarageInfo;
     const { hasNetwork } = state.PageState;
     return { user, garage, hasNetwork };
 }
@@ -258,11 +189,10 @@ const mapDispatchToProps = (dispatch) => {
             })
         },
         updateGarageName: (garageName, garageId) => dispatch(updateGarageName(garageName, garageId)),
-        setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
-        deleteBike: (userId, bikeId, index) => dispatch(deleteBike(userId, bikeId, index)),
         getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
             dispatch(updateBikePictureAction({ spaceId, picture: response.picture }))
         }, (error) => console.log("getPicture error: ", error)),
+        setCurrentBikeIndex: (index) => dispatch(setCurrentBikeIndexAction(index)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MyGarageTab);

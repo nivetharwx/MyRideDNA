@@ -47,10 +47,6 @@ class MyProfileTab extends Component {
     }
 
     async componentDidMount() {
-        // this.props.getSpaceList(this.props.user.userId);
-        if (this.props.garage.garageId === null) {
-            // this.props.getGarageInfo(this.props.user.userId);
-        }
         if (this.props.user.profilePictureId && !this.props.user.profilePicture) {
             this.profilePicture = await AsyncStorage.getItem('profilePicture');
             if (this.profilePicture) {
@@ -366,22 +362,10 @@ const mapDispatchToProps = (dispatch) => {
         }),
         getSpaceList: (userId) => dispatch(getSpaceList(userId)),
         updateProfilePicture: (profilePicStr, mimeType, userId) => dispatch(updateProfilePicture(profilePicStr, mimeType, userId)),
-
         setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
-        getGarageInfo: (userId) => {
-            dispatch(apiLoaderActions(true));
-            getGarageInfo(userId, (garage) => {
-                dispatch(replaceGarageInfoAction(garage))
-                dispatch(apiLoaderActions(false))
-            }, (error) => {
-                dispatch(apiLoaderActions(false));
-                console.log(`getGarage error: `, error);
-            })
-        },
         updateMyProfileLastOptions: (expanded) => dispatch(updateMyProfileLastOptionsAction({ expanded })),
         getRoadBuddies: (userId) => dispatch(getRoadBuddies(userId)),
         getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
-
             if (callingFrom === 'roadBuddies') {
                 dispatch(updateFriendInListAction({ pictureObj }))
             }
