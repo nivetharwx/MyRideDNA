@@ -79,6 +79,21 @@ export default (state = initialState, action) => {
                     }
                 };
             }
+            if (action.data.type === 'album') {
+                return {
+                    ...state,
+                    person: {
+                        ...state.person,
+                        pictures: state.person.pictures.map(pic => {
+                            if (!pic.id) return pic;
+                            if (typeof action.data.pictureObj[pic.id] === 'string') {
+                                return { ...pic, data: action.data.pictureObj[pic.id] };
+                            }
+                            return pic;
+                        })
+                    }
+                };
+            }
 
         case RESET_PERSON_PROFILE:
             if (action.data && action.data.comingFrom === PageKeys.NOTIFICATIONS) {

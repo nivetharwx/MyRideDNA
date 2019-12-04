@@ -77,7 +77,8 @@ export const PageKeys = {
     BIKE_DETAILS: 'bikeDetails',
     POST_FORM: 'postForm',
     BUDDY_FRIENDS: 'buddyFriends',
-    BUDDY_PASSENGERS: 'buddyPassengers'
+    BUDDY_PASSENGERS: 'buddyPassengers',
+    BUDDY_ALBUM: 'buddyAlbum'
 };
 
 export const POST_TYPE = { WISH_LIST: 'wishList', JOURNAL: 'journal', STORIES_FROM_ROAD: 'storiesFromRoad', CUSTOMIZATION: 'customization', ALBUM: 'album' };
