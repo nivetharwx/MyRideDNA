@@ -8,7 +8,6 @@ import { Tabs, Tab, ScrollableTab, TabHeading } from 'native-base';
 import MyProfileTab from './my-profile';
 import MyGarageTab from './my-garage';
 import { Loader } from '../../components/loader';
-import { getGarageInfo } from '../../api';
 
 class Profile extends Component {
     tabsRef = null;
@@ -20,7 +19,6 @@ class Profile extends Component {
     }
 
     componentDidMount() {
-        this.props.getGarageInfo(this.props.user.userId);
         if (this.props.tabProps.activeTab !== 0) setTimeout(() => this.tabsRef.goToPage(this.props.tabProps.activeTab), 0);
     }
 
@@ -72,13 +70,6 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        getGarageInfo: (userId) => {
-            getGarageInfo(userId, (garage) => {
-                dispatch(replaceGarageInfoAction(garage));
-            }, (error) => {
-                console.log(`getGarage error: `, error);
-            })
-        },
         clearGarageInfo: () => dispatch(clearGarageInfoAction()),
     }
 }
