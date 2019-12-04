@@ -6,11 +6,14 @@ import { Actions } from 'react-native-router-flux';
 import { IconButton, ShifterButton, LinkButton } from '../../../../components/buttons';
 import { appNavMenuVisibilityAction, setCurrentBikeIndexAction } from '../../../../actions';
 import { DefaultText } from '../../../../components/labels';
+import { BaseModal } from '../../../../components/modal';
 
 class BikeDetails extends Component {
     constructor(props) {
         super(props);
-        this.state = {};
+        this.state = {
+            showOptionsModal: false,
+        };
     }
 
     componentDidMount() {
@@ -38,14 +41,26 @@ class BikeDetails extends Component {
 
     addCustomization = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.CUSTOMIZATION });
 
+    showOptionsModal = () => this.setState({ showOptionsModal: true });
+
+    hideOptionsModal = () => this.setState({ showOptionsModal: false });
+
     componentWillUnmount() {
 
     }
 
     render() {
         const { user, bike } = this.props;
+        const { showOptionsModal } = this.state;
         return (
             <View style={styles.fill}>
+                <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
+                    <View style={APP_COMMON_STYLES.optionsContainer}>
+                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='EDIT BIKE' titleStyle={APP_COMMON_STYLES.optionBtnTxt} />
+                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='DELETE BIKE' titleStyle={APP_COMMON_STYLES.optionBtnTxt} />
+                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='CANCEL' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.hideOptionsModal} />
+                    </View>
+                </BaseModal>
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
@@ -63,8 +78,8 @@ class BikeDetails extends Component {
                                 </DefaultText>
                                 : null
                         }
-
                     </View>
+                    <IconButton style={{ padding: 10 }} iconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 20 } }} onPress={this.showOptionsModal} />
                 </View>
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={[styles.bikePic, styles.bikeBtmBorder, bike.isDefault ? styles.activeBorder : null]}>
@@ -78,12 +93,16 @@ class BikeDetails extends Component {
                         <DefaultText style={styles.odometerLbl}>MILES</DefaultText>
                     </View>
                     <View style={{ marginHorizontal: 20, marginTop: 20 }}>
-                        <IconButton iconProps={{ name: 'account-edit', type: 'MaterialCommunityIcons', style: { fontSize: 26, color: '#f69039' } }}
-                            style={{ alignSelf: 'flex-end' }} onPress={this.openBikeForm} />
-                        <DefaultText style={styles.title}>{bike.name}</DefaultText>
+                        {/* <IconButton iconProps={{ name: 'account-edit', type: 'MaterialCommunityIcons', style: { fontSize: 26, color: '#f69039' } }}
+                            style={{ alignSelf: 'flex-end' }} onPress={this.openBikeForm} /> */}
+                        <DefaultText style={styles.title}>2013 Softail Fatboy</DefaultText>
                         <DefaultText style={styles.subtitle}>{`${bike.make || ''}${bike.model ? ' - ' + bike.model : ''}${bike.notes ? '    |    ' + bike.notes.length <= 17 ? bike.notes : bike.notes.substring(0, 17) + '...' : ''}`}</DefaultText>
+                        {
+                            bike.isDefault
+                                ? <DefaultText style={styles.activeBikeTxt}>Active Bike</DefaultText>
+                                : <LinkButton style={styles.activeBikeBtn} title='Set as Active Bike' titleStyle={styles.activeBikeBtnTxt} />
+                        }
                     </View>
-                    {bike.isDefault ? <View style={styles.activeLabelCont}><View style={styles.activeIndicator} /><DefaultText style={styles.activeBikeTxt}>Active Bike</DefaultText></View> : null}
                     <View style={{ marginHorizontal: 20, flex: 1 }}>
                         <View style={styles.hDivider} />
                         <View style={styles.section}>
@@ -171,7 +190,9 @@ const styles = StyleSheet.create({
         shadowColor: '#000000',
         shadowOpacity: 0.9,
         shadowRadius: 5,
-        zIndex: 999
+        zIndex: 999,
+        paddingLeft: 17,
+        paddingRight: 25
     },
     headerIconCont: {
         paddingHorizontal: 0,
@@ -180,7 +201,6 @@ const styles = StyleSheet.create({
         borderRadius: widthPercentageToDP(9) / 2,
         backgroundColor: '#fff',
         alignSelf: 'center',
-        marginLeft: 17
     },
     headingContainer: {
         flex: 1,
@@ -224,12 +244,6 @@ const styles = StyleSheet.create({
     activeBorder: {
         borderBottomColor: APP_COMMON_STYLES.infoColor
     },
-    activeLabelCont: {
-        marginTop: 16,
-        marginLeft: 10,
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
     activeIndicator: {
         width: 7,
         height: 7,
@@ -249,7 +263,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 72
     },
     title: {
-        marginTop: 10,
+        marginTop: 25,
         fontSize: 19,
         fontFamily: CUSTOM_FONTS.robotoBold
     },
@@ -257,10 +271,28 @@ const styles = StyleSheet.create({
         marginTop: 5,
     },
     activeBikeTxt: {
-        color: '#585756',
+        marginTop: 16,
+        color: '#fff',
         letterSpacing: 0.6,
         fontSize: 12,
-        marginLeft: 4
+        backgroundColor: APP_COMMON_STYLES.infoColor,
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        borderRadius: 50,
+        alignSelf: 'flex-start'
+    },
+    activeBikeBtnTxt: {
+        color: '#585756',
+        letterSpacing: 0.6
+    },
+    activeBikeBtn: {
+        marginTop: 16,
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        borderRadius: 50,
+        borderWidth: 1.2,
+        borderColor: APP_COMMON_STYLES.infoColor,
+        alignSelf: 'flex-start'
     },
     miles: {
         letterSpacing: 0.3,
@@ -329,5 +361,5 @@ const styles = StyleSheet.create({
         backgroundColor: '#B1B1B1',
         height: 1.5,
         marginTop: 8
-    }
+    },
 });
