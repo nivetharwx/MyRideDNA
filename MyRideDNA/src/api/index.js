@@ -2079,26 +2079,16 @@ export const getAllMembersAndFriendsLocationList = (userId, ids) => {
             })
     }
 }
-export const getSpaceList = (userId) => {
-    return dispatch => {
-        // dispatch(toggleLoaderAction(true));
-        dispatch(apiLoaderActions(true));
-        axios.get(USER_BASE_URL + `getSpaceList?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
-            .then(res => {
-                console.log("getSpaceList success: ", res.data);
-                dispatch(apiLoaderActions(false));
-                // dispatch(toggleLoaderAction(false));
-                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                dispatch(replaceShortSpaceListAction(res.data))
-            })
-            .catch(er => {
-                console.log(`getSpaceList: `, er.response);
-                // TODO: Dispatch error info action
-                dispatch(apiLoaderActions(false));
-                differentErrors(er, [userId], getSpaceList, false);
-                // dispatch(toggleLoaderAction(false));
-            })
-    };
+export const getSpaceList = (userId, successCallback, errorCallback) => {
+    axios.get(USER_BASE_URL + `getSpaceList?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+        .then(res => {
+            console.log("getSpaceList success: ", res.data);
+            typeof successCallback === 'function' && successCallback(res.data);
+        })
+        .catch(er => {
+            console.log(`getSpaceList: `, er.response || er);
+            typeof errorCallback === 'function' && errorCallback(er.response || er);
+        })
 }
 export const getGarageInfo = (userId, successCallback, errorCallback) => {
     // return dispatch => {
@@ -2207,23 +2197,18 @@ export const addPicturesToBike = (userId, bike, pictureList, isPrivate = true) =
             })
     }
 }
-export const setBikeAsActive = (userId, spaceId, prevActiveIndex, newActiveIndex) => {
+export const setBikeAsActive = (userId, spaceId, newActiveIndex) => {
     return dispatch => {
-        // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true));
         axios.put(USER_BASE_URL + `setDefaultSpace/${userId}/${spaceId}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                console.log("setDefaultSpace success: ", res.data);
-                // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
-                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                return dispatch(updateActiveBikeAction({ prevActiveIndex, newActiveIndex }))
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+                dispatch(updateActiveBikeAction(newActiveIndex));
             })
             .catch(er => {
-                console.log(`setDefaultSpace: `, er.response || er);
-                differentErrors(er, [userId, spaceId, prevActiveIndex, newActiveIndex], setBikeAsActive, true);
-                // TODO: Dispatch error info action
-                // dispatch(toggleLoaderAction(false));
+                console.log(`setDefaultSpace error: `, er.response || er);
+                differentErrors(er, [userId, spaceId, newActiveIndex], setBikeAsActive, true);
                 dispatch(apiLoaderActions(false));
             })
     };

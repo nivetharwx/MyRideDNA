@@ -10,7 +10,7 @@ import { ImageButton, ShifterButton, SwitchIconButton, IconButton, LinkButton, B
 import { appNavMenuVisibilityAction } from '../../actions';
 import { IconicList } from '../../components/inputs';
 import { Icon as NBIcon, Thumbnail, Toast } from 'native-base';
-import { createPost } from '../../api';
+import { createPost, getSpaceList } from '../../api';
 import { Loader } from '../../components/loader';
 
 const CONTAINER_H_SPACE = widthPercentageToDP(6);
@@ -24,13 +24,18 @@ class PostForm extends Component {
             selectedImgs: [],
             title: '',
             description: '',
+            bikeList: [],
         };
     }
 
     componentDidMount() {
-        if (this.state.selectedBikeId === null && this.props.bikeList.length > 0) {
-            this.setState({ selectedBikeId: this.props.bikeList[0].spaceId });
-        }
+        getSpaceList(this.props.user.userId, (bikeList) => {
+            this.setState({ bikeList }, () => {
+                if (this.state.selectedBikeId === null) {
+                    this.setState({ selectedBikeId: this.state.bikeList[0].spaceId });
+                }
+            });
+        }, (er) => console.log(er));
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
@@ -103,21 +108,21 @@ class PostForm extends Component {
 
     onSubmit = () => {
         this.setState({ isSubmiting: true });
-        const bike = this.props.bikeList.find(({ spaceId }) => spaceId === this.state.selectedBikeId);
+        const bike = this.state.bikeList.find(({ spaceId }) => spaceId === this.state.selectedBikeId);
         this.props.createPost(this.props.user.userId, bike.spaceId, {
             title: this.state.title, description: this.state.description,
             postTypeId: this.props.postTypes[this.props.postType].id,
             isPrivate: this.state.isPrivate, pictures: this.state.selectedImgs
         }, () => {
             Toast.show({ text: 'Post created successfully', position: 'bottom', type: 'success', duration: 1000 });
-            const selBike = this.props.bikeList.length > 0 ? this.props.bikeList[0].spaceId : this.props.currentBikeId || null;
+            const selBike = this.state.bikeList.length > 0 ? this.state.bikeList[0].spaceId : this.props.currentBikeId || null;
             this.setState({ title: '', description: '', selectedImgs: [], selectedBikeId: selBike, isPrivate: true });
         });
     }
 
     render() {
-        const { user, bikeList, currentBikeId, postType, showLoader } = this.props;
-        const { selectedBikeId, isPrivate, selectedImgs, title, description } = this.state;
+        const { user, currentBikeId, postType, showLoader } = this.props;
+        const { selectedBikeId, isPrivate, selectedImgs, title, description, bikeList } = this.state;
         const BIKE_LIST = bikeList.map(bike => ({ label: bike.name, value: bike.spaceId }));
         return <View style={styles.fill}>
             <View style={APP_COMMON_STYLES.statusBar}>
@@ -158,7 +163,7 @@ class PostForm extends Component {
                     </View>
                     <View style={styles.btmContainer}>
                         <IconicList
-                            disabled={typeof currentBikeId !== 'undefined'}
+                            disabled={typeof currentBikeId !== 'undefined' || BIKE_LIST.length === 0}
                             selectedValue={selectedBikeId}
                             dropdownIcon={<NBIcon name='caret-down' type='FontAwesome' style={styles.dropdownIcon} />}
                             placeholder='SELECT A BIKE'
@@ -188,9 +193,8 @@ class PostForm extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { spaceList: bikeList } = state.GarageInfo;
     const { postTypes, showLoader } = state.PageState;
-    return { user, bikeList, postTypes, showLoader };
+    return { user, postTypes, showLoader };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
