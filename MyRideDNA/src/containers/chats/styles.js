@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     },
     chatHeaderNickname: {
         color: APP_COMMON_STYLES.infoColor,
-        fontWeight: 'bold',
+        fontFamily:CUSTOM_FONTS.gothamBold,
         marginLeft: widthPercentageToDP(2)
     },
     chatArea: {

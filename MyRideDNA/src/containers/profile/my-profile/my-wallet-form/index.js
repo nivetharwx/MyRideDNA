@@ -105,7 +105,7 @@ class MyWalletForm extends Component {
                     <BasicHeader title='My Wallet' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
                     <ScrollView >
                         <View style={{ marginLeft: widthPercentageToDP(13), marginTop: heightPercentageToDP(15) }}>
-                            <Text style={{ color: '#F5891F', fontSize: 20, fontWeight: 'bold' }}>Insurance</Text>
+                            <Text style={{ color: '#F5891F', fontSize: 20, fontFamily:CUSTOM_FONTS.robotoSlabBold }}>Insurance</Text>
                             <LabeledInputPlaceholder
                                 inputValue={insurance.name} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
@@ -132,7 +132,7 @@ class MyWalletForm extends Component {
                                 onChange={this.onChangeContactInfoInsurance} label='CONTACT INFO' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
 
-                            <Text style={{ color: '#F5891F', fontSize: 20, fontWeight: 'bold', marginTop: heightPercentageToDP(5) }}>Roadside Assistance</Text>
+                            <Text style={{ color: '#F5891F', fontSize: 20, fontFamily:CUSTOM_FONTS.robotoSlabBold, marginTop: heightPercentageToDP(5) }}>Roadside Assistance</Text>
                             <LabeledInputPlaceholder
                                 inputValue={roadsideAssistance.policyNumber} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     labelStyle: {
         color: '#000',
         fontSize: 11,
-        fontWeight: 'bold',
+        fontFamily:CUSTOM_FONTS.robotoSlabBold,
         letterSpacing: 1.1
     },
     secondLabelStyle: {

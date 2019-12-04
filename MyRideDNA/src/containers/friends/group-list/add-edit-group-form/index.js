@@ -139,11 +139,11 @@ class GroupForm extends Component {
                         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 41 + APP_COMMON_STYLES.headerHeight }}>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
                                 <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../../assets/img/cam-icon.png')} imgStyles={{ width: 45, height: 37 }} />
-                                <DefaultText style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{' TAKE \nPHOTO'}</DefaultText>
+                                <DefaultText style={{ letterSpacing: 2, marginTop: 15, fontFamily:CUSTOM_FONTS.robotoSlabBold, color: '#000', fontSize: 12 }}>{' TAKE \nPHOTO'}</DefaultText>
                             </View>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
                                 <ImageButton onPress={this.onPressGalleryIcon} imageSrc={require('../../../../assets/img/photos-icon.png')} imgStyles={{ width: 41, height: 33 }} />
-                                <DefaultText style={{ letterSpacing: 2, marginTop: 15, fontWeight: 'bold', color: '#000', fontSize: 12 }}>{'UPLOAD \n PHOTO'}</DefaultText>
+                                <DefaultText style={{ letterSpacing: 2, marginTop: 15,  fontFamily:CUSTOM_FONTS.robotoSlabBold, color: '#000', fontSize: 12 }}>{'UPLOAD \n PHOTO'}</DefaultText>
                             </View>
                         </View>
                         <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(3) }}>
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     labelStyle: {
         color: '#000',
         fontSize: 10,
-        fontWeight: 'bold',
+        fontFamily:CUSTOM_FONTS.robotoSlabBold,
         letterSpacing: 1.1
     },
     submitBtn: {

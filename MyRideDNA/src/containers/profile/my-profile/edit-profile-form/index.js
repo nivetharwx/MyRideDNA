@@ -72,7 +72,7 @@ class EditProfileForm extends Component {
 
     onChangeDOB = (val) => {
         // this.changedDetails['dob'] = new Date(val).toISOString();
-        this.setState(prevState => ({ user: { ...prevState.user, dob: new Date(val).toISOString() } }));
+        this.setState(prevState => ({ user: { ...prevState.user, dob: new Date(val).toLocaleDateString() } }));
     }
 
     onChangeStreetAddress = (val) => {
@@ -132,7 +132,7 @@ class EditProfileForm extends Component {
     }
 
     onPressBackButton = () => Actions.pop();
-    
+
     hideLoader = () => {
         this.setState({ showLoader: false });
     }
@@ -272,7 +272,7 @@ class EditProfileForm extends Component {
                                 onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
-                                inputValue={user.homeAddress.zipCode ? user.homeAddress.zipCode + '' : ''} 
+                                inputValue={user.homeAddress.zipCode ? user.homeAddress.zipCode + '' : ''}
                                 inputType={'postalCode'} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[5] = elRef} returnKeyType='next'
@@ -280,7 +280,7 @@ class EditProfileForm extends Component {
                                 onSubmit={() => this.fieldRefs[6].focus()} hideKeyboardOnSubmit={false} />
 
                             <LabeledInputPlaceholder
-                                inputValue={user.phoneNumber ? user.phoneNumber + '' : ''} 
+                                inputValue={user.phoneNumber ? user.phoneNumber + '' : ''}
                                 inputType={'telephoneNumber'} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[6] = elRef} returnKeyType='next'
@@ -292,7 +292,7 @@ class EditProfileForm extends Component {
                                 selectedValue={user.gender} values={GENDER_LIST} labelPlaceHolder='GENDER'
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 labelPlaceHolderStyle={[styles.labelStyle, { marginTop: heightPercentageToDP(1) }]}
-                                innerContainerStyle={{ borderBottomWidth: 1 }} onChange={this.onChangeGender} />
+                                innerContainerStyle={{ borderBottomWidth: 1, flex: 1 }} onChange={this.onChangeGender} />
 
                             <IconicDatePicker
                                 selectedDate={user.dob} datePickerStyle={{ paddingLeft: 0, paddingBottom: 1, fontSize: heightPercentageToDP(2.3) }}
@@ -306,6 +306,7 @@ class EditProfileForm extends Component {
                                 inputRef={elRef => this.fieldRefs[7] = elRef} returnKeyType='next'
                                 onChange={this.onChangeRidingSince} label='RIDING SINCE' labelStyle={styles.labelStyle}
                                 hideKeyboardOnSubmit={false} />
+
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: heightPercentageToDP(3) }}>
                                 <Text style={[styles.labelStyle, { marginLeft: 0 }]}>CLUB(s)</Text>
                                 <IconButton style={styles.roundBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={() => this.setState({ isAddingClub: true, activeClubId: null, club: '' })} />

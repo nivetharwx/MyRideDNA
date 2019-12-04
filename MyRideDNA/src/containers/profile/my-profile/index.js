@@ -232,11 +232,11 @@ class MyProfileTab extends Component {
                         <View style={[styles.basicAlignment, styles.horizontalContainer]}>
                             <View style={styles.individualComponent}>
                                 <DefaultText style={styles.labels}>DOB</DefaultText>
-                                <DefaultText style={styles.labelsData}>{user.dob ? getFormattedDateFromISO(user.dob) : '---'}</DefaultText>
+                                <DefaultText style={styles.labelsData}>{user.dob ? getFormattedDateFromISO(new Date(user.dob).toISOString()) : '---'}</DefaultText>
                             </View>
                             <View style={styles.individualComponent}>
                                 <DefaultText style={[styles.labels, { paddingHorizontal: 9 }]}>YEARS RIDING</DefaultText>
-                                <DefaultText style={styles.labelsData}>{user.ridingSince ? new Date().getFullYear() - user.ridingSince : 0}</DefaultText>
+                                <DefaultText style={styles.labelsData}>{user.ridingSince ? new Date().getFullYear() - user.ridingSince : '0'}</DefaultText>
                             </View>
                             <View style={styles.individualComponent}>
                                 <DefaultText style={styles.labels}>MEMBER SINCE</DefaultText>

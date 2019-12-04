@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     },
     sectionDeviderText: {
         color: '#000',
-        fontWeight: 'bold',
+        fontFamily:CUSTOM_FONTS.robotoBold,
         fontSize: widthPercentageToDP(5),
         marginVertical: heightPercentageToDP(5),
         alignSelf: 'center'
