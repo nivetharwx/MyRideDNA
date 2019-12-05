@@ -89,7 +89,7 @@ class BikeAlbum extends Component {
                             <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={this.onCancelEnlargedPhoto} />
                             <View style={{ width: widthPercentageToDP(92) - 40, height: heightPercentageToDP(70) - 20 }}>
                                 <ImageBackground source={selectedPicture.data ? { uri: selectedPicture.data } : require('../../../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} />
-                                <DefaultText numberOfLines={1} style={{ letterSpacing: 0.38, fontSize: 15, marginVertical: 20 }}>{selectedPicture.description}</DefaultText>
+                                {selectedPicture.description ? <DefaultText numberOfLines={1} style={{ letterSpacing: 0.38, fontSize: 15, marginVertical: 20 }}>{selectedPicture.description}</DefaultText> : <View style={{ height: 20 }} />}
                             </View>
                         </View>
                         : null
@@ -114,7 +114,7 @@ class BikeAlbum extends Component {
                                 thumbnail={item.data}
                                 item={item}
                                 imageStyle={[styles.imageStyle, index % 3 === 1 ? { marginHorizontal: widthPercentageToDP(1) } : null]}
-                                onPress={() => this.showEnlargedPhoto(item)}
+                                onPress={() => item.data && this.showEnlargedPhoto(item)}
                             />
                         )}
                         initialNumToRender={15}
@@ -130,8 +130,9 @@ class BikeAlbum extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { hasNetwork } = state.PageState;
-    const { currentIndex } = state.GarageInfo;
-    const bike = currentIndex === -1 ? null : state.GarageInfo.spaceList[currentIndex];
+    const { currentBikeId } = state.GarageInfo;
+    const currentBikeIndex = state.GarageInfo.spaceList.findIndex(({ spaceId }) => spaceId === currentBikeId);
+    const bike = currentBikeIndex === -1 ? null : state.GarageInfo.spaceList[currentBikeIndex];
     return { user, hasNetwork, bike };
 }
 const mapDispatchToProps = (dispatch) => {

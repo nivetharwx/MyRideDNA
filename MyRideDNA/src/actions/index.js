@@ -71,7 +71,7 @@ import {
     UPDATE_POST_TYPES,
     UPDATE_BIKE_ALBUM,
     CLEAR_BIKE_ALBUM,
-    SET_CURRENT_BIKE_INDEX
+    SET_CURRENT_BIKE_ID
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -320,9 +320,9 @@ export const updateShortSpaceListAction = (data) => (
         data: data
     }
 );
-export const setCurrentBikeIndexAction = (data) => (
+export const setCurrentBikeIdAction = (data) => (
     {
-        type: SET_CURRENT_BIKE_INDEX,
+        type: SET_CURRENT_BIKE_ID,
         data: data
     }
 );

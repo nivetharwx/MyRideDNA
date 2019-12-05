@@ -7,7 +7,7 @@ import { Actions } from 'react-native-router-flux';
 import { LabeledInput, LabeledInputPlaceholder, IconicList, IconicDatePicker } from '../../../../components/inputs';
 import { BasicButton, ShifterButton, ImageButton, IconButton } from '../../../../components/buttons';
 import { Thumbnail } from '../../../../components/images';
-import ImageCropPicker from 'react-native-image-crop-picker';
+import ImagePicker from 'react-native-image-crop-picker';
 import { addBikeToGarage, editBike } from '../../../../api';
 import { toggleLoaderAction, appNavMenuVisibilityAction } from '../../../../actions';
 import { Loader } from '../../../../components/loader';
@@ -19,37 +19,44 @@ class AddBikeForm extends Component {
         super(props);
         this.state = {
             bikeImages: [],
-            bike: props.bikeIndex >= 0 ? props.spaceList[props.bikeIndex] : {},
+            bike: { ...props.bike },
             showLoader: false
         };
-        if (typeof this.state.bike.pictureList === 'undefined') {
-            this.state.bike.pictureList = [];
+        if (typeof this.state.bike.pictures === 'undefined') {
+            this.state.bike.pictures = [];
         }
     }
 
     componentDidUpdate(prevProps, prevState) { }
 
-    onPressUploadImages = async () => {
-        this.props.toggleLoader(true);
+    onPressCameraIcon = async () => {
         try {
-            const imageList = await ImageCropPicker.openPicker({
+            const imgs = await ImagePicker.openCamera({
+                width: 300,
+                height: 300,
+                includeBase64: true,
+                multiple: true,
+                maxFiles: 5,
+                cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
+            });
+            this.setState({ bikeImages: imgs.slice(0, 5).map(({ mime, data }) => ({ mimeType: mime, picture: data })) });
+        } catch (er) {
+            console.log("Error occurd: ", er);
+        }
+    }
+
+    onPressGalleryIcon = async () => {
+        try {
+            const imgs = await ImagePicker.openPicker({
                 width: 300,
                 height: 300,
                 cropping: false,
-                includeBase64: true,
                 multiple: true,
-                mediaType: 'photo',
-                compressImageQuality: 0.8,
+                maxFiles: 5,
+                includeBase64: true,
             });
-            this.setState({
-                bikeImages: imageList.reduce((arr, { mime, data }) => {
-                    arr.push({ mimeType: mime, picture: data });
-                    return arr;
-                }, [])
-            });
-            this.props.toggleLoader(false);
+            this.setState({ bikeImages: imgs.slice(0, 5).map(({ mime, data }) => ({ mimeType: mime, picture: data })) });
         } catch (er) {
-            this.props.toggleLoader(false);
             console.log("Error occurd: ", er);
         }
     }
@@ -66,9 +73,9 @@ class AddBikeForm extends Component {
 
     onChangeNotes = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, notes: val } }));
 
-    hideLoader = () => {
-        this.setState({ showLoader: false });
-    }
+    hideLoader = () => this.setState({ showLoader: false });
+
+    onPressBackArrow = () => Actions.pop();
 
     showAppNavMenu = () => this.props.showAppNavMenu();
 
@@ -79,34 +86,32 @@ class AddBikeForm extends Component {
             Alert.alert('Field Error', 'Please enter a bike name');
             return;
         }
-        const pictureList = [...bikeImages];
+        const pictures = [...bikeImages];
         if (!bike.spaceId) {
             this.setState({ showLoader: true });
-            this.props.addBikeToGarage(this.props.user.userId, bike, pictureList, (res) => {
-                this.hideLoader()
-            }, (err) => {
-                this.hideLoader()
-            });
+            this.props.addBikeToGarage(this.props.user.userId, bike, pictures, () => {
+                this.hideLoader();
+                this.onPressBackArrow();
+            }, this.hideLoader);
         } else {
             this.setState({ showLoader: true });
-            this.props.editBike(this.props.user.userId, bike, pictureList, this.props.bikeIndex, (res) => {
-                this.hideLoader()
-            }, (err) => {
-                this.hideLoader()
-            });
+            this.props.editBike(this.props.user.userId, bike, pictures, this.props.currentBikeIndex, () => {
+                this.hideLoader();
+                this.onPressBackArrow();
+            }, this.hideLoader);
         }
     }
 
     render() {
         const { bike, showLoader } = this.state;
-        const { bikeIndex, user } = this.props;
+        const { currentBikeIndex, user } = this.props;
         return (
             <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
-                    <BasicHeader title={bikeIndex === -1 ? 'Add Bike' : 'Edit Bike'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => Actions.pop() }} />
+                    <BasicHeader title={currentBikeIndex === -1 ? 'Add Bike' : 'Edit Bike'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackArrow }} />
                     <ScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ marginTop: 41 + APP_COMMON_STYLES.headerHeight }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
@@ -169,8 +174,10 @@ class AddBikeForm extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { spaceList } = state.GarageInfo;
-    return { user, spaceList };
+    const { currentBikeId } = state.GarageInfo;
+    const currentBikeIndex = state.GarageInfo.spaceList.findIndex(({ spaceId }) => spaceId === currentBikeId);
+    const bike = currentBikeIndex === -1 ? null : state.GarageInfo.spaceList[currentBikeIndex];
+    return { user, currentBikeIndex, bike };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -184,7 +191,8 @@ export default connect(mapStateToProps, mapDispatchToProps)(AddBikeForm);
 
 const styles = StyleSheet.create({
     fill: {
-        flex: 1
+        flex: 1,
+        backgroundColor: '#fff',
     },
     form: {
         marginTop: APP_COMMON_STYLES.headerHeight,
