@@ -104,7 +104,7 @@ export const BaseModal = ({ isVisible, onCancel, onPressOutside, offSpaceBackgro
             onRequestClose={onCancel}>
             {
                 onPressOutside ?
-                    <TouchableOpacity style={[styles.fillParent, offSpaceBackgroundColor ? { backgroundColor: offSpaceBackgroundColor } : styles.modalOffSpaceBgColor]} onPress={onPressOutside}>
+                    <TouchableOpacity activeOpacity={1} style={[styles.fillParent, offSpaceBackgroundColor ? { backgroundColor: offSpaceBackgroundColor } : styles.modalOffSpaceBgColor]} onPress={onPressOutside}>
                         <ScrollView
                             directionalLockEnabled={true}
                             style={styles.fillParent}
