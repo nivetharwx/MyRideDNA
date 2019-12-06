@@ -5,10 +5,10 @@ import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../components/headers';
 import ImagePicker from 'react-native-image-crop-picker';
 import { DefaultText } from '../../components/labels';
-import { APP_COMMON_STYLES, PageKeys, CUSTOM_FONTS, heightPercentageToDP, widthPercentageToDP, POST_TYPE } from '../../constants';
+import { APP_COMMON_STYLES, PageKeys, CUSTOM_FONTS, heightPercentageToDP, widthPercentageToDP, POST_TYPE, IS_ANDROID } from '../../constants';
 import { ImageButton, ShifterButton, SwitchIconButton, IconButton, LinkButton, BasicButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction } from '../../actions';
-import { IconicList } from '../../components/inputs';
+import { IconicList, LabeledInputPlaceholder } from '../../components/inputs';
 import { Icon as NBIcon, Thumbnail, Toast } from 'native-base';
 import { createPost, getSpaces } from '../../api';
 import { Loader } from '../../components/loader';
@@ -20,7 +20,7 @@ class PostForm extends Component {
         super(props);
         this.state = {
             selectedBikeId: props.currentBikeId || null,
-            isPrivate: true,
+            isPrivate: (props.postType === POST_TYPE.WISH_LIST || props.postType === POST_TYPE.MY_RIDE) ? false : true,
             selectedImgs: [],
             title: '',
             description: '',
@@ -100,23 +100,18 @@ class PostForm extends Component {
                 <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: styles.closeIcon }} onPress={() => this.unselectImg(index)} />
             </ImageBackground>
         </View>
-        // return <View style={styles.thumbnailContainer}>
-        //     <Thumbnail source={{ uri: `data:${item.mime};base64,${item.data}` }} style={styles.thumbnail} />
-        //     <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: styles.closeIcon }} onPress={() => this.unselectImg(index)} />
-        // </View>
     }
 
     onSubmit = () => {
+        const { postType, postTypes, currentBikeId, user } = this.props;
+        const { bikeList, title, description, selectedImgs, isPrivate, selectedBikeId } = this.state;
+
         this.setState({ isSubmiting: true });
-        const bike = this.state.bikeList.find(({ spaceId }) => spaceId === this.state.selectedBikeId);
-        this.props.createPost(this.props.user.userId, bike.spaceId, {
-            title: this.state.title, description: this.state.description,
-            postTypeId: this.props.postTypes[this.props.postType].id,
-            isPrivate: this.state.isPrivate, pictures: this.state.selectedImgs
-        }, () => {
-            Toast.show({ text: 'Post created successfully', position: 'bottom', type: 'success', duration: 1000 });
-            const selBike = this.state.bikeList.length > 0 ? this.state.bikeList[0].spaceId : this.props.currentBikeId || null;
-            this.setState({ title: '', description: '', selectedImgs: [], selectedBikeId: selBike, isPrivate: true });
+        const bike = bikeList.find(({ spaceId }) => spaceId === selectedBikeId);
+        const postProps = { title, description, isPrivate, postTypeId: postTypes[postType].id, pictures: selectedImgs };
+        this.props.createPost(user.userId, bike.spaceId, postProps, () => {
+            const selBike = currentBikeId ? currentBikeId : bikeList.length > 0 ? bikeList[0].spaceId : null;
+            this.setState({ title: '', description: '', selectedImgs: [], selectedBikeId: selBike, isPrivate: (postType === POST_TYPE.WISH_LIST || postType === POST_TYPE.MY_RIDE) ? false : true });
         });
     }
 
@@ -135,10 +130,77 @@ class PostForm extends Component {
         return <BasicHeader title={title} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
     }
 
+    renderFormFields = () => {
+        const { selectedImgs, title, description, selectedBikeId, isPrivate, bikeList } = this.state;
+        const { currentBikeId } = this.props;
+        const BIKE_LIST = bikeList.map(bike => ({ label: bike.name, value: bike.spaceId }));
+        if (this.props.postType === POST_TYPE.WISH_LIST || this.props.postType === POST_TYPE.MY_RIDE) {
+            return <View style={styles.fill}>
+                <View style={{ flex: 1, marginLeft: widthPercentageToDP(12) }}>
+                    <LabeledInputPlaceholder
+                        inputValue={title} inputStyle={{ paddingBottom: 0 }}
+                        outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
+                        returnKeyType='next'
+                        onChange={this.onChangeTitle} label='ITEM NAME' labelStyle={styles.labelStyle}
+                        hideKeyboardOnSubmit={false} />
+                    <LabeledInputPlaceholder
+                        inputValue={description}
+                        inputStyle={{ paddingBottom: 0 }}
+                        multiline={true}
+                        outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
+                        returnKeyType='next'
+                        onChange={this.onChangeDescription} label='ADDITIONAL INFO' labelStyle={styles.labelStyle}
+                        hideKeyboardOnSubmit={true} />
+                </View>
+                <BasicButton title='ADD ITEM' style={styles.submitBtn} titleStyle={styles.submitBtnTxt} onPress={this.onSubmit} />
+            </View>
+        }
+        return <View style={styles.fill}>
+            <View style={styles.rootContainer}>
+                {
+                    selectedImgs.filter(item => item.isHidden).length !== selectedImgs.length
+                        ? <FlatList
+                            style={styles.listStyles}
+                            numColumns={5}
+                            columnWrapperStyle={styles.imgPreviewArea}
+                            data={selectedImgs}
+                            keyExtractor={this.imgKeyExtractor}
+                            renderItem={this.renderSelectedImg}
+                        />
+                        : null
+                }
+                <View style={styles.fill}>
+                    <TextInput value={title} placeholder='POST TITLE' placeholderTextColor={APP_COMMON_STYLES.infoColor} style={styles.postTitle} autoCapitalize='characters' onChangeText={this.onChangeTitle} />
+                    <TextInput value={description} placeholder='Write a caption' placeholderTextColor='#707070' multiline={true} style={styles.descrArea} onChangeText={this.onChangeDescription} />
+                </View>
+            </View>
+            <View style={styles.btmContainer}>
+                <IconicList
+                    disabled={typeof currentBikeId !== 'undefined' || BIKE_LIST.length === 0}
+                    selectedValue={selectedBikeId}
+                    dropdownIcon={<NBIcon name='caret-down' type='FontAwesome' style={styles.dropdownIcon} />}
+                    placeholder='SELECT A BIKE'
+                    placeholderStyle={styles.dropdownPlaceholderTxt}
+                    textStyle={styles.dropdownTxt}
+                    pickerStyle={styles.dropdownStyle}
+                    values={BIKE_LIST}
+                    onChange={this.onChangeBike} />
+                <View style={styles.hDivider} />
+                <View style={styles.switchBtnContainer}>
+                    <DefaultText style={styles.switchBtnLbl}>{isPrivate ? 'PRIVATE' : 'PUBLIC'}</DefaultText>
+                    <SwitchIconButton
+                        activeIcon={<NBIcon name='close' type='FontAwesome' style={[styles.switchIcon, { alignSelf: 'flex-start' }]} />}
+                        inactiveIcon={<NBIcon name='eye' type='MaterialCommunityIcons' style={[styles.switchIcon, { alignSelf: 'flex-end' }]} />}
+                        value={isPrivate} onChangeValue={this.onChangePrivacyMode} />
+                </View>
+            </View>
+            <BasicButton title='POST' style={styles.submitBtn} titleStyle={styles.submitBtnTxt} onPress={this.onSubmit} />
+        </View>
+    }
+
     render() {
         const { user, currentBikeId, postType, showLoader } = this.props;
         const { selectedBikeId, isPrivate, selectedImgs, title, description, bikeList } = this.state;
-        const BIKE_LIST = bikeList.map(bike => ({ label: bike.name, value: bike.spaceId }));
         return <View style={styles.fill}>
             <View style={APP_COMMON_STYLES.statusBar}>
                 <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
@@ -146,57 +208,20 @@ class PostForm extends Component {
             <View style={styles.fill}>
                 {this.renderHeader()}
                 <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps='handled' contentContainerStyle={styles.scrollView}>
-                    <View style={styles.btnContainer}>
+                    <View style={[styles.btnContainer, postType === POST_TYPE.MY_RIDE || postType === POST_TYPE.WISH_LIST ? { backgroundColor: '#fff' } : null]}>
                         {/* TODO: Images below has to be changed with proper color (Need to get from the Platypus) */}
                         <View style={styles.galleryBtnContainer}>
-                            <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../assets/img/cam-icon-gray.png')} imgStyles={{ width: 45, height: 37 }} />
+                            <ImageButton onPress={this.onPressCameraIcon} imageSrc={postType !== POST_TYPE.MY_RIDE && postType !== POST_TYPE.WISH_LIST ? require('../../assets/img/cam-icon-gray.png') : require('../../assets/img/cam-icon.png')} imgStyles={{ width: 45, height: 37 }} />
                             <DefaultText style={styles.galleryLabel}>{' TAKE \nPHOTO'}</DefaultText>
                         </View>
                         <View style={styles.galleryBtnContainer}>
-                            <ImageButton onPress={this.onPressGalleryIcon} imageSrc={require('../../assets/img/photos-icon-gray.png')} imgStyles={{ width: 41, height: 33 }} />
+                            <ImageButton onPress={this.onPressGalleryIcon} imageSrc={postType !== POST_TYPE.MY_RIDE && postType !== POST_TYPE.WISH_LIST ? require('../../assets/img/photos-icon-gray.png') : require('../../assets/img/photos-icon.png')} imgStyles={{ width: 41, height: 33 }} />
                             <DefaultText style={styles.galleryLabel}>{'UPLOAD \n PHOTO'}</DefaultText>
                         </View>
                     </View>
-                    <View style={styles.rootContainer}>
-                        {
-                            selectedImgs.filter(item => item.isHidden).length !== selectedImgs.length
-                                ? <FlatList
-                                    style={styles.listStyles}
-                                    numColumns={5}
-                                    columnWrapperStyle={styles.imgPreviewArea}
-                                    data={selectedImgs}
-                                    keyExtractor={this.imgKeyExtractor}
-                                    renderItem={this.renderSelectedImg}
-                                />
-                                : null
-                        }
-                        <View style={styles.fill}>
-                            {/* <DefaultText style={styles.postTitle}>POST TITLE</DefaultText> */}
-                            <TextInput value={title} placeholder='POST TITLE' placeholderTextColor={APP_COMMON_STYLES.infoColor} style={styles.postTitle} autoCapitalize='characters' onChangeText={this.onChangeTitle} />
-                            <TextInput value={description} placeholder='Write a caption' placeholderTextColor='#707070' multiline={true} style={styles.descrArea} onChangeText={this.onChangeDescription} />
-                        </View>
-                    </View>
-                    <View style={styles.btmContainer}>
-                        <IconicList
-                            disabled={typeof currentBikeId !== 'undefined' || BIKE_LIST.length === 0}
-                            selectedValue={selectedBikeId}
-                            dropdownIcon={<NBIcon name='caret-down' type='FontAwesome' style={styles.dropdownIcon} />}
-                            placeholder='SELECT A BIKE'
-                            placeholderStyle={styles.dropdownPlaceholderTxt}
-                            textStyle={styles.dropdownTxt}
-                            pickerStyle={styles.dropdownStyle}
-                            values={BIKE_LIST}
-                            onChange={this.onChangeBike} />
-                        <View style={styles.hDivider} />
-                        <View style={styles.switchBtnContainer}>
-                            <DefaultText style={styles.switchBtnLbl}>{isPrivate ? 'PRIVATE' : 'PUBLIC'}</DefaultText>
-                            <SwitchIconButton
-                                activeIcon={<NBIcon name='close' type='FontAwesome' style={[styles.switchIcon, { alignSelf: 'flex-start' }]} />}
-                                inactiveIcon={<NBIcon name='eye' type='MaterialCommunityIcons' style={[styles.switchIcon, { alignSelf: 'flex-end' }]} />}
-                                value={isPrivate} onChangeValue={this.onChangePrivacyMode} />
-                        </View>
-                    </View>
-                    <BasicButton title='POST' style={styles.submitBtn} titleStyle={styles.submitBtnTxt} onPress={this.onSubmit} />
+                    {
+                        this.renderFormFields()
+                    }
                 </ScrollView>
                 <Loader isVisible={showLoader} />
                 {/* Shifter: - Brings the app navigation menu */}
@@ -348,6 +373,11 @@ const styles = StyleSheet.create({
     submitBtnTxt: {
         letterSpacing: 2,
         fontSize: 20,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold
+    },
+    labelStyle: {
+        fontSize: 11,
+        letterSpacing: 1.1,
         fontFamily: CUSTOM_FONTS.robotoSlabBold
     }
 });

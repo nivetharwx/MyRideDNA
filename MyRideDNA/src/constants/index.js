@@ -80,9 +80,10 @@ export const PageKeys = {
     BUDDY_PASSENGERS: 'buddyPassengers',
     BUDDY_ALBUM: 'buddyAlbum',
     BIKE_ALBUM: 'bikeAlbum',
+    BIKE_SPECS: 'bikeSpecs',
 };
 
-export const POST_TYPE = { WISH_LIST: 'wishList', JOURNAL: 'journal', STORIES_FROM_ROAD: 'storiesFromRoad', MY_RIDE: 'customization', ALBUM: 'album' };
+export const POST_TYPE = { WISH_LIST: 'wishList', JOURNAL: 'journal', STORIES_FROM_ROAD: 'storiesFromRoad', MY_RIDE: 'customization', ALBUM: 'album', LOGGED_RIDES: 'loggedRides' };
 
 export const MAP_ACCESS_TOKEN = 'pk.eyJ1IjoibWFkaGF2YW4tcmVhY3RpdmV3b3JrcyIsImEiOiJjam9qbXJybzQwNmE4M3BvODY4dXhhdGUyIn0.oPQRig3knqF_oYXrRSca7w';
 export const JS_SDK_ACCESS_TOKEN = 'sk.eyJ1IjoibWFkaGF2YW4tcmVhY3RpdmV3b3JrcyIsImEiOiJjam90eWlsN2wwbG1rM2tzM3pvaDlmYzh0In0.QMn07ObbKIQT_JOVprV5Dg';
