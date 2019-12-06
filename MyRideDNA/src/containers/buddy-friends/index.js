@@ -226,13 +226,13 @@ class BuddyFriends extends Component {
     }
 
     getActions = (item) => {
-        // switch (item.relationship) {
-        //     case RELATIONSHIP.RECIEVED_REQUEST: return { isIconImage: true, imgSrc: require('../../assets/img/accept-reject.png'), id: 4, onPressActions: () => this.acceptRejectFriendRequest(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
-        //     case RELATIONSHIP.SENT_REQUEST: return { isIconImage: true, imgSrc: require('../../assets/img/cancel.png'), id: 4, onPressActions: () => this.cancelFriendRequest(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
-        //     case RELATIONSHIP.UNKNOWN: return { isIconImage: true, imgSrc: require('../../assets/img/add-friend-from-community.png'), id: 4, onPressActions: () => this.sendFriendRequest(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
-        //     case RELATIONSHIP.FRIEND: return { isIconImage: true, imgSrc: require('../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
-        // }
-        return { isIconImage: true, imgSrc: require('../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
+        switch (item.relationship) {
+            case RELATIONSHIP.RECIEVED_REQUEST: return { isIconImage: true, imgSrc: require('../../assets/img/accept-reject.png'), id: 4, onPressActions: () => this.acceptRejectFriendRequest(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
+            case RELATIONSHIP.SENT_REQUEST: return { isIconImage: true, imgSrc: require('../../assets/img/cancel.png'), id: 4, onPressActions: () => this.cancelFriendRequest(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
+            case RELATIONSHIP.UNKNOWN: return { isIconImage: true, imgSrc: require('../../assets/img/add-friend-from-community.png'), id: 4, onPressActions: () => this.sendFriendRequest(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
+            case RELATIONSHIP.FRIEND: return { isIconImage: true, imgSrc: require('../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
+        }
+        // return { isIconImage: true, imgSrc: require('../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
     }
 
     _renderItem = ({ item, index }) => {

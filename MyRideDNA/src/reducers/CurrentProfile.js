@@ -1,4 +1,4 @@
-import { SET_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND, RESET_PERSON_PROFILE, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_PICTURES, UPDATE_FRIENDS_RIDE_SNAPSHOT, GO_PREV_PROFILE } from "../actions/actionConstants";
+import { SET_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND, RESET_PERSON_PROFILE, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_PICTURES, UPDATE_FRIENDS_RIDE_SNAPSHOT, GO_PREV_PROFILE, UPDATE_PREV_PROFILE } from "../actions/actionConstants";
 import { PageKeys } from "../constants";
 import { undoable } from "./Undoable";
 
@@ -136,6 +136,13 @@ export default (state = initialState, action) => {
                 ...state,
                 prevProfiles: [...state.prevProfiles.slice(0, -1)],
                 person: prevPerson
+            }
+        }
+
+        case UPDATE_PREV_PROFILE: {
+            const personIdx = state.prevProfiles.findIndex(prevPerson => prevPerson.userId === action.data.userId);
+            if (personIdx > -1) {
+                return { ...state, prevProfiles: state.prevProfiles.filter(prevPerson => action.data.userId.indexOf(prevPerson.userId) === -1) }
             }
         }
 

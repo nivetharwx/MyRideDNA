@@ -171,7 +171,7 @@ class PaasengerFormDisplay extends Component {
                                 selectedValue={passenger.gender} values={GENDER_LIST} labelPlaceHolder='GENDER'
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 labelPlaceHolderStyle={[styles.labelStyle, { marginTop: heightPercentageToDP(1) }]}
-                                innerContainerStyle={{ borderBottomWidth: 1 }} onChange={this.onChangeGender} />
+                                innerContainerStyle={{ borderBottomWidth: 1, flex: 1 }} onChange={this.onChangeGender} />
                             <IconicDatePicker
                                 selectedDate={passenger.dob} datePickerStyle={{ paddingLeft: 0, paddingBottom: 1, fontSize: heightPercentageToDP(2.3) }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(4) }}

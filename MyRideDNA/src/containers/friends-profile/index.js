@@ -5,12 +5,13 @@ import { Actions } from 'react-native-router-flux';
 import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions, FRIEND_TYPE, CUSTOM_FONTS } from '../../constants/index';
 import { IconButton, LinkButton, ShifterButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, updateUserAction, updateBikePictureListAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction, setCurrentFriendAction, updateCurrentFriendAction, updatePicturesAction, undoLastAction, resetPersonProfileAction, goToPrevProfileAction } from '../../actions';
-import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo, getRoadBuddies, getPictureList, getFriendInfo, getFriendProfile, getPassengersById, getRoadBuddiesById, getUserProfile } from '../../api';
+import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo, getRoadBuddies, getPictureList, getFriendInfo, getFriendProfile, getPassengersById, getRoadBuddiesById, getUserProfile, doUnfriend } from '../../api';
 import { ImageLoader } from '../../components/loader';
 import { SmallCard } from '../../components/cards';
 import { BasicHeader } from '../../components/headers';
 import { DefaultText } from '../../components/labels';
 import { getFormattedDateFromISO } from '../../util';
+import { BaseModal } from '../../components/modal';
 
 const hasIOSAbove10 = parseInt(Platform.Version) > 10;
 class FriendsProfile extends Component {
@@ -25,6 +26,7 @@ class FriendsProfile extends Component {
             bikes: [10, 20, 30, 40, 50],
             isLoadingProfPic: false,
             pictureLoader: {},
+            showOptionsModal: false,
         };
     }
 
@@ -135,155 +137,174 @@ class FriendsProfile extends Component {
         Actions.push(PageKeys.BUDDY_PASSENGERS);
     }
 
+    showOptionsModal = () => this.setState({ showOptionsModal: true });
+
+    hideOptionsModal = () => this.setState({ showOptionsModal: false });
+
+    removeRoadBuddy = () => {
+        this.props.doUnfriend(this.props.user.userId, this.props.person.userId);
+        this.setState({ showOptionsModal: false })
+    }
+
     render() {
-        const { person } = this.props;
-        const { isLoadingProfPic } = this.state;
+        const { person, prevProfiles } = this.props;
+        const { isLoadingProfPic, showOptionsModal } = this.state;
         return (
             <View style={styles.fill}>
+                <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
+                    <View style={APP_COMMON_STYLES.optionsContainer}>
+                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='REMOVE ROAD BUDDY' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.removeRoadBuddy} />
+                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='CANCEL' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.hideOptionsModal} />
+                    </View>
+                </BaseModal>
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent barStyle="light-content" />
                 </View>
-                <View style={styles.fill}>
-                    <View style={styles.header}>
-                        <IconButton iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: { fontSize: 27 } }}
-                            style={styles.headerIconCont} onPress={this.popToPrevProfile} />
-                        <View style={styles.titleContainer}>
-                            <DefaultText style={styles.title} >{person.name}</DefaultText>
-                            <DefaultText style={styles.subTitle}>{person.nickname ? person.nickname.toUpperCase() : null}</DefaultText>
-                        </View>
+                <View style={styles.header}>
+                    <IconButton iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: { fontSize: 27 } }}
+                        style={styles.headerIconCont} onPress={this.popToPrevProfile} />
+                    <View style={styles.titleContainer}>
+                        <DefaultText style={styles.title} >{person.name}</DefaultText>
+                        <DefaultText style={styles.subTitle}>{person.nickname ? person.nickname.toUpperCase() : null}</DefaultText>
                     </View>
-                    <ScrollView showsVerticalScrollIndicator={false}>
-                        <View style={styles.profilePic}>
-                            <ImageBackground source={person.profilePicture ? { uri: person.profilePicture } : require('../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
-                                {
-                                    isLoadingProfPic
-                                        ? <ImageLoader show={isLoadingProfPic} />
-                                        : null
-                                }
-                            </ImageBackground>
-                        </View>
-                        <Image source={require('../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} />
-                        <View style={styles.container}>
-                            <View style={{ flexDirection: 'column' }}>
-                                <DefaultText style={styles.labels}>LOCATION</DefaultText>
-                                <DefaultText style={styles.labelsData}>{person.homeAddress.city ? person.homeAddress.city : '__ '}, {person.homeAddress.state ? person.homeAddress.state : '__'}</DefaultText>
-                            </View>
-                            <View style={[styles.basicAlignment, styles.horizontalContainer]}>
-                                <View style={styles.individualComponent}>
-                                    <DefaultText style={styles.labels}>DOB</DefaultText>
-                                    <DefaultText style={styles.labelsData}>{person.dob ? getFormattedDateFromISO(person.dob) : '---'}</DefaultText>
-                                </View>
-                                <View style={styles.individualComponent}>
-                                    <DefaultText style={[styles.labels, { paddingHorizontal: 9 }]}>YEARS RIDING</DefaultText>
-                                    <DefaultText style={styles.labelsData}>{person.ridingSince ? new Date().getFullYear() - person.ridingSince : 0}</DefaultText>
-                                </View>
-                                <View style={styles.individualComponent}>
-                                    <DefaultText style={styles.labels}>MEMBER SINCE</DefaultText>
-                                    <DefaultText style={[styles.labelsData, { alignSelf: 'center' }]}>{new Date(person.dateOfRegistration).getFullYear()}</DefaultText>
-                                </View>
-                            </View>
-                            <View style={styles.clubContainer}>
-                                <DefaultText style={styles.labels}>CLUBS</DefaultText>
-                                <FlatList
-                                    style={{ marginBottom: 9 }}
-                                    data={person.clubs}
-                                    keyExtractor={this.clubsKeyExtractor}
-                                    renderItem={({ item, index }) => (
-                                        <View style={{ paddingVertical: 2 }}>
-                                            <DefaultText style={styles.labelsData}>{item.clubName}</DefaultText>
-                                        </View>
-                                    )}
-                                />
-                            </View>
-
-
+                    {
+                        this.props.person.isFriend ?
+                            <IconButton style={{ padding: 30 }} iconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 20 } }} onPress={this.showOptionsModal} />
+                            :
+                            null
+                    }
+                </View>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                    <View style={styles.profilePic}>
+                        <ImageBackground source={person.profilePicture ? { uri: person.profilePicture } : require('../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
                             {
-                                this.props.person.isFriend
-                                    ? <View>
-                                        <View style={{ marginTop: 19 }}>
-                                            <View style={styles.basicAlignment}>
-                                                <TouchableOpacity style={styles.basicAlignment} onPress={() => this.getBuddyFriendListPage()}>
-                                                    <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Road Buddies</DefaultText>
-                                                    <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
-                                                </TouchableOpacity>
-                                            </View>
-                                            {
-                                                person.friendList.length > 0
-                                                    ?
-                                                    <View style={styles.greyBorder}>
-                                                        <FlatList
-                                                            style={{ flexDirection: 'column' }}
-                                                            numColumns={4}
-                                                            data={person.friendList.slice(0, 4)}
-                                                            keyExtractor={this.roadBuddiesKeyExtractor}
-                                                            renderItem={({ item, index }) => (
-                                                                <SmallCard
-                                                                    smallardPlaceholder={require('../../assets/img/profile-pic.png')}
-                                                                    item={item}
-                                                                    onPress={() => this.openRoadBuddy(item.userId)}
-                                                                    imageStyle={styles.imageStyle}
-                                                                />
-                                                            )}
-                                                        />
-
-                                                    </View>
-                                                    : null
-                                            }
-                                        </View>
-
-
-
-                                        <View style={{ marginTop: 19 }}>
-                                            <View style={styles.basicAlignment}>
-                                                <TouchableOpacity style={styles.basicAlignment} onPress={() => this.getBuddyPassengerListPage()}>
-                                                    <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Passengers</DefaultText>
-                                                    <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
-                                                </TouchableOpacity>
-                                            </View>
-                                            {
-                                                person.passengerList.length > 0
-                                                    ?
-                                                    <View style={styles.greyBorder}>
-                                                        <FlatList
-                                                            style={{ flexDirection: 'column' }}
-                                                            numColumns={4}
-                                                            data={person.passengerList.slice(0, 4)}
-                                                            keyExtractor={this.passengerListKeyExtractor}
-                                                            renderItem={({ item, index }) => (
-                                                                <SmallCard
-                                                                    smallardPlaceholder={require('../../assets/img/profile-pic.png')}
-                                                                    item={item}
-                                                                    onPress={() => this.openPassengerProfile(item, index)}
-                                                                    imageStyle={styles.imageStyle}
-                                                                />
-                                                            )}
-                                                        />
-                                                    </View>
-                                                    : null
-                                            }
-                                        </View>
-                                    </View>
+                                isLoadingProfPic
+                                    ? <ImageLoader show={isLoadingProfPic} />
                                     : null
                             }
+                        </ImageBackground>
+                    </View>
+                    <Image source={require('../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} />
+                    <View style={styles.container}>
+                        <View style={{ flexDirection: 'column' }}>
+                            <DefaultText style={styles.labels}>LOCATION</DefaultText>
+                            <DefaultText style={styles.labelsData}>{person.homeAddress.city ? person.homeAddress.city : '__ '}, {person.homeAddress.state ? person.homeAddress.state : '__'}</DefaultText>
                         </View>
-                        <View style={styles.usersExtraDetailContainer}>
-                            <ImageBackground source={require('../../assets/img/my-journal.png')} style={styles.usersExtraDetail}>
-                                <DefaultText style={styles.txtOnImg}>Journal</DefaultText>
-                            </ImageBackground>
+                        <View style={[styles.basicAlignment, styles.horizontalContainer]}>
+                            <View style={styles.individualComponent}>
+                                <DefaultText style={styles.labels}>DOB</DefaultText>
+                                <DefaultText style={styles.labelsData}>{person.dob ? getFormattedDateFromISO(person.dob) : '---'}</DefaultText>
+                            </View>
+                            <View style={styles.individualComponent}>
+                                <DefaultText style={[styles.labels, { paddingHorizontal: 9 }]}>YEARS RIDING</DefaultText>
+                                <DefaultText style={styles.labelsData}>{person.ridingSince ? new Date().getFullYear() - person.ridingSince : 0}</DefaultText>
+                            </View>
+                            <View style={styles.individualComponent}>
+                                <DefaultText style={styles.labels}>MEMBER SINCE</DefaultText>
+                                <DefaultText style={[styles.labelsData, { alignSelf: 'center' }]}>{new Date(person.dateOfRegistration).getFullYear()}</DefaultText>
+                            </View>
                         </View>
-                        <View style={styles.usersExtraDetailContainer}>
-                            <ImageBackground source={require('../../assets/img/my-vest.png')} style={styles.usersExtraDetail}>
-                                <DefaultText style={styles.txtOnImg}>Vest</DefaultText>
-                            </ImageBackground>
+                        <View style={styles.clubContainer}>
+                            <DefaultText style={styles.labels}>CLUBS</DefaultText>
+                            <FlatList
+                                style={{ marginBottom: 9 }}
+                                data={person.clubs}
+                                keyExtractor={this.clubsKeyExtractor}
+                                renderItem={({ item, index }) => (
+                                    <View style={{ paddingVertical: 2 }}>
+                                        <DefaultText style={styles.labelsData}>{item.clubName}</DefaultText>
+                                    </View>
+                                )}
+                            />
                         </View>
-                        <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.BUDDY_ALBUM)}>
-                            <ImageBackground source={require('../../assets/img/my-photos.png')} style={styles.usersExtraDetail}>
-                                <DefaultText style={styles.txtOnImg}>Photos</DefaultText>
-                            </ImageBackground>
-                        </TouchableOpacity>
 
-                    </ScrollView>
-                </View>
+
+                        {
+                            this.props.person.isFriend
+                                ? <View>
+                                    <View style={{ marginTop: 19 }}>
+                                        <View style={styles.basicAlignment}>
+                                            <TouchableOpacity style={styles.basicAlignment} onPress={() => this.getBuddyFriendListPage()}>
+                                                <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Road Buddies</DefaultText>
+                                                <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
+                                            </TouchableOpacity>
+                                        </View>
+                                        {
+                                            person.friendList.length > 0
+                                                ?
+                                                <View style={styles.greyBorder}>
+                                                    <FlatList
+                                                        style={{ flexDirection: 'column' }}
+                                                        numColumns={4}
+                                                        data={person.friendList.slice(0, 4)}
+                                                        keyExtractor={this.roadBuddiesKeyExtractor}
+                                                        renderItem={({ item, index }) => (
+                                                            <SmallCard
+                                                                smallardPlaceholder={require('../../assets/img/profile-pic.png')}
+                                                                item={item}
+                                                                onPress={() => this.openRoadBuddy(item.userId)}
+                                                                imageStyle={styles.imageStyle}
+                                                            />
+                                                        )}
+                                                    />
+
+                                                </View>
+                                                : null
+                                        }
+                                    </View>
+
+
+
+                                    <View style={{ marginTop: 19 }}>
+                                        <View style={styles.basicAlignment}>
+                                            <TouchableOpacity style={styles.basicAlignment} onPress={() => this.getBuddyPassengerListPage()}>
+                                                <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Passengers</DefaultText>
+                                                <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
+                                            </TouchableOpacity>
+                                        </View>
+                                        {
+                                            person.passengerList.length > 0
+                                                ?
+                                                <View style={styles.greyBorder}>
+                                                    <FlatList
+                                                        style={{ flexDirection: 'column' }}
+                                                        numColumns={4}
+                                                        data={person.passengerList.slice(0, 4)}
+                                                        keyExtractor={this.passengerListKeyExtractor}
+                                                        renderItem={({ item, index }) => (
+                                                            <SmallCard
+                                                                smallardPlaceholder={require('../../assets/img/profile-pic.png')}
+                                                                item={item}
+                                                                onPress={() => this.openPassengerProfile(item, index)}
+                                                                imageStyle={styles.imageStyle}
+                                                            />
+                                                        )}
+                                                    />
+                                                </View>
+                                                : null
+                                        }
+                                    </View>
+                                </View>
+                                : null
+                        }
+                    </View>
+                    <View style={styles.usersExtraDetailContainer}>
+                        <ImageBackground source={require('../../assets/img/my-journal.png')} style={styles.usersExtraDetail}>
+                            <DefaultText style={styles.txtOnImg}>Journal</DefaultText>
+                        </ImageBackground>
+                    </View>
+                    <View style={styles.usersExtraDetailContainer}>
+                        <ImageBackground source={require('../../assets/img/my-vest.png')} style={styles.usersExtraDetail}>
+                            <DefaultText style={styles.txtOnImg}>Vest</DefaultText>
+                        </ImageBackground>
+                    </View>
+                    <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.BUDDY_ALBUM)}>
+                        <ImageBackground source={require('../../assets/img/my-photos.png')} style={styles.usersExtraDetail}>
+                            <DefaultText style={styles.txtOnImg}>Photos</DefaultText>
+                        </ImageBackground>
+                    </TouchableOpacity>
+
+                </ScrollView>
                 {/* Shifter: - Brings the app navigation menu */}
                 <ShifterButton onPress={this.showAppNavMenu} containerStyles={this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null} alignLeft={this.props.user.handDominance === 'left'} />
             </View>
@@ -294,10 +315,10 @@ class FriendsProfile extends Component {
 const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { profileLastOptions, hasNetwork } = state.PageState;
-    const { person } = state.CurrentProfile;
+    const { person, prevProfiles } = state.CurrentProfile;
     const hasPrevProfiles = state.CurrentProfile.prevProfiles.length > 0;
     const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
-    return { user, userAuthToken, deviceToken, garage, profileLastOptions, hasNetwork, person, hasPrevProfiles };
+    return { user, userAuthToken, deviceToken, garage, profileLastOptions, hasNetwork, person, hasPrevProfiles, prevProfiles };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -339,6 +360,7 @@ const mapDispatchToProps = (dispatch) => {
         goToPrevProfile: () => dispatch(goToPrevProfileAction()),
         resetPersonProfile: () => dispatch(resetPersonProfileAction()),
         changeScreen: (screenProps) => dispatch(screenChangeAction(screenProps)),
+        doUnfriend: (userId, personId) => dispatch(doUnfriend(userId, personId)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(FriendsProfile);
@@ -458,6 +480,7 @@ const styles = StyleSheet.create({
         zIndex: 999
     },
     titleContainer: {
+        flex: 1,
         flexDirection: 'column',
         marginLeft: 17,
         justifyContent: 'center',

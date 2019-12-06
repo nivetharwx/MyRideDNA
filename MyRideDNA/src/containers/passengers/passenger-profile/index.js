@@ -5,11 +5,11 @@ import { Actions } from 'react-native-router-flux';
 import { DatePicker, Icon as NBIcon, Toast, ListItem, Left, Body, Right, Thumbnail } from 'native-base';
 import { BasicHeader } from '../../../components/headers';
 import { APP_COMMON_STYLES, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, heightPercentageToDP, IS_ANDROID, WindowDimensions, widthPercentageToDP, CUSTOM_FONTS } from '../../../constants';
-import { getPassengerList, getPicture } from '../../../api';
+import { getPassengerList, getPicture, deletePassenger } from '../../../api';
 import { BaseModal } from '../../../components/modal';
 import { getPassengerInfoAction, updateCurrentPassengerAction, resetCurrentPassengerAction, appNavMenuVisibilityAction } from '../../../actions';
 import { ImageLoader } from '../../../components/loader';
-import { IconButton, ShifterButton } from '../../../components/buttons';
+import { IconButton, ShifterButton, LinkButton } from '../../../components/buttons';
 import { DefaultText } from '../../../components/labels';
 import { getFormattedDateFromISO } from '../../../util';
 
@@ -25,6 +25,7 @@ class PassengersProfile extends Component {
             isLoading: false,
             spinValue: new Animated.Value(0),
             isLoadingProfPic: false,
+            showOptionsModal: false,
         };
     }
 
@@ -126,15 +127,36 @@ class PassengersProfile extends Component {
         return <DefaultText fontFamily={CUSTOM_FONTS.robotoSlabBold}>{address}</DefaultText >
     }
 
+    showOptionsModal = () => this.setState({ showOptionsModal: true });
+
+    hideOptionsModal = () => this.setState({ showOptionsModal: false });
+
+    openPassengerEditForm = () => {
+        this.setState({ showOptionsModal: false });
+        return Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: this.props.passengerIdx })
+    }
+
+    removePassenger = () => {
+        this.props.deletePassenger(this.props.currentPassenger.passengerId);
+        this.setState({ showOptionsModal: false });
+    }
+
     render() {
         const { user, currentPassenger } = this.props;
-        const { isLoadingProfPic } = this.state;
+        const { isLoadingProfPic, showOptionsModal } = this.state;
         const spin = this.state.spinValue.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
         });
         return (
             <View style={styles.fill}>
+                <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
+                    <View style={APP_COMMON_STYLES.optionsContainer}>
+                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='EDIT' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.openPassengerEditForm} />
+                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='REMOVE PASSENGER' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.removePassenger} />
+                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='CANCEL' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.hideOptionsModal} />
+                    </View>
+                </BaseModal>
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
@@ -142,6 +164,7 @@ class PassengersProfile extends Component {
                     <BasicHeader
                         title={currentPassenger.name || ''}
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
+                        rightIconProps={{ reverse: false, name: 'options', type: 'SimpleLineIcons', onPress: this.showOptionsModal, style: { color: '#fff', fontSize: 19 } }}
                     />
                     <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
                         <View style={styles.profilePic}>
@@ -155,8 +178,6 @@ class PassengersProfile extends Component {
                             </ImageBackground>
                         </View>
                     </ImageBackground>
-                    <IconButton iconProps={{ name: 'account-edit', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#f69039' } }}
-                        style={styles.editPassenger} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: this.props.passengerIdx })} />
                     <View style={styles.contentContainer}>
                         <DefaultText style={styles.fieldLabel}>DOB</DefaultText>
                         <DefaultText fontFamily={CUSTOM_FONTS.robotoSlabBold}>{currentPassenger.dob ? getFormattedDateFromISO(currentPassenger.dob) : ''}</DefaultText>
@@ -190,6 +211,7 @@ const mapDispatchToProps = (dispatch) => {
         }),
         resetCurrentPassenger: () => dispatch(resetCurrentPassengerAction()),
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
+        deletePassenger: (passengerId) => dispatch(deletePassenger(passengerId)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(PassengersProfile);
@@ -201,7 +223,8 @@ const styles = StyleSheet.create({
     },
     contentContainer: {
         flex: 1,
-        marginHorizontal: 35
+        marginHorizontal: 35,
+        marginTop: 41
     },
     profileBG: {
         width: '100%',

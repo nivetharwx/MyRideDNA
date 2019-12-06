@@ -71,7 +71,8 @@ import {
     UPDATE_POST_TYPES,
     UPDATE_BIKE_ALBUM,
     CLEAR_BIKE_ALBUM,
-    SET_CURRENT_BIKE_INDEX
+    SET_CURRENT_BIKE_INDEX,
+    UPDATE_PREV_PROFILE
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -528,6 +529,12 @@ export const setCurrentFriendAction = (data) => (
 export const goToPrevProfileAction = (data) => (
     {
         type: GO_PREV_PROFILE,
+        data: data
+    }
+);
+export const updatePrevProfileAction = (data) => (
+    {
+        type: UPDATE_PREV_PROFILE,
         data: data
     }
 );

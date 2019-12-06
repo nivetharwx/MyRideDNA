@@ -96,6 +96,10 @@ export default (state = initialState, action) => {
                     ...state.passengerList.slice(0, passengerIdx),
                     ...state.passengerList.slice(passengerIdx + 1)
                 ],
+                currentPassenger: {
+                    passengerId: null
+                },
+
             }
 
         case GET_PASSENGER_INFO:
@@ -159,7 +163,6 @@ export default (state = initialState, action) => {
             else {
                 const communityIndex = state.communityList.findIndex(item => item.userId === action.data.userId)
                 updatedCommnuity = state.communityList[communityIndex];
-                console.log('updatedCommnuity : ', updatedCommnuity)
                 updatedCommnuity.isPassenger = true
                 return {
                     ...state,
