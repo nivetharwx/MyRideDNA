@@ -42,6 +42,18 @@ export default (state = initialState, action) => {
             }
 
         case SET_CURRENT_BIKE_ID:
+            if (action.data === null) {
+                return {
+                    ...state,
+                    currentBikeId: null,
+                    spaceList: state.spaceList.map(space => {
+                        if (state.currentBikeId === space.spaceId) {
+                            return { ...space, customizations: null, wishList: null, loggedRides: null, stories: null };
+                        }
+                        return space;
+                    })
+                }
+            }
             return {
                 ...state,
                 currentBikeId: action.data
@@ -80,6 +92,7 @@ export default (state = initialState, action) => {
             return state;
 
         case UPDATE_BIKE_LIST:
+            if (state.currentBikeId === null) return state;
             const bikeIdx = state.spaceList.findIndex(({ spaceId }) => state.currentBikeId === spaceId);
             if (bikeIdx === -1) return state;
             return {
