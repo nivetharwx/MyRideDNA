@@ -240,8 +240,8 @@ class FriendsProfile extends Component {
                                                         keyExtractor={this.roadBuddiesKeyExtractor}
                                                         renderItem={({ item, index }) => (
                                                             <SmallCard
-                                                                smallardPlaceholder={require('../../assets/img/profile-pic.png')}
-                                                                item={item}
+                                                                placeholderImage={require('../../assets/img/profile-pic.png')}
+                                                                image={item.profilePicture}
                                                                 onPress={() => this.openRoadBuddy(item.userId)}
                                                                 imageStyle={styles.imageStyle}
                                                             />
@@ -273,8 +273,8 @@ class FriendsProfile extends Component {
                                                         keyExtractor={this.passengerListKeyExtractor}
                                                         renderItem={({ item, index }) => (
                                                             <SmallCard
-                                                                smallardPlaceholder={require('../../assets/img/profile-pic.png')}
-                                                                item={item}
+                                                                placeholderImage={require('../../assets/img/profile-pic.png')}
+                                                                image={item.profilePicture}
                                                                 onPress={() => this.openPassengerProfile(item, index)}
                                                                 imageStyle={styles.imageStyle}
                                                             />

@@ -137,7 +137,7 @@ export const ThumbnailCard = ({ item, thumbnailPlaceholder, onPress, onLongPress
     </View>
 );
 
-export const SmallCard = ({ item, smallardPlaceholder, onPress, onLongPress, actions, thumbnailRef, outerContainer, imageStyle }) => (
+export const SmallCard = ({ image, placeholderImage, onPress, outerContainer, imageStyle }) => (
     <View style={outerContainer}>
         <TouchableOpacity onPress={() => onPress ? onPress() : null} style={{
             flex: 1,
@@ -145,10 +145,8 @@ export const SmallCard = ({ item, smallardPlaceholder, onPress, onLongPress, act
             justifyContent: 'center'
         }}>
             <View style={[{ height: 74, width: 74, backgroundColor: '#A9A9A9', justifyContent: 'center' }, imageStyle]}>
-                <Image source={item.profilePicture ? { uri: item.profilePicture } : smallardPlaceholder}
+                <Image source={image ? { uri: image } : placeholderImage}
                     style={{ width: null, height: null, flex: 1 }} />
-                {/* <Image source={smallardPlaceholder}
-                    style={{ width: null, height: null, flex: 1 }} /> */}
             </View>
         </TouchableOpacity>
     </View>
