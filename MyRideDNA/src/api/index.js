@@ -2082,14 +2082,14 @@ export const getAllMembersAndFriendsLocationList = (userId, ids) => {
             })
     }
 }
-export const getSpaceList = (userId, successCallback, errorCallback) => {
-    axios.get(USER_BASE_URL + `getSpaceList?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+export const getSpaces = (userId, successCallback, errorCallback) => {
+    axios.get(`${USER_BASE_URL}getSpaces/${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
         .then(res => {
-            console.log("getSpaceList success: ", res.data);
+            console.log("getSpaces success: ", res.data);
             typeof successCallback === 'function' && successCallback(res.data);
         })
         .catch(er => {
-            console.log(`getSpaceList: `, er.response || er);
+            console.log(`getSpaces error: `, er.response || er);
             typeof errorCallback === 'function' && errorCallback(er.response || er);
         })
 }
@@ -2142,63 +2142,37 @@ export const updateGarageName = (garageName, garageId) => {
 }
 export const addBikeToGarage = (userId, bike, pictureList, successCallback, errorCallback) => {
     return dispatch => {
-        // dispatch(toggleLoaderAction(true));
         axios.put(USER_BASE_URL + `addSpace/${userId}`, { ...bike, pictureList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                console.log('add bike to garage : ', res)
                 if (res.status === 200) {
-                    // console.log(`addSpace success: `, res.data);
-                    // dispatch(toggleLoaderAction(false));
-                    bike.pictureIdList = res.data.pictureIdList || [];
-                    bike.pictureList = res.data.pictureList || [];
                     bike.spaceId = res.data.spaceId;
+                    bike.picture = res.data.picture;
                     dispatch(addToBikeListAction({ bike }));
-                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    successCallback(true)
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+                    successCallback(true);
                 }
             })
             .catch(er => {
-                errorCallback(false)
                 console.log(`addSpace error: `, er.response || er);
+                errorCallback(false);
                 differentErrors(er, [userId, bike, pictureList, successCallback, errorCallback], addBikeToGarage, true);
-                // TODO: Dispatch error info action
-                // dispatch(toggleLoaderAction(false));
             })
     };
 }
 export const editBike = (userId, bike, pictureList, index, successCallback, errorCallback) => {
     return dispatch => {
         axios.put(USER_BASE_URL + `updateSpace/${userId}`, { ...bike, pictureList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
-            .then(res => {
-                console.log("updateSpace success: ", res.data);
+            .then(({ data }) => {
+                if (!bike.picture) bike.picture = data.picture;
                 dispatch(updateBikeListAction(bike));
                 successCallback(true);
             })
             .catch(er => {
-                differentErrors(er, [userId, bike, pictureList, index, successCallback, errorCallback], editBike, true);
-                errorCallback(false);
                 console.log("updateSpace error: ", er.response || er);
+                errorCallback(false);
+                differentErrors(er, [userId, bike, pictureList, index, successCallback, errorCallback], editBike, true);
             })
     };
-}
-export const addPicturesToBike = (userId, bike, pictureList, isPrivate = true) => {
-    return dispatch => {
-        dispatch(apiLoaderActions(true))
-        axios.put(USER_BASE_URL + `addPicturesToSpace`, { userId, spaceId: bike.spaceId, pictureList, isPrivate }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
-            .then(res => {
-                console.log("addPicturesToSpace success: ", res.data);
-                dispatch(apiLoaderActions(false));
-                if (!bike.pictureIdList) bike.pictureIdList = [];
-                bike.pictureIdList = [...bike.pictureIdList, ...res.data.pictureIds];
-                dispatch(updateBikeListAction({ bike }));
-                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-            })
-            .catch(er => {
-                console.log(`addPicturesToSpace error: `, er.response || er);
-                differentErrors(er, [userId, bike, pictureList], addPicturesToBike, true);
-                dispatch(apiLoaderActions(false))
-            })
-    }
 }
 export const setBikeAsActive = (userId, spaceId, newActiveIndex) => {
     return dispatch => {
@@ -2225,7 +2199,7 @@ export const deleteBike = (userId, bikeId, index) => {
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
                 dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                return dispatch(deleteBikeFromListAction({ index }))
+                dispatch(deleteBikeFromListAction(index))
             })
             .catch(er => {
                 console.log(`deleteBike: `, er.response);

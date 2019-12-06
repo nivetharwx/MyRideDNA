@@ -10,7 +10,7 @@ import { ImageButton, ShifterButton, SwitchIconButton, IconButton, LinkButton, B
 import { appNavMenuVisibilityAction } from '../../actions';
 import { IconicList } from '../../components/inputs';
 import { Icon as NBIcon, Thumbnail, Toast } from 'native-base';
-import { createPost, getSpaceList } from '../../api';
+import { createPost, getSpaces } from '../../api';
 import { Loader } from '../../components/loader';
 
 const CONTAINER_H_SPACE = widthPercentageToDP(6);
@@ -29,7 +29,7 @@ class PostForm extends Component {
     }
 
     componentDidMount() {
-        getSpaceList(this.props.user.userId, (bikeList) => {
+        getSpaces(this.props.user.userId, (bikeList) => {
             this.setState({ bikeList }, () => {
                 if (this.state.selectedBikeId === null) {
                     this.setState({ selectedBikeId: this.state.bikeList[0].spaceId });
@@ -120,6 +120,21 @@ class PostForm extends Component {
         });
     }
 
+    renderHeader = () => {
+        let title = '';
+        switch (this.props.postType) {
+            case POST_TYPE.WISH_LIST:
+                title = 'Add to Wish List';
+                break;
+            case POST_TYPE.MY_RIDE:
+                title = 'Add to My Ride';
+                break;
+            default:
+                title = 'New Post';
+        }
+        return <BasicHeader title={title} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
+    }
+
     render() {
         const { user, currentBikeId, postType, showLoader } = this.props;
         const { selectedBikeId, isPrivate, selectedImgs, title, description, bikeList } = this.state;
@@ -129,7 +144,7 @@ class PostForm extends Component {
                 <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
             </View>
             <View style={styles.fill}>
-                <BasicHeader title={postType === POST_TYPE.IMAGE_UPLOAD ? 'Upload Image' : 'New Post'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
+                {this.renderHeader()}
                 <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps='handled' contentContainerStyle={styles.scrollView}>
                     <View style={styles.btnContainer}>
                         {/* TODO: Images below has to be changed with proper color (Need to get from the Platypus) */}

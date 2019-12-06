@@ -361,7 +361,6 @@ export class Map extends Component {
                 if (Actions.prevState.routes.length > 1) {
                     if (Actions.prevState.routes.findIndex(route => route.routeName === currentScreen.name) > -1) {
                         Actions.popTo(currentScreen.name, {});
-                        setTimeout(() => Actions.refresh(currentScreen.params || {}), 0);
                     } else {
                         currentScreen.params && currentScreen.params.comingFrom
                             ? Actions.push(currentScreen.name, currentScreen.params)

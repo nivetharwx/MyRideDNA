@@ -1,19 +1,21 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, View, ScrollView, ImageBackground, Image, StatusBar, FlatList, Alert } from 'react-native';
-import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, heightPercentageToDP, POST_TYPE } from '../../../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, heightPercentageToDP, POST_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { IconButton, ShifterButton, LinkButton } from '../../../../components/buttons';
-import { appNavMenuVisibilityAction, setCurrentBikeIndexAction } from '../../../../actions';
+import { appNavMenuVisibilityAction, updateBikePictureAction } from '../../../../actions';
 import { DefaultText } from '../../../../components/labels';
 import { BaseModal } from '../../../../components/modal';
-import { setBikeAsActive, deleteBike } from '../../../../api';
+import { setBikeAsActive, deleteBike, getPicture } from '../../../../api';
+import { ImageLoader } from '../../../../components/loader';
 
 class BikeDetails extends Component {
     constructor(props) {
         super(props);
         this.state = {
             showOptionsModal: false,
+            isLoadingProfPic: false,
         };
     }
 
@@ -22,15 +24,17 @@ class BikeDetails extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.props.currentBikeIndex === -1) this.onPressBackButton();
+        if (this.props.currentBikeIndex === -1) return this.onPressBackButton();
+        if (this.props.bike.picture) {
+            if (!prevProps.bike.picture || prevProps.bike.picture.id !== this.props.bike.picture.id) {
+                this.setState({ isLoadingProfPic: true });
+                this.props.getBikePicture(this.props.bike.picture.id.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), this.props.bike.spaceId);
+            }
+            if (this.props.bike.picture.data && this.state.isLoadingProfPic) this.setState({ isLoadingProfPic: false });
+        }
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
-
-    openBikeForm = () => {
-        this.hideOptionsModal();
-        Actions.push(PageKeys.ADD_BIKE_FORM, {});
-    }
 
     openBikeForm = () => {
         this.hideOptionsModal();
@@ -81,7 +85,7 @@ class BikeDetails extends Component {
 
     render() {
         const { user, bike } = this.props;
-        const { showOptionsModal } = this.state;
+        const { showOptionsModal, isLoadingProfPic } = this.state;
         return (
             <View style={styles.fill}>
                 <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
@@ -116,7 +120,13 @@ class BikeDetails extends Component {
                         ? null
                         : <ScrollView showsVerticalScrollIndicator={false}>
                             <View style={[styles.bikePic, styles.bikeBtmBorder, bike.isDefault ? styles.activeBorder : null]}>
-                                <Image source={bike.picture && bike.picture.data ? { uri: bike.picture.data } : require('../../../../assets/img/bike_placeholder.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} />
+                                <ImageBackground source={bike.picture && bike.picture.data ? { uri: bike.picture.data } : require('../../../../assets/img/bike_placeholder.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
+                                    {
+                                        isLoadingProfPic
+                                            ? <ImageLoader show={isLoadingProfPic} />
+                                            : null
+                                    }
+                                </ImageBackground>
                             </View>
                             <ImageBackground source={require('../../../../assets/img/odometer-small.png')} style={{ position: 'absolute', marginTop: styles.bikePic.height - 55.5, alignSelf: 'center', height: 111, width: 118, justifyContent: 'center' }}>
                                 <DefaultText style={styles.miles}>114,526</DefaultText>
@@ -194,16 +204,19 @@ class BikeDetails extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { hasNetwork } = state.PageState;
-    const { currentIndex, activeBikeIndex } = state.GarageInfo;
-    const bike = currentIndex === -1 ? null : state.GarageInfo.spaceList[currentIndex];
-    return { user, hasNetwork, bike, activeBikeIndex, currentBikeIndex: currentIndex };
+    const { currentBikeId, activeBikeIndex } = state.GarageInfo;
+    const currentBikeIndex = state.GarageInfo.spaceList.findIndex(({ spaceId }) => spaceId === currentBikeId);
+    const bike = currentBikeIndex === -1 ? null : state.GarageInfo.spaceList[currentBikeIndex];
+    return { user, hasNetwork, bike, activeBikeIndex, currentBikeIndex };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        setCurrentBikeIndex: (index) => dispatch(setCurrentBikeIndexAction(index)),
         setBikeAsActive: (userId, spaceId, index) => dispatch(setBikeAsActive(userId, spaceId, index)),
         deleteBike: (userId, bikeId, index) => dispatch(deleteBike(userId, bikeId, index)),
+        getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
+            dispatch(updateBikePictureAction({ spaceId, picture: response.picture }))
+        }, (error) => console.log("getPicture error: ", error)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BikeDetails);
@@ -313,8 +326,9 @@ const styles = StyleSheet.create({
         backgroundColor: APP_COMMON_STYLES.infoColor,
         paddingVertical: 5,
         paddingHorizontal: 10,
-        borderRadius: 50,
-        alignSelf: 'flex-start'
+        borderRadius: widthPercentageToDP(3.5),
+        alignSelf: 'flex-start',
+        overflow: 'hidden'
     },
     activeBikeBtnTxt: {
         color: '#585756',
