@@ -40,6 +40,7 @@ export const GRAPH_BASE_URL = GRAPH_URL + ':5057/';
 // export const EVENTS_BASE_URL = GRAPH_URL + ':5055/';
 export const EVENTS_BASE_URL = EVENT_URL + ':5055/';
 export const POSTS_BASE_URL = NOTIFICATION_URL + ':6062/';
+export const GET_PICTURE_BY_ID = `${USER_BASE_URL}getPictureById/`;
 
 export const PageKeys = {
     EDIT_PROFILE: 'editProfile',
