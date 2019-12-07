@@ -1,15 +1,15 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, View, ScrollView, ImageBackground, Image, StatusBar, FlatList, Alert } from 'react-native';
-import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, heightPercentageToDP, POST_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, heightPercentageToDP, POST_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, GET_PICTURE_BY_ID } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { IconButton, ShifterButton, LinkButton } from '../../../../components/buttons';
-import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updateBikeListAction } from '../../../../actions';
+import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updateBikeListAction, updateLatestPostPictureListAction } from '../../../../actions';
 import { DefaultText } from '../../../../components/labels';
 import { BaseModal } from '../../../../components/modal';
 import { ImageLoader } from '../../../../components/loader';
 import { SmallCard } from '../../../../components/cards';
-import { setBikeAsActive, deleteBike, getPicture, getPosts } from '../../../../api';
+import { setBikeAsActive, deleteBike, getPicture, getPosts, getPictureList } from '../../../../api';
 
 class BikeDetails extends Component {
     constructor(props) {
@@ -34,9 +34,14 @@ class BikeDetails extends Component {
             if (this.props.bike.picture.data && this.state.isLoadingProfPic) this.setState({ isLoadingProfPic: false });
         }
         if (prevProps.bike.customizations !== this.props.bike.customizations) {
-            const myRidePicIds = this.props.bike.customizations.map((wish, index) => {
-                
-            });
+            // const myRidePicIds = this.props.bike.customizations.reduce((obj, item) => {
+            //     // TODO: Have to change when API changes the pictureIds key with pictures key
+            //     if (item.pictureIds && item.pictureIds[0] && !item.pictureIds[0].data) {
+            //         obj[item.id] = item.pictureIds[0].id;
+            //     }
+            //     return obj;
+            // }, {});
+            // if (Object.keys(myRidePicIds).length > 0) this.props.getPostsPictures(myRidePicIds, POST_TYPE.MY_RIDE);
         }
     }
 
@@ -93,7 +98,7 @@ class BikeDetails extends Component {
 
     renderSmallCard(item, postType) {
         return <SmallCard
-            image={item.picture ? item.picture.data : null}
+            image={item.pictureIds && item.pictureIds[0] ? `${GET_PICTURE_BY_ID}${item.pictureIds[0].id}` : null}
             onPress={() => {
                 if (postType === POST_TYPE.MY_RIDE) console.log("Open MyRide Item page for ", item);
                 else if (postType === POST_TYPE.WISH_LIST) console.log("Open WisList Item page for ", item);
@@ -178,12 +183,12 @@ class BikeDetails extends Component {
                                         <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={this.addMyRide} />
                                     </View>
                                     {
-                                        bike.wishList
+                                        bike.customizations
                                             ? <FlatList
                                                 style={styles.list}
                                                 numColumns={4}
-                                                data={bike.wishList.slice(0, 4)}
-                                                data={this.postKeyExtractor}
+                                                data={bike.customizations.slice(0, 4)}
+                                                keyExtractor={this.postKeyExtractor}
                                                 renderItem={({ item }) => this.renderSmallCard(item, POST_TYPE.MY_RIDE)}
                                             />
                                             : null
@@ -197,7 +202,17 @@ class BikeDetails extends Component {
                                         </LinkButton>
                                         <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={this.addWish} />
                                     </View>
-                                    <FlatList style={styles.list} />
+                                    {
+                                        bike.wishList
+                                            ? <FlatList
+                                                style={styles.list}
+                                                numColumns={4}
+                                                data={bike.wishList.slice(0, 4)}
+                                                keyExtractor={this.postKeyExtractor}
+                                                renderItem={({ item }) => this.renderSmallCard(item, POST_TYPE.WISH_LIST)}
+                                            />
+                                            : null
+                                    }
                                 </View>
                                 <View style={styles.section}>
                                     <View style={styles.sectionHeader}>
