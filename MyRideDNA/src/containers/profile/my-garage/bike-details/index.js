@@ -4,11 +4,12 @@ import { StyleSheet, View, ScrollView, ImageBackground, Image, StatusBar, FlatLi
 import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, heightPercentageToDP, POST_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { IconButton, ShifterButton, LinkButton } from '../../../../components/buttons';
-import { appNavMenuVisibilityAction, updateBikePictureAction } from '../../../../actions';
+import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updateBikeListAction } from '../../../../actions';
 import { DefaultText } from '../../../../components/labels';
 import { BaseModal } from '../../../../components/modal';
-import { setBikeAsActive, deleteBike, getPicture } from '../../../../api';
 import { ImageLoader } from '../../../../components/loader';
+import { SmallCard } from '../../../../components/cards';
+import { setBikeAsActive, deleteBike, getPicture, getPosts } from '../../../../api';
 
 class BikeDetails extends Component {
     constructor(props) {
@@ -20,7 +21,7 @@ class BikeDetails extends Component {
     }
 
     componentDidMount() {
-
+        this.props.getPosts(this.props.user.userId, POST_TYPE.WISH_LIST, this.props.postTypes[POST_TYPE.WISH_LIST].id, this.props.bike.spaceId);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -31,6 +32,11 @@ class BikeDetails extends Component {
                 this.props.getBikePicture(this.props.bike.picture.id.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), this.props.bike.spaceId);
             }
             if (this.props.bike.picture.data && this.state.isLoadingProfPic) this.setState({ isLoadingProfPic: false });
+        }
+        if (prevProps.bike.customizations !== this.props.bike.customizations) {
+            const myRidePicIds = this.props.bike.customizations.map((wish, index) => {
+                
+            });
         }
     }
 
@@ -69,18 +75,35 @@ class BikeDetails extends Component {
         this.hideOptionsModal();
     }
 
-    addStoryFromRoad = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.STORIES_FROM_ROAD });
+    addStoryFromRoad = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.STORIES_FROM_ROAD, currentBikeId: this.props.bike.spaceId });
 
-    addWish = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.WISH_LIST });
+    addWish = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.WISH_LIST, currentBikeId: this.props.bike.spaceId });
 
-    addCustomization = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.CUSTOMIZATION });
+    addMyRide = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.MY_RIDE, currentBikeId: this.props.bike.spaceId });
 
     showOptionsModal = () => this.setState({ showOptionsModal: true });
 
     hideOptionsModal = () => this.setState({ showOptionsModal: false });
 
-    componentWillUnmount() {
+    openMyRidePage = () => Actions.push(PageKeys.BIKE_SPECS, { comingFrom: Actions.currentScene, postType: POST_TYPE.MY_RIDE });
 
+    openWishListPage = () => Actions.push(PageKeys.BIKE_SPECS, { comingFrom: Actions.currentScene, postType: POST_TYPE.WISH_LIST });
+
+    postKeyExtractor = item => item.id;
+
+    renderSmallCard(item, postType) {
+        return <SmallCard
+            image={item.picture ? item.picture.data : null}
+            onPress={() => {
+                if (postType === POST_TYPE.MY_RIDE) console.log("Open MyRide Item page for ", item);
+                else if (postType === POST_TYPE.WISH_LIST) console.log("Open WisList Item page for ", item);
+            }}
+            imageStyle={styles.imageStyle}
+        />
+    }
+
+    componentWillUnmount() {
+        this.props.setCurrentBikeId(null);
     }
 
     render() {
@@ -137,7 +160,7 @@ class BikeDetails extends Component {
                             </View>
                             <View style={{ marginHorizontal: 20, marginTop: 20 }}>
                                 <DefaultText style={styles.title}>{bike.name}</DefaultText>
-                                <DefaultText style={styles.subtitle}>{`${bike.make || ''}${bike.model ? ' - ' + bike.model : ''}${bike.notes ? '    |    ' + bike.notes.length <= 17 ? bike.notes : bike.notes.substring(0, 17) + '...' : ''}`}</DefaultText>
+                                <DefaultText numberOfLines={1} style={styles.subtitle}>{`${bike.make || ''}${bike.model ? ' - ' + bike.model : ''} ${bike.notes || ''}`}</DefaultText>
                                 {
                                     bike.isDefault
                                         ? <DefaultText style={styles.activeBikeTxt}>Active Bike</DefaultText>
@@ -148,21 +171,31 @@ class BikeDetails extends Component {
                                 <View style={styles.hDivider} />
                                 <View style={styles.section}>
                                     <View style={styles.sectionHeader}>
-                                        <LinkButton style={styles.sectionLinkBtn}>
+                                        <LinkButton style={styles.sectionLinkBtn} onPress={this.openMyRidePage}>
                                             <DefaultText style={styles.sectionLinkTxt}>My Ride</DefaultText>
                                             <DefaultText style={[styles.sectionLinkTxt, { color: APP_COMMON_STYLES.infoColor, marginLeft: 8 }]}>[see all]</DefaultText>
                                         </LinkButton>
-                                        <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={() => null} />
+                                        <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={this.addMyRide} />
                                     </View>
-                                    <FlatList style={styles.list} />
+                                    {
+                                        bike.wishList
+                                            ? <FlatList
+                                                style={styles.list}
+                                                numColumns={4}
+                                                data={bike.wishList.slice(0, 4)}
+                                                data={this.postKeyExtractor}
+                                                renderItem={({ item }) => this.renderSmallCard(item, POST_TYPE.MY_RIDE)}
+                                            />
+                                            : null
+                                    }
                                 </View>
                                 <View style={styles.section}>
                                     <View style={styles.sectionHeader}>
-                                        <LinkButton style={styles.sectionLinkBtn}>
+                                        <LinkButton style={styles.sectionLinkBtn} onPress={this.openWishListPage}>
                                             <DefaultText style={styles.sectionLinkTxt}>Wish List</DefaultText>
                                             <DefaultText style={[styles.sectionLinkTxt, { color: APP_COMMON_STYLES.infoColor, marginLeft: 8 }]}>[see all]</DefaultText>
                                         </LinkButton>
-                                        <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={() => null} />
+                                        <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={this.addWish} />
                                     </View>
                                     <FlatList style={styles.list} />
                                 </View>
@@ -203,11 +236,11 @@ class BikeDetails extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { hasNetwork } = state.PageState;
+    const { postTypes, hasNetwork } = state.PageState;
     const { currentBikeId, activeBikeIndex } = state.GarageInfo;
     const currentBikeIndex = state.GarageInfo.spaceList.findIndex(({ spaceId }) => spaceId === currentBikeId);
     const bike = currentBikeIndex === -1 ? null : state.GarageInfo.spaceList[currentBikeIndex];
-    return { user, hasNetwork, bike, activeBikeIndex, currentBikeIndex };
+    return { user, postTypes, hasNetwork, bike, activeBikeIndex, currentBikeIndex };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -217,6 +250,24 @@ const mapDispatchToProps = (dispatch) => {
         getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
             dispatch(updateBikePictureAction({ spaceId, picture: response.picture }))
         }, (error) => console.log("getPicture error: ", error)),
+        setCurrentBikeId: (bikeId) => dispatch(setCurrentBikeIdAction(bikeId)),
+        getPosts: (userId, postType, postTypeId, spaceId, successCallback, errorCallback) => dispatch(getPosts(userId, postTypeId, spaceId, (res) => {
+            if (typeof successCallback === 'function') successCallback(res);
+            switch (postType) {
+                case POST_TYPE.WISH_LIST:
+                    dispatch(updateBikeListAction({ wishList: res }));
+                    break;
+                case POST_TYPE.MY_RIDE:
+                    dispatch(updateBikeListAction({ customizations: res }));
+                    break;
+                case POST_TYPE.STORIES_FROM_ROAD:
+                    break;
+                case POST_TYPE.LOGGED_RIDES:
+                    break;
+            }
+        }, (err) => {
+            if (typeof errorCallback === 'function') errorCallback(err);
+        })),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BikeDetails);

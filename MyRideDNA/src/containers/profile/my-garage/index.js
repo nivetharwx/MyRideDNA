@@ -61,6 +61,9 @@ class MyGarageTab extends Component {
                 //     }
                 // })
             }
+            if (!prevProps.currentBikeId && this.props.currentBikeId) {
+                Actions.push(PageKeys.BIKE_DETAILS, {});
+            }
         }
     }
 
@@ -90,7 +93,6 @@ class MyGarageTab extends Component {
 
     openBikeDetailsPage = (bike) => {
         this.props.setCurrentBikeId(bike.spaceId);
-        Actions.push(PageKeys.BIKE_DETAILS, {});
     }
 
     renderBike = ({ item, index }) => {
@@ -101,16 +103,16 @@ class MyGarageTab extends Component {
                         item.isDefault
                             ? <View style={styles.contentOvrImg}>
                                 <View style={styles.activeIndicator} />
-                                <Item style={styles.txtContainer}>
-                                    <DefaultText style={styles.cardTitle}>{item.name}</DefaultText>
-                                    <DefaultText style={[styles.cardSubtitle, { color: APP_COMMON_STYLES.infoColor }]}>{`${item.make || ''}${item.model ? ' - ' + item.model : ''}`}</DefaultText>
-                                </Item>
+                                <View style={styles.txtContainer}>
+                                    <DefaultText numberOfLines={1} style={styles.cardTitle}>{item.name}</DefaultText>
+                                    <DefaultText numberOfLines={1} style={[styles.cardSubtitle, { color: APP_COMMON_STYLES.infoColor }]}>{`${item.make || ''}${item.model ? ' - ' + item.model : ''}`}</DefaultText>
+                                </View>
                             </View>
                             : <View style={styles.contentOvrImg}>
-                                <Item style={[styles.txtContainer, { marginLeft: styles.txtContainer.marginLeft + styles.activeIndicator.width }]}>
-                                    <DefaultText style={styles.cardTitle}>{item.name}</DefaultText>
-                                    <DefaultText style={[styles.cardSubtitle, { color: '#D9D9D9' }]}>{`${item.make || ''}${item.model ? ' - ' + item.model : ''}`}</DefaultText>
-                                </Item>
+                                <View style={[styles.txtContainer, { marginLeft: styles.txtContainer.marginLeft + styles.activeIndicator.width }]}>
+                                    <DefaultText numberOfLines={1} style={styles.cardTitle}>{item.name}</DefaultText>
+                                    <DefaultText numberOfLines={1} style={[styles.cardSubtitle, { color: '#D9D9D9' }]}>{`${item.make || ''}${item.model ? ' - ' + item.model : ''}`}</DefaultText>
+                                </View>
                             </View>
                     }
                 </ImageBackground>
@@ -131,12 +133,12 @@ class MyGarageTab extends Component {
                     <IconButton iconProps={{ name: 'ios-notifications', type: 'Ionicons', style: { fontSize: 26 } }}
                         style={styles.headerIconCont} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
                     <View style={styles.headerTitleContainer}>
-                        <DefaultText style={styles.heading}>
+                        <DefaultText numberOfLines={1} style={styles.heading}>
                             {user.name}
                         </DefaultText>
                         {
                             user.nickname ?
-                                <DefaultText style={styles.subheading}>
+                                <DefaultText numberOfLines={1} style={styles.subheading}>
                                     {user.nickname.toUpperCase()}
                                 </DefaultText>
                                 : null
@@ -173,8 +175,9 @@ class MyGarageTab extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const garage = { garageId, garageName, spaceList } = state.GarageInfo;
+    const { currentBikeId } = state.GarageInfo;
     const { hasNetwork } = state.PageState;
-    return { user, garage, hasNetwork };
+    return { user, garage, currentBikeId, hasNetwork };
 }
 const mapDispatchToProps = (dispatch) => {
     return {

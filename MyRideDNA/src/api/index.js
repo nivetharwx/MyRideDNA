@@ -2654,7 +2654,26 @@ export const createPost = (userId, spaceId, postData, successCallback, errorCall
                 dispatch(apiLoaderActions(false));
                 console.log(`createPost error: `, er.response || er);
                 typeof errorCallback === 'function' && errorCallback(er.response || er);
-                differentErrors(er, [isGroup, id, userId, messageToBeDeleted, newChatMessages], deleteAllMessages, true);
+                differentErrors(er, [userId, spaceId, postData, successCallback, errorCallback], createPost, true);
+            })
+    }
+}
+export const getPosts = (userId, postTypeId, spaceId, successCallback, errorCallback) => {
+    return dispatch => {
+        dispatch(apiLoaderActions(true));
+        axios.get(`${POSTS_BASE_URL}user/${userId}/postType/${postTypeId}?spaceId=${spaceId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    dispatch(apiLoaderActions(false));
+                    console.log("getPosts success: ", res.data);
+                    typeof successCallback === 'function' && successCallback(res.data);
+                }
+            })
+            .catch(er => {
+                dispatch(apiLoaderActions(false));
+                console.log(`getPosts error: `, er.response || er);
+                typeof errorCallback === 'function' && errorCallback(er.response || er);
+                differentErrors(er, [userId, postTypeId, spaceId, successCallback, errorCallback], getPosts, true);
             })
     }
 }
