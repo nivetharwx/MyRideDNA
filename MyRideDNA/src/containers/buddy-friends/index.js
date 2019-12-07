@@ -10,7 +10,7 @@ import { LabeledInputPlaceholder } from '../../components/inputs';
 import { IconButton } from '../../components/buttons';
 import { getRoadBuddiesById, getPictureList, sendFriendRequest, approveFriendRequest, rejectFriendRequest, cancelFriendRequest } from '../../api';
 import { HorizontalCard } from '../../components/cards';
-import { setCurrentFriendAction, goToPrevProfileAction, resetPersonProfileAction, updatePicturesAction } from '../../actions';
+import { setCurrentFriendAction, goToPrevProfileAction, resetPersonProfileAction, updatePicturesAction, updateCurrentFriendAction } from '../../actions';
 
 
 class BuddyFriends extends Component {
@@ -163,26 +163,26 @@ class BuddyFriends extends Component {
     onChangeSearchValue = (val) => { this.setState({ searchQuery: val }) }
 
     approvingFriendRequest = (item) => {
-        this.props.approvedRequest(this.props.user.userId, item.userId, new Date().toISOString(), item.id);
+        this.props.approvedRequest(this.props.user.userId, item.userId, new Date().toISOString(), item.id, this.props.person.friendList, this.props.person.userId);
     }
     rejectingFriendRequest = (item) => {
-        this.props.rejectRequest(this.props.user.userId, item.userId, item.id);
+        this.props.rejectRequest(this.props.user.userId, item.userId, item.id, this.props.person.friendList, this.props.person.userId);
     }
     cancelingFriendRequest = (item) => {
-        this.props.cancelRequest(this.props.user.userId, item.userId, item.id);
+        this.props.cancelRequest(this.props.user.userId, item.userId, item.id, this.props.person.friendList, this.props.person.userId);
     }
 
-    sendFriendRequest = (selectedMember = this.state.selectedMember) => {
+    sendFriendRequest = (item) => {
         const { user } = this.props;
         const requestBody = {
             senderId: user.userId,
             senderName: user.name,
             senderNickname: user.nickname,
             senderEmail: user.email,
-            userId: selectedMember.userId,
-            name: selectedMember.name,
-            nickname: selectedMember.nickname,
-            email: selectedMember.email,
+            userId: item.userId,
+            name: item.name,
+            nickname: item.nickname,
+            email: item.email,
             actionDate: new Date().toISOString()
         };
         this.props.sendFriendRequest(requestBody);
@@ -256,7 +256,6 @@ class BuddyFriends extends Component {
     render() {
         const { searchQuery, isRefreshing } = this.state;
         const { person } = this.props;
-
         this.filteredFriends = searchQuery === '' ? person.friendList : person.friendList.filter(friend => {
             return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                 (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
@@ -297,7 +296,6 @@ class BuddyFriends extends Component {
                                     refreshing={isRefreshing}
                                     onRefresh={this.onPullRefresh}
                                     keyExtractor={this.friendKeyExtractor}
-                                    extraData={this.state}
                                     renderItem={this._renderItem}
                                     ListFooterComponent={this.renderFooter}
                                     onEndReached={this.loadMoreData}
@@ -344,17 +342,50 @@ const mapDispatchToProps = (dispatch) => {
         }, (error) => {
             console.log('getPictureList error : ', error)
         }),
-        sendFriendRequest: (requestBody) => dispatch(sendFriendRequest(requestBody)),
-        approvedRequest: (userId, personId, actionDate, requestId) => dispatch(approveFriendRequest(userId, personId, actionDate, requestId, (res) => {
-            dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.FRIEND }));
+        sendFriendRequest: (requestBody) => dispatch(sendFriendRequest(requestBody, (res) => {
+            const personIdx = friendList.findIndex(friend => friend.userId === personId);
+            const buddyFriend = { ...friendList[personIdx], relationship: RELATIONSHIP.SENT_REQUEST }
+            const updatedBuddyFriendList = [
+                ...friendList.slice(0, personIdx),
+                buddyFriend,
+                ...friendList.slice(personIdx + 1)
+            ];
+            dispatch(updateCurrentFriendAction({ friendList: updatedBuddyFriendList, userId: currentPersonId }));
+            // dispatch(updateSearchListAction({ userId: requestBody.userId, relationship: RELATIONSHIP.SENT_REQUEST }));
+        }, (error) => {
+            // dispatch(updateFriendRequestResponseAction({ error: error.response.data || "Something went wrong" }));
+        })),
+        approvedRequest: (userId, personId, actionDate, requestId, friendList, currentPersonId) => dispatch(approveFriendRequest(userId, personId, actionDate, requestId, (res) => {
+            const personIdx = friendList.findIndex(friend => friend.userId === personId);
+            const buddyFriend = { ...friendList[personIdx], relationship: RELATIONSHIP.FRIEND }
+            const updatedBuddyFriendList = [
+                ...friendList.slice(0, personIdx),
+                buddyFriend,
+                ...friendList.slice(personIdx + 1)
+            ];
+            dispatch(updateCurrentFriendAction({ friendList: updatedBuddyFriendList, userId: currentPersonId }));
         }, (error) => {
         })),
-        rejectRequest: (userId, personId, requestId) => dispatch(rejectFriendRequest(userId, personId, requestId, (res) => {
-            dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.UNKNOWN }));
+        rejectRequest: (userId, personId, requestId, friendList, currentPersonId) => dispatch(rejectFriendRequest(userId, personId, requestId, (res) => {
+            const personIdx = friendList.findIndex(friend => friend.userId === personId);
+            const buddyFriend = { ...friendList[personIdx], relationship: RELATIONSHIP.UNKNOWN }
+            const updatedBuddyFriendList = [
+                ...friendList.slice(0, personIdx),
+                buddyFriend,
+                ...friendList.slice(personIdx + 1)
+            ];
+            dispatch(updateCurrentFriendAction({ friendList: updatedBuddyFriendList, userId: currentPersonId }));
         }, (error) => {
         })),
-        cancelRequest: (userId, personId, requestId) => dispatch(cancelFriendRequest(userId, personId, requestId, (res) => {
-            dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.UNKNOWN }))
+        cancelRequest: (userId, personId, requestId, friendList, currentPersonId) => dispatch(cancelFriendRequest(userId, personId, requestId, (res) => {
+            const personIdx = friendList.findIndex(friend => friend.userId === personId);
+            const buddyFriend = { ...friendList[personIdx], relationship: RELATIONSHIP.UNKNOWN }
+            const updatedBuddyFriendList = [
+                ...friendList.slice(0, personIdx),
+                buddyFriend,
+                ...friendList.slice(personIdx + 1)
+            ];
+            dispatch(updateCurrentFriendAction({ friendList: updatedBuddyFriendList, userId: currentPersonId }));
         }, (error) => {
         })),
     };
