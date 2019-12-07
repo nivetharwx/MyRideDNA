@@ -1604,7 +1604,7 @@ export const sendInvitationOrRequest = (requestBody) => {
             })
     };
 }
-export const sendFriendRequest = (requestBody) => {
+export const sendFriendRequest = (requestBody, successCallback, errorCallback) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true))
@@ -1614,7 +1614,7 @@ export const sendFriendRequest = (requestBody) => {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    dispatch(updateSearchListAction({ userId: requestBody.userId, relationship: RELATIONSHIP.SENT_REQUEST }));
+                    typeof successCallback === "function" && successCallback(res.data)
                 }
             })
             .catch(er => {
@@ -1623,7 +1623,7 @@ export const sendFriendRequest = (requestBody) => {
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
                 differentErrors(er, [requestBody], sendFriendRequest, true);
-                dispatch(updateFriendRequestResponseAction({ error: er.response.data || "Something went wrong" }));
+                typeof errorCallback === "function" && errorCallback(er);
             })
     };
 }

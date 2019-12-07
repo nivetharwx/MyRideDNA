@@ -12,7 +12,7 @@ import { HorizontalCard } from '../../components/cards';
 import Contacts from 'react-native-contacts';
 import Permissions from 'react-native-permissions';
 import { searchForFriend, sendFriendRequest, sendInvitationOrRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest } from '../../api';
-import { clearSearchFriendListAction, resetFriendRequestResponseAction, resetInvitationResponseAction, updateSearchListAction } from '../../actions';
+import { clearSearchFriendListAction, resetFriendRequestResponseAction, resetInvitationResponseAction, updateSearchListAction, updateFriendRequestResponseAction } from '../../actions';
 import { isValidEmailFormat } from '../../util';
 import { LabeledInputPlaceholder } from '../../components/inputs';
 
@@ -515,7 +515,11 @@ const mapDispatchToProps = (dispatch) => {
         clearSearchResults: () => dispatch(clearSearchFriendListAction()),
         clearFriendRequestResponse: () => dispatch(resetFriendRequestResponseAction()),
         clearInvitationResponse: () => dispatch(resetInvitationResponseAction()),
-        sendFriendRequest: (requestBody) => dispatch(sendFriendRequest(requestBody)),
+        sendFriendRequest: (requestBody) => dispatch(sendFriendRequest(requestBody,(res)=>{
+            dispatch(updateSearchListAction({ userId: requestBody.userId, relationship: RELATIONSHIP.SENT_REQUEST }));
+        }, (error)=>{
+            dispatch(updateFriendRequestResponseAction({ error: error.response.data || "Something went wrong" }));
+        })),
         sendInvitationOrRequest: (requestBody) => dispatch(sendInvitationOrRequest(requestBody)),
         cancelRequest: (userId, personId, requestId) => dispatch(cancelFriendRequest(userId, personId, requestId, (res) => {
             dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.UNKNOWN }))
