@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { StyleSheet, TouchableWithoutFeedback, StatusBar, FlatList, ScrollView, View, Keyboard, Alert, TextInput, Text, ActivityIndicator, Animated, Easing } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { DatePicker, Icon as NBIcon, Toast, ListItem, Left, Body, Right, Thumbnail } from 'native-base';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, GET_PICTURE_BY_ID } from '../../constants';
 import { getPassengersById, getPictureList } from '../../api';
 import { BasicHeader } from '../../components/headers';
 import { SquareCard } from '../../components/cards';
@@ -33,22 +33,20 @@ class BuddyPassengers extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.person.passengerList !== this.props.person.passengerList) {
-            if (!this.isLoadingPassPic) {
-                const passPicIdList = [];
-                this.props.person.passengerList.forEach((passenger) => {
-                    if (!passenger.profilePicture && passenger.profilePictureId) {
-                        passPicIdList.push(passenger.profilePictureId);
-                    }
-                })
-                if (passPicIdList.length > 0) {
-                    this.isLoadingPassPic = true;
-                    this.props.getPictureList(passPicIdList, 'passenger', () => this.isLoadingPassPic = false, () => this.isLoadingPassPic = false);
-                }
-            }
-        }
-
-
+        // if (prevProps.person.passengerList !== this.props.person.passengerList) {
+        //     if (!this.isLoadingPassPic) {
+        //         const passPicIdList = [];
+        //         this.props.person.passengerList.forEach((passenger) => {
+        //             if (!passenger.profilePicture && passenger.profilePictureId) {
+        //                 passPicIdList.push(passenger.profilePictureId);
+        //             }
+        //         })
+        //         if (passPicIdList.length > 0) {
+        //             this.isLoadingPassPic = true;
+        //             this.props.getPictureList(passPicIdList, 'passenger', () => this.isLoadingPassPic = false, () => this.isLoadingPassPic = false);
+        //         }
+        //     }
+        // }
     }
 
 
@@ -155,10 +153,11 @@ class BuddyPassengers extends Component {
                         keyExtractor={this.passengerKeyExtractor}
                         renderItem={({ item, index }) => (
                             <SquareCard
-                                thumbnail={item.profilePicture}
-                                // containerStyle={{ marginHorizontal: 20 }}
-                                squareCardPlaceholder={require('../../assets/img/profile-pic.png')}
-                                item={item}
+                                // TODO: Have to request portrait image here
+                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
+                                placeholderImage={require('../../assets/img/profile-pic.png')}
+                                title={item.name}
+                                subtitle={item.homeAddress && item.homeAddress.city && item.homeAddress.state ? `${item.homeAddress.city}, ${item.homeAddress.state}` : item.homeAddress.city ? item.homeAddress.city : item.homeAddress.state}
                                 onPress={() => this.openPassengerProfile(item, index)}
                                 imageStyle={{ height: widthPercentageToDP(40), width: widthPercentageToDP(40) }}
                             />
@@ -197,11 +196,11 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
-            dispatch(updatePicturesAction({ pictureObj, type: callingFrom }))
-        }, (error) => {
-            console.log('getPictureList error : ', error)
-        }),
+        // getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
+        //     dispatch(updatePicturesAction({ pictureObj, type: callingFrom }))
+        // }, (error) => {
+        //     console.log('getPictureList error : ', error)
+        // }),
         setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
         getPassengersById: (userId, friendId, pageNumber, passengerList, successCallback, errorCallback) => dispatch(getPassengersById(userId, friendId, pageNumber, passengerList, successCallback, errorCallback)),
         goToPrevProfile: () => dispatch(goToPrevProfileAction()),

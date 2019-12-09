@@ -176,15 +176,17 @@ class FriendsProfile extends Component {
                 </View>
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={styles.profilePic}>
-                        <ImageBackground source={person.profilePicture ? { uri: person.profilePicture } : require('../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
-                            {
-                                isLoadingProfPic
-                                    ? <ImageLoader show={isLoadingProfPic} />
-                                    : null
-                            }
+                        <ImageBackground source={require('../../assets/img/profile-bg.png')} style={{ flex: 1, height: null, width: null }}>
+                            <ImageBackground source={person.profilePicture ? { uri: person.profilePicture } : require('../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} resizeMode='contain'>
+                                {
+                                    isLoadingProfPic
+                                        ? <ImageLoader show={isLoadingProfPic} />
+                                        : null
+                                }
+                            </ImageBackground>
                         </ImageBackground>
                     </View>
-                    <Image source={require('../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} />
+                    {/* <Image source={require('../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} /> */}
                     <View style={styles.container}>
                         <View style={{ flexDirection: 'column' }}>
                             <DefaultText style={styles.labels}>LOCATION</DefaultText>

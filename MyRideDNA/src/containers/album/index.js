@@ -3,7 +3,7 @@ import { View, ImageBackground, StatusBar, FlatList, StyleSheet, ActivityIndicat
 import { connect } from 'react-redux';
 import { appNavMenuVisibilityAction, updateAlbumListAction, clearAlbumAction } from '../../actions';
 import { IconButton } from '../../components/buttons';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE, GET_PICTURE_BY_ID } from '../../constants';
 import { BaseModal } from '../../components/modal';
 import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../components/headers';
@@ -30,17 +30,17 @@ class Album extends Component {
             });
     }
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.albumList !== this.props.albumList) {
-            const pictureIdList = [];
-            this.props.albumList.forEach((album) => {
-                if (!album.profilePicture && album.profilePictureId) {
-                    pictureIdList.push(album.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
-                }
-            })
-            if (pictureIdList.length > 0) {
-                this.props.getPictureList(pictureIdList);
-            }
-        }
+        // if (prevProps.albumList !== this.props.albumList) {
+        //     const pictureIdList = [];
+        //     this.props.albumList.forEach((album) => {
+        //         if (!album.profilePicture && album.profilePictureId) {
+        //             pictureIdList.push(album.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
+        //         }
+        //     })
+        //     if (pictureIdList.length > 0) {
+        //         this.props.getPictureList(pictureIdList);
+        //     }
+        // }
     }
     onPressBackButton = () => Actions.pop();
 
@@ -131,8 +131,8 @@ class Album extends Component {
                         keyExtractor={this.albumKeyExtractor}
                         renderItem={({ item, index }) => (
                             <SquareCard
-                                thumbnail={item.profilePicture}
-                                item={item}
+                                // TODO: Have to request portrait image here
+                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
                                 imageStyle={[styles.imageStyle, index % 3 === 1 ? { marginHorizontal: widthPercentageToDP(1) } : null]}
                                 onPress={() => this.openPicture(item)}
                             />
@@ -157,12 +157,12 @@ const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         getAlbum: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getAlbum(userId, pageNumber, preference, successCallback, errorCallback)),
-        getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
-            dispatch(updateAlbumListAction({ pictureObj }))
-        }, (error) => {
-            console.log('getPictureList album error : ', error)
-            // dispatch(updateFriendInListAction({ userId: friendId }))
-        }),
+        // getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
+        //     dispatch(updateAlbumListAction({ pictureObj }))
+        // }, (error) => {
+        //     console.log('getPictureList album error : ', error)
+        //     // dispatch(updateFriendInListAction({ userId: friendId }))
+        // }),
         clearAlbum: () => dispatch(clearAlbumAction())
     };
 }

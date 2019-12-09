@@ -3,7 +3,7 @@ import { View, ImageBackground, StatusBar, FlatList, StyleSheet, ActivityIndicat
 import { connect } from 'react-redux';
 import { appNavMenuVisibilityAction, updateBikeAlbumAction, clearBikeAlbumAction } from '../../../../../actions';
 import { IconButton } from '../../../../../components/buttons';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE, PORTRAIT_TAIL_TAG } from '../../../../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE, PORTRAIT_TAIL_TAG, GET_PICTURE_BY_ID } from '../../../../../constants';
 import { BaseModal } from '../../../../../components/modal';
 import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../../../../components/headers';
@@ -26,13 +26,13 @@ class BikeAlbum extends Component {
         this.setState({ pageNumber: 1 });
     }
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.bike.pictures !== this.props.bike.pictures) {
-            const pictureIdList = this.props.bike.pictures.reduce((list, pic) => {
-                if (!pic.data) list.push(pic.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG));
-                return list;
-            }, []);
-            if (pictureIdList.length > 0) this.props.getPictureList(pictureIdList);
-        }
+        // if (prevProps.bike.pictures !== this.props.bike.pictures) {
+        //     const pictureIdList = this.props.bike.pictures.reduce((list, pic) => {
+        //         if (!pic.data) list.push(pic.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG));
+        //         return list;
+        //     }, []);
+        //     if (pictureIdList.length > 0) this.props.getPictureList(pictureIdList);
+        // }
     }
     onPressBackButton = () => Actions.pop();
 
@@ -111,8 +111,7 @@ class BikeAlbum extends Component {
                         keyExtractor={this.albumKeyExtractor}
                         renderItem={({ item, index }) => (
                             <SquareCard
-                                thumbnail={item.data}
-                                item={item}
+                                image={item.id ? `${GET_PICTURE_BY_ID}${item.id}` : null}
                                 imageStyle={[styles.imageStyle, index % 3 === 1 ? { marginHorizontal: widthPercentageToDP(1) } : null]}
                                 onPress={() => item.data && this.showEnlargedPhoto(item)}
                             />
@@ -139,9 +138,9 @@ const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         getBikeAlbum: (userId, spaceId, pageNumber, successCallback, errorCallback) => dispatch(getBikeAlbum(userId, spaceId, pageNumber, successCallback, errorCallback)),
-        getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
-            dispatch(updateBikeAlbumAction({ pictureObj }))
-        }, (error) => console.log('getPictureList album error : ', error)),
+        // getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
+        //     dispatch(updateBikeAlbumAction({ pictureObj }))
+        // }, (error) => console.log('getPictureList album error : ', error)),
         clearBikeAlbum: () => dispatch(clearBikeAlbumAction()),
     };
 }

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, TouchableWithoutFeedback, StatusBar, FlatList, ScrollView, View, Keyboard, Alert, TextInput, Text, ActivityIndicator, Animated, Easing } from 'react-native';
 import { BasicHeader } from '../../components/headers';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, PageKeys, FRIEND_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, PORTRAIT_TAIL_TAG } from '../../constants';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, PageKeys, FRIEND_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, PORTRAIT_TAIL_TAG, GET_PICTURE_BY_ID } from '../../constants';
 import { Actions } from 'react-native-router-flux';
 import { LabeledInput, IconicList, IconicDatePicker, IconicInput } from '../../components/inputs';
 import { BasicButton, LinkButton, IconButton, ShifterButton } from '../../components/buttons';
@@ -40,19 +40,17 @@ class Passengers extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.passengerList !== this.props.passengerList) {
-            const pictureIdList = [];
-            this.props.passengerList.forEach((friend) => {
-                if (!friend.profilePicture && friend.profilePictureId) {
-                    pictureIdList.push(friend.profilePictureId.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG));
-                }
-            })
-            if (pictureIdList.length > 0) {
-                this.props.getPictureList(pictureIdList, THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG);
-            }
-        }
-
-
+        // if (prevProps.passengerList !== this.props.passengerList) {
+        //     const pictureIdList = [];
+        //     this.props.passengerList.forEach((friend) => {
+        //         if (!friend.profilePicture && friend.profilePictureId) {
+        //             pictureIdList.push(friend.profilePictureId.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG));
+        //         }
+        //     })
+        //     if (pictureIdList.length > 0) {
+        //         this.props.getPictureList(pictureIdList, THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG);
+        //     }
+        // }
     }
 
 
@@ -227,10 +225,11 @@ class Passengers extends Component {
                         keyExtractor={this.passengerKeyExtractor}
                         renderItem={({ item, index }) => (
                             <SquareCard
-                                thumbnail={item.profilePicture}
-                                // containerStyle={{ marginHorizontal: 20 }}
-                                squareCardPlaceholder={require('../../assets/img/profile-pic.png')}
-                                item={item}
+                                // TODO: Have to request portrait image here
+                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
+                                placeholderImage={require('../../assets/img/profile-pic.png')}
+                                title={item.name}
+                                subtitle={item.homeAddress && item.homeAddress.city && item.homeAddress.state ? `${item.homeAddress.city}, ${item.homeAddress.state}` : item.homeAddress.city ? item.homeAddress.city : item.homeAddress.state}
                                 onLongPress={() => this.showOptionsModal(index)}
                                 onPress={() => this.openPassengerProfile(item, index)}
                                 imageStyle={{ height: widthPercentageToDP(40), width: widthPercentageToDP(40) }}
@@ -271,13 +270,13 @@ const mapDispatchToProps = (dispatch) => {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         getPassengerList: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getPassengerList(userId, pageNumber, preference, successCallback, errorCallback)),
         deletePassenger: (passengerId) => dispatch(deletePassenger(passengerId)),
-        getPictureList: (pictureIdList, curImgSize, newImgSize) => getPictureList(pictureIdList, (pictureObj) => {
-            // console.log('getPictureList all passenger sucess : ', pictureObj);
-            dispatch(updatePassengerInListAction({ pictureObj, curImgSize, newImgSize }))
-        }, (error) => {
-            console.log('getPictureList all friend error : ', error)
-            // dispatch(updateFriendInListAction({ userId: friendId }))
-        }),
+        // getPictureList: (pictureIdList, curImgSize, newImgSize) => getPictureList(pictureIdList, (pictureObj) => {
+        //     // console.log('getPictureList all passenger sucess : ', pictureObj);
+        //     dispatch(updatePassengerInListAction({ pictureObj, curImgSize, newImgSize }))
+        // }, (error) => {
+        //     console.log('getPictureList all friend error : ', error)
+        //     // dispatch(updateFriendInListAction({ userId: friendId }))
+        // }),
         setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
     };
 }

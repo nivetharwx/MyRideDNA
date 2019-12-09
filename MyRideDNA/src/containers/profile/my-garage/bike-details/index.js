@@ -27,11 +27,11 @@ class BikeDetails extends Component {
     componentDidUpdate(prevProps, prevState) {
         if (this.props.currentBikeIndex === -1) return this.onPressBackButton();
         if (this.props.bike.picture) {
-            if (!prevProps.bike.picture || prevProps.bike.picture.id !== this.props.bike.picture.id) {
-                this.setState({ isLoadingProfPic: true });
-                this.props.getBikePicture(this.props.bike.picture.id.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), this.props.bike.spaceId);
-            }
-            if (this.props.bike.picture.data && this.state.isLoadingProfPic) this.setState({ isLoadingProfPic: false });
+            // if (!prevProps.bike.picture || prevProps.bike.picture.id !== this.props.bike.picture.id) {
+            //     this.setState({ isLoadingProfPic: true });
+            //     this.props.getBikePicture(this.props.bike.picture.id.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), this.props.bike.spaceId);
+            // }
+            // if (this.props.bike.picture.data && this.state.isLoadingProfPic) this.setState({ isLoadingProfPic: false });
         }
         if (prevProps.bike.customizations !== this.props.bike.customizations) {
             // const myRidePicIds = this.props.bike.customizations.reduce((obj, item) => {
@@ -148,7 +148,8 @@ class BikeDetails extends Component {
                         ? null
                         : <ScrollView showsVerticalScrollIndicator={false}>
                             <View style={[styles.bikePic, styles.bikeBtmBorder, bike.isDefault ? styles.activeBorder : null]}>
-                                <ImageBackground source={bike.picture && bike.picture.data ? { uri: bike.picture.data } : require('../../../../assets/img/bike_placeholder.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
+                                {/* TODO: Have to request portrait image here */}
+                                <ImageBackground source={bike.picture && bike.picture.id ? { uri: `${GET_PICTURE_BY_ID}${bike.picture.id}` } : require('../../../../assets/img/bike_placeholder.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
                                     {
                                         isLoadingProfPic
                                             ? <ImageLoader show={isLoadingProfPic} />
@@ -262,9 +263,9 @@ const mapDispatchToProps = (dispatch) => {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         setBikeAsActive: (userId, spaceId, index) => dispatch(setBikeAsActive(userId, spaceId, index)),
         deleteBike: (userId, bikeId, index) => dispatch(deleteBike(userId, bikeId, index)),
-        getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
-            dispatch(updateBikePictureAction({ spaceId, picture: response.picture }))
-        }, (error) => console.log("getPicture error: ", error)),
+        // getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
+        //     dispatch(updateBikePictureAction({ spaceId, picture: response.picture }))
+        // }, (error) => console.log("getPicture error: ", error)),
         setCurrentBikeId: (bikeId) => dispatch(setCurrentBikeIdAction(bikeId)),
         getPosts: (userId, postType, postTypeId, spaceId, successCallback, errorCallback) => dispatch(getPosts(userId, postTypeId, spaceId, (res) => {
             if (typeof successCallback === 'function') successCallback(res);

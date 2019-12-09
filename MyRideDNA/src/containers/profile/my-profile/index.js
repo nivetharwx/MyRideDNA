@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import { Actions } from 'react-native-router-flux';
-import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions, FRIEND_TYPE, CUSTOM_FONTS } from '../../../constants/index';
+import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions, FRIEND_TYPE, CUSTOM_FONTS, GET_PICTURE_BY_ID } from '../../../constants/index';
 import { BasicHeader } from '../../../components/headers';
 import { IconButton, LinkButton } from '../../../components/buttons';
 import { Thumbnail } from '../../../components/images';
@@ -85,38 +85,31 @@ class MyProfileTab extends Component {
             this.setState({ isLoadingProfPic: false });
         }
 
-        if (prevProps.allFriends !== this.props.allFriends) {
-            const pictureIdList = [];
-            this.props.allFriends.forEach((friend) => {
-                if (!friend.profilePicture && friend.profilePictureId) {
-                    pictureIdList.push(friend.profilePictureId);
-                }
-            })
-            if (pictureIdList.length > 0) {
-                this.props.getPictureList(pictureIdList, 'roadBuddies');
-            }
-        }
+        // if (prevProps.allFriends !== this.props.allFriends) {
+        //     const pictureIdList = [];
+        //     this.props.allFriends.forEach((friend) => {
+        //         if (!friend.profilePicture && friend.profilePictureId) {
+        //             pictureIdList.push(friend.profilePictureId);
+        //         }
+        //     })
+        //     if (pictureIdList.length > 0) {
+        //         this.props.getPictureList(pictureIdList, 'roadBuddies');
+        //     }
+        // }
 
-        if (prevProps.passengerList !== this.props.passengerList) {
-            const pictureIdList = [];
-            this.props.passengerList.forEach((passenger) => {
-                if (!passenger.profilePicture && passenger.profilePictureId) {
-                    pictureIdList.push(passenger.profilePictureId);
-                }
-            })
-            if (pictureIdList.length > 0) {
-                this.props.getPictureList(pictureIdList, 'passenger');
-            }
-        }
+        // if (prevProps.passengerList !== this.props.passengerList) {
+        //     const pictureIdList = [];
+        //     this.props.passengerList.forEach((passenger) => {
+        //         if (!passenger.profilePicture && passenger.profilePictureId) {
+        //             pictureIdList.push(passenger.profilePictureId);
+        //         }
+        //     })
+        //     if (pictureIdList.length > 0) {
+        //         this.props.getPictureList(pictureIdList, 'passenger');
+        //     }
+        // }
     }
 
-    // onSpaceLongPress = (newSpaceIndex) => {
-    //      if (newSpaceIndex === 0) return;
-    //      this.hScrollView.scrollToIndex({ index: 0, animated: true });
-    //     console.log('onSpaceLongPress : ',newSpaceIndex)
-    //     const prevActiveBikeIndex = this.props.shortSpaceList.findIndex(bike => bike.isDefault);
-    //     this.props.setBikeAsActive(this.props.user.userId, this.props.shortSpaceList[newSpaceIndex].spaceId, prevActiveBikeIndex, newSpaceIndex);
-    // }
     onSpaceLongPress = (newSpaceIndex) => {
         if (newSpaceIndex === 0) return;
         this.hScrollView.scrollToIndex({ index: 0, animated: true });
@@ -185,7 +178,6 @@ class MyProfileTab extends Component {
         else {
             Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx: index });
         }
-        // Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx: index });
     }
 
     openRoadBuddy = (userId) => {
@@ -272,7 +264,7 @@ class MyProfileTab extends Component {
                                             renderItem={({ item, index }) => (
                                                 <SmallCard
                                                     placeholderImage={require('../../../assets/img/profile-pic.png')}
-                                                    image={item.profilePicture}
+                                                    image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
                                                     onPress={() => this.openRoadBuddy(item.userId)}
                                                     imageStyle={styles.imageStyle}
                                                 />
@@ -303,7 +295,7 @@ class MyProfileTab extends Component {
                                             renderItem={({ item, index }) => (
                                                 <SmallCard
                                                     placeholderImage={require('../../../assets/img/profile-pic.png')}
-                                                    image={item.profilePicture}
+                                                    image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
                                                     onPress={() => this.openPassengerProfile(item, index)}
                                                     imageStyle={styles.imageStyle}
                                                 />
@@ -365,16 +357,16 @@ const mapDispatchToProps = (dispatch) => {
         setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
         updateMyProfileLastOptions: (expanded) => dispatch(updateMyProfileLastOptionsAction({ expanded })),
         getRoadBuddies: (userId) => dispatch(getRoadBuddies(userId)),
-        getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
-            if (callingFrom === 'roadBuddies') {
-                dispatch(updateFriendInListAction({ pictureObj }))
-            }
-            else {
-                dispatch(updatePassengerInListAction({ pictureObj }))
-            }
-        }, (error) => {
-            console.log('getPictureList error : ', error)
-        }),
+        // getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
+        //     if (callingFrom === 'roadBuddies') {
+        //         dispatch(updateFriendInListAction({ pictureObj }))
+        //     }
+        //     else {
+        //         dispatch(updatePassengerInListAction({ pictureObj }))
+        //     }
+        // }, (error) => {
+        //     console.log('getPictureList error : ', error)
+        // }),
         getMyWallet: (userId) => dispatch(getMyWallet(userId)),
         getPassengerList: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getPassengerList(userId, pageNumber, preference, successCallback, errorCallback)),
         setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),

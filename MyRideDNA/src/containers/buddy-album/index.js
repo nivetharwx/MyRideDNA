@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { Actions } from 'react-native-router-flux';
 import { BaseModal } from '../../components/modal';
 import { IconButton } from '../../components/buttons';
-import { widthPercentageToDP, APP_COMMON_STYLES, heightPercentageToDP } from '../../constants';
+import { widthPercentageToDP, APP_COMMON_STYLES, heightPercentageToDP, GET_PICTURE_BY_ID } from '../../constants';
 import { BasicHeader } from '../../components/headers';
 import { SquareCard } from '../../components/cards';
 import { getBuddyAlbum, getPictureList } from '../../api';
@@ -31,20 +31,20 @@ class BuddyAlbum extends Component {
         })
     }
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.person.pictures !== this.props.person.pictures) {
-            if (!this.isLoadingBuddyAlbum) {
-                const buddyAlbumPicIdList = [];
-                this.props.person.pictures.forEach((pic) => {
-                    if (!pic.data && pic.id) {
-                        buddyAlbumPicIdList.push(pic.id);
-                    }
-                })
-                if (buddyAlbumPicIdList.length > 0) {
-                    this.isLoadingBuddyAlbum = true;
-                    this.props.getBuddyPictureList(buddyAlbumPicIdList, 'album', () => this.isLoadingBuddyAlbum = false);
-                }
-            }
-        }
+        // if (prevProps.person.pictures !== this.props.person.pictures) {
+        //     if (!this.isLoadingBuddyAlbum) {
+        //         const buddyAlbumPicIdList = [];
+        //         this.props.person.pictures.forEach((pic) => {
+        //             if (!pic.data && pic.id) {
+        //                 buddyAlbumPicIdList.push(pic.id);
+        //             }
+        //         })
+        //         if (buddyAlbumPicIdList.length > 0) {
+        //             this.isLoadingBuddyAlbum = true;
+        //             this.props.getBuddyPictureList(buddyAlbumPicIdList, 'album', () => this.isLoadingBuddyAlbum = false);
+        //         }
+        //     }
+        // }
     }
     onPressBackButton = () => {
         Actions.pop()
@@ -144,8 +144,7 @@ class BuddyAlbum extends Component {
                         keyExtractor={this.albumKeyExtractor}
                         renderItem={({ item, index }) => (
                             <SquareCard
-                                thumbnail={item.data}
-                                item={item}
+                                image={item.id ? `${GET_PICTURE_BY_ID}${item.id}` : null}
                                 imageStyle={[styles.imageStyle, index % 3 === 1 ? { marginHorizontal: widthPercentageToDP(1) } : null]}
                                 onPress={() => this.openPicture(item)}
                             />
@@ -173,12 +172,12 @@ const mapDispatchToProps = (dispatch) => {
         // showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         // getAlbum: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getAlbum(userId, pageNumber, preference, successCallback, errorCallback)),
         getBuddyAlbum: (userId, friendId, pageNumber, preference, successCallback, errorCallback) => dispatch(getBuddyAlbum(userId, friendId, pageNumber, preference, successCallback, errorCallback)),
-        getBuddyPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
-            console.log('getBuddyPictureList : ', pictureObj)
-            dispatch(updatePicturesAction({ pictureObj, type: callingFrom }))
-        }, (error) => {
-            console.log('getPictureList error : ', error)
-        }),
+        // getBuddyPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
+        //     console.log('getBuddyPictureList : ', pictureObj)
+        //     dispatch(updatePicturesAction({ pictureObj, type: callingFrom }))
+        // }, (error) => {
+        //     console.log('getPictureList error : ', error)
+        // }),
         clearAlbum: () => dispatch(clearAlbumAction()),
     };
 }
