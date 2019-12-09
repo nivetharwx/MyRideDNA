@@ -151,36 +151,26 @@ export const SmallCard = ({ image, placeholderImage, onPress, outerContainer, im
         </TouchableOpacity>
     </View>
 );
-export const SquareCard = ({ item, squareCardPlaceholder, onPress, onLongPress, actions, thumbnailRef,thumbnail, imageStyle, containerStyle, contentContainerStyle }) => (
+export const SquareCard = ({ title, subtitle, placeholderImage, onPress, onLongPress, image, imageStyle, containerStyle, contentContainerStyle }) => (
     <TouchableOpacity onPress={() => onPress ? onPress() : null} onLongPress={() => onLongPress && onLongPress()} style={[{ flexDirection: 'column' }, containerStyle]}>
         <View style={[{ height: 150, width: 150, backgroundColor: '#A9A9A9', justifyContent: 'center' }, imageStyle]}>
             {
-                thumbnail ?
-                    <Image source={{ uri:thumbnail }} style={{ width: null, height: null, flex: 1 }} />
-                    :
-                    squareCardPlaceholder ?
-                        <Image source={squareCardPlaceholder} style={{ width: null, height: null, flex: 1 }} />
-                        :
-                        null
+                image
+                    ? <Image source={{ uri: image }} style={{ width: null, height: null, flex: 1 }} />
+                    : placeholderImage
+                        ? <Image source={placeholderImage} style={{ width: null, height: null, flex: 1 }} />
+                        : null
             }
         </View>
         <View style={contentContainerStyle}>
             {
-                item.name ?
-                    <DefaultText style={{ fontSize: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold, color: '#000', marginTop: 6 }}>{item.name ? item.name : ''}</DefaultText>
+                title
+                    ? <DefaultText style={{ fontSize: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold, color: '#000', marginTop: 6 }}>{title}</DefaultText>
                     : null
             }
             {
-                item.homeAddress ?
-                    <DefaultText style={{ fontSize: 11, color: '#585756', marginTop: 2 }}>
-                        {
-                            item.homeAddress.city && item.homeAddress.state
-                                ? `${item.homeAddress.city}, ${item.homeAddress.state}`
-                                : item.homeAddress.city
-                                    ? item.homeAddress.city
-                                    : item.homeAddress.state
-                        }
-                    </DefaultText>
+                subtitle
+                    ? <DefaultText style={{ fontSize: 11, color: '#585756', marginTop: 2 }}>{subtitle}</DefaultText>
                     : null
             }
         </View>
