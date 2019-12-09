@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, View, ScrollView, ImageBackground, Image, StatusBar, FlatList, Alert } from 'react-native';
-import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, heightPercentageToDP, POST_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, GET_PICTURE_BY_ID } from '../../../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, heightPercentageToDP, POST_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, GET_PICTURE_BY_ID, PORTRAIT_TAIL_TAG } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { IconButton, ShifterButton, LinkButton } from '../../../../components/buttons';
-import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updateBikeListAction, updateLatestPostPictureListAction } from '../../../../actions';
+import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updateBikeListAction, updateLatestPostPictureListAction, updatePageContentStatusAction } from '../../../../actions';
 import { DefaultText } from '../../../../components/labels';
 import { BaseModal } from '../../../../components/modal';
 import { ImageLoader } from '../../../../components/loader';
@@ -21,27 +21,43 @@ class BikeDetails extends Component {
     }
 
     componentDidMount() {
+        if (this.props.bike === null) return;
         this.props.getPosts(this.props.user.userId, POST_TYPE.WISH_LIST, this.props.postTypes[POST_TYPE.WISH_LIST].id, this.props.bike.spaceId);
+        this.props.getPosts(this.props.user.userId, POST_TYPE.MY_RIDE, this.props.postTypes[POST_TYPE.MY_RIDE].id, this.props.bike.spaceId);
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (this.props.currentBikeIndex === -1) return this.onPressBackButton();
-        if (this.props.bike.picture) {
-            // if (!prevProps.bike.picture || prevProps.bike.picture.id !== this.props.bike.picture.id) {
-            //     this.setState({ isLoadingProfPic: true });
-            //     this.props.getBikePicture(this.props.bike.picture.id.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), this.props.bike.spaceId);
-            // }
-            // if (this.props.bike.picture.data && this.state.isLoadingProfPic) this.setState({ isLoadingProfPic: false });
+        if (this.props.updatePageContent && (!prevProps.updatePageContent || prevProps.updatePageContent.type !== this.props.updatePageContent.type)) {
+            this.fetchUpdates(this.props.updatePageContent.type);
         }
-        if (prevProps.bike.customizations !== this.props.bike.customizations) {
-            // const myRidePicIds = this.props.bike.customizations.reduce((obj, item) => {
-            //     // TODO: Have to change when API changes the pictureIds key with pictures key
-            //     if (item.pictureIds && item.pictureIds[0] && !item.pictureIds[0].data) {
-            //         obj[item.id] = item.pictureIds[0].id;
-            //     }
-            //     return obj;
-            // }, {});
-            // if (Object.keys(myRidePicIds).length > 0) this.props.getPostsPictures(myRidePicIds, POST_TYPE.MY_RIDE);
+    }
+    // if (this.props.bike.picture) {
+    //     if (!prevProps.bike.picture || prevProps.bike.picture.id !== this.props.bike.picture.id) {
+    //         this.setState({ isLoadingProfPic: true });
+    //         this.props.getBikePicture(this.props.bike.picture.id.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), this.props.bike.spaceId);
+    //     }
+    //     if (this.props.bike.picture.data && this.state.isLoadingProfPic) this.setState({ isLoadingProfPic: false });
+    // }
+    // if (prevProps.bike.customizations !== this.props.bike.customizations) {
+    // const myRidePicIds = this.props.bike.customizations.reduce((obj, item) => {
+    //     // TODO: Have to change when API changes the pictureIds key with pictures key
+    //     if (item.pictureIds && item.pictureIds[0] && !item.pictureIds[0].data) {
+    //         obj[item.id] = item.pictureIds[0].id;
+    //     }
+    //     return obj;
+    // }, {});
+    // if (Object.keys(myRidePicIds).length > 0) this.props.getPostsPictures(myRidePicIds, POST_TYPE.MY_RIDE);
+    // }
+
+    fetchUpdates(updatedContentType) {
+        switch (updatedContentType) {
+            case POST_TYPE.WISH_LIST:
+                this.props.getPosts(this.props.user.userId, POST_TYPE.WISH_LIST, this.props.postTypes[POST_TYPE.WISH_LIST].id, this.props.bike.spaceId);
+                break;
+            case POST_TYPE.MY_RIDE:
+                this.props.getPosts(this.props.user.userId, POST_TYPE.MY_RIDE, this.props.postTypes[POST_TYPE.MY_RIDE].id, this.props.bike.spaceId);
+                break;
         }
     }
 
@@ -148,8 +164,7 @@ class BikeDetails extends Component {
                         ? null
                         : <ScrollView showsVerticalScrollIndicator={false}>
                             <View style={[styles.bikePic, styles.bikeBtmBorder, bike.isDefault ? styles.activeBorder : null]}>
-                                {/* TODO: Have to request portrait image here */}
-                                <ImageBackground source={bike.picture && bike.picture.id ? { uri: `${GET_PICTURE_BY_ID}${bike.picture.id}` } : require('../../../../assets/img/bike_placeholder.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
+                                <ImageBackground source={bike.picture ? { uri: `${GET_PICTURE_BY_ID}${bike.picture.id.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` } : require('../../../../assets/img/bike_placeholder.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
                                     {
                                         isLoadingProfPic
                                             ? <ImageLoader show={isLoadingProfPic} />
@@ -164,7 +179,7 @@ class BikeDetails extends Component {
                                 <DefaultText style={styles.odometerLbl}>TOTAL</DefaultText>
                                 <DefaultText style={styles.odometerLbl}>MILES</DefaultText>
                             </View>
-                            <View style={{ marginHorizontal: 20, marginTop: 20 }}>
+                            <View style={styles.container}>
                                 <DefaultText style={styles.title}>{bike.name}</DefaultText>
                                 <DefaultText numberOfLines={1} style={styles.subtitle}>{`${bike.make || ''}${bike.model ? ' - ' + bike.model : ''} ${bike.notes || ''}`}</DefaultText>
                                 {
@@ -172,17 +187,16 @@ class BikeDetails extends Component {
                                         ? <DefaultText style={styles.activeBikeTxt}>Active Bike</DefaultText>
                                         : <LinkButton style={styles.activeBikeBtn} title='Set as Active Bike' titleStyle={styles.activeBikeBtnTxt} onPress={this.makeAsActiveBike} />
                                 }
-                            </View>
-                            <View style={{ marginHorizontal: 20, flex: 1 }}>
                                 <View style={styles.hDivider} />
                                 <View style={styles.section}>
                                     <View style={styles.sectionHeader}>
-                                        <LinkButton style={styles.sectionLinkBtn} onPress={this.openMyRidePage}>
+                                        <LinkButton style={styles.sectionLinkBtn} onPress={bike.customizations ? this.openMyRidePage : () => null}>
                                             <DefaultText style={styles.sectionLinkTxt}>My Ride</DefaultText>
                                             <DefaultText style={[styles.sectionLinkTxt, { color: APP_COMMON_STYLES.infoColor, marginLeft: 8 }]}>[see all]</DefaultText>
                                         </LinkButton>
                                         <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={this.addMyRide} />
                                     </View>
+                                    <View style={styles.greyBorder} />
                                     {
                                         bike.customizations
                                             ? <FlatList
@@ -197,12 +211,13 @@ class BikeDetails extends Component {
                                 </View>
                                 <View style={styles.section}>
                                     <View style={styles.sectionHeader}>
-                                        <LinkButton style={styles.sectionLinkBtn} onPress={this.openWishListPage}>
+                                        <LinkButton style={styles.sectionLinkBtn} onPress={bike.wishList ? this.openWishListPage : () => null}>
                                             <DefaultText style={styles.sectionLinkTxt}>Wish List</DefaultText>
                                             <DefaultText style={[styles.sectionLinkTxt, { color: APP_COMMON_STYLES.infoColor, marginLeft: 8 }]}>[see all]</DefaultText>
                                         </LinkButton>
                                         <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={this.addWish} />
                                     </View>
+                                    <View style={styles.greyBorder} />
                                     {
                                         bike.wishList
                                             ? <FlatList
@@ -223,6 +238,7 @@ class BikeDetails extends Component {
                                         </LinkButton>
                                         <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={() => null} />
                                     </View>
+                                    <View style={styles.greyBorder} />
                                     <FlatList style={styles.list} />
                                 </View>
                                 <View style={styles.section}>
@@ -252,11 +268,11 @@ class BikeDetails extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { postTypes, hasNetwork } = state.PageState;
+    const { postTypes, hasNetwork, updatePageContent } = state.PageState;
     const { currentBikeId, activeBikeIndex } = state.GarageInfo;
     const currentBikeIndex = state.GarageInfo.spaceList.findIndex(({ spaceId }) => spaceId === currentBikeId);
     const bike = currentBikeIndex === -1 ? null : state.GarageInfo.spaceList[currentBikeIndex];
-    return { user, postTypes, hasNetwork, bike, activeBikeIndex, currentBikeIndex };
+    return { user, postTypes, hasNetwork, updatePageContent, bike, activeBikeIndex, currentBikeIndex };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -268,6 +284,7 @@ const mapDispatchToProps = (dispatch) => {
         // }, (error) => console.log("getPicture error: ", error)),
         setCurrentBikeId: (bikeId) => dispatch(setCurrentBikeIdAction(bikeId)),
         getPosts: (userId, postType, postTypeId, spaceId, successCallback, errorCallback) => dispatch(getPosts(userId, postTypeId, spaceId, (res) => {
+            dispatch(updatePageContentStatusAction(null));
             if (typeof successCallback === 'function') successCallback(res);
             switch (postType) {
                 case POST_TYPE.WISH_LIST:
@@ -293,8 +310,10 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
-    pageContent: {
-
+    container: {
+        flex: 1,
+        marginHorizontal: 27,
+        marginTop: 20
     },
     header: {
         height: APP_COMMON_STYLES.headerHeight,
@@ -418,9 +437,7 @@ const styles = StyleSheet.create({
         fontFamily: CUSTOM_FONTS.dinCondensedBold
     },
     list: {
-        borderTopWidth: 13,
-        borderTopColor: '#DCDCDE',
-        flexGrow: 0
+        flexGrow: 0,
     },
     sectionLinkBtn: {
         paddingHorizontal: 0,
@@ -445,11 +462,11 @@ const styles = StyleSheet.create({
     sectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
     },
     greyBorder: {
-        borderTopWidth: 13,
-        borderTopColor: '#DCDCDE',
+        height: 13,
+        backgroundColor: '#DCDCDE'
     },
     fullWidthImgLink: {
         flex: 1,
@@ -478,4 +495,9 @@ const styles = StyleSheet.create({
         height: 1.5,
         marginTop: 8
     },
+    imageStyle: {
+        marginRight: widthPercentageToDP(1.8),
+        height: widthPercentageToDP(100 / 5),
+        width: widthPercentageToDP(100 / 5)
+    }
 });
