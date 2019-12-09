@@ -73,6 +73,7 @@ import {
     CLEAR_BIKE_ALBUM,
     UPDATE_PREV_PROFILE,
     SET_CURRENT_BIKE_ID,
+    UPDATE_PAGE_CONTENT_STATUS,
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -884,6 +885,12 @@ export const clearChatListAction = (data) => (
 export const errorHandlingAction = (data) => (
     {
         type: ERROR_HANDLING,
+        data: data
+    }
+);
+export const updatePageContentStatusAction = (data) => (
+    {
+        type: UPDATE_PAGE_CONTENT_STATUS,
         data: data
     }
 );
