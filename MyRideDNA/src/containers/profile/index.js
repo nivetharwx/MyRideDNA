@@ -19,12 +19,12 @@ class Profile extends Component {
     }
 
     componentDidMount() {
-        if (this.props.tabProps.activeTab !== 0) setTimeout(() => this.tabsRef.goToPage(this.props.tabProps.activeTab), 0);
+        if (this.props.tabProps.activeTab !== 0) setTimeout(() => this.tabsRef && this.tabsRef.goToPage(this.props.tabProps.activeTab), 0);
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.tabProps !== this.props.tabProps) {
-            this.tabsRef.goToPage(this.props.tabProps.activeTab);
+            this.tabsRef && this.tabsRef.goToPage(this.props.tabProps.activeTab);
         }
     }
 
