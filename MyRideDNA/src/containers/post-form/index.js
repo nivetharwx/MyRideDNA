@@ -7,7 +7,7 @@ import ImagePicker from 'react-native-image-crop-picker';
 import { DefaultText } from '../../components/labels';
 import { APP_COMMON_STYLES, PageKeys, CUSTOM_FONTS, heightPercentageToDP, widthPercentageToDP, POST_TYPE, IS_ANDROID } from '../../constants';
 import { ImageButton, ShifterButton, SwitchIconButton, IconButton, LinkButton, BasicButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction } from '../../actions';
+import { appNavMenuVisibilityAction, updatePageContentStatusAction } from '../../actions';
 import { IconicList, LabeledInputPlaceholder } from '../../components/inputs';
 import { Icon as NBIcon, Thumbnail, Toast } from 'native-base';
 import { createPost, getSpaces } from '../../api';
@@ -109,7 +109,7 @@ class PostForm extends Component {
         this.setState({ isSubmiting: true });
         const bike = bikeList.find(({ spaceId }) => spaceId === selectedBikeId);
         const postProps = { title, description, isPrivate, postTypeId: postTypes[postType].id, pictures: selectedImgs };
-        this.props.createPost(user.userId, bike.spaceId, postProps, () => {
+        this.props.createPost(user.userId, bike.spaceId, postType, postProps, () => {
             const selBike = currentBikeId ? currentBikeId : bikeList.length > 0 ? bikeList[0].spaceId : null;
             this.setState({ title: '', description: '', selectedImgs: [], selectedBikeId: selBike, isPrivate: (postType === POST_TYPE.WISH_LIST || postType === POST_TYPE.MY_RIDE) ? false : true });
         });
@@ -239,7 +239,10 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        createPost: (userId, spaceId, postData, successCallback, errorCallback) => dispatch(createPost(userId, spaceId, postData, successCallback, errorCallback)),
+        createPost: (userId, spaceId, postType, postData, successCallback, errorCallback) => dispatch(createPost(userId, spaceId, postData, (res) => {
+            typeof successCallback === 'function' && successCallback(res);
+            dispatch(updatePageContentStatusAction({ type: postType }));
+        }, errorCallback)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(PostForm);
