@@ -3,7 +3,7 @@ import { View, ImageBackground, StatusBar, FlatList, StyleSheet, ActivityIndicat
 import { connect } from 'react-redux';
 import { appNavMenuVisibilityAction, updateAlbumListAction, clearAlbumAction } from '../../actions';
 import { IconButton } from '../../components/buttons';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE, GET_PICTURE_BY_ID } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE, GET_PICTURE_BY_ID, PORTRAIT_TAIL_TAG } from '../../constants';
 import { BaseModal } from '../../components/modal';
 import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../components/headers';
@@ -131,8 +131,7 @@ class Album extends Component {
                         keyExtractor={this.albumKeyExtractor}
                         renderItem={({ item, index }) => (
                             <SquareCard
-                                // TODO: Have to request portrait image here
-                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
+                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` : null}
                                 imageStyle={[styles.imageStyle, index % 3 === 1 ? { marginHorizontal: widthPercentageToDP(1) } : null]}
                                 onPress={() => this.openPicture(item)}
                             />

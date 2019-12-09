@@ -98,8 +98,7 @@ class MyGarageTab extends Component {
     renderBike = ({ item, index }) => {
         return <TouchableOpacity activeOpacity={0.7} style={{ marginBottom: 12 }} onPress={() => this.openBikeDetailsPage(item)}>
             <View style={[styles.imgContainer, { borderBottomColor: item.isDefault ? APP_COMMON_STYLES.infoColor : APP_COMMON_STYLES.headerColor }]}>
-                {/* TODO: Have to request portrait image here */}
-                <ImageBackground style={{ flex: 1, width: null, height: null }} source={item.picture && item.picture.id ? { uri: `${GET_PICTURE_BY_ID}${item.picture.id}` } : require('../../../assets/img/bike_placeholder.png')}>
+                <ImageBackground style={{ flex: 1, width: null, height: null }} source={item.picture ? { uri: `${GET_PICTURE_BY_ID}${item.picture.id.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` } : require('../../../assets/img/bike_placeholder.png')}>
                     {
                         item.isDefault
                             ? <View style={styles.contentOvrImg}>

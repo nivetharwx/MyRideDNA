@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { StyleSheet, TouchableWithoutFeedback, StatusBar, FlatList, ScrollView, View, Keyboard, Alert, TextInput, Text, ActivityIndicator, Animated, Easing } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { DatePicker, Icon as NBIcon, Toast, ListItem, Left, Body, Right, Thumbnail } from 'native-base';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, GET_PICTURE_BY_ID } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, GET_PICTURE_BY_ID, THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG } from '../../constants';
 import { getPassengersById, getPictureList } from '../../api';
 import { BasicHeader } from '../../components/headers';
 import { SquareCard } from '../../components/cards';
@@ -153,11 +153,10 @@ class BuddyPassengers extends Component {
                         keyExtractor={this.passengerKeyExtractor}
                         renderItem={({ item, index }) => (
                             <SquareCard
-                                // TODO: Have to request portrait image here
-                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
+                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` : null}
                                 placeholderImage={require('../../assets/img/profile-pic.png')}
                                 title={item.name}
-                                subtitle={item.homeAddress && item.homeAddress.city && item.homeAddress.state ? `${item.homeAddress.city}, ${item.homeAddress.state}` : item.homeAddress.city ? item.homeAddress.city : item.homeAddress.state}
+                                subtitle={item.homeAddress ? (item.homeAddress.city && item.homeAddress.state) ? `${item.homeAddress.city}, ${item.homeAddress.state}` : item.homeAddress.city ? item.homeAddress.city : item.homeAddress.state : null}
                                 onPress={() => this.openPassengerProfile(item, index)}
                                 imageStyle={{ height: widthPercentageToDP(40), width: widthPercentageToDP(40) }}
                             />
