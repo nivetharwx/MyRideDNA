@@ -106,9 +106,9 @@ class BikeDetails extends Component {
 
     hideOptionsModal = () => this.setState({ showOptionsModal: false });
 
-    openMyRidePage = () => Actions.push(PageKeys.BIKE_SPECS, { comingFrom: Actions.currentScene, postType: POST_TYPE.MY_RIDE });
+    openMyRidePage = () => Actions.push(PageKeys.BIKE_SPEC_LIST, { comingFrom: Actions.currentScene, postType: POST_TYPE.MY_RIDE });
 
-    openWishListPage = () => Actions.push(PageKeys.BIKE_SPECS, { comingFrom: Actions.currentScene, postType: POST_TYPE.WISH_LIST });
+    openWishListPage = () => Actions.push(PageKeys.BIKE_SPEC_LIST, { comingFrom: Actions.currentScene, postType: POST_TYPE.WISH_LIST });
 
     postKeyExtractor = item => item.id;
 

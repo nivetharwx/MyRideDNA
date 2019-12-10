@@ -81,7 +81,8 @@ export const PageKeys = {
     BUDDY_PASSENGERS: 'buddyPassengers',
     BUDDY_ALBUM: 'buddyAlbum',
     BIKE_ALBUM: 'bikeAlbum',
-    BIKE_SPECS: 'bikeSpecs',
+    BIKE_SPEC_LIST: 'bikeSpecList',
+    BIKE_SPEC: 'bikeSpec',
 };
 
 export const POST_TYPE = { WISH_LIST: 'wishList', JOURNAL: 'journal', STORIES_FROM_ROAD: 'storiesFromRoad', MY_RIDE: 'customization', ALBUM: 'album', LOGGED_RIDES: 'loggedRides' };

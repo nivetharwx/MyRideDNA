@@ -11,7 +11,7 @@ import { DefaultText } from '../../../../../components/labels';
 import { appNavMenuVisibilityAction, updateBikeListAction } from '../../../../../actions';
 import { getPosts } from '../../../../../api';
 
-class BikeSpecs extends Component {
+class BikeSpecList extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -32,6 +32,8 @@ class BikeSpecs extends Component {
     onPressBackButton = () => Actions.pop();
 
     openPostForm = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: this.props.postType, currentBikeId: this.props.bike.spaceId });
+
+    openBikeSpecPage = (index) => Actions.push(PageKeys.BIKE_SPEC, { comingFrom: Actions.currentScene, postType: this.props.postType });
 
     renderHeader = () => {
         let title = '';
@@ -68,7 +70,7 @@ class BikeSpecs extends Component {
         return <SquareCard
             image={item.pictureIds && item.pictureIds[0] ? `${GET_PICTURE_BY_ID}${item.pictureIds[0].id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` : null}
             title={item.title}
-            onPress={() => null}
+            onPress={() => this.openBikeSpecPage(index)}
             imageStyle={styles.squareImg}
         />
     }
@@ -161,7 +163,7 @@ const mapDispatchToProps = (dispatch) => {
         }, pageNumber))
     }
 }
-export default connect(mapStateToProps, mapDispatchToProps)(BikeSpecs);
+export default connect(mapStateToProps, mapDispatchToProps)(BikeSpecList);
 
 const styles = StyleSheet.create({
     fill: {
