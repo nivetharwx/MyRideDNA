@@ -94,6 +94,8 @@ class BikeDetails extends Component {
 
     openWishListPage = () => Actions.push(PageKeys.BIKE_SPECS, { comingFrom: Actions.currentScene, postType: POST_TYPE.WISH_LIST });
 
+    openLoggedRidePage = () => Actions.push(PageKeys.LOGGED_RIDE, { comingFrom: Actions.currentScene, postType: POST_TYPE.LOGGED_RIDES });
+
     postKeyExtractor = item => item.id;
 
     renderSmallCard(item, postType) {
@@ -217,7 +219,7 @@ class BikeDetails extends Component {
                                 </View>
                                 <View style={styles.section}>
                                     <View style={styles.sectionHeader}>
-                                        <LinkButton style={styles.sectionLinkBtn}>
+                                        <LinkButton style={styles.sectionLinkBtn} onPress={this.openLoggedRidePage}>
                                             <DefaultText style={styles.sectionLinkTxt}>Logged Rides</DefaultText>
                                             <DefaultText style={[styles.sectionLinkTxt, { color: APP_COMMON_STYLES.infoColor, marginLeft: 8 }]}>[see all]</DefaultText>
                                         </LinkButton>
