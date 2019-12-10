@@ -111,7 +111,7 @@ class BikeAlbum extends Component {
                         keyExtractor={this.albumKeyExtractor}
                         renderItem={({ item, index }) => (
                             <SquareCard
-                                image={item.id ? `${GET_PICTURE_BY_ID}${item.id}` : null}
+                                image={`${GET_PICTURE_BY_ID}${item.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}`}
                                 imageStyle={[styles.imageStyle, index % 3 === 1 ? { marginHorizontal: widthPercentageToDP(1) } : null]}
                                 onPress={() => item.data && this.showEnlargedPhoto(item)}
                             />

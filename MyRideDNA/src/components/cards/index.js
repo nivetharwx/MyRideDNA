@@ -254,6 +254,30 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
     </View>
 )
 
+export const RideCard = ({ outerContainer, headerStyle, nameOfRide, nameOfRideStyle, headerIcon, image, rideCardPlaceholder, imageStyle, headerContent, footerStyle, footerContent }) => (
+    <View onPress={() => onPress ? onPress() : null} style={[{
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+        height: 310,
+        borderBottomWidth: 1,
+        borderBottomColor: '#D8D8D8'
+    }, outerContainer]}>
+        { headerContent}
+        <View style={[{ height: 190, backgroundColor: '#A9A9A9', justifyContent: 'center' }, imageStyle]}>
+            {
+                image ?
+                    <Image source={{ uri: image }} style={{ width: null, height: null, flex: 1 }} />
+                    :
+                    rideCardPlaceholder
+                        ?
+                        <Image source={rideCardPlaceholder} style={{ width: null, height: null, flex: 1 }} />
+                        : null
+            }
+        </View>
+            { footerContent }
+    </View>
+);
+
 
 
 const styles = StyleSheet.create({

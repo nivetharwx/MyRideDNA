@@ -2658,7 +2658,7 @@ export const createPost = (userId, spaceId, postData, successCallback, errorCall
             })
     }
 }
-export const getPosts = (userId, postTypeId, spaceId, successCallback, errorCallback) => {
+export const getPosts = (userId, postTypeId, spaceId, successCallback, errorCallback, pageNumber = 0) => {
     return dispatch => {
         dispatch(apiLoaderActions(true));
         axios.get(`${POSTS_BASE_URL}user/${userId}/postType/${postTypeId}?spaceId=${spaceId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })

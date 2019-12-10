@@ -225,11 +225,10 @@ class Passengers extends Component {
                         keyExtractor={this.passengerKeyExtractor}
                         renderItem={({ item, index }) => (
                             <SquareCard
-                                // TODO: Have to request portrait image here
-                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
+                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` : null}
                                 placeholderImage={require('../../assets/img/profile-pic.png')}
                                 title={item.name}
-                                subtitle={item.homeAddress && item.homeAddress.city && item.homeAddress.state ? `${item.homeAddress.city}, ${item.homeAddress.state}` : item.homeAddress.city ? item.homeAddress.city : item.homeAddress.state}
+                                subtitle={item.homeAddress ? (item.homeAddress.city && item.homeAddress.state) ? `${item.homeAddress.city}, ${item.homeAddress.state}` : item.homeAddress.city ? item.homeAddress.city : item.homeAddress.state : null}
                                 onLongPress={() => this.showOptionsModal(index)}
                                 onPress={() => this.openPassengerProfile(item, index)}
                                 imageStyle={{ height: widthPercentageToDP(40), width: widthPercentageToDP(40) }}

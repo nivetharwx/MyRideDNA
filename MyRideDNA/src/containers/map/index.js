@@ -360,7 +360,8 @@ export class Map extends Component {
             if (currentScreen.name !== Actions.currentScene) {
                 if (Actions.prevState.routes.length > 1) {
                     if (Actions.prevState.routes.findIndex(route => route.routeName === currentScreen.name) > -1) {
-                        Actions.popTo(currentScreen.name, {});
+                        Actions.popTo(currentScreen.name, currentScreen.params);
+                        setTimeout(() => Actions.refresh(currentScreen.params), 0);
                     } else {
                         currentScreen.params && currentScreen.params.comingFrom
                             ? Actions.push(currentScreen.name, currentScreen.params)
@@ -370,8 +371,8 @@ export class Map extends Component {
                     if (currentScreen.name !== this.rootScreen) {
                         Actions.push(currentScreen.name, currentScreen.params)
                     } else {
-                        Actions.popTo(currentScreen.name, {});
-                        setTimeout(() => Actions.refresh(currentScreen.params || {}), 0);
+                        Actions.popTo(currentScreen.name, currentScreen.params);
+                        setTimeout(() => Actions.refresh(currentScreen.params), 0);
                     }
                 }
             } else if (currentScreen.params && (this.props.currentScreen.params !== currentScreen.params)) {
