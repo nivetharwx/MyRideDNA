@@ -52,7 +52,7 @@ class BikeAlbum extends Component {
         this.setState({ isLoading: true }, () => {
             this.props.getBikeAlbum(this.props.user.userId, this.props.bike.spaceId, this.state.pageNumber,
                 (res) => this.setState(prevState => ({ isLoading: false, pageNumber: prevState.pageNumber + 1 })),
-                (er) => this.setState({ isLoading: false })
+                ({ isEmpty, ...otherError }) => this.setState({ isLoading: false })
             );
         });
     }
@@ -93,7 +93,7 @@ class BikeAlbum extends Component {
                         ? <View style={{ backgroundColor: '#fff', height: heightPercentageToDP(70), width: widthPercentageToDP(92), padding: 20, paddingBottom: 0, alignItems: 'center' }}>
                             <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={this.onCancelEnlargedPhoto} />
                             <View style={{ width: widthPercentageToDP(92) - 40, height: heightPercentageToDP(70) - 20 }}>
-                                <ImageBackground source={selectedPicture.data ? { uri: selectedPicture.data } : require('../../../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} />
+                                <ImageBackground source={{ uri: `${GET_PICTURE_BY_ID}${selectedPicture.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={{ height: null, width: null, flex: 1, borderRadius: 0, backgroundColor: '#A9A9A9' }} />
                                 {selectedPicture.description ? <DefaultText numberOfLines={1} style={{ letterSpacing: 0.38, fontSize: 15, marginVertical: 20 }}>{selectedPicture.description}</DefaultText> : <View style={{ height: 20 }} />}
                             </View>
                         </View>
@@ -118,7 +118,7 @@ class BikeAlbum extends Component {
                             <SquareCard
                                 image={`${GET_PICTURE_BY_ID}${item.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}`}
                                 imageStyle={[styles.imageStyle, index % 3 === 1 ? { marginHorizontal: widthPercentageToDP(1) } : null]}
-                                onPress={() => item.data && this.showEnlargedPhoto(item)}
+                                onPress={() => this.showEnlargedPhoto(item)}
                             />
                         )}
                         initialNumToRender={15}
@@ -141,11 +141,11 @@ const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         getBikeAlbum: (userId, spaceId, pageNumber, successCallback, errorCallback) => dispatch(getBikeAlbum(userId, spaceId, pageNumber, successCallback, errorCallback)),
+        clearBikeAlbum: () => dispatch(clearBikeAlbumAction()),
+        updatePageContentStatus: (status) => dispatch(updatePageContentStatusAction(status)),
         // getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
         //     dispatch(updateBikeAlbumAction({ pictureObj }))
         // }, (error) => console.log('getPictureList album error : ', error)),
-        clearBikeAlbum: () => dispatch(clearBikeAlbumAction()),
-        updatePageContentStatus: (status) => dispatch(updatePageContentStatusAction(status))
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BikeAlbum);
