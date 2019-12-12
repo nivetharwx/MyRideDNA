@@ -25,17 +25,20 @@ class PostForm extends Component {
             title: '',
             description: '',
             bikeList: [],
+            isLoadingImage: false,
         };
     }
 
     componentDidMount() {
-        getSpaces(this.props.user.userId, (bikeList) => {
-            this.setState({ bikeList }, () => {
-                if (this.state.selectedBikeId === null) {
-                    this.setState({ selectedBikeId: this.state.bikeList[0].spaceId });
-                }
-            });
-        }, (er) => console.log(er));
+        if (this.props.bike === null) {
+            getSpaces(this.props.user.userId, (bikeList) => {
+                this.setState({ bikeList }, () => {
+                    if (this.state.selectedBikeId === null) {
+                        this.setState({ selectedBikeId: this.state.bikeList[0].spaceId });
+                    }
+                });
+            }, (er) => console.log(er));
+        }
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
@@ -44,6 +47,7 @@ class PostForm extends Component {
 
     onPressCameraIcon = async () => {
         try {
+            this.setState({ isLoadingImage: true });
             const imgs = await ImagePicker.openCamera({
                 width: 300,
                 height: 300,
@@ -52,14 +56,16 @@ class PostForm extends Component {
                 maxFiles: 5,
                 cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
             });
-            this.setState({ selectedImgs: imgs.slice(0, 5).map(item => ({ mimeType: item.mime, picture: item.data })) });
+            this.setState({ isLoadingImage: false, selectedImgs: imgs.slice(0, 5).map(item => ({ mimeType: item.mime, picture: item.data })) });
         } catch (er) {
+            this.setState({ isLoadingImage: false });
             console.log("Error occurd: ", er);
         }
     }
 
     onPressGalleryIcon = async () => {
         try {
+            this.setState({ isLoadingImage: true });
             const imgs = await ImagePicker.openPicker({
                 width: 300,
                 height: 300,
@@ -68,8 +74,9 @@ class PostForm extends Component {
                 maxFiles: 5,
                 includeBase64: true,
             });
-            this.setState({ selectedImgs: imgs.slice(0, 5).map(item => ({ mimeType: item.mime, picture: item.data })) });
+            this.setState({ isLoadingImage: false, selectedImgs: imgs.slice(0, 5).map(item => ({ mimeType: item.mime, picture: item.data })) });
         } catch (er) {
+            this.setState({ isLoadingImage: false });
             console.log("Error occurd: ", er);
         }
     }
@@ -103,16 +110,15 @@ class PostForm extends Component {
     }
 
     onSubmit = () => {
-        const { postType, postTypes, currentBikeId, user } = this.props;
+        const { postType, postTypes, currentBikeId, user, bike, comingFrom } = this.props;
         const { bikeList, title, description, selectedImgs, isPrivate, selectedBikeId } = this.state;
 
-        this.setState({ isSubmiting: true });
-        const bike = bikeList.find(({ spaceId }) => spaceId === selectedBikeId);
         const postProps = { title, description, isPrivate, postTypeId: postTypes[postType].id, pictures: selectedImgs };
-        this.props.createPost(user.userId, bike.spaceId, postType, postProps, () => {
-            const selBike = currentBikeId ? currentBikeId : bikeList.length > 0 ? bikeList[0].spaceId : null;
-            this.setState({ title: '', description: '', selectedImgs: [], selectedBikeId: selBike, isPrivate: (postType === POST_TYPE.WISH_LIST || postType === POST_TYPE.MY_RIDE) ? false : true });
-        });
+        // this.props.createPost(user.userId, selectedBikeId, postType, postProps, () => {
+        //     const selBike = bike ? bike.spaceId : bikeList.length > 0 ? bikeList[0].spaceId : null;
+        //     this.setState({ title: '', description: '', selectedImgs: [], selectedBikeId: selBike, isPrivate: (postType === POST_TYPE.WISH_LIST || postType === POST_TYPE.MY_RIDE) ? false : true });
+        // });
+        this.props.createPost(user.userId, selectedBikeId, postType, postProps, this.onPressBackButton);
     }
 
     renderHeader = () => {
@@ -131,9 +137,14 @@ class PostForm extends Component {
     }
 
     renderFormFields = () => {
-        const { selectedImgs, title, description, selectedBikeId, isPrivate, bikeList } = this.state;
-        const { currentBikeId } = this.props;
-        const BIKE_LIST = bikeList.map(bike => ({ label: bike.name, value: bike.spaceId }));
+        const { selectedImgs, title, description, selectedBikeId, isPrivate, bikeList, isLoadingImage } = this.state;
+        const { currentBikeId, bike } = this.props;
+        const BIKE_LIST = [];
+        if (!bike) {
+            bikeList.forEach(bike => BIKE_LIST.push({ label: bike.name, value: bike.spaceId }));
+        } else {
+            BIKE_LIST.push({ label: bike.name, value: bike.spaceId });
+        }
         if (this.props.postType === POST_TYPE.WISH_LIST || this.props.postType === POST_TYPE.MY_RIDE) {
             return <View style={styles.fill}>
                 <View style={{ flex: 1, marginLeft: widthPercentageToDP(12) }}>
@@ -152,7 +163,7 @@ class PostForm extends Component {
                         onChange={this.onChangeDescription} label='ADDITIONAL INFO' labelStyle={styles.labelStyle}
                         hideKeyboardOnSubmit={true} />
                 </View>
-                <BasicButton title='ADD ITEM' style={styles.submitBtn} titleStyle={styles.submitBtnTxt} onPress={this.onSubmit} />
+                <BasicButton disabled={isLoadingImage} title='ADD ITEM' style={styles.submitBtn} titleStyle={styles.submitBtnTxt} onPress={this.onSubmit} />
             </View>
         }
         return <View style={styles.fill}>
@@ -194,7 +205,7 @@ class PostForm extends Component {
                         value={isPrivate} onChangeValue={this.onChangePrivacyMode} />
                 </View>
             </View>
-            <BasicButton title='POST' style={styles.submitBtn} titleStyle={styles.submitBtnTxt} onPress={this.onSubmit} />
+            <BasicButton disabled={isLoadingImage} title='POST' style={styles.submitBtn} titleStyle={styles.submitBtnTxt} onPress={this.onSubmit} />
         </View>
     }
 
@@ -234,14 +245,15 @@ class PostForm extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { postTypes, showLoader } = state.PageState;
-    return { user, postTypes, showLoader };
+    const { currentBike: bike } = state.GarageInfo;
+    return { user, postTypes, showLoader, bike };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         createPost: (userId, spaceId, postType, postData, successCallback, errorCallback) => dispatch(createPost(userId, spaceId, postData, (res) => {
-            typeof successCallback === 'function' && successCallback(res);
             dispatch(updatePageContentStatusAction({ type: postType }));
+            typeof successCallback === 'function' && successCallback(res);
         }, errorCallback)),
     };
 }
