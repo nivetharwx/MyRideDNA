@@ -2212,15 +2212,17 @@ export const getBikeAlbum = (userId, spaceId, pageNumber, successCallback, error
         axios.get(`${USER_BASE_URL}getPicturesBySpaceId/${userId}/spaceId/${spaceId}?pageNumber=${pageNumber}&preference=${preference}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(({ data }) => {
                 dispatch(apiLoaderActions(false));
-                console.log("getPicturesBySpaceId success: ", data);
                 if (data.pictures.length > 0) {
                     typeof successCallback === 'function' && successCallback(data);
                     dispatch(updateBikeAlbumAction({ updates: data.pictures, reset: !pageNumber }));
+                } else {
+                    typeof errorCallback === 'function' && errorCallback({ isEmpty: true });
                 }
             }).catch(er => {
                 console.log(`getPicturesBySpaceId error: `, er.response || er);
                 differentErrors(er, [userId, spaceId], getBikeAlbum, false);
                 dispatch(apiLoaderActions(false));
+                typeof errorCallback === 'function' && errorCallback(er);
             })
     }
 }
