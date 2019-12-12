@@ -95,7 +95,7 @@ class AddBikeForm extends Component {
             }, this.hideLoader);
         } else {
             this.setState({ showLoader: true });
-            this.props.editBike(this.props.user.userId, bike, pictures, this.props.currentBikeIndex, () => {
+            this.props.editBike(this.props.user.userId, bike, pictures, () => {
                 this.hideLoader();
                 this.onPressBackArrow();
             }, this.hideLoader);
@@ -104,14 +104,14 @@ class AddBikeForm extends Component {
 
     render() {
         const { bike, showLoader } = this.state;
-        const { currentBikeIndex, user } = this.props;
+        const { user } = this.props;
         return (
             <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
-                    <BasicHeader title={currentBikeIndex === -1 ? 'Add Bike' : 'Edit Bike'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackArrow }} />
+                    <BasicHeader title={!bike.spaceId ? 'Add Bike' : 'Edit Bike'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackArrow }} />
                     <ScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ marginTop: 41 + APP_COMMON_STYLES.headerHeight }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
                             <View style={{ alignSelf: 'center', alignItems: 'center' }}>
@@ -174,10 +174,8 @@ class AddBikeForm extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { currentBikeId } = state.GarageInfo;
-    const currentBikeIndex = state.GarageInfo.spaceList.findIndex(({ spaceId }) => spaceId === currentBikeId);
-    const bike = currentBikeIndex === -1 ? null : state.GarageInfo.spaceList[currentBikeIndex];
-    return { user, currentBikeIndex, bike };
+    const { currentBike: bike } = state.GarageInfo;
+    return { user, bike };
 }
 const mapDispatchToProps = (dispatch) => {
     return {

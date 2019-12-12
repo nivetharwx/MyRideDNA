@@ -4,7 +4,7 @@ import { StyleSheet, View, ScrollView, ImageBackground, Image, StatusBar, FlatLi
 import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, heightPercentageToDP, POST_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, GET_PICTURE_BY_ID, PORTRAIT_TAIL_TAG } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { IconButton, ShifterButton, LinkButton } from '../../../../components/buttons';
-import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updateBikeListAction, updateLatestPostPictureListAction, updatePageContentStatusAction } from '../../../../actions';
+import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updatePageContentStatusAction, getCurrentBikeAction, updateBikeWishListAction, updateBikeCustomizationsAction } from '../../../../actions';
 import { DefaultText } from '../../../../components/labels';
 import { BaseModal } from '../../../../components/modal';
 import { ImageLoader } from '../../../../components/loader';
@@ -21,15 +21,17 @@ class BikeDetails extends Component {
     }
 
     componentDidMount() {
-        if (this.props.bike === null) return;
-        this.props.getPosts(this.props.user.userId, POST_TYPE.WISH_LIST, this.props.postTypes[POST_TYPE.WISH_LIST].id, this.props.bike.spaceId);
-        this.props.getPosts(this.props.user.userId, POST_TYPE.MY_RIDE, this.props.postTypes[POST_TYPE.MY_RIDE].id, this.props.bike.spaceId);
+        this.props.getCurrentBike(this.props.currentBikeId);
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.props.currentBikeIndex === -1) return this.onPressBackButton();
+        if (!this.props.bike) return this.onPressBackButton();
         if (this.props.updatePageContent && (!prevProps.updatePageContent || prevProps.updatePageContent.type !== this.props.updatePageContent.type)) {
             this.fetchUpdates(this.props.updatePageContent.type);
+        }
+        if (prevProps.bike === null && this.props.bike !== null) {
+            this.props.getPosts(this.props.user.userId, POST_TYPE.WISH_LIST, this.props.postTypes[POST_TYPE.WISH_LIST].id, this.props.bike.spaceId);
+            this.props.getPosts(this.props.user.userId, POST_TYPE.MY_RIDE, this.props.postTypes[POST_TYPE.MY_RIDE].id, this.props.bike.spaceId);
         }
     }
     // if (this.props.bike.picture) {
@@ -73,7 +75,7 @@ class BikeDetails extends Component {
     }
 
     makeAsActiveBike = () => {
-        this.props.setBikeAsActive(this.props.user.userId, this.props.bike.spaceId, this.props.currentBikeIndex);
+        this.props.setBikeAsActive(this.props.user.userId, this.props.bike.spaceId, this.props.bike.spaceId);
     }
 
     onPressBackButton = () => Actions.pop();
@@ -89,7 +91,7 @@ class BikeDetails extends Component {
                         onPress: () => console.log('Cancel Pressed'),
                         style: 'cancel',
                     },
-                    { text: 'Remove', onPress: () => this.props.deleteBike(this.props.user.userId, this.props.bike.spaceId, this.props.currentBikeIndex) },
+                    { text: 'Remove', onPress: () => this.props.deleteBike(this.props.user.userId, this.props.bike.spaceId) },
                 ]
             );
         }, 100);
@@ -126,7 +128,7 @@ class BikeDetails extends Component {
     }
 
     componentWillUnmount() {
-        this.props.setCurrentBikeId(null);
+        this.props.getCurrentBike(null);
     }
 
     render() {
@@ -162,7 +164,7 @@ class BikeDetails extends Component {
                     <IconButton style={{ padding: 10 }} iconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 20 } }} onPress={this.showOptionsModal} />
                 </View>
                 {
-                    bike === null
+                    !bike
                         ? null
                         : <ScrollView showsVerticalScrollIndicator={false}>
                             <View style={[styles.bikePic, styles.bikeBtmBorder, bike.isDefault ? styles.activeBorder : null]}>
@@ -271,29 +273,38 @@ class BikeDetails extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { postTypes, hasNetwork, updatePageContent } = state.PageState;
-    const { currentBikeId, activeBikeIndex } = state.GarageInfo;
-    const currentBikeIndex = state.GarageInfo.spaceList.findIndex(({ spaceId }) => spaceId === currentBikeId);
-    const bike = currentBikeIndex === -1 ? null : state.GarageInfo.spaceList[currentBikeIndex];
-    return { user, postTypes, hasNetwork, updatePageContent, bike, activeBikeIndex, currentBikeIndex };
+    const { currentBike: bike, activeBikeIndex } = state.GarageInfo;
+    // const { bike, currentBikeIndex } = state.GarageInfo.spaceList.slice().reduce((obj, b, idx, arr) => {
+    //     if (b.spaceId === currentBikeId) {
+    //         obj.bike = b;
+    //         obj.currentBikeIndex = idx;
+    //         console.log("currentBike without selector: ", obj);
+    //         arr.splice(1);
+    //     }
+    //     return obj;
+    // }, {});
+    // const { bike, currentBikeIndex } = getCurrentBikeState(state);
+    return { user, postTypes, hasNetwork, updatePageContent, bike, activeBikeIndex };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        setBikeAsActive: (userId, spaceId, index) => dispatch(setBikeAsActive(userId, spaceId, index)),
-        deleteBike: (userId, bikeId, index) => dispatch(deleteBike(userId, bikeId, index)),
+        setBikeAsActive: (userId, spaceId) => dispatch(setBikeAsActive(userId, spaceId)),
+        deleteBike: (userId, bikeId) => dispatch(deleteBike(userId, bikeId)),
         // getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
         //     dispatch(updateBikePictureAction({ spaceId, picture: response.picture }))
         // }, (error) => console.log("getPicture error: ", error)),
         setCurrentBikeId: (bikeId) => dispatch(setCurrentBikeIdAction(bikeId)),
-        getPosts: (userId, postType, postTypeId, spaceId, successCallback, errorCallback) => dispatch(getPosts(userId, postTypeId, spaceId, (res) => {
+        getCurrentBike: (bikeId) => dispatch(getCurrentBikeAction(bikeId)),
+        getPosts: (userId, postType, postTypeId, spaceId, successCallback, errorCallback) => dispatch(getPosts(userId, postTypeId, spaceId, 0, (res) => {
             dispatch(updatePageContentStatusAction(null));
             if (typeof successCallback === 'function') successCallback(res);
             switch (postType) {
                 case POST_TYPE.WISH_LIST:
-                    dispatch(updateBikeListAction({ wishList: res }));
+                    dispatch(updateBikeWishListAction({ updates: res, reset: true }));
                     break;
                 case POST_TYPE.MY_RIDE:
-                    dispatch(updateBikeListAction({ customizations: res }));
+                    dispatch(updateBikeCustomizationsAction({ updates: res, reset: true }));
                     break;
                 case POST_TYPE.STORIES_FROM_ROAD:
                     break;

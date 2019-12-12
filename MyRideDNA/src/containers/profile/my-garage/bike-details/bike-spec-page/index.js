@@ -8,7 +8,7 @@ import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../../../../components/headers';
 import { SquareCard } from '../../../../../components/cards';
 import { DefaultText } from '../../../../../components/labels';
-import { appNavMenuVisibilityAction, updateBikeListAction } from '../../../../../actions';
+import { appNavMenuVisibilityAction } from '../../../../../actions';
 import { getPosts } from '../../../../../api';
 
 class BikeSpec extends Component {
@@ -19,12 +19,9 @@ class BikeSpec extends Component {
         };
     }
 
-    componentDidMount() {
-        
-    }
+    componentDidMount() { }
 
-    componentDidUpdate(prevProps, prevState) {
-    }
+    componentDidUpdate(prevProps, prevState) { }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
 
@@ -36,7 +33,7 @@ class BikeSpec extends Component {
 
     openPostForm = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: this.props.postType, currentBikeId: this.props.bike.spaceId });
 
-    onPressDeleteSpec = () => {}
+    onPressDeleteSpec = () => { }
 
     render() {
         const { showOptionsModal } = this.state;
@@ -66,10 +63,8 @@ class BikeSpec extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { hasNetwork, postTypes } = state.PageState;
-    const { currentBikeId, activeBikeIndex } = state.GarageInfo;
-    const currentBikeIndex = state.GarageInfo.spaceList.findIndex(({ spaceId }) => spaceId === currentBikeId);
-    const bike = currentBikeIndex === -1 ? null : state.GarageInfo.spaceList[currentBikeIndex];
-    return { user, hasNetwork, bike, activeBikeIndex, currentBikeIndex, postTypes };
+    const { currentBike: bike, activeBikeIndex } = state.GarageInfo;
+    return { user, hasNetwork, bike, activeBikeIndex, postTypes };
 }
 const mapDispatchToProps = (dispatch) => {
     return {

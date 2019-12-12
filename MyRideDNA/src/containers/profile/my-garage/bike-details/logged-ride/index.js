@@ -119,9 +119,7 @@ class LogggedRide extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { hasNetwork } = state.PageState;
-    const { currentBikeId } = state.GarageInfo;
-    const currentBikeIndex = state.GarageInfo.spaceList.findIndex(({ spaceId }) => spaceId === currentBikeId);
-    const bike = currentBikeIndex === -1 ? null : state.GarageInfo.spaceList[currentBikeIndex];
+    const { currentBike: bike } = state.GarageInfo;
     return { user, hasNetwork, bike };
 }
 const mapDispatchToProps = (dispatch) => {

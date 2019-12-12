@@ -61,9 +61,9 @@ class MyGarageTab extends Component {
                 //     }
                 // })
             }
-            if (!prevProps.currentBikeId && this.props.currentBikeId) {
-                Actions.push(PageKeys.BIKE_DETAILS, {});
-            }
+            // if (!prevProps.currentBikeId && this.props.currentBikeId) {
+            //     Actions.push(PageKeys.BIKE_DETAILS, {});
+            // }
         }
     }
 
@@ -92,7 +92,7 @@ class MyGarageTab extends Component {
     }
 
     openBikeDetailsPage = (bike) => {
-        this.props.setCurrentBikeId(bike.spaceId);
+        Actions.push(PageKeys.BIKE_DETAILS, { currentBikeId: bike.spaceId });
     }
 
     renderBike = ({ item, index }) => {
@@ -175,9 +175,8 @@ class MyGarageTab extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const garage = { garageId, garageName, spaceList } = state.GarageInfo;
-    const { currentBikeId } = state.GarageInfo;
     const { hasNetwork } = state.PageState;
-    return { user, garage, currentBikeId, hasNetwork };
+    return { user, garage, hasNetwork };
 }
 const mapDispatchToProps = (dispatch) => {
     return {

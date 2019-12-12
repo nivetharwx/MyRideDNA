@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { View, ImageBackground, StatusBar, FlatList, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import { connect } from 'react-redux';
-import { appNavMenuVisibilityAction, updateBikeAlbumAction, clearBikeAlbumAction } from '../../../../../actions';
+import { appNavMenuVisibilityAction, updateBikeAlbumAction, clearBikeAlbumAction, updatePageContentStatusAction } from '../../../../../actions';
 import { IconButton } from '../../../../../components/buttons';
 import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE, PORTRAIT_TAIL_TAG, GET_PICTURE_BY_ID } from '../../../../../constants';
 import { BaseModal } from '../../../../../components/modal';
@@ -33,6 +33,11 @@ class BikeAlbum extends Component {
         //     }, []);
         //     if (pictureIdList.length > 0) this.props.getPictureList(pictureIdList);
         // }
+        if (this.props.updatePageContent && (!prevProps.updatePageContent || prevProps.updatePageContent.type !== this.props.updatePageContent.type)) {
+            this.props.getBikeAlbum(this.props.user.userId, this.props.bike.spaceId, 0);
+            this.setState({ pageNumber: 1 });
+            this.props.updatePageContentStatus(null);
+        }
     }
     onPressBackButton = () => Actions.pop();
 
@@ -128,11 +133,9 @@ class BikeAlbum extends Component {
 }
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { hasNetwork } = state.PageState;
-    const { currentBikeId } = state.GarageInfo;
-    const currentBikeIndex = state.GarageInfo.spaceList.findIndex(({ spaceId }) => spaceId === currentBikeId);
-    const bike = currentBikeIndex === -1 ? null : state.GarageInfo.spaceList[currentBikeIndex];
-    return { user, hasNetwork, bike };
+    const { hasNetwork, updatePageContent } = state.PageState;
+    const { currentBike: bike } = state.GarageInfo;
+    return { user, hasNetwork, bike, updatePageContent };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -142,6 +145,7 @@ const mapDispatchToProps = (dispatch) => {
         //     dispatch(updateBikeAlbumAction({ pictureObj }))
         // }, (error) => console.log('getPictureList album error : ', error)),
         clearBikeAlbum: () => dispatch(clearBikeAlbumAction()),
+        updatePageContentStatus: (status) => dispatch(updatePageContentStatusAction(status))
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BikeAlbum);
