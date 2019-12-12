@@ -1,5 +1,5 @@
-import { REPLACE_GARAGE_INFO, UPDATE_GARAGE_NAME, UPDATE_BIKE_LIST, CLEAR_GARAGE, ADD_TO_BIKE_LIST, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, UPDATE_SHORT_SPACE_LIST, REPLACE_SHORT_SPACE_LIST, UPDATE_BIKE_PICTURE, CLEAR_BIKE_ALBUM, UPDATE_BIKE_ALBUM, GET_CURRENT_BIKE, SET_CURRENT_BIKE_ID, UPDATE_BIKE_WISH_LIST, UPDATE_BIKE_CUSTOMIZATIONS } from "../actions/actionConstants";
-import { PORTRAIT_TAIL_TAG, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from "../constants";
+import { REPLACE_GARAGE_INFO, UPDATE_GARAGE_NAME, UPDATE_BIKE_LIST, CLEAR_GARAGE, ADD_TO_BIKE_LIST, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, UPDATE_SHORT_SPACE_LIST, REPLACE_SHORT_SPACE_LIST, UPDATE_BIKE_PICTURE, CLEAR_BIKE_ALBUM, UPDATE_BIKE_ALBUM, GET_CURRENT_BIKE, SET_CURRENT_BIKE_ID, UPDATE_BIKE_WISH_LIST, UPDATE_BIKE_CUSTOMIZATIONS, GET_CURRENT_BIKE_SPEC } from "../actions/actionConstants";
+import { PORTRAIT_TAIL_TAG, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE } from "../constants";
 
 const initialState = {
     garageName: null,
@@ -42,10 +42,11 @@ export default (state = initialState, action) => {
             }
 
         case GET_CURRENT_BIKE:
-            if (action.data === null) {
+            if (!action.data) {
                 return {
                     ...state,
                     currentBike: null,
+                    getCurrentBikeSpec: null,
                 }
             }
             return {
@@ -113,17 +114,25 @@ export default (state = initialState, action) => {
                 currentBikeId: action.data
             }
 
-        // case GET_CURRENT_BIKE_SPEC:
-        //     if (action.data === null) {
-        //         return {
-        //             ...state,
-        //             currentBikeSpec: null,
-        //         }
-        //     }
-        //     return {
-        //         ...state,
-        //         currentBike: state.spaceList.find(({ spaceId }) => spaceId === action.data)
-        //     }
+        case GET_CURRENT_BIKE_SPEC:
+            if (state.currentBike === null) return state;
+            if (!action.data) {
+                return {
+                    ...state,
+                    currentBikeSpec: null,
+                }
+            }
+            if (action.data.postType === POST_TYPE.WISH_LIST) {
+                return {
+                    ...state,
+                    currentBikeSpec: state.currentBike.wishList.find(({ id }) => id === action.data.postId),
+                }
+            } else if (action.data.postType === POST_TYPE.MY_RIDE) {
+                return {
+                    ...state,
+                    currentBikeSpec: state.currentBike.customizations.find(({ id }) => id === action.data.postId),
+                }
+            }
 
         case DELETE_BIKE_FROM_LIST:
             const updatedList = state.spaceList.reduce((list, bike, idx, arr) => {

@@ -77,6 +77,7 @@ import {
     GET_CURRENT_BIKE,
     UPDATE_BIKE_WISH_LIST,
     UPDATE_BIKE_CUSTOMIZATIONS,
+    GET_CURRENT_BIKE_SPEC,
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -334,6 +335,12 @@ export const setCurrentBikeIdAction = (data) => (
 export const getCurrentBikeAction = (data) => (
     {
         type: GET_CURRENT_BIKE,
+        data: data
+    }
+);
+export const getCurrentBikeSpecAction = (data) => (
+    {
+        type: GET_CURRENT_BIKE_SPEC,
         data: data
     }
 );

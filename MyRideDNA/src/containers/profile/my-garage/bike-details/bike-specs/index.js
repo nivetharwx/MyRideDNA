@@ -8,7 +8,7 @@ import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../../../../components/headers';
 import { SquareCard } from '../../../../../components/cards';
 import { DefaultText } from '../../../../../components/labels';
-import { appNavMenuVisibilityAction, updateBikeWishListAction, updateBikeCustomizationsAction } from '../../../../../actions';
+import { appNavMenuVisibilityAction, updateBikeWishListAction, updateBikeCustomizationsAction, getCurrentBikeSpecAction } from '../../../../../actions';
 import { getPosts } from '../../../../../api';
 
 class BikeSpecList extends Component {
@@ -33,7 +33,10 @@ class BikeSpecList extends Component {
 
     openPostForm = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: this.props.postType, currentBikeId: this.props.bike.spaceId });
 
-    openBikeSpecPage = (postId) => Actions.push(PageKeys.BIKE_SPEC, { comingFrom: Actions.currentScene, postType: this.props.postType, postId });
+    openBikeSpecPage = (postId) => {
+        this.props.getCurrentBikeSpec(this.props.postType, postId);
+        Actions.push(PageKeys.BIKE_SPEC, { comingFrom: Actions.currentScene, postType: this.props.postType, postId });
+    }
 
     renderHeader = () => {
         let title = '';
@@ -161,7 +164,8 @@ const mapDispatchToProps = (dispatch) => {
             }
         }, (err) => {
             if (typeof errorCallback === 'function') errorCallback(err);
-        }))
+        })),
+        getCurrentBikeSpec: (postType, postId) => dispatch(getCurrentBikeSpecAction({ postType, postId })),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BikeSpecList);

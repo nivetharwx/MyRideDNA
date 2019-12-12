@@ -37,6 +37,7 @@ class BikeSpec extends Component {
 
     render() {
         const { showOptionsModal } = this.state;
+        const { specification } = this.props;
         return <View style={styles.fill}>
             <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
                 <View style={APP_COMMON_STYLES.optionsContainer}>
@@ -49,11 +50,12 @@ class BikeSpec extends Component {
                 <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
             </View>
             <View style={styles.fill}>
-                <BasicHeader title={null}
+                <BasicHeader title={specification.title}
                     leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
                     rightIconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 20 }, onPress: this.showOptionsModal }}
                 />
                 <View style={styles.pageContent}>
+                    
                 </View>
             </View>
         </View>
@@ -63,8 +65,8 @@ class BikeSpec extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { hasNetwork, postTypes } = state.PageState;
-    const { currentBike: bike, activeBikeIndex } = state.GarageInfo;
-    return { user, hasNetwork, bike, activeBikeIndex, postTypes };
+    const { currentBike: bike, activeBikeIndex, currentBikeSpec: specification } = state.GarageInfo;
+    return { user, hasNetwork, bike, activeBikeIndex, postTypes, specification };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
