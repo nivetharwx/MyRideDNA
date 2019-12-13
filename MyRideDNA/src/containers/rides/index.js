@@ -106,17 +106,7 @@ export class Rides extends Component {
     componentDidMount() {
         const { activeTab } = this.state;
         if (activeTab === 0) {
-            this.props.getAllBuildRides(this.props.user.userId, true, 0, (res) => {
-            }, (err) => {
-            });
-        } else if (activeTab === 1) {
-            this.props.getAllRecordedRides(this.props.user.userId, true, 0, (res) => {
-            }, (err) => {
-            });
-        } else {
-            this.props.getAllPublicRides(this.props.user.userId, true, 0, (res) => {
-            }, (err) => {
-            });
+            this.getRidesApi(activeTab);
         }
     }
 
@@ -126,19 +116,7 @@ export class Rides extends Component {
         }
         const { activeTab } = this.state;
         if (prevState.activeTab != activeTab) {
-            if (activeTab === 0) {
-                this.props.getAllBuildRides(this.props.user.userId, true, 0, (res) => {
-                }, (err) => {
-                });
-            } else if (activeTab === 1) {
-                this.props.getAllRecordedRides(this.props.user.userId, true, 0, (res) => {
-                }, (err) => {
-                });
-            } else {
-                this.props.getAllPublicRides(this.props.user.userId, true, 0, (res) => {
-                }, (err) => {
-                });
-            }
+            this.getRidesApi(activeTab);
         }
 
         if (prevProps.buildRides !== this.props.buildRides) {
@@ -208,6 +186,24 @@ export class Rides extends Component {
             }
         }
     }
+
+    getRidesApi = (activeTab) => {
+        switch (activeTab) {
+            case 0: this.props.getAllBuildRides(this.props.user.userId, true, 0, (res) => {
+            }, (err) => {
+            });
+                break;
+            case 1: this.props.getAllRecordedRides(this.props.user.userId, true, 0, (res) => {
+            }, (err) => {
+            });
+                break;
+            case 2: this.props.getAllPublicRides(this.props.user.userId, true, 0, (res) => {
+            }, (err) => {
+            });
+                break;
+        }
+    }
+
     retryApiFunction = () => {
         this.state.spinValue.setValue(0);
         Animated.timing(this.state.spinValue, {
@@ -217,21 +213,7 @@ export class Rides extends Component {
             useNativeDriver: true
         }).start(() => {
             if (this.props.hasNetwork === true) {
-                if (this.state.activeTab === 0) {
-                    this.props.getAllBuildRides(this.props.user.userId, true, 0, (res) => {
-                    }, (err) => {
-                    });
-                }
-                else if (this.state.activeTab === 1) {
-                    this.props.getAllRecordedRides(this.props.user.userId, true, 0, (res) => {
-                    }, (err) => {
-                    });
-                }
-                else {
-                    this.props.getAllPublicRides(this.props.user.userId, true, 0, (res) => {
-                    }, (err) => {
-                    });
-                }
+                this.getRidesApi(this.state.activeTab);
             }
         });
 
@@ -545,7 +527,7 @@ export class Rides extends Component {
 
     getDateAndTime = (item) => {
         var dateFormat = { day: 'numeric', year: '2-digit', month: 'short' };
-        return new Date(item.date).toLocaleDateString('en-IN',dateFormat) + ', ' + new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        return new Date(item.date).toLocaleDateString('en-IN', dateFormat) + ', ' + new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
 
     renderRides = ({ item, index }) => {
@@ -560,7 +542,7 @@ export class Rides extends Component {
                     <Body>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                             <View>
-                                <DefaultText style={{ fontWeight: 'bold', fontSize: widthPercentageToDP(3.8) }}>{item.isRecorded?this.getDateAndTime(item):item.name}</DefaultText>
+                                <DefaultText style={{ fontWeight: 'bold', fontSize: widthPercentageToDP(3.8) }}>{item.isRecorded ? this.getDateAndTime(item) : item.name}</DefaultText>
                                 <DefaultText note></DefaultText>
                             </View>
                             {
@@ -707,7 +689,7 @@ export class Rides extends Component {
         return (
             <View style={{ flex: 1 }}>
                 <View style={APP_COMMON_STYLES.statusBar}>
-                <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={{ flex: 1 }}>
                     <BaseModal alignCenter={true} isVisible={isVisibleRenameModal} onCancel={this.onCancelRenameForm} onPressOutside={this.onCancelRenameForm}>

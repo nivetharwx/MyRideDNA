@@ -1,4 +1,4 @@
-import { REPLACE_GARAGE_INFO, UPDATE_GARAGE_NAME, UPDATE_BIKE_LIST, CLEAR_GARAGE, ADD_TO_BIKE_LIST, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, UPDATE_SHORT_SPACE_LIST, REPLACE_SHORT_SPACE_LIST, UPDATE_BIKE_PICTURE, CLEAR_BIKE_ALBUM, UPDATE_BIKE_ALBUM, GET_CURRENT_BIKE, SET_CURRENT_BIKE_ID, UPDATE_BIKE_WISH_LIST, UPDATE_BIKE_CUSTOMIZATIONS, GET_CURRENT_BIKE_SPEC } from "../actions/actionConstants";
+import { REPLACE_GARAGE_INFO, UPDATE_GARAGE_NAME, UPDATE_BIKE_LIST, CLEAR_GARAGE, ADD_TO_BIKE_LIST, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, UPDATE_SHORT_SPACE_LIST, REPLACE_SHORT_SPACE_LIST, UPDATE_BIKE_PICTURE, CLEAR_BIKE_ALBUM, UPDATE_BIKE_ALBUM, GET_CURRENT_BIKE, SET_CURRENT_BIKE_ID, UPDATE_BIKE_WISH_LIST, UPDATE_BIKE_CUSTOMIZATIONS, GET_CURRENT_BIKE_SPEC, UPDATE_BIKE_LOGGED_RIDE } from "../actions/actionConstants";
 import { PORTRAIT_TAIL_TAG, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE } from "../constants";
 
 const initialState = {
@@ -76,6 +76,17 @@ export default (state = initialState, action) => {
                         ? action.data.updates
                         : [...state.currentBike.customizations, ...action.data.updates]
                 },
+            }
+        case UPDATE_BIKE_LOGGED_RIDE:
+            if (state.currentBike === null) return state;
+            return {
+                ...state,
+                currentBike: {
+                    ...state.currentBike,
+                    loggedRides: action.data.reset
+                        ? action.data.updates
+                        : [...state.currentBike.loggedRides, ...action.data.updates]
+                }
             }
 
         case UPDATE_BIKE_ALBUM:

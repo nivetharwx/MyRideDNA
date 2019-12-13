@@ -8,6 +8,7 @@ import { BasicHeader } from '../../../../../components/headers';
 import { DefaultText } from '../../../../../components/labels';
 import { appNavMenuVisibilityAction } from '../../../../../actions';
 import { RideCard } from '../../../../../components/cards';
+import { getRecordRides } from '../../../../../api';
 
 const loggedRideDummy = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 6 }]
 class LogggedRide extends Component {
@@ -16,7 +17,7 @@ class LogggedRide extends Component {
         this.state = {
             isLoading: false,
             spinValue: new Animated.Value(0),
-            pageNumber: 0,
+            pageNumber: 1,
         };
     }
     componentDidMount() {
@@ -39,6 +40,8 @@ class LogggedRide extends Component {
                 </View>
                 }
 
+                rideCardPlaceholder={require('../../../../../assets/img/ride-placeholder-image.png')}
+
                 footerContent={<View style={{ flexDirection: 'row', justifyContent: 'space-around', height: 40, backgroundColor: '#585756', }}>
                     <View style={{ flexDirection: 'row' }}>
                         <ImageButton imageSrc={require('../../../../../assets/img/distance.png')} imgStyles={styles.footerIcon} />
@@ -58,20 +61,18 @@ class LogggedRide extends Component {
     }
 
     loadMoreData = ({ distanceFromEnd }) => {
-        // this.setState({ isLoading: true, isLoadingData: false })
         if (this.state.isLoading === true || distanceFromEnd < 0) return;
-        // this.setState((prevState) => ({ isLoading: true }),
-        //     () => {
-        //         this.props.11getBuddyAlbum(this.props.user.userId, this.props.person.userId, this.state.pageNumber, 15, (res) => {
-        //             if (res.pictures.length > 0) {
-        //                 this.setState({ pageNumber: this.state.pageNumber + 1 })
-        //             }
-        //             this.setState({ isLoading: false })
-        //         },
-        //             (er) => {
-        //                 this.setState({ isLoading: false })
-        //             });
-        //     })
+        this.setState({ isLoading: true }, () => {
+            this.props.getRecordRides(this.props.user.userId, this.props.bike.spaceId, this.state.pageNumber, this.fetchSuccessCallback, this.fetchErrorCallback);
+        });
+    }
+
+    fetchSuccessCallback = (res) => {
+        this.setState(prevState => ({ isLoading: false, pageNumber: res.length > 0 ? prevState.pageNumber + 1 : prevState.pageNumber }));
+    }
+
+    fetchErrorCallback = (er) => {
+        this.setState({ isLoading: false });
     }
 
     renderFooter = () => {
@@ -125,6 +126,13 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
+        getRecordRides: (userId, spaceId, pageNumber, successCallback, errorCallback) => dispatch(getRecordRides(userId, spaceId, pageNumber, (res) => {
+            if (typeof successCallback === 'function') successCallback(res);
+            console.log('getRecordRides loggedRide :', res);
+            dispatch(updateBikeLoggedRideAction({ updates: res, reset: !pageNumber }))
+        }, (err) => {
+            if (typeof errorCallback === 'function') errorCallback(err);
+        })),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(LogggedRide);

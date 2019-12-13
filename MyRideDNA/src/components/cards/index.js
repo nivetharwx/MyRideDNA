@@ -137,7 +137,7 @@ export const ThumbnailCard = ({ item, thumbnailPlaceholder, onPress, onLongPress
     </View>
 );
 
-export const SmallCard = ({ image, placeholderImage, onPress, outerContainer, imageStyle }) => (
+export const SmallCard = ({ image, placeholderImage, onPress, outerContainer, imageStyle, customPlaceholder }) => (
     <View style={outerContainer}>
         <TouchableOpacity onPress={() => onPress ? onPress() : null} style={{
             flex: 1,
@@ -145,8 +145,13 @@ export const SmallCard = ({ image, placeholderImage, onPress, outerContainer, im
             justifyContent: 'center'
         }}>
             <View style={[{ height: 74, width: 74, backgroundColor: '#A9A9A9', justifyContent: 'center' }, imageStyle]}>
-                <Image source={image ? { uri: image } : placeholderImage}
-                    style={{ width: null, height: null, flex: 1 }} />
+                {
+                    image
+                        ? <Image source={{ uri: image }} style={{ width: null, height: null, flex: 1 }} />
+                        : placeholderImage
+                            ? <Image source={placeholderImage} style={{ width: null, height: null, flex: 1 }} />
+                            : customPlaceholder
+                }
             </View>
         </TouchableOpacity>
     </View>
@@ -262,7 +267,7 @@ export const RideCard = ({ outerContainer, headerStyle, nameOfRide, nameOfRideSt
         borderBottomWidth: 1,
         borderBottomColor: '#D8D8D8'
     }, outerContainer]}>
-        { headerContent}
+        {headerContent}
         <View style={[{ height: 190, backgroundColor: '#A9A9A9', justifyContent: 'center' }, imageStyle]}>
             {
                 image ?
@@ -274,7 +279,7 @@ export const RideCard = ({ outerContainer, headerStyle, nameOfRide, nameOfRideSt
                         : null
             }
         </View>
-            { footerContent }
+        {footerContent}
     </View>
 );
 

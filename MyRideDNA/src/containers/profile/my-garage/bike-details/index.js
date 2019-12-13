@@ -4,12 +4,12 @@ import { StyleSheet, View, ScrollView, ImageBackground, Image, StatusBar, FlatLi
 import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, heightPercentageToDP, POST_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, GET_PICTURE_BY_ID, PORTRAIT_TAIL_TAG } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { IconButton, ShifterButton, LinkButton } from '../../../../components/buttons';
-import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updatePageContentStatusAction, getCurrentBikeAction, updateBikeWishListAction, updateBikeCustomizationsAction } from '../../../../actions';
+import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updatePageContentStatusAction, getCurrentBikeAction, updateBikeWishListAction, updateBikeCustomizationsAction, updateBikeLoggedRideAction } from '../../../../actions';
 import { DefaultText } from '../../../../components/labels';
 import { BaseModal } from '../../../../components/modal';
 import { ImageLoader } from '../../../../components/loader';
 import { SmallCard } from '../../../../components/cards';
-import { setBikeAsActive, deleteBike, getPicture, getPosts, getPictureList } from '../../../../api';
+import { setBikeAsActive, deleteBike, getPicture, getPosts, getPictureList, getAllRecordedRides, getRecordRides } from '../../../../api';
 
 class BikeDetails extends Component {
     constructor(props) {
@@ -32,6 +32,7 @@ class BikeDetails extends Component {
         if (prevProps.bike === null && this.props.bike !== null) {
             this.props.getPosts(this.props.user.userId, POST_TYPE.WISH_LIST, this.props.postTypes[POST_TYPE.WISH_LIST].id, this.props.bike.spaceId);
             this.props.getPosts(this.props.user.userId, POST_TYPE.MY_RIDE, this.props.postTypes[POST_TYPE.MY_RIDE].id, this.props.bike.spaceId);
+            this.props.getRecordRides(this.props.user.userId, this.props.bike.spaceId)
         }
     }
     // if (this.props.bike.picture) {
@@ -116,12 +117,26 @@ class BikeDetails extends Component {
 
     postKeyExtractor = item => item.id;
 
-    renderSmallCard(item, postType) {
+    loggedRideKeyExtractor = item => item.rideId;
+
+    renderSmallCard(postType, id, pictureId, title) {
         return <SmallCard
-            image={item.pictureIds && item.pictureIds[0] ? `${GET_PICTURE_BY_ID}${item.pictureIds[0].id}` : null}
+            image={pictureId ? `${GET_PICTURE_BY_ID}${pictureId}` : null}
+            customPlaceholder={
+                <ImageBackground style={{ width: null, height: null, flex: 1, justifyContent:'center', alignItems:'center' }} source={require('../../../../assets/img/textured-black-background.png')}>
+                    <DefaultText style={styles.squareCardTitle}>{title}</DefaultText>
+                    {
+                        postType === POST_TYPE.LOGGED_RIDES ?
+                            <DefaultText style={[styles.squareCardTitle,{fontSize:12}]}>{this.props.user.distanceUnit === 'km' ? 'KILOMETERS' : 'MILES'}</DefaultText>
+                            :
+                            null
+                    }
+                </ImageBackground>
+            }
             onPress={() => {
                 if (postType === POST_TYPE.MY_RIDE) console.log("Open MyRide Item page for ", item);
                 else if (postType === POST_TYPE.WISH_LIST) console.log("Open WisList Item page for ", item);
+                else if (postType === POST_TYPE.LOGGED_RIDES) console.log("Open Logged Ride Item page for ", item);
             }}
             imageStyle={styles.imageStyle}
         />
@@ -133,6 +148,7 @@ class BikeDetails extends Component {
 
     render() {
         const { user, bike } = this.props;
+        console.log('bike : ', bike)
         const { showOptionsModal, isLoadingProfPic } = this.state;
         return (
             <View style={styles.fill}>
@@ -208,7 +224,7 @@ class BikeDetails extends Component {
                                                 numColumns={4}
                                                 data={bike.customizations.slice(0, 4)}
                                                 keyExtractor={this.postKeyExtractor}
-                                                renderItem={({ item }) => this.renderSmallCard(item, POST_TYPE.MY_RIDE)}
+                                                renderItem={({ item }) => this.renderSmallCard(POST_TYPE.MY_RIDE, item.id, item.pictureIds && item.pictureIds[0] ? item.pictureIds[0].id : null, item.name)}
                                             />
                                             : null
                                     }
@@ -229,7 +245,7 @@ class BikeDetails extends Component {
                                                 numColumns={4}
                                                 data={bike.wishList.slice(0, 4)}
                                                 keyExtractor={this.postKeyExtractor}
-                                                renderItem={({ item }) => this.renderSmallCard(item, POST_TYPE.WISH_LIST)}
+                                                renderItem={({ item }) => this.renderSmallCard(POST_TYPE.WISH_LIST, item.id, item.pictureIds && item.pictureIds[0] ? item.pictureIds[0].id : null, item.name)}
                                             />
                                             : null
                                     }
@@ -243,7 +259,17 @@ class BikeDetails extends Component {
                                         <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={() => null} />
                                     </View>
                                     <View style={styles.greyBorder} />
-                                    <FlatList style={styles.list} />
+                                    {
+                                        bike.loggedRides
+                                            ? <FlatList
+                                                style={styles.list}
+                                                numColumns={4}
+                                                data={bike.loggedRides.slice(0, 4)}
+                                                keyExtractor={this.loggedRideKeyExtractor}
+                                                renderItem={({ item }) => this.renderSmallCard(POST_TYPE.LOGGED_RIDES, item.rideId, item.picture ? item.picture.id : null, item.totalDistance)}
+                                            />
+                                            : null
+                                    }
                                 </View>
                                 <View style={styles.section}>
                                     <View style={styles.sectionHeader}>
@@ -296,9 +322,17 @@ const mapDispatchToProps = (dispatch) => {
         // }, (error) => console.log("getPicture error: ", error)),
         setCurrentBikeId: (bikeId) => dispatch(setCurrentBikeIdAction(bikeId)),
         getCurrentBike: (bikeId) => dispatch(getCurrentBikeAction(bikeId)),
+        getRecordRides: (userId, spaceId, successCallback, errorCallback) => dispatch(getRecordRides(userId, spaceId, 0, (res) => {
+            if (typeof successCallback === 'function') successCallback(res);
+            console.log('getRecordRides bike-detail :', res);
+            dispatch(updateBikeLoggedRideAction({ updates: res, reset: true }))
+        }, (err) => {
+            if (typeof errorCallback === 'function') errorCallback(err);
+        })),
         getPosts: (userId, postType, postTypeId, spaceId, successCallback, errorCallback) => dispatch(getPosts(userId, postTypeId, spaceId, 0, (res) => {
             dispatch(updatePageContentStatusAction(null));
             if (typeof successCallback === 'function') successCallback(res);
+            console.log('myride : ', res)
             switch (postType) {
                 case POST_TYPE.WISH_LIST:
                     dispatch(updateBikeWishListAction({ updates: res, reset: true }));
@@ -512,5 +546,10 @@ const styles = StyleSheet.create({
         marginRight: widthPercentageToDP(1.8),
         height: widthPercentageToDP(100 / 5),
         width: widthPercentageToDP(100 / 5)
+    },
+    squareCardTitle:{ 
+        fontFamily: CUSTOM_FONTS.dinCondensed, 
+        color: '#FFFFFF', 
+        fontSize: 30 
     }
 });

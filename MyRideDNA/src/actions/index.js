@@ -78,6 +78,7 @@ import {
     UPDATE_BIKE_WISH_LIST,
     UPDATE_BIKE_CUSTOMIZATIONS,
     GET_CURRENT_BIKE_SPEC,
+    UPDATE_BIKE_LOGGED_RIDE,
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -395,6 +396,12 @@ export const updateBikeWishListAction = (data) => (
 export const updateBikeCustomizationsAction = (data) => (
     {
         type: UPDATE_BIKE_CUSTOMIZATIONS,
+        data: data
+    }
+);
+export const updateBikeLoggedRideAction = (data) => (
+    {
+        type: UPDATE_BIKE_LOGGED_RIDE,
         data: data
     }
 );

@@ -564,7 +564,7 @@ export const getAllPublicRides = (userId, toggleLoader, pageNumber, successCallb
             })
     };
 }
-export const getAllRecordedRides = (userId, toggleLoader, pageNumber, successCallback, errorCallback) => {
+export const getAllRecordedRides = (userId, toggleLoader, pageNumber, spaceId, successCallback, errorCallback) => {
     return dispatch => {
         // dispatch(toggleLoaderAction(true));
         toggleLoader && dispatch(apiLoaderActions(true))
@@ -594,6 +594,32 @@ export const getAllRecordedRides = (userId, toggleLoader, pageNumber, successCal
             })
     };
 }
+
+
+export const getRecordRides = (userId, spaceId, pageNumber = 0, successCallback, errorCallback) => {
+    return dispatch => {
+        dispatch(apiLoaderActions(true))
+        axios.get(RIDE_BASE_URL + `getRecordRides?userId=${userId}&pageNumber=${pageNumber}&spaceId=${spaceId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                console.log('getRecordRides : ', res.data);
+                if (res.status === 200) {
+                    dispatch(apiLoaderActions(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    successCallback(res.data);
+                }
+            })
+            .catch(er => {
+                console.log(er.response);
+                differentErrors(er, [userId, toggleLoader, pageNumber, spaceId, successCallback, errorCallback], getRecordRides, false);
+                // TODO: Dispatch error info action
+                dispatch(apiLoaderActions(false))
+                errorCallback(er);
+            })
+    };
+}
+
+
+
 
 export const getFriendsRideList = (friendUserId, relationship) => {
     return dispatch => {
