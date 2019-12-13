@@ -399,7 +399,7 @@ class GroupListTab extends Component {
                         }
                     </View>
                 </BaseModal>
-                <View style={{ marginHorizontal: widthPercentageToDP(8) }}>
+                <View style={{ flex: 1, marginHorizontal: widthPercentageToDP(8) }}>
                     <SearchBoxFilter
                         searchQuery={searchQuery}
                         onChangeSearchValue={this.onChangeSearchValue}

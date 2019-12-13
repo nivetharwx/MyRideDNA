@@ -1516,28 +1516,20 @@ export const getAllFriends1 = (friendType, userId, pageNumber, toggleLoader, suc
             })
     };
 }
-export const getUserById = (userId) => {
+
+export const getUser = (userId, successCallback, errorCallback) => {
     return dispatch => {
-        dispatch(apiLoaderActions(true));
-        axios.get(GRAPH_BASE_URL + `getUserById?userId=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
-            .then(res => {
-                if (res.status === 200) {
-                    dispatch(replaceFriendInfooAction(res.data));
-                    dispatch(apiLoaderActions(false));
-                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                }
+        axios.get(USER_BASE_URL + `getUser?id=${userId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(({ data }) => {
+                dispatch(updateUserAction(data));
+                typeof successCallback === 'function' && successCallback();
             })
             .catch(er => {
-                console.log(`getUserById: `, er.response || er);
-                differentErrors(er, [userId], getUserById, false);
-                // TODO: Dispatch error info action
-                // dispatch(toggleLoaderAction(false));
-                dispatch(apiLoaderActions(false));
+                console.log(`getUser: `, er.response || er);
+                typeof errorCallback === 'function' && errorCallback();
             })
     };
 }
-
-
 
 export const getAllOnlineFriends = (userId) => {
     return dispatch => {
@@ -2722,6 +2714,23 @@ export const getPosts = (userId, postTypeId, spaceId, pageNumber = 0, successCal
                 console.log(`getPosts error: `, er.response || er);
                 typeof errorCallback === 'function' && errorCallback(er.response || er);
                 differentErrors(er, [userId, postTypeId, spaceId, successCallback, errorCallback], getPosts, true);
+            })
+    }
+}
+export const deletePost = (postId, successCallback, errorCallback) => {
+    return dispatch => {
+        dispatch(apiLoaderActions(true));
+        axios.delete(`${POSTS_BASE_URL}posts/${postId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                dispatch(apiLoaderActions(false));
+                console.log("deletePost success: ", res);
+                typeof successCallback === 'function' && successCallback();
+            })
+            .catch(er => {
+                dispatch(apiLoaderActions(false));
+                console.log(`deletePost error: `, er.response || er);
+                typeof errorCallback === 'function' && errorCallback(er.response || er);
+                differentErrors(er, [postId, successCallback, errorCallback], deletePost, true);
             })
     }
 }

@@ -33,7 +33,7 @@ class BikeAlbum extends Component {
         //     }, []);
         //     if (pictureIdList.length > 0) this.props.getPictureList(pictureIdList);
         // }
-        if (this.props.updatePageContent && (!prevProps.updatePageContent || prevProps.updatePageContent.type !== this.props.updatePageContent.type)) {
+        if (this.props.updatePageContent && (!prevProps.updatePageContent || prevProps.updatePageContent !== this.props.updatePageContent)) {
             this.props.getBikeAlbum(this.props.user.userId, this.props.bike.spaceId, 0);
             this.setState({ pageNumber: 1 });
             this.props.updatePageContentStatus(null);

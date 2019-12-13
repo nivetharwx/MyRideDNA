@@ -157,7 +157,7 @@ export const SmallCard = ({ image, placeholderImage, onPress, outerContainer, im
     </View>
 );
 export const SquareCard = ({ title, subtitle, placeholderImage, onPress, onLongPress, image, imageStyle, containerStyle, contentContainerStyle }) => (
-    <TouchableOpacity onPress={() => onPress ? onPress() : null} onLongPress={() => onLongPress && onLongPress()} style={[{ flexDirection: 'column' }, containerStyle]}>
+    <TouchableOpacity onPress={() => onPress ? onPress() : null} onLongPress={onLongPress || null} style={[{ flexDirection: 'column' }, containerStyle]}>
         <View style={[{ height: 150, width: 150, backgroundColor: '#A9A9A9', justifyContent: 'center' }, imageStyle]}>
             {
                 image
@@ -186,29 +186,20 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
     <View style={[{ flex: 1, marginTop: 20, flexDirection: 'row', minWidth: widthPercentageToDP(81.5) }, cardOuterStyle]}>
         <TouchableOpacity style={{ height: 74, width: 74, flexDirection: actionsBar ? 'row' : null, }} onPress={onPressLeft} >
             {
-                // for online and offline
-                actionsBar && actionsBar.online ?
-                    <View style={{ backgroundColor: item.isOnline ? '#81BA41' : '#C4C6C8', zIndex: 1, width: 6 }}>
-                    </View>
-                    :
-                    null
+                actionsBar && actionsBar.online
+                    ? <View style={{ backgroundColor: item.isOnline ? '#81BA41' : '#C4C6C8', zIndex: 1, width: 6 }} />
+                    : null
             }
             {
-                thumbnail ?
-                    <Image source={{ uri: thumbnail }} style={{ width: null, height: null, flex: 1 }} />
-                    :
-                    horizontalCardPlaceholder
-                        ?
-                        <Image source={horizontalCardPlaceholder} style={{ width: null, height: null, flex: 1 }} />
-                        :
-                        leftIcon ?
-                            <View style={{ flex: 1, width: null, heigh: null, backgroundColor: '#C4C6C8', justifyContent: 'center', alignItems: 'center' }}>
+                thumbnail
+                    ? <Image source={{ uri: thumbnail }} style={{ width: null, height: null, flex: 1 }} />
+                    : horizontalCardPlaceholder
+                        ? <Image source={horizontalCardPlaceholder} style={{ width: null, height: null, flex: 1 }} />
+                        : leftIcon
+                            ? <View style={{ flex: 1, width: null, heigh: null, backgroundColor: '#C4C6C8', justifyContent: 'center', alignItems: 'center' }}>
                                 <NBIcon active name={leftIcon.name} type={leftIcon.type} style={{ fontSize: 40, color: '#707070' }} />
                             </View>
-                            :
-                            <View style={{ flex: 1, width: null, heigh: null, backgroundColor: '#C4C6C8', justifyContent: 'center', alignItems: 'center' }}>
-                            </View>
-
+                            : <View style={{ flex: 1, width: null, heigh: null, backgroundColor: '#C4C6C8', justifyContent: 'center', alignItems: 'center' }} />
             }
         </TouchableOpacity>
 

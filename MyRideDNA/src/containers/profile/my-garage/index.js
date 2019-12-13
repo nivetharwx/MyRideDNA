@@ -7,7 +7,7 @@ import { IconButton, LinkButton } from '../../../components/buttons';
 import { Item } from 'native-base';
 import { getPicture, getGarageInfo, setBikeAsActive, deleteBike, updateGarageName } from '../../../api';
 import { BaseModal } from '../../../components/modal';
-import { replaceGarageInfoAction, updateBikePictureAction, apiLoaderActions, setCurrentBikeIdAction } from '../../../actions';
+import { replaceGarageInfoAction, updateBikePictureAction, apiLoaderActions, setCurrentBikeIdAction, getCurrentBikeAction } from '../../../actions';
 import { DefaultText } from '../../../components/labels';
 
 class MyGarageTab extends Component {
@@ -92,6 +92,7 @@ class MyGarageTab extends Component {
     }
 
     openBikeDetailsPage = (bike) => {
+        this.props.getCurrentBike(bike.spaceId);
         Actions.push(PageKeys.BIKE_DETAILS, { currentBikeId: bike.spaceId });
     }
 
@@ -191,10 +192,7 @@ const mapDispatchToProps = (dispatch) => {
             })
         },
         updateGarageName: (garageName, garageId) => dispatch(updateGarageName(garageName, garageId)),
-        // getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
-        //     dispatch(updateBikePictureAction({ spaceId, picture: response.picture }))
-        // }, (error) => console.log("getPicture error: ", error)),
-        setCurrentBikeId: (bikeId) => dispatch(setCurrentBikeIdAction(bikeId)),
+        getCurrentBike: (bikeId) => dispatch(getCurrentBikeAction(bikeId)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MyGarageTab);

@@ -21,10 +21,13 @@ class BikeSpecList extends Component {
     }
 
     componentDidMount() {
-        this.props.getPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.bike.spaceId, this.state.pageNumber, this.fetchSuccessCallback, this.fetchErrorCallback);
+        this.props.getPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.bike.spaceId, 0, this.fetchSuccessCallback, this.fetchErrorCallback);
     }
 
     componentDidUpdate(prevProps, prevState) {
+        if (this.props.updatePageContent && (!prevProps.updatePageContent || prevProps.updatePageContent !== this.props.updatePageContent)) {
+            this.props.getPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.bike.spaceId, 0, this.fetchSuccessCallback, this.fetchErrorCallback);
+        }
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
@@ -141,9 +144,9 @@ class BikeSpecList extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { hasNetwork, postTypes } = state.PageState;
+    const { hasNetwork, postTypes, updatePageContent } = state.PageState;
     const { currentBike: bike, activeBikeIndex } = state.GarageInfo;
-    return { user, hasNetwork, bike, activeBikeIndex, postTypes };
+    return { user, hasNetwork, bike, activeBikeIndex, postTypes, updatePageContent };
 }
 const mapDispatchToProps = (dispatch) => {
     return {

@@ -4,7 +4,7 @@ import { StyleSheet, View, ScrollView, ImageBackground, Image, StatusBar, FlatLi
 import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, heightPercentageToDP, POST_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, GET_PICTURE_BY_ID, PORTRAIT_TAIL_TAG } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { IconButton, ShifterButton, LinkButton } from '../../../../components/buttons';
-import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updatePageContentStatusAction, getCurrentBikeAction, updateBikeWishListAction, updateBikeCustomizationsAction, updateBikeLoggedRideAction } from '../../../../actions';
+import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updatePageContentStatusAction, getCurrentBikeAction, updateBikeWishListAction, updateBikeCustomizationsAction, updateBikeLoggedRideAction, getCurrentBikeSpecAction  } from '../../../../actions';
 import { DefaultText } from '../../../../components/labels';
 import { BaseModal } from '../../../../components/modal';
 import { ImageLoader } from '../../../../components/loader';
@@ -21,18 +21,22 @@ class BikeDetails extends Component {
     }
 
     componentDidMount() {
-        this.props.getCurrentBike(this.props.currentBikeId);
+        if (this.props.bike) {
+            this.props.getPosts(this.props.user.userId, POST_TYPE.WISH_LIST, this.props.postTypes[POST_TYPE.WISH_LIST].id, this.props.bike.spaceId);
+            this.props.getPosts(this.props.user.userId, POST_TYPE.MY_RIDE, this.props.postTypes[POST_TYPE.MY_RIDE].id, this.props.bike.spaceId);
+            this.props.getRecordRides(this.props.user.userId, this.props.bike.spaceId)
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (!this.props.bike) return this.onPressBackButton();
-        if (this.props.updatePageContent && (!prevProps.updatePageContent || prevProps.updatePageContent.type !== this.props.updatePageContent.type)) {
+        if (this.props.updatePageContent && (!prevProps.updatePageContent || prevProps.updatePageContent !== this.props.updatePageContent)) {
             this.fetchUpdates(this.props.updatePageContent.type);
         }
         if (prevProps.bike === null && this.props.bike !== null) {
+            this.props.getRecordRides(this.props.user.userId, this.props.bike.spaceId)
             this.props.getPosts(this.props.user.userId, POST_TYPE.WISH_LIST, this.props.postTypes[POST_TYPE.WISH_LIST].id, this.props.bike.spaceId);
             this.props.getPosts(this.props.user.userId, POST_TYPE.MY_RIDE, this.props.postTypes[POST_TYPE.MY_RIDE].id, this.props.bike.spaceId);
-            this.props.getRecordRides(this.props.user.userId, this.props.bike.spaceId)
         }
     }
     // if (this.props.bike.picture) {
@@ -115,6 +119,11 @@ class BikeDetails extends Component {
 
     openLoggedRidePage = () => Actions.push(PageKeys.LOGGED_RIDE, { comingFrom: Actions.currentScene, postType: POST_TYPE.LOGGED_RIDES });
 
+    openBikeSpecPage = (postType, postId) => {
+        this.props.getCurrentBikeSpec(postType, postId);
+        Actions.push(PageKeys.BIKE_SPEC, { comingFrom: Actions.currentScene, postType, postId });
+    }
+
     postKeyExtractor = item => item.id;
 
     loggedRideKeyExtractor = item => item.rideId;
@@ -123,22 +132,21 @@ class BikeDetails extends Component {
         return <SmallCard
             image={pictureId ? `${GET_PICTURE_BY_ID}${pictureId}` : null}
             customPlaceholder={
-                <ImageBackground style={{ width: null, height: null, flex: 1, justifyContent:'center', alignItems:'center' }} source={require('../../../../assets/img/textured-black-background.png')}>
+                <ImageBackground style={{ width: null, height: null, flex: 1, justifyContent: 'center', alignItems: 'center' }} source={require('../../../../assets/img/textured-black-background.png')}>
                     <DefaultText style={styles.squareCardTitle}>{title}</DefaultText>
                     {
                         postType === POST_TYPE.LOGGED_RIDES ?
-                            <DefaultText style={[styles.squareCardTitle,{fontSize:12}]}>{this.props.user.distanceUnit === 'km' ? 'KILOMETERS' : 'MILES'}</DefaultText>
+                            <DefaultText style={[styles.squareCardTitle, { fontSize: 12, letterSpacing:2.4 }]}>{this.props.user.distanceUnit === 'km' ? 'KILOMETERS' : 'MILES'}</DefaultText>
                             :
                             null
                     }
                 </ImageBackground>
             }
             onPress={() => {
-                if (postType === POST_TYPE.MY_RIDE) console.log("Open MyRide Item page for ", item);
-                else if (postType === POST_TYPE.WISH_LIST) console.log("Open WisList Item page for ", item);
+                if (postType === POST_TYPE.MY_RIDE) this.openBikeSpecPage(postType, id);
+                else if (postType === POST_TYPE.WISH_LIST) this.openBikeSpecPage(postType, id);
                 else if (postType === POST_TYPE.LOGGED_RIDES) console.log("Open Logged Ride Item page for ", item);
             }}
-            imageStyle={styles.imageStyle}
         />
     }
 
@@ -320,7 +328,6 @@ const mapDispatchToProps = (dispatch) => {
         // getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
         //     dispatch(updateBikePictureAction({ spaceId, picture: response.picture }))
         // }, (error) => console.log("getPicture error: ", error)),
-        setCurrentBikeId: (bikeId) => dispatch(setCurrentBikeIdAction(bikeId)),
         getCurrentBike: (bikeId) => dispatch(getCurrentBikeAction(bikeId)),
         getRecordRides: (userId, spaceId, successCallback, errorCallback) => dispatch(getRecordRides(userId, spaceId, 0, (res) => {
             if (typeof successCallback === 'function') successCallback(res);
@@ -348,6 +355,7 @@ const mapDispatchToProps = (dispatch) => {
         }, (err) => {
             if (typeof errorCallback === 'function') errorCallback(err);
         })),
+        getCurrentBikeSpec: (postType, postId) => dispatch(getCurrentBikeSpecAction({ postType, postId })),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BikeDetails);
@@ -547,9 +555,9 @@ const styles = StyleSheet.create({
         height: widthPercentageToDP(100 / 5),
         width: widthPercentageToDP(100 / 5)
     },
-    squareCardTitle:{ 
-        fontFamily: CUSTOM_FONTS.dinCondensed, 
-        color: '#FFFFFF', 
-        fontSize: 30 
+    squareCardTitle: {
+        fontFamily: CUSTOM_FONTS.dinCondensed,
+        color: '#FFFFFF',
+        fontSize: 30
     }
 });
