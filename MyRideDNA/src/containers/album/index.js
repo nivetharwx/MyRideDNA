@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, ImageBackground, StatusBar, FlatList, StyleSheet, ActivityIndicator, Animated } from 'react-native';
+import { View, ImageBackground, StatusBar, FlatList, StyleSheet, ActivityIndicator, Animated, Easing } from 'react-native';
 import { connect } from 'react-redux';
 import { appNavMenuVisibilityAction, updateAlbumListAction, clearAlbumAction } from '../../actions';
 import { IconButton } from '../../components/buttons';
@@ -9,6 +9,8 @@ import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../components/headers';
 import { SquareCard } from '../../components/cards';
 import { getAlbum, getPictureList } from '../../api';
+import { DefaultText } from '../../components/labels';
+import { ConnectionLostLoader } from '../../components/loader';
 
 class Album extends Component {
 
@@ -25,9 +27,8 @@ class Album extends Component {
     }
     componentDidMount() {
         this.props.getAlbum(this.props.user.userId, 0, 15, (res) => {
-        },
-            (er) => {
-            });
+        }, (er) => {
+        });
     }
     componentDidUpdate(prevProps, prevState) {
         // if (prevProps.albumList !== this.props.albumList) {
@@ -43,6 +44,22 @@ class Album extends Component {
         // }
     }
     onPressBackButton = () => Actions.pop();
+
+    retryApiFunction = () => {
+        this.state.spinValue.setValue(0);
+        Animated.timing(this.state.spinValue, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.linear,
+            useNativeDriver: true
+        }).start(() => {
+            if (this.props.hasNetwork === true) {
+                this.props.getAlbum(this.props.user.userId, 0, 15, (res) => {
+                }, (er) => {
+                });
+            }
+        });
+    }
 
     openPicture = (item) => {
         this.setState({ selectedPicture: item, isVisiblePicture: true });
@@ -122,7 +139,7 @@ class Album extends Component {
                 <BasicHeader title='My Photos'
                     leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
                     rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', rightIconPropsStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 }, onPress: this.openPostForm }} />
-                <View style={{ marginTop: heightPercentageToDP(9.6), flex: 1 }}>
+                <View style={{ marginTop: heightPercentageToDP(10.7) }}>
                     <FlatList
                         showsVerticalScrollIndicator={false}
                         numColumns={3}
@@ -140,7 +157,19 @@ class Album extends Component {
                         onEndReached={this.loadMoreData}
                         onEndReachedThreshold={0.1}
                     />
-
+                    {
+                        // this.props.hasNetwork === false && albumList.length === 0 && <View style={{ height: heightPercentageToDP(30), justifyContent:'center' }}>
+                        //     <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                        //         <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', fontSize: heightPercentageToDP(15) } }} onPress={this.retryApiFunction} />
+                        //     </Animated.View>
+                        //     <DefaultText style={{ alignSelf:'center', fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
+                        //     <DefaultText style={{ alignSelf: 'center' }}>Please connect to internet</DefaultText>
+                        // </View>
+                        this.props.hasNetwork === false && albumList.length === 0 && <View style={{ marginTop: heightPercentageToDP(25), flexDirection: 'column', justifyContent: 'space-between', height: 100 }}>
+                            <IconButton iconProps={{ name: 'broadcast-tower', type: 'FontAwesome5', style: { fontSize: 60, color: '#505050' } }} />
+                            <DefaultText style={{ alignSelf: 'center', fontSize: 14 }}>Please Connect To Internet</DefaultText>
+                        </View>
+                    }
                 </View>
             </View >
         </View>

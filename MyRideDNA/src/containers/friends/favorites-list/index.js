@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { StyleSheet, Animated, FlatList, View, ActivityIndicator, Easing } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, PageKeys, FRIEND_TYPE } from '../../../constants';
-import { LabeledInputPlaceholder } from '../../../components/inputs';
+import { LabeledInputPlaceholder, SearchBoxFilter } from '../../../components/inputs';
 import { IconButton } from '../../../components/buttons';
 import { HorizontalCard } from '../../../components/cards';
 import { getFriendsLocationList, getAllFriends } from '../../../api';
@@ -224,25 +224,14 @@ class FavoriteListTab extends Component {
         return (
             <View style={styles.fill}>
                 <View style={{ marginHorizontal: widthPercentageToDP(8) }}>
-                    <View style={{ marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
-                        <View style={{ flex: 2.89 }}>
-                            <LabeledInputPlaceholder
-                                placeholder='Name'
-                                inputValue={searchQuery} inputStyle={{ borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
-                                returnKeyType='next'
-                                onChange={this.onChangeSearchValue}
-                                hideKeyboardOnSubmit={true}
-                                containerStyle={styles.searchCont} />
-                        </View>
-                        <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
-                            <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
-                        </View>
-                    </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', paddingBottom: 16 }}>
-                        {/* <IconButton iconProps={{ name: 'star', type: 'Entypo', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.FAVOURITE ? '#CE0D0D' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterFavouriteFriend()} /> */}
-                        <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ? '#2B77B4' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} />
-                        <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapFriends()} />
-                    </View>
+                    <SearchBoxFilter
+                        searchQuery={searchQuery} onChangeSearchValue={this.onChangeSearchValue}
+                        placeholder='Name' outerContainer={{ marginTop: 16 }}
+                        footer={<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', paddingBottom: 16 }}>
+                            <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ? '#2B77B4' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableFriends()} />
+                            <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapFriends()} />
+                        </View>}
+                    />
                     <FlatList
                         showsVerticalScrollIndicator={false}
                         style={{ flexDirection: 'column' }}

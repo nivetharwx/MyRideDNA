@@ -14,7 +14,7 @@ import Permissions from 'react-native-permissions';
 import { searchForFriend, sendFriendRequest, sendInvitationOrRequest, cancelFriendRequest, approveFriendRequest, rejectFriendRequest } from '../../api';
 import { clearSearchFriendListAction, resetFriendRequestResponseAction, resetInvitationResponseAction, updateSearchListAction, updateFriendRequestResponseAction } from '../../actions';
 import { isValidEmailFormat } from '../../util';
-import { LabeledInputPlaceholder } from '../../components/inputs';
+import { LabeledInputPlaceholder, SearchBoxFilter } from '../../components/inputs';
 
 class ContactsSection extends PureComponent {
     searchQueryTimeout = null;
@@ -153,7 +153,7 @@ class ContactsSection extends PureComponent {
                     item.thumbnailPath
                         ? <Thumbnail source={{ uri: item.thumbnailPath }} />
                         : <View style={{ alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(10), height: widthPercentageToDP(10), borderWidth: 2, borderColor: '#6B7663', borderRadius: widthPercentageToDP(5), backgroundColor: item.email === null ? '#6B7663' : '#FFF' }}>
-                            <DefaultText style={{ color: item.email === null ? '#FFF' : '#6B7663', fontFamily:CUSTOM_FONTS.robotoBold }}>{item.name.charAt(0)}</DefaultText>
+                            <DefaultText style={{ color: item.email === null ? '#FFF' : '#6B7663', fontFamily: CUSTOM_FONTS.robotoBold }}>{item.name.charAt(0)}</DefaultText>
                         </View>
                 }
             </Left>
@@ -449,46 +449,36 @@ class ContactsSection extends PureComponent {
                     <BasicHeader title='Add A Road Buddy' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
                     <Tabs tabContainerStyle={APP_COMMON_STYLES.tabContainer} onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' style={{ marginTop: APP_COMMON_STYLES.headerHeight }} tabBarUnderlineStyle={{ height: 0 }}>
                         <Tab heading='COMMUNITY' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
-                            <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
-                                <View style={{ flex: 2.89 }}>
-                                    <LabeledInputPlaceholder
-                                        placeholder='Name'
-                                        inputValue={searchName} inputStyle={{ paddingBottom: 0, backgroundColor: '#fff', borderBottomWidth: 0 }}
-                                        onChange={this.searchInCommunity}
-                                        hideKeyboardOnSubmit={false}
-                                        containerStyle={styles.containerStyle}
-                                        outerContainer={{ marginLeft: 15 }}
+                            <View style={{ marginHorizontal: widthPercentageToDP(8) }}>
+                                <SearchBoxFilter
+                                    searchQuery={searchName} onChangeSearchValue={this.searchInCommunity}
+                                    placeholder='Name' outerContainer={{ marginTop: 16 }} />
+                                <View style={{ borderBottomWidth: 3, borderBottomColor: '#F5891F', marginTop: 16 }}>
+                                    <DefaultText style={{ marginLeft: widthPercentageToDP(3), fontFamily: CUSTOM_FONTS.robotoBold, letterSpacing: 0.6, marginBottom: 2 }}>SEARCH RESULTS</DefaultText>
+                                </View>
+                                <View style={{ marginTop: 16 }}>
+                                    <FlatList
+                                        // style={{ marginBottom: heightPercentageToDP(20) }}
+                                        data={searchResults}
+                                        keyExtractor={this.searchResultsKeyExtractor}
+                                        keyboardShouldPersistTaps='handled'
+                                        renderItem={({ item, index }) => (
+                                            <HorizontalCard
+                                                item={item}
+                                                thumbnail={item.profilePicture}
+                                                horizontalCardPlaceholder={require('../../assets/img/profile-pic.png')}
+                                                cardOuterStyle={styles.horizontalCardOuterStyle}
+                                                rightProps={this.getRightIconProps(item)}
+                                                onPress={() => this.onPressRightIconProps(item)}
+                                            />
+                                        )}
+                                        ListFooterComponent={this.renderFooter}
+                                        onEndReached={this.loadMoreData}
+                                        onEndReachedThreshold={0.1}
+                                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
                                     />
+                                    {this.props.hasNetwork === false && this.renderIconOnOffline(spin)}
                                 </View>
-                                <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
-                                    <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 19 } }} />
-                                </View>
-                            </View>
-                            <View style={{ borderBottomWidth: 3, borderBottomColor: '#F5891F', marginTop: 16, marginHorizontal: widthPercentageToDP(9) }}>
-                                <DefaultText style={{ marginLeft: widthPercentageToDP(3), fontFamily: CUSTOM_FONTS.robotoBold, letterSpacing: 0.6, marginBottom: 2 }}>SEARCH RESULTS</DefaultText>
-                            </View>
-                            <View style={{ marginTop: 16 }}>
-                                <FlatList
-                                    // style={{ marginBottom: heightPercentageToDP(20) }}
-                                    data={searchResults}
-                                    keyExtractor={this.searchResultsKeyExtractor}
-                                    keyboardShouldPersistTaps='handled'
-                                    renderItem={({ item, index }) => (
-                                        <HorizontalCard
-                                            item={item}
-                                            thumbnail={item.profilePicture}
-                                            horizontalCardPlaceholder={require('../../assets/img/profile-pic.png')}
-                                            cardOuterStyle={styles.horizontalCardOuterStyle}
-                                            rightProps={this.getRightIconProps(item)}
-                                            onPress={() => this.onPressRightIconProps(item)}
-                                        />
-                                    )}
-                                    ListFooterComponent={this.renderFooter}
-                                    onEndReached={this.loadMoreData}
-                                    onEndReachedThreshold={0.1}
-                                    onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
-                                />
-                                {this.props.hasNetwork === false && this.renderIconOnOffline(spin)}
                             </View>
                         </Tab>
                         <Tab heading='CONTACTS' tabStyle={[styles.inActiveTab, styles.borderLeftWhite, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderLeftWhite, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
@@ -499,7 +489,7 @@ class ContactsSection extends PureComponent {
                         </Tab>
                     </Tabs>
                 </View>
-            </View>
+            </View >
         );
     }
 }
@@ -515,9 +505,9 @@ const mapDispatchToProps = (dispatch) => {
         clearSearchResults: () => dispatch(clearSearchFriendListAction()),
         clearFriendRequestResponse: () => dispatch(resetFriendRequestResponseAction()),
         clearInvitationResponse: () => dispatch(resetInvitationResponseAction()),
-        sendFriendRequest: (requestBody) => dispatch(sendFriendRequest(requestBody,(res)=>{
+        sendFriendRequest: (requestBody) => dispatch(sendFriendRequest(requestBody, (res) => {
             dispatch(updateSearchListAction({ userId: requestBody.userId, relationship: RELATIONSHIP.SENT_REQUEST }));
-        }, (error)=>{
+        }, (error) => {
             dispatch(updateFriendRequestResponseAction({ error: error.response.data || "Something went wrong" }));
         })),
         sendInvitationOrRequest: (requestBody) => dispatch(sendInvitationOrRequest(requestBody)),

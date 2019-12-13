@@ -6,7 +6,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 0
     },
     horizontalCardOuterStyle: {
-        marginHorizontal: widthPercentageToDP(9),
         marginBottom: heightPercentageToDP(4)
     },
     containerStyle: {

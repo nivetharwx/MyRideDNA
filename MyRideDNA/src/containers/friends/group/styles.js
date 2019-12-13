@@ -45,11 +45,9 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.8)'
     },
     HorizontalCardOuterStyle: {
-        marginHorizontal: widthPercentageToDP(4),
         marginBottom: heightPercentageToDP(4),
     },
     friendList: {
-        marginHorizontal: widthPercentageToDP(5),
         paddingTop: 16
     },
     searchCont: {

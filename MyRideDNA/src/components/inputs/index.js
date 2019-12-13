@@ -11,6 +11,7 @@ import { Icon as NBIcon, Picker, DatePicker } from 'native-base';
 import { WindowDimensions, ShortMonthNames, heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, CUSTOM_FONTS } from '../../constants';
 import { getFormattedDateFromISO } from '../../util';
 import { DefaultText } from '../labels';
+import { IconButton } from '../buttons';
 
 const getKeyboardTypeForContentType = (contentType) => {
     if (contentType === 'telephoneNumber' || contentType === 'postalCode' || contentType === 'creditCardNumber') {
@@ -183,6 +184,26 @@ export const SearchBox = ({ value, hideIcon, onTextChange, onFocus, onPressClear
     </View>
 );
 
+export const SearchBoxFilter = ({ outerContainer, searchQuery, onChangeSearchValue, placeholder, footer }) => (
+    <View style={[outerContainer]}>
+        <View style={styles.searchBoxFilterContainer}>
+            <View style={{ flex: 2.89 }}>
+                <LabeledInputPlaceholder
+                    placeholder={placeholder}
+                    inputValue={searchQuery} inputStyle={styles.searchBoxFilterInput}
+                    returnKeyType='next'
+                    onChange={onChangeSearchValue}
+                    hideKeyboardOnSubmit={true}
+                    containerStyle={styles.searchCont} />
+            </View>
+            <View style={styles.searchIconContainer}>
+                <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
+            </View>
+        </View>
+        {footer}
+    </View>
+)
+
 const styles = StyleSheet.create({
     formFieldIcon: {
         fontSize: 20,
@@ -225,5 +246,29 @@ const styles = StyleSheet.create({
         fontSize: 18,
         alignSelf: 'center',
         paddingHorizontal: 10,
+    },
+    searchCont: {
+        marginBottom: 0,
+        width: widthPercentageToDP(47),
+    },
+    searchBoxFilterContainer: {
+        borderWidth: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        borderRadius: 20,
+        height: 37
+    },
+    searchBoxFilterInput: {
+        borderBottomWidth: 0,
+        width: widthPercentageToDP(47),
+        marginLeft: 15,
+        backgroundColor: '#fff'
+    },
+    searchIconContainer: {
+        flex: 1,
+        backgroundColor: '#C4C6C8',
+        borderTopRightRadius: 20,
+        borderBottomRightRadius: 20,
+        justifyContent: 'center'
     }
 });

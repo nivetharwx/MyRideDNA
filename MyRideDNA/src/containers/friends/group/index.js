@@ -11,7 +11,7 @@ import { addMembers, getAllGroupMembers, dismissMemberAsAdmin, makeMemberAsAdmin
 import { ThumbnailCard, HorizontalCard } from '../../../components/cards';
 import { BaseModal } from '../../../components/modal';
 import { Icon as NBIcon, ListItem, Left, Thumbnail, Body, Right, CheckBox } from 'native-base';
-import { LabeledInput, LabeledInputPlaceholder } from '../../../components/inputs';
+import { LabeledInput, LabeledInputPlaceholder, SearchBoxFilter } from '../../../components/inputs';
 import { Loader } from '../../../components/loader';
 import { DefaultText } from '../../../components/labels';
 
@@ -461,77 +461,61 @@ class Group extends Component {
                             </View>
                             : null
                     }
-                    <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 80, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
-                        <View style={{ flex: 2.89 }}>
-                            <LabeledInputPlaceholder
-                                placeholder='Name'
-                                inputValue={searchQuery} inputStyle={{ borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
-                                onChange={this.onChangeSearchValue}
-                                hideKeyboardOnSubmit={true}
-                                containerStyle={styles.searchCont} />
-                        </View>
-                        <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
-                            <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
-                        </View>
-                    </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
-                        <IconButton iconProps={{ name: 'edit', type: 'FontAwesome', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => Actions.push(PageKeys.GROUP_FORM, { pageIndex: this.props.grpIndex })} />
-                        {
-                            currentGroup.groupMembers.length > 0 && currentGroup.groupMembers[0].isAdmin ?
-                                <IconButton iconProps={{ name: 'adduser', type: 'AntDesign', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.onPressAddMember()} />
-                                :
-                                null
-                        }
-                        <ImageButton imageSrc={require('../../../assets/img/chat.png')} imgStyles={{ height: 23, width: 26, marginTop: 6 }} onPress={() => this.openChatPage(undefined, true)} />
-                        <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ? '#2B77B4' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableMembers()} />
-                    </View>
-
-                    {
-                        this.state.filteredMembers.length > 0
-                            ?
-                            <FlatList
-                                keyboardShouldPersistTaps="handled"
-                                contentContainerStyle={styles.friendList}
-                                data={this.state.filteredMembers}
-                                keyExtractor={this.memberKeyExtractor}
-                                renderItem={({ item, index }) => (
-                                    <View style={{ flex: 1, maxWidth: widthPercentageToDP(50) }}>
-                                        <HorizontalCard
-                                            horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
-                                            item={item}
-                                            thumbnail={item.profilePicture}
-                                            onPressLeft={() => this.openFriendsProfileTab(item, index)}
-                                            cardOuterStyle={styles.HorizontalCardOuterStyle}
-                                            actionsBar={{
-                                                online: true,
-                                                actions: [
-                                                    { name: 'search', id: 2, type: 'FontAwesome', color: item.locationEnable ? '#2B77B4' : '#C4C6C8' },
-                                                    index !== 0 && item.isFriend ? { isIconImage: true, imgSrc: require('../../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } } : null,
-                                                    { name: 'verified-user', id: 3, type: 'MaterialIcons', color: item.isAdmin ? '#81BA41' : '#C4C6C8' },
-                                                    index === 0 || item.isAdmin ? null : this.state.filteredMembers[0].isAdmin === false ? null : { name: 'remove-user', id: 4, type: 'Entypo', color: '#707070', onPressActions: () => this.removeMemberConfirmation(item) }
-                                                ]
-                                            }}
-                                        />
-                                    </View>
-                                )
+                    <View style={{ marginHorizontal: w = widthPercentageToDP(9) }}>
+                        <SearchBoxFilter
+                            searchQuery={searchQuery} onChangeSearchValue={this.onChangeSearchValue}
+                            placeholder='Name' outerContainer={{ marginTop: 80 }}
+                            footer={<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', paddingBottom: 16 }}>
+                                <IconButton iconProps={{ name: 'edit', type: 'FontAwesome', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => Actions.push(PageKeys.GROUP_FORM, { pageIndex: this.props.grpIndex })} />
+                                {
+                                    currentGroup.groupMembers.length > 0 && currentGroup.groupMembers[0].isAdmin ?
+                                        <IconButton iconProps={{ name: 'adduser', type: 'AntDesign', style: { color: '#C4C6C8', fontSize: 23 } }} onPress={() => this.onPressAddMember()} />
+                                        :
+                                        null
                                 }
-                                ListFooterComponent={this.renderFooter}
-                                onEndReached={this.loadMoreData}
-                                onEndReachedThreshold={0.1}
-                                onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
-                            />
-                            :
-                            this.props.hasNetwork ?
-                                null
-                                :
-                                <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
-                                    <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                        <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                    </Animated.View>
-                                    <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
-                                    <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
-                                </View>
-                    }
+                                <ImageButton imageSrc={require('../../../assets/img/chat.png')} imgStyles={{ height: 23, width: 26, marginTop: 6 }} onPress={() => this.openChatPage(undefined, true)} />
+                                <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.LOCATION_ENABLE ? '#2B77B4' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterLocationEnableMembers()} />
+                            </View>}
+                        />
+                        <FlatList
+                            keyboardShouldPersistTaps="handled"
+                            contentContainerStyle={styles.friendList}
+                            data={this.state.filteredMembers}
+                            keyExtractor={this.memberKeyExtractor}
+                            renderItem={({ item, index }) => (
+                                <HorizontalCard
+                                    horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
+                                    item={item}
+                                    thumbnail={item.profilePicture}
+                                    onPressLeft={() => this.openFriendsProfileTab(item, index)}
+                                    cardOuterStyle={styles.HorizontalCardOuterStyle}
+                                    actionsBar={{
+                                        online: true,
+                                        actions: [
+                                            { name: 'search', id: 2, type: 'FontAwesome', color: item.locationEnable ? '#2B77B4' : '#C4C6C8' },
+                                            index !== 0 && item.isFriend ? { isIconImage: true, imgSrc: require('../../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } } : null,
+                                            { name: 'verified-user', id: 3, type: 'MaterialIcons', color: item.isAdmin ? '#81BA41' : '#C4C6C8' },
+                                            index === 0 || item.isAdmin ? null : this.state.filteredMembers[0].isAdmin === false ? null : { name: 'remove-user', id: 4, type: 'Entypo', color: '#707070', onPressActions: () => this.removeMemberConfirmation(item) }
+                                        ]
+                                    }}
+                                />
+                            )
+                            }
+                            ListFooterComponent={this.renderFooter}
+                            onEndReached={this.loadMoreData}
+                            onEndReachedThreshold={0.1}
+                            onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                        />
+                        {
+                            this.props.hasNetwork === false && currentGroup.groupMembers.length === 0 && <View style={{ height: heightPercentageToDP(30) }}>
+                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', fontSize: heightPercentageToDP(15) } }} onPress={this.retryApiFunction} />
+                                </Animated.View>
+                                <DefaultText style={{ fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
+                                <DefaultText style={{ alignSelf: 'center' }}>Please connect to internet</DefaultText>
+                            </View>
+                        }
+                    </View>
                 </View>
                 <Loader isVisible={this.props.showLoader} />
             </View>
