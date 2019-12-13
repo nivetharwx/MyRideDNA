@@ -4,7 +4,7 @@ import { StyleSheet, View, ScrollView, ImageBackground, Image, StatusBar, FlatLi
 import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, heightPercentageToDP, POST_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, GET_PICTURE_BY_ID, PORTRAIT_TAIL_TAG } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { IconButton, ShifterButton, LinkButton } from '../../../../components/buttons';
-import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updatePageContentStatusAction, getCurrentBikeAction, updateBikeWishListAction, updateBikeCustomizationsAction } from '../../../../actions';
+import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updatePageContentStatusAction, getCurrentBikeAction, updateBikeWishListAction, updateBikeCustomizationsAction, getCurrentBikeSpecAction } from '../../../../actions';
 import { DefaultText } from '../../../../components/labels';
 import { BaseModal } from '../../../../components/modal';
 import { ImageLoader } from '../../../../components/loader';
@@ -21,17 +21,16 @@ class BikeDetails extends Component {
     }
 
     componentDidMount() {
-        this.props.getCurrentBike(this.props.currentBikeId);
+        if (this.props.bike) {
+            this.props.getPosts(this.props.user.userId, POST_TYPE.WISH_LIST, this.props.postTypes[POST_TYPE.WISH_LIST].id, this.props.bike.spaceId);
+            this.props.getPosts(this.props.user.userId, POST_TYPE.MY_RIDE, this.props.postTypes[POST_TYPE.MY_RIDE].id, this.props.bike.spaceId);
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (!this.props.bike) return this.onPressBackButton();
-        if (this.props.updatePageContent && (!prevProps.updatePageContent || prevProps.updatePageContent.type !== this.props.updatePageContent.type)) {
+        if (this.props.updatePageContent && (!prevProps.updatePageContent || prevProps.updatePageContent !== this.props.updatePageContent)) {
             this.fetchUpdates(this.props.updatePageContent.type);
-        }
-        if (prevProps.bike === null && this.props.bike !== null) {
-            this.props.getPosts(this.props.user.userId, POST_TYPE.WISH_LIST, this.props.postTypes[POST_TYPE.WISH_LIST].id, this.props.bike.spaceId);
-            this.props.getPosts(this.props.user.userId, POST_TYPE.MY_RIDE, this.props.postTypes[POST_TYPE.MY_RIDE].id, this.props.bike.spaceId);
         }
     }
     // if (this.props.bike.picture) {
@@ -116,13 +115,15 @@ class BikeDetails extends Component {
 
     postKeyExtractor = item => item.id;
 
+    openBikeSpecPage = (postType, postId) => {
+        this.props.getCurrentBikeSpec(postType, postId);
+        Actions.push(PageKeys.BIKE_SPEC, { comingFrom: Actions.currentScene, postType, postId });
+    }
+
     renderSmallCard(item, postType) {
         return <SmallCard
             image={item.pictureIds && item.pictureIds[0] ? `${GET_PICTURE_BY_ID}${item.pictureIds[0].id}` : null}
-            onPress={() => {
-                if (postType === POST_TYPE.MY_RIDE) console.log("Open MyRide Item page for ", item);
-                else if (postType === POST_TYPE.WISH_LIST) console.log("Open WisList Item page for ", item);
-            }}
+            onPress={() => this.openBikeSpecPage(postType, item.id)}
             imageStyle={styles.imageStyle}
         />
     }
@@ -294,8 +295,6 @@ const mapDispatchToProps = (dispatch) => {
         // getBikePicture: (pictureId, spaceId) => getPicture(pictureId, (response) => {
         //     dispatch(updateBikePictureAction({ spaceId, picture: response.picture }))
         // }, (error) => console.log("getPicture error: ", error)),
-        setCurrentBikeId: (bikeId) => dispatch(setCurrentBikeIdAction(bikeId)),
-        getCurrentBike: (bikeId) => dispatch(getCurrentBikeAction(bikeId)),
         getPosts: (userId, postType, postTypeId, spaceId, successCallback, errorCallback) => dispatch(getPosts(userId, postTypeId, spaceId, 0, (res) => {
             dispatch(updatePageContentStatusAction(null));
             if (typeof successCallback === 'function') successCallback(res);
@@ -314,6 +313,7 @@ const mapDispatchToProps = (dispatch) => {
         }, (err) => {
             if (typeof errorCallback === 'function') errorCallback(err);
         })),
+        getCurrentBikeSpec: (postType, postId) => dispatch(getCurrentBikeSpecAction({ postType, postId })),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BikeDetails);
