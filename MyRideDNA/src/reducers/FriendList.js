@@ -86,17 +86,10 @@ export default (state = initialState, action) => {
             }
 
         case UNFRIEND:
-            const personIndex = state.allFriends.findIndex(person => person.userId === action.data.personId);
-            if (personIndex > -1) {
-                return {
-                    ...state,
-                    allFriends: [
-                        ...state.allFriends.slice(0, personIndex),
-                        ...state.allFriends.slice(personIndex + 1)
-                    ]
-                }
+            return {
+                ...state,
+                allFriends: state.allFriends.filter(({ userId }) => userId !== action.data.personId)
             }
-            return state;
 
         case DELETE_FRIEND:
             return {
