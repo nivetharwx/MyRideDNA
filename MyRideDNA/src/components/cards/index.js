@@ -250,7 +250,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
     </View>
 )
 
-export const RideCard = ({ outerContainer, headerStyle, nameOfRide, nameOfRideStyle, headerIcon, image, rideCardPlaceholder, imageStyle, headerContent, footerStyle, footerContent }) => (
+export const RideCard = ({ outerContainer, headerStyle, nameOfRide, nameOfRideStyle, headerIcon, image, rideCardPlaceholder, imageStyle, headerContent, footerStyle, footerContent, onPress }) => (
     <View onPress={() => onPress ? onPress() : null} style={[{
         flex: 1,
         backgroundColor: '#FFFFFF',
@@ -259,7 +259,7 @@ export const RideCard = ({ outerContainer, headerStyle, nameOfRide, nameOfRideSt
         borderBottomColor: '#D8D8D8'
     }, outerContainer]}>
         {headerContent}
-        <View style={[{ height: 190, backgroundColor: '#A9A9A9', justifyContent: 'center' }, imageStyle]}>
+        <TouchableOpacity style={[{ height: 190, backgroundColor: '#A9A9A9', justifyContent: 'center' }, imageStyle]} onPress={onPress}>
             {
                 image ?
                     <Image source={{ uri: image }} style={{ width: null, height: null, flex: 1 }} />
@@ -269,7 +269,7 @@ export const RideCard = ({ outerContainer, headerStyle, nameOfRide, nameOfRideSt
                         <Image source={rideCardPlaceholder} style={{ width: null, height: null, flex: 1 }} />
                         : null
             }
-        </View>
+        </TouchableOpacity>
         {footerContent}
     </View>
 );

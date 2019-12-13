@@ -4,7 +4,7 @@ import { StyleSheet, View, ScrollView, ImageBackground, Image, StatusBar, FlatLi
 import { APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, heightPercentageToDP, POST_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, GET_PICTURE_BY_ID, PORTRAIT_TAIL_TAG } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
 import { IconButton, ShifterButton, LinkButton } from '../../../../components/buttons';
-import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updatePageContentStatusAction, getCurrentBikeAction, updateBikeWishListAction, updateBikeCustomizationsAction, updateBikeLoggedRideAction, getCurrentBikeSpecAction  } from '../../../../actions';
+import { appNavMenuVisibilityAction, updateBikePictureAction, setCurrentBikeIdAction, updatePageContentStatusAction, getCurrentBikeAction, updateBikeWishListAction, updateBikeCustomizationsAction, updateBikeLoggedRideAction, getCurrentBikeSpecAction } from '../../../../actions';
 import { DefaultText } from '../../../../components/labels';
 import { BaseModal } from '../../../../components/modal';
 import { ImageLoader } from '../../../../components/loader';
@@ -131,12 +131,13 @@ class BikeDetails extends Component {
     renderSmallCard(postType, id, pictureId, title) {
         return <SmallCard
             image={pictureId ? `${GET_PICTURE_BY_ID}${pictureId}` : null}
+            imageStyle={styles.imageStyle}
             customPlaceholder={
                 <ImageBackground style={{ width: null, height: null, flex: 1, justifyContent: 'center', alignItems: 'center' }} source={require('../../../../assets/img/textured-black-background.png')}>
                     <DefaultText style={styles.squareCardTitle}>{title}</DefaultText>
                     {
                         postType === POST_TYPE.LOGGED_RIDES ?
-                            <DefaultText style={[styles.squareCardTitle, { fontSize: 12, letterSpacing:2.4 }]}>{this.props.user.distanceUnit === 'km' ? 'KILOMETERS' : 'MILES'}</DefaultText>
+                            <DefaultText style={[styles.squareCardTitle, { fontSize: 12, letterSpacing: 2.4 }]}>{this.props.user.distanceUnit === 'km' ? 'KILOMETERS' : 'MILES'}</DefaultText>
                             :
                             null
                     }
@@ -145,7 +146,7 @@ class BikeDetails extends Component {
             onPress={() => {
                 if (postType === POST_TYPE.MY_RIDE) this.openBikeSpecPage(postType, id);
                 else if (postType === POST_TYPE.WISH_LIST) this.openBikeSpecPage(postType, id);
-                else if (postType === POST_TYPE.LOGGED_RIDES) console.log("Open Logged Ride Item page for ", item);
+                else if (postType === POST_TYPE.LOGGED_RIDES) console.log("Open Logged Ride Item page for ");
             }}
         />
     }
@@ -156,7 +157,6 @@ class BikeDetails extends Component {
 
     render() {
         const { user, bike } = this.props;
-        console.log('bike : ', bike)
         const { showOptionsModal, isLoadingProfPic } = this.state;
         return (
             <View style={styles.fill}>
@@ -264,7 +264,6 @@ class BikeDetails extends Component {
                                             <DefaultText style={styles.sectionLinkTxt}>Logged Rides</DefaultText>
                                             <DefaultText style={[styles.sectionLinkTxt, { color: APP_COMMON_STYLES.infoColor, marginLeft: 8 }]}>[see all]</DefaultText>
                                         </LinkButton>
-                                        <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={() => null} />
                                     </View>
                                     <View style={styles.greyBorder} />
                                     {
@@ -559,5 +558,10 @@ const styles = StyleSheet.create({
         fontFamily: CUSTOM_FONTS.dinCondensed,
         color: '#FFFFFF',
         fontSize: 30
+    },
+    imageStyle: {
+        marginRight: widthPercentageToDP(1.8),
+        height: widthPercentageToDP(100 / 5),
+        width: widthPercentageToDP(100 / 5)
     }
 });

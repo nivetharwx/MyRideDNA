@@ -610,7 +610,7 @@ export const getRecordRides = (userId, spaceId, pageNumber = 0, successCallback,
             })
             .catch(er => {
                 console.log(er.response);
-                differentErrors(er, [userId, toggleLoader, pageNumber, spaceId, successCallback, errorCallback], getRecordRides, false);
+                differentErrors(er, [userId, pageNumber, spaceId, successCallback, errorCallback], getRecordRides, false);
                 // TODO: Dispatch error info action
                 dispatch(apiLoaderActions(false))
                 errorCallback(er);
