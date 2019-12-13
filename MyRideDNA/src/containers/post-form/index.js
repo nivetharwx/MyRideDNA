@@ -5,7 +5,7 @@ import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../components/headers';
 import ImagePicker from 'react-native-image-crop-picker';
 import { DefaultText } from '../../components/labels';
-import { APP_COMMON_STYLES, PageKeys, CUSTOM_FONTS, heightPercentageToDP, widthPercentageToDP, POST_TYPE, IS_ANDROID } from '../../constants';
+import { APP_COMMON_STYLES, PageKeys, CUSTOM_FONTS, heightPercentageToDP, widthPercentageToDP, POST_TYPE, IS_ANDROID, USER_BASE_URL } from '../../constants';
 import { ImageButton, ShifterButton, SwitchIconButton, IconButton, LinkButton, BasicButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, updatePageContentStatusAction } from '../../actions';
 import { IconicList, LabeledInputPlaceholder } from '../../components/inputs';
@@ -74,7 +74,7 @@ class PostForm extends Component {
                 maxFiles: 5,
                 includeBase64: true,
             });
-            this.setState({ isLoadingImage: false, selectedImgs: imgs.slice(0, 5).map(item => ({ mimeType: item.mime, picture: item.data })) });
+            this.setState({ isLoadingImage: false, selectedImgs: imgs.slice(0, 5).map(item => ({ mimeType: item.mime, picture: item.data, path: item.path })) });
         } catch (er) {
             this.setState({ isLoadingImage: false });
             console.log("Error occurd: ", er);
@@ -119,6 +119,13 @@ class PostForm extends Component {
         //     this.setState({ title: '', description: '', selectedImgs: [], selectedBikeId: selBike, isPrivate: (postType === POST_TYPE.WISH_LIST || postType === POST_TYPE.MY_RIDE) ? false : true });
         // });
         this.props.createPost(user.userId, selectedBikeId, postType, postProps, this.onPressBackButton);
+        // let formdata = new FormData();
+        // formdata.append("picture", {
+        //     uri: selectedImgs[0].path,
+        //     type: selectedImgs[0].mimeType,
+        // });
+        // axios.put(`${USER_BASE_URL}updateProfilePictureMutliPart?userId=${user.userId}`, formdata)
+        //     .then(res => console.log(res)).catch(er => console.log(er));
     }
 
     renderHeader = () => {
@@ -133,7 +140,7 @@ class PostForm extends Component {
             default:
                 title = 'New Post';
         }
-        return <BasicHeader title={title} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
+        return <BasicHeader style={{ top: APP_COMMON_STYLES.statusBar.height }} title={title} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
     }
 
     renderFormFields = () => {
@@ -216,28 +223,26 @@ class PostForm extends Component {
             <View style={APP_COMMON_STYLES.statusBar}>
                 <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
             </View>
-            <View style={styles.fill}>
-                {this.renderHeader()}
-                <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps='handled' contentContainerStyle={styles.scrollView}>
-                    <View style={[styles.btnContainer, postType === POST_TYPE.MY_RIDE || postType === POST_TYPE.WISH_LIST ? { backgroundColor: '#fff' } : null]}>
-                        {/* TODO: Images below has to be changed with proper color (Need to get from the Platypus) */}
-                        <View style={styles.galleryBtnContainer}>
-                            <ImageButton onPress={this.onPressCameraIcon} imageSrc={postType !== POST_TYPE.MY_RIDE && postType !== POST_TYPE.WISH_LIST ? require('../../assets/img/cam-icon-gray.png') : require('../../assets/img/cam-icon.png')} imgStyles={{ width: 45, height: 37 }} />
-                            <DefaultText style={styles.galleryLabel}>{' TAKE \nPHOTO'}</DefaultText>
-                        </View>
-                        <View style={styles.galleryBtnContainer}>
-                            <ImageButton onPress={this.onPressGalleryIcon} imageSrc={postType !== POST_TYPE.MY_RIDE && postType !== POST_TYPE.WISH_LIST ? require('../../assets/img/photos-icon-gray.png') : require('../../assets/img/photos-icon.png')} imgStyles={{ width: 41, height: 33 }} />
-                            <DefaultText style={styles.galleryLabel}>{'UPLOAD \n PHOTO'}</DefaultText>
-                        </View>
+            {this.renderHeader()}
+            <ScrollView style={{ backgroundColor: '#fff' }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps='handled'>
+                <View style={[styles.btnContainer, postType === POST_TYPE.MY_RIDE || postType === POST_TYPE.WISH_LIST ? { backgroundColor: '#fff' } : null]}>
+                    {/* TODO: Images below has to be changed with proper color (Need to get from the Platypus) */}
+                    <View style={styles.galleryBtnContainer}>
+                        <ImageButton onPress={this.onPressCameraIcon} imageSrc={postType !== POST_TYPE.MY_RIDE && postType !== POST_TYPE.WISH_LIST ? require('../../assets/img/cam-icon-gray.png') : require('../../assets/img/cam-icon.png')} imgStyles={{ width: 45, height: 37 }} />
+                        <DefaultText style={styles.galleryLabel}>{' TAKE \nPHOTO'}</DefaultText>
                     </View>
-                    {
-                        this.renderFormFields()
-                    }
-                </ScrollView>
-                <Loader isVisible={showLoader} />
-                {/* Shifter: - Brings the app navigation menu */}
-                <ShifterButton onPress={this.showAppNavMenu} alignLeft={user.handDominance === 'left'} />
-            </View>
+                    <View style={styles.galleryBtnContainer}>
+                        <ImageButton onPress={this.onPressGalleryIcon} imageSrc={postType !== POST_TYPE.MY_RIDE && postType !== POST_TYPE.WISH_LIST ? require('../../assets/img/photos-icon-gray.png') : require('../../assets/img/photos-icon.png')} imgStyles={{ width: 41, height: 33 }} />
+                        <DefaultText style={styles.galleryLabel}>{'UPLOAD \n PHOTO'}</DefaultText>
+                    </View>
+                </View>
+                {
+                    this.renderFormFields()
+                }
+            </ScrollView>
+            <Loader isVisible={showLoader} />
+            {/* Shifter: - Brings the app navigation menu */}
+            <ShifterButton onPress={this.showAppNavMenu} alignLeft={user.handDominance === 'left'} />
         </View>
     }
 }
