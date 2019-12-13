@@ -14,6 +14,7 @@ const initialState = {
         homeAddress: {},
         passengerList: [],
         friendList: [],
+        mutualFriends: [],
     },
 };
 

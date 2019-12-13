@@ -190,7 +190,7 @@ export const HorizontalCard = ({ item, onPress, rightProps, onLongPress, actions
             }
             {
                 thumbnail ?
-                    <Image source={{ uri: item.profilePicture }} style={{ width: null, height: null, flex: 1 }} />
+                    <Image source={{ uri: thumbnail }} style={{ width: null, height: null, flex: 1 }} />
                     :
                     horizontalCardPlaceholder
                         ?

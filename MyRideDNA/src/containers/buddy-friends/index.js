@@ -4,11 +4,11 @@ import { StyleSheet, Animated, FlatList, View, Alert, ActivityIndicator, Easing,
 import { Icon as NBIcon, Tabs, Tab } from 'native-base';
 import { Actions } from 'react-native-router-flux';
 import { DefaultText } from '../../components/labels';
-import { APP_COMMON_STYLES, PageKeys, CUSTOM_FONTS, widthPercentageToDP, heightPercentageToDP, FRIEND_TYPE, RELATIONSHIP } from '../../constants';
+import { APP_COMMON_STYLES, PageKeys, CUSTOM_FONTS, widthPercentageToDP, heightPercentageToDP, FRIEND_TYPE, RELATIONSHIP, GET_PICTURE_BY_ID } from '../../constants';
 import { BasicHeader } from '../../components/headers';
-import { LabeledInputPlaceholder } from '../../components/inputs';
+import { LabeledInputPlaceholder, SearchBoxFilter } from '../../components/inputs';
 import { IconButton } from '../../components/buttons';
-import { getRoadBuddiesById, getPictureList, sendFriendRequest, approveFriendRequest, rejectFriendRequest, cancelFriendRequest } from '../../api';
+import { getRoadBuddiesById, getPictureList, sendFriendRequest, approveFriendRequest, rejectFriendRequest, cancelFriendRequest, getMutualFriends } from '../../api';
 import { HorizontalCard } from '../../components/cards';
 import { setCurrentFriendAction, goToPrevProfileAction, resetPersonProfileAction, updatePicturesAction, updateCurrentFriendAction } from '../../actions';
 
@@ -33,18 +33,18 @@ class BuddyFriends extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.person.friendList !== this.props.person.friendList) {
-            if (!this.isLoadingFrndsPic) {
-                const frndPicIdList = [];
-                this.props.person.friendList.forEach((frnd) => {
-                    if (!frnd.profilePicture && frnd.profilePictureId) {
-                        frndPicIdList.push(frnd.profilePictureId);
-                    }
-                })
-                if (frndPicIdList.length > 0) {
-                    this.isLoadingFrndsPic = true;
-                    this.props.getPictureList(frndPicIdList, 'roadBuddies', () => this.isLoadingFrndsPic = false, () => this.isLoadingFrndsPic = false);
-                }
-            }
+            // if (!this.isLoadingFrndsPic) {
+            //     const frndPicIdList = [];
+            //     this.props.person.friendList.forEach((frnd) => {
+            //         if (!frnd.profilePicture && frnd.profilePictureId) {
+            //             frndPicIdList.push(frnd.profilePictureId);
+            //         }
+            //     })
+            //     if (frndPicIdList.length > 0) {
+            //         this.isLoadingFrndsPic = true;
+            //         this.props.getPictureList(frndPicIdList, 'roadBuddies', () => this.isLoadingFrndsPic = false, () => this.isLoadingFrndsPic = false);
+            //     }
+            // }
         }
     }
 
@@ -63,26 +63,37 @@ class BuddyFriends extends Component {
 
     }
 
-
-
-    sendFriendRequest = (person) => {
-        const { user } = this.props;
-        const { selectedPerson } = this.state;
-        person = person || selectedPerson;
-        const requestBody = {
-            senderId: user.userId,
-            senderName: user.name,
-            senderNickname: user.nickname,
-            senderEmail: user.email,
-            userId: person.userId,
-            name: person.name,
-            nickname: person.nickname,
-            email: person.email,
-            actionDate: new Date().toISOString(),
-        };
-        if (this.state.isVisibleOptionsModal) this.onCancelOptionsModal();
-        this.props.sendFriendRequest(requestBody, person.userId);
+    onChangeTab = ({ from, i }) => {
+        this.setState({ activeTab: i }, () => {
+            if (i === 1) {
+                this.setState({ searchQuery: '', pageNumber: 0 });
+                this.props.getMutualFriends(this.props.user.userId, this.props.person.userId, 0, 10, undefined, (res) => {
+                }, (error) => {
+                })
+            }
+        });
     }
+
+
+
+    // sendFriendRequest = (person) => {
+    //     const { user } = this.props;
+    //     const { selectedPerson } = this.state;
+    //     person = person || selectedPerson;
+    //     const requestBody = {
+    //         senderId: user.userId,
+    //         senderName: user.name,
+    //         senderNickname: user.nickname,
+    //         senderEmail: user.email,
+    //         userId: person.userId,
+    //         name: person.name,
+    //         nickname: person.nickname,
+    //         email: person.email,
+    //         actionDate: new Date().toISOString(),
+    //     };
+    //     if (this.state.isVisibleOptionsModal) this.onCancelOptionsModal();
+    //     this.props.sendFriendRequest(requestBody, person.userId);
+    // }
 
 
 
@@ -105,18 +116,30 @@ class BuddyFriends extends Component {
     }
 
 
-    loadMoreData = () => {
-        if (this.state.isLoadingData && this.state.isLoading === false) {
-            this.setState({ isLoading: true, isLoadingData: false })
-            this.props.getRoadBuddiesById(this.props.user.userId, this.props.person.userId, this.state.pageNumber, this.props.person.friendList, (res) => {
-                if (res.friendList.length > 0) {
-                    this.setState({ pageNumber: this.state.pageNumber + 1 })
-                }
-                this.setState({ isLoading: false })
-            }, (error) => {
-                this.setState({ isLoading: false })
-            });
-        }
+    loadMoreData = (distanceFromEnd, type) => {
+        if (this.state.isLoading === false && distanceFromEnd < 0) return;
+        this.setState((prevState) => ({ isLoading: true }), () => {
+            if (type === 'allBuddies') {
+                this.props.getRoadBuddiesById(this.props.user.userId, this.props.person.userId, this.state.pageNumber, this.props.person.friendList, (res) => {
+                    if (res.friendList.length > 0) {
+                        this.setState({ pageNumber: this.state.pageNumber + 1 })
+                    }
+                    this.setState({ isLoading: false })
+                }, (error) => {
+                    this.setState({ isLoading: false })
+                });
+            }
+            else if (type === 'mutualFriends') {
+                this.props.getMutualFriends(this.props.user.userId, this.props.person.userId, this.state.pageNumber, 10, this.props.person.mutualFriends, (res) => {
+                    if (res.friendList.length > 0) {
+                        this.setState({ pageNumber: this.state.pageNumber + 1 })
+                    }
+                    this.setState({ isLoading: false })
+                }, (er) => {
+                    this.setState({ isLoading: false })
+                })
+            }
+        });
     }
 
     renderFooter = () => {
@@ -182,10 +205,10 @@ class BuddyFriends extends Component {
             userId: item.userId,
             name: item.name,
             nickname: item.nickname,
-            email: item.email,
+            // email: item.email,
             actionDate: new Date().toISOString()
         };
-        this.props.sendFriendRequest(requestBody);
+        this.props.sendFriendRequest(requestBody, item.userId, this.props.person.friendList, this.props.person.userId);
     }
 
     acceptRejectFriendRequest = (item) => {
@@ -230,7 +253,7 @@ class BuddyFriends extends Component {
             case RELATIONSHIP.RECIEVED_REQUEST: return { isIconImage: true, imgSrc: require('../../assets/img/accept-reject.png'), id: 4, onPressActions: () => this.acceptRejectFriendRequest(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
             case RELATIONSHIP.SENT_REQUEST: return { isIconImage: true, imgSrc: require('../../assets/img/cancel.png'), id: 4, onPressActions: () => this.cancelFriendRequest(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
             case RELATIONSHIP.UNKNOWN: return { isIconImage: true, imgSrc: require('../../assets/img/add-friend-from-community.png'), id: 4, onPressActions: () => this.sendFriendRequest(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
-            case RELATIONSHIP.FRIEND: return { isIconImage: true, imgSrc: require('../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
+            default: return { isIconImage: true, imgSrc: require('../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
         }
         // return { isIconImage: true, imgSrc: require('../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
     }
@@ -241,7 +264,7 @@ class BuddyFriends extends Component {
                 horizontalCardPlaceholder={require('../../assets/img/friend-profile-pic.png')}
                 item={item}
                 onPressLeft={() => this.openFriendsProfileTab(item)}
-                thumbnail={item.profilePicture}
+                thumbnail={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
                 cardOuterStyle={styles.horizontalCardOuterStyle}
                 actionsBar={{
                     online: true,
@@ -251,6 +274,19 @@ class BuddyFriends extends Component {
                 }}
             />
         )
+    }
+    renderList = (data, type) => {
+        return <FlatList
+            showsVerticalScrollIndicator={false}
+            style={{ flexDirection: 'column' }}
+            contentContainerStyle={styles.friendList}
+            data={data}
+            keyExtractor={this.friendKeyExtractor}
+            renderItem={this._renderItem}
+            ListFooterComponent={this.renderFooter}
+            onEndReached={({ distanceFromEnd }) => this.loadMoreData(distanceFromEnd, type)}
+            onEndReachedThreshold={0.1}
+        />
     }
 
     render() {
@@ -271,38 +307,15 @@ class BuddyFriends extends Component {
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
                     />
 
-                    <Tabs tabContainerStyle={APP_COMMON_STYLES.tabContainer} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' style={{ marginTop: APP_COMMON_STYLES.headerHeight }} tabBarUnderlineStyle={{ height: 0 }}>
+                    <Tabs tabContainerStyle={APP_COMMON_STYLES.tabContainer} onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' style={{ marginTop: APP_COMMON_STYLES.headerHeight }} tabBarUnderlineStyle={{ height: 0 }}>
                         <Tab heading='ALL BUDDIES' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
                             <View style={{ marginHorizontal: widthPercentageToDP(8), flex: 1 }}>
-                                <View style={{ marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
-                                    <View style={{ flex: 2.89 }}>
-                                        <LabeledInputPlaceholder
-                                            placeholder='Name'
-                                            inputValue={searchQuery} inputStyle={{ borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
-                                            returnKeyType='next'
-                                            onChange={this.onChangeSearchValue}
-                                            hideKeyboardOnSubmit={true}
-                                            containerStyle={styles.searchCont} />
-                                    </View>
-                                    <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
-                                        <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
-                                    </View>
-                                </View>
-                                <FlatList
-                                    showsVerticalScrollIndicator={false}
-                                    style={{ flexDirection: 'column' }}
-                                    contentContainerStyle={styles.friendList}
-                                    data={this.filteredFriends}
-                                    refreshing={isRefreshing}
-                                    onRefresh={this.onPullRefresh}
-                                    keyExtractor={this.friendKeyExtractor}
-                                    renderItem={this._renderItem}
-                                    ListFooterComponent={this.renderFooter}
-                                    onEndReached={this.loadMoreData}
-                                    onEndReachedThreshold={0.1}
-                                    onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
-                                />
-                                {/* rightIcon={{name:'user', type:'FontAwesome', style:styles.rightIconStyle}} /> */}
+                                <SearchBoxFilter
+                                    searchQuery={searchQuery} onChangeSearchValue={this.onChangeSearchValue}
+                                    placeholder='Name' outerContainer={{ marginTop: 16 }} />
+                                {
+                                    this.renderList(this.filteredFriends, 'allBuddies')
+                                }
                                 {
                                     this.props.hasNetwork === false && person.friendList.length === 0 && <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
                                         <Animated.View style={{ transform: [{ rotate: spin }] }}>
@@ -313,6 +326,16 @@ class BuddyFriends extends Component {
                                     </View>
                                 }
 
+                            </View>
+                        </Tab>
+                        <Tab heading='MUTUAL BUDDIES' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
+                            <View style={{ marginHorizontal: widthPercentageToDP(8), flex: 1 }}>
+                                <SearchBoxFilter
+                                    searchQuery={searchQuery} onChangeSearchValue={this.onChangeSearchValue}
+                                    placeholder='Name' outerContainer={{ marginTop: 16 }} />
+                                {
+                                    this.renderList(person.mutualFriends, 'mutualFriends')
+                                }
                             </View>
                         </Tab>
                     </Tabs>
@@ -337,12 +360,12 @@ const mapDispatchToProps = (dispatch) => {
         setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
         goToPrevProfile: () => dispatch(goToPrevProfileAction()),
         resetPersonProfile: () => dispatch(resetPersonProfileAction()),
-        getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
-            dispatch(updatePicturesAction({ pictureObj, type: callingFrom }))
-        }, (error) => {
-            console.log('getPictureList error : ', error)
-        }),
-        sendFriendRequest: (requestBody) => dispatch(sendFriendRequest(requestBody, (res) => {
+        // getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
+        //     dispatch(updatePicturesAction({ pictureObj, type: callingFrom }))
+        // }, (error) => {
+        //     console.log('getPictureList error : ', error)
+        // }),
+        sendFriendRequest: (requestBody, personId, friendList, currentPersonId) => dispatch(sendFriendRequest(requestBody, (res) => {
             const personIdx = friendList.findIndex(friend => friend.userId === personId);
             const buddyFriend = { ...friendList[personIdx], relationship: RELATIONSHIP.SENT_REQUEST }
             const updatedBuddyFriendList = [
@@ -351,7 +374,7 @@ const mapDispatchToProps = (dispatch) => {
                 ...friendList.slice(personIdx + 1)
             ];
             dispatch(updateCurrentFriendAction({ friendList: updatedBuddyFriendList, userId: currentPersonId }));
-            // dispatch(updateSearchListAction({ userId: requestBody.userId, relationship: RELATIONSHIP.SENT_REQUEST }));
+            // dispatch(updateSearchListAction({userId: requestBody.userId, relationship: RELATIONSHIP.SENT_REQUEST }));
         }, (error) => {
             // dispatch(updateFriendRequestResponseAction({ error: error.response.data || "Something went wrong" }));
         })),
@@ -388,6 +411,8 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(updateCurrentFriendAction({ friendList: updatedBuddyFriendList, userId: currentPersonId }));
         }, (error) => {
         })),
+
+        getMutualFriends: (userId, friendId, pageNumber, preference, mutualFriends, successCallback, errorCallback) => dispatch(getMutualFriends(userId, friendId, pageNumber, preference, mutualFriends, successCallback, errorCallback)),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(BuddyFriends);

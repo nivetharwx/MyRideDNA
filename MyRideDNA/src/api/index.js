@@ -1408,6 +1408,30 @@ export const getRoadBuddiesById = (userId, friendId, pageNumber, friendList, suc
             })
     };
 }
+export const getMutualFriends = (userId, friendId, pageNumber, preference, mutualFriends = [], successCallback, errorCallback) => {
+    return dispatch => {
+        dispatch(apiLoaderActions(true));
+        axios.get(GRAPH_BASE_URL + `getMutualFriends?userId=${userId}&friendId=${friendId}&pageNumber=${pageNumber}&preference=${preference}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
+            .then(res => {
+                if (res.status === 200) {
+                    console.log('getMutualFriends : ', res.data)
+                    dispatch(apiLoaderActions(false));
+                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+                    updatedMutualFriendList = [...mutualFriends, ...res.data.friendList]
+                    res.data.friendList.length > 0 && dispatch(updateCurrentFriendAction({ mutualFriends: updatedMutualFriendList, userId: friendId }));
+                    successCallback(res.data)
+                }
+            })
+            .catch(er => {
+                console.log(`getMutualFriends error: `, er.response || er);
+                dispatch(apiLoaderActions(false));
+                differentErrors(er, [userId, friendId, pageNumber, preference, successCallback, errorCallback], getMutualFriends, false);
+                errorCallback(er)
+            })
+    };
+}
+
+
 export const getUserProfile = (userId, friendId) => {
     return dispatch => {
         dispatch(apiLoaderActions(true));
@@ -1738,9 +1762,9 @@ export const doUnfriend = (senderId, personId) => {
                     // dispatch(toggleLoaderAction(false));
                     dispatch(apiLoaderActions(false))
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                    dispatch(doUnfriendAction({ personId }));
                     dispatch(updateCurrentFriendAction({ isFriend: false, userId: personId }));
                     dispatch(updatePrevProfileAction({ userId: personId }))
-                    return dispatch(doUnfriendAction({ personId }));
                 }
             })
             .catch(er => {
@@ -2454,7 +2478,7 @@ export const getAlbum = (userId, pageNumber, preference, successCallback, errorC
             })
             .catch(er => {
                 console.log(`getAlbum error: `, er.response || er);
-                differentErrors(er, [userId, pageNumber, preference = 15], getAlbum, false);
+                differentErrors(er, [userId, pageNumber, preference = 15, successCallback, errorCallback], getAlbum, false);
                 // TODO: Dispatch error info action
                 errorCallback(er)
             })
