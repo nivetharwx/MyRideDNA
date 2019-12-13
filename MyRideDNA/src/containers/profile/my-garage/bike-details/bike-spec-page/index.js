@@ -8,7 +8,7 @@ import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../../../../components/headers';
 import { SquareCard } from '../../../../../components/cards';
 import { DefaultText } from '../../../../../components/labels';
-import { appNavMenuVisibilityAction, updateBikeListAction } from '../../../../../actions';
+import { appNavMenuVisibilityAction } from '../../../../../actions';
 import { getPosts } from '../../../../../api';
 
 class BikeSpec extends Component {
@@ -19,12 +19,9 @@ class BikeSpec extends Component {
         };
     }
 
-    componentDidMount() {
-        
-    }
+    componentDidMount() { }
 
-    componentDidUpdate(prevProps, prevState) {
-    }
+    componentDidUpdate(prevProps, prevState) { }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
 
@@ -36,10 +33,11 @@ class BikeSpec extends Component {
 
     openPostForm = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: this.props.postType, currentBikeId: this.props.bike.spaceId });
 
-    onPressDeleteSpec = () => {}
+    onPressDeleteSpec = () => { }
 
     render() {
         const { showOptionsModal } = this.state;
+        const { specification } = this.props;
         return <View style={styles.fill}>
             <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
                 <View style={APP_COMMON_STYLES.optionsContainer}>
@@ -52,11 +50,12 @@ class BikeSpec extends Component {
                 <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
             </View>
             <View style={styles.fill}>
-                <BasicHeader title={null}
+                <BasicHeader title={specification.title}
                     leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
                     rightIconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 20 }, onPress: this.showOptionsModal }}
                 />
                 <View style={styles.pageContent}>
+                    
                 </View>
             </View>
         </View>
@@ -66,10 +65,8 @@ class BikeSpec extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { hasNetwork, postTypes } = state.PageState;
-    const { currentBikeId, activeBikeIndex } = state.GarageInfo;
-    const currentBikeIndex = state.GarageInfo.spaceList.findIndex(({ spaceId }) => spaceId === currentBikeId);
-    const bike = currentBikeIndex === -1 ? null : state.GarageInfo.spaceList[currentBikeIndex];
-    return { user, hasNetwork, bike, activeBikeIndex, currentBikeIndex, postTypes };
+    const { currentBike: bike, activeBikeIndex, currentBikeSpec: specification } = state.GarageInfo;
+    return { user, hasNetwork, bike, activeBikeIndex, postTypes, specification };
 }
 const mapDispatchToProps = (dispatch) => {
     return {

@@ -1,12 +1,12 @@
-import { REPLACE_GARAGE_INFO, UPDATE_GARAGE_NAME, UPDATE_BIKE_LIST, CLEAR_GARAGE, ADD_TO_BIKE_LIST, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, UPDATE_SHORT_SPACE_LIST, REPLACE_SHORT_SPACE_LIST, UPDATE_BIKE_PICTURE, CLEAR_BIKE_ALBUM, UPDATE_BIKE_ALBUM, SET_CURRENT_BIKE_ID } from "../actions/actionConstants";
-import { PORTRAIT_TAIL_TAG, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from "../constants";
+import { REPLACE_GARAGE_INFO, UPDATE_GARAGE_NAME, UPDATE_BIKE_LIST, CLEAR_GARAGE, ADD_TO_BIKE_LIST, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, UPDATE_SHORT_SPACE_LIST, REPLACE_SHORT_SPACE_LIST, UPDATE_BIKE_PICTURE, CLEAR_BIKE_ALBUM, UPDATE_BIKE_ALBUM, GET_CURRENT_BIKE, SET_CURRENT_BIKE_ID, UPDATE_BIKE_WISH_LIST, UPDATE_BIKE_CUSTOMIZATIONS, GET_CURRENT_BIKE_SPEC } from "../actions/actionConstants";
+import { PORTRAIT_TAIL_TAG, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE } from "../constants";
 
 const initialState = {
     garageName: null,
     garageId: null,
     spaceList: [],
-    currentBikeId: null,
-    activeBikeIndex: 0
+    currentBike: null,
+    currentBikeSpec: null
 };
 
 export default (state = initialState, action) => {
@@ -41,16 +41,71 @@ export default (state = initialState, action) => {
                 spaceList: [...state.spaceList, action.data.bike]
             }
 
+        case GET_CURRENT_BIKE:
+            if (!action.data) {
+                return {
+                    ...state,
+                    currentBike: null,
+                    getCurrentBikeSpec: null,
+                }
+            }
+            return {
+                ...state,
+                currentBike: state.spaceList.find(({ spaceId }) => spaceId === action.data)
+            }
+
+        case UPDATE_BIKE_WISH_LIST:
+            if (state.currentBike === null) return state;
+            return {
+                ...state,
+                currentBike: {
+                    ...state.currentBike,
+                    wishList: action.data.reset
+                        ? action.data.updates
+                        : [...state.currentBike.wishList, ...action.data.updates]
+                },
+            }
+
+        case UPDATE_BIKE_CUSTOMIZATIONS:
+            if (state.currentBike === null) return state;
+            return {
+                ...state,
+                currentBike: {
+                    ...state.currentBike,
+                    customizations: action.data.reset
+                        ? action.data.updates
+                        : [...state.currentBike.customizations, ...action.data.updates]
+                },
+            }
+
+        case UPDATE_BIKE_ALBUM:
+            if (state.currentBike === null) return state;
+            return {
+                ...state,
+                currentBike: {
+                    ...state.currentBike,
+                    pictures: action.data.reset
+                        ? action.data.updates
+                        : [...state.currentBike.pictures, ...action.data.updates]
+                }
+            }
+
+        case CLEAR_BIKE_ALBUM:
+            if (state.currentBike === null) return state;
+            return {
+                ...state,
+                currentBike: { ...state.currentBike, pictures: [] }
+            }
+
         case SET_CURRENT_BIKE_ID:
             if (action.data === null) {
                 return {
                     ...state,
                     currentBikeId: null,
                     spaceList: state.spaceList.map(space => {
-                        if (state.currentBikeId === space.spaceId) {
-                            return { ...space, customizations: null, wishList: null, loggedRides: null, stories: null };
-                        }
-                        return space;
+                        return state.currentBikeId === space.spaceId
+                            ? { ...space, customizations: null, wishList: null, loggedRides: null, stories: null }
+                            : space;
                     })
                 }
             }
@@ -59,105 +114,89 @@ export default (state = initialState, action) => {
                 currentBikeId: action.data
             }
 
-        case DELETE_BIKE_FROM_LIST:
-            const spaceList = [
-                ...state.spaceList.slice(0, action.data),
-                ...state.spaceList.slice(action.data + 1)
-            ];
-            // DOC: Set first bike as active if only one is there
-            if (spaceList.length > 0 && state.spaceList[action.data].isDefault) {
-                spaceList[0].isDefault = true;
+        case GET_CURRENT_BIKE_SPEC:
+            if (state.currentBike === null) return state;
+            if (!action.data) {
+                return {
+                    ...state,
+                    currentBikeSpec: null,
+                }
             }
+            if (action.data.postType === POST_TYPE.WISH_LIST) {
+                return {
+                    ...state,
+                    currentBikeSpec: state.currentBike.wishList.find(({ id }) => id === action.data.postId),
+                }
+            } else if (action.data.postType === POST_TYPE.MY_RIDE) {
+                return {
+                    ...state,
+                    currentBikeSpec: state.currentBike.customizations.find(({ id }) => id === action.data.postId),
+                }
+            }
+
+        case DELETE_BIKE_FROM_LIST:
+            const updatedList = state.spaceList.reduce((list, bike, idx, arr) => {
+                if (bike.spaceId === action.data) {
+                    if (bike.isDefault && arr.length > 1) {
+                        arr[idx + 1] = { ...arr[idx + 1], isDefault: true };
+                    }
+                    return list;
+                }
+                list.push(bike);
+                return list;
+            }, []);
             return {
                 ...state,
-                spaceList: spaceList,
-                currentBikeId: state.spaceList[action.data].spaceId === state.currentBikeId ? null : state.currentBikeId
+                spaceList: updatedList,
+                currentBike: !state.currentBike || state.currentBike.spaceId === action.data
+                    ? null
+                    : state.currentBike && state.currentBike.spaceId === updatedList[0].spaceId
+                        ? { ...state.currentBike, isDefault: true }
+                        : state.currentBike
             }
 
         case UPDATE_ACTIVE_BIKE:
             if (state.spaceList.length > 0) {
-                const updatedSpaceList = [...state.spaceList];
-                updatedSpaceList[state.activeBikeIndex] = { ...state.spaceList[state.activeBikeIndex], isDefault: false };
-                updatedSpaceList[action.data] = { ...state.spaceList[action.data], isDefault: true };
                 return {
                     ...state,
-                    spaceList: [
-                        updatedSpaceList[action.data],
-                        ...updatedSpaceList.slice(0, action.data),
-                        ...updatedSpaceList.slice(action.data + 1)
-                    ],
-                    activeBikeIndex: action.data
+                    spaceList: state.spaceList.reduce((list, bike, idx) => {
+                        if (idx === 0) {
+                            list.push({ ...bike, isDefault: false });
+                        } else if (bike.spaceId === action.data) {
+                            list = [{ ...bike, isDefault: true }, ...list];
+                        }
+                        else {
+                            list.push(bike);
+                        }
+                        return list;
+                    }, []),
+                    currentBike: state.currentBike && state.currentBike.spaceId === action.data
+                        ? { ...state.currentBike, isDefault: true } : state.currentBike
                 }
             }
             return state;
 
         case UPDATE_BIKE_LIST:
-            if (state.currentBikeId === null) return state;
-            const bikeIdx = state.spaceList.findIndex(({ spaceId }) => state.currentBikeId === spaceId);
-            if (bikeIdx === -1) return state;
             return {
                 ...state,
-                spaceList: [
-                    ...state.spaceList.slice(0, bikeIdx),
-                    {
-                        ...state.spaceList[bikeIdx],
-                        ...action.data
-                    },
-                    ...state.spaceList.slice(bikeIdx + 1)
-                ]
+                spaceList: state.spaceList.map((bike) => {
+                    return action.data.spaceId === bike.spaceId
+                        ? { ...bike, ...action.data }
+                        : bike;
+                }),
+                currentBike: state.currentBike && state.currentBike.spaceId === action.data.spaceId ? { ...state.currentBike, ...action.data } : state.currentBike
             }
 
-        case UPDATE_BIKE_PICTURE:
-            const bikeIndex = state.spaceList.findIndex(({ spaceId }) => spaceId === action.data.spaceId);
-            if (bikeIndex === -1) return state;
-            return {
-                ...state,
-                spaceList: [
-                    ...state.spaceList.slice(0, bikeIndex),
-                    {
-                        ...state.spaceList[bikeIndex],
-                        picture: { ...state.spaceList[bikeIndex].picture, data: action.data.picture }
-                    },
-                    ...state.spaceList.slice(bikeIndex + 1)
-                ]
-            }
-
-        case UPDATE_BIKE_ALBUM:
-            const bIndex = state.spaceList.findIndex(({ spaceId }) => state.currentBikeId === spaceId);
-            if (bIndex === -1) return state;
-            return {
-                ...state,
-                spaceList: [
-                    ...state.spaceList.slice(0, bIndex),
-                    {
-                        ...state.spaceList[bIndex],
-                        pictures: state.spaceList[bIndex].pictures.map(picture => {
-                            const picId = picture.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG);
-                            return typeof action.data.pictureObj[picId] === 'string'
-                                ? { ...picture, data: action.data.pictureObj[picId] }
-                                : picture;
-                        })
-                    },
-                    ...state.spaceList.slice(bIndex + 1),
-                ]
-            }
-
-        case CLEAR_BIKE_ALBUM:
-            const bIdx = state.spaceList.findIndex(({ spaceId }) => state.currentBikeId === spaceId);
-            if (bIdx === -1) return state;
-            return {
-                ...state,
-                spaceList: [
-                    ...state.spaceList.slice(0, bIdx),
-                    { ...state.spaceList[bIdx], pictures: [] },
-                    ...state.spaceList.slice(bIdx + 1)
-                ]
-            }
-
-        case CLEAR_GARAGE:
-            return {
-                ...initialState
-            }
+        // case UPDATE_BIKE_PICTURE:
+        //     if (state.currentBikeId === null) return state;
+        //     return {
+        //         ...state,
+        //         spaceList: state.spaceList.map((bike) => {
+        //             return state.currentBikeId === bike.spaceId
+        //                 ? { ...bike, picture: { ...bike.picture, data: action.data.picture } }
+        //                 : bike;
+        //         })
+        //     }
 
         default: return state
     }

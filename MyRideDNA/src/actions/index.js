@@ -74,6 +74,10 @@ import {
     UPDATE_PREV_PROFILE,
     SET_CURRENT_BIKE_ID,
     UPDATE_PAGE_CONTENT_STATUS,
+    GET_CURRENT_BIKE,
+    UPDATE_BIKE_WISH_LIST,
+    UPDATE_BIKE_CUSTOMIZATIONS,
+    GET_CURRENT_BIKE_SPEC,
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -328,6 +332,18 @@ export const setCurrentBikeIdAction = (data) => (
         data: data
     }
 );
+export const getCurrentBikeAction = (data) => (
+    {
+        type: GET_CURRENT_BIKE,
+        data: data
+    }
+);
+export const getCurrentBikeSpecAction = (data) => (
+    {
+        type: GET_CURRENT_BIKE_SPEC,
+        data: data
+    }
+);
 export const addToBikeListAction = (data) => (
     {
         type: ADD_TO_BIKE_LIST,
@@ -367,6 +383,18 @@ export const updateBikeAlbumAction = (data) => (
 export const clearBikeAlbumAction = (data) => (
     {
         type: CLEAR_BIKE_ALBUM,
+        data: data
+    }
+);
+export const updateBikeWishListAction = (data) => (
+    {
+        type: UPDATE_BIKE_WISH_LIST,
+        data: data
+    }
+);
+export const updateBikeCustomizationsAction = (data) => (
+    {
+        type: UPDATE_BIKE_CUSTOMIZATIONS,
         data: data
     }
 );

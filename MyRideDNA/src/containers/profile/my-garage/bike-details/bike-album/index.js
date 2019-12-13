@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { View, ImageBackground, StatusBar, FlatList, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import { connect } from 'react-redux';
-import { appNavMenuVisibilityAction, updateBikeAlbumAction, clearBikeAlbumAction } from '../../../../../actions';
+import { appNavMenuVisibilityAction, updateBikeAlbumAction, clearBikeAlbumAction, updatePageContentStatusAction } from '../../../../../actions';
 import { IconButton } from '../../../../../components/buttons';
 import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE, PORTRAIT_TAIL_TAG, GET_PICTURE_BY_ID } from '../../../../../constants';
 import { BaseModal } from '../../../../../components/modal';
@@ -33,6 +33,11 @@ class BikeAlbum extends Component {
         //     }, []);
         //     if (pictureIdList.length > 0) this.props.getPictureList(pictureIdList);
         // }
+        if (this.props.updatePageContent && (!prevProps.updatePageContent || prevProps.updatePageContent.type !== this.props.updatePageContent.type)) {
+            this.props.getBikeAlbum(this.props.user.userId, this.props.bike.spaceId, 0);
+            this.setState({ pageNumber: 1 });
+            this.props.updatePageContentStatus(null);
+        }
     }
     onPressBackButton = () => Actions.pop();
 
@@ -47,7 +52,7 @@ class BikeAlbum extends Component {
         this.setState({ isLoading: true }, () => {
             this.props.getBikeAlbum(this.props.user.userId, this.props.bike.spaceId, this.state.pageNumber,
                 (res) => this.setState(prevState => ({ isLoading: false, pageNumber: prevState.pageNumber + 1 })),
-                (er) => this.setState({ isLoading: false })
+                ({ isEmpty, ...otherError }) => this.setState({ isLoading: false })
             );
         });
     }
@@ -88,7 +93,7 @@ class BikeAlbum extends Component {
                         ? <View style={{ backgroundColor: '#fff', height: heightPercentageToDP(70), width: widthPercentageToDP(92), padding: 20, paddingBottom: 0, alignItems: 'center' }}>
                             <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={this.onCancelEnlargedPhoto} />
                             <View style={{ width: widthPercentageToDP(92) - 40, height: heightPercentageToDP(70) - 20 }}>
-                                <ImageBackground source={selectedPicture.data ? { uri: selectedPicture.data } : require('../../../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} />
+                                <ImageBackground source={{ uri: `${GET_PICTURE_BY_ID}${selectedPicture.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={{ height: null, width: null, flex: 1, borderRadius: 0, backgroundColor: '#A9A9A9' }} />
                                 {selectedPicture.description ? <DefaultText numberOfLines={1} style={{ letterSpacing: 0.38, fontSize: 15, marginVertical: 20 }}>{selectedPicture.description}</DefaultText> : <View style={{ height: 20 }} />}
                             </View>
                         </View>
@@ -113,7 +118,7 @@ class BikeAlbum extends Component {
                             <SquareCard
                                 image={`${GET_PICTURE_BY_ID}${item.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}`}
                                 imageStyle={[styles.imageStyle, index % 3 === 1 ? { marginHorizontal: widthPercentageToDP(1) } : null]}
-                                onPress={() => item.data && this.showEnlargedPhoto(item)}
+                                onPress={() => this.showEnlargedPhoto(item)}
                             />
                         )}
                         initialNumToRender={15}
@@ -128,20 +133,19 @@ class BikeAlbum extends Component {
 }
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { hasNetwork } = state.PageState;
-    const { currentBikeId } = state.GarageInfo;
-    const currentBikeIndex = state.GarageInfo.spaceList.findIndex(({ spaceId }) => spaceId === currentBikeId);
-    const bike = currentBikeIndex === -1 ? null : state.GarageInfo.spaceList[currentBikeIndex];
-    return { user, hasNetwork, bike };
+    const { hasNetwork, updatePageContent } = state.PageState;
+    const { currentBike: bike } = state.GarageInfo;
+    return { user, hasNetwork, bike, updatePageContent };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         getBikeAlbum: (userId, spaceId, pageNumber, successCallback, errorCallback) => dispatch(getBikeAlbum(userId, spaceId, pageNumber, successCallback, errorCallback)),
+        clearBikeAlbum: () => dispatch(clearBikeAlbumAction()),
+        updatePageContentStatus: (status) => dispatch(updatePageContentStatusAction(status)),
         // getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
         //     dispatch(updateBikeAlbumAction({ pictureObj }))
         // }, (error) => console.log('getPictureList album error : ', error)),
-        clearBikeAlbum: () => dispatch(clearBikeAlbumAction()),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BikeAlbum);

@@ -8,7 +8,7 @@ import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../../../../components/headers';
 import { SquareCard } from '../../../../../components/cards';
 import { DefaultText } from '../../../../../components/labels';
-import { appNavMenuVisibilityAction, updateBikeListAction } from '../../../../../actions';
+import { appNavMenuVisibilityAction, updateBikeWishListAction, updateBikeCustomizationsAction, getCurrentBikeSpecAction } from '../../../../../actions';
 import { getPosts } from '../../../../../api';
 
 class BikeSpecList extends Component {
@@ -21,7 +21,7 @@ class BikeSpecList extends Component {
     }
 
     componentDidMount() {
-        this.props.getPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.bike.spaceId, this.fetchSuccessCallback, this.fetchErrorCallback, this.state.pageNumber);
+        this.props.getPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.bike.spaceId, this.state.pageNumber, this.fetchSuccessCallback, this.fetchErrorCallback);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -33,7 +33,10 @@ class BikeSpecList extends Component {
 
     openPostForm = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: this.props.postType, currentBikeId: this.props.bike.spaceId });
 
-    openBikeSpecPage = (index) => Actions.push(PageKeys.BIKE_SPEC, { comingFrom: Actions.currentScene, postType: this.props.postType });
+    openBikeSpecPage = (postId) => {
+        this.props.getCurrentBikeSpec(this.props.postType, postId);
+        Actions.push(PageKeys.BIKE_SPEC, { comingFrom: Actions.currentScene, postType: this.props.postType, postId });
+    }
 
     renderHeader = () => {
         let title = '';
@@ -51,6 +54,7 @@ class BikeSpecList extends Component {
     }
 
     renderList = (data) => {
+        if (!data) return null;
         return <FlatList
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingTop: 40 + APP_COMMON_STYLES.headerHeight }}
@@ -66,11 +70,11 @@ class BikeSpecList extends Component {
         />
     }
 
-    renderSquareCard = ({ item, index }) => {
+    renderSquareCard = ({ item }) => {
         return <SquareCard
             image={item.pictureIds && item.pictureIds[0] ? `${GET_PICTURE_BY_ID}${item.pictureIds[0].id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` : null}
             title={item.title}
-            onPress={() => this.openBikeSpecPage(index)}
+            onPress={() => this.openBikeSpecPage(item.id)}
             imageStyle={styles.squareImg}
         />
     }
@@ -95,7 +99,7 @@ class BikeSpecList extends Component {
     loadMoreData = ({ distanceFromEnd }) => {
         if (this.state.isLoading === true || distanceFromEnd < 0) return;
         this.setState({ isLoading: true }, () => {
-            this.props.getPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.bike.spaceId, this.fetchSuccessCallback, this.fetchErrorCallback, this.state.pageNumber);
+            this.props.getPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.bike.spaceId, this.state.pageNumber, this.fetchSuccessCallback, this.fetchErrorCallback);
         });
     }
 
@@ -109,9 +113,16 @@ class BikeSpecList extends Component {
 
     postKeyExtractor = item => item.id;
 
+    getCurrentPosts() {
+        switch (this.props.postType) {
+            case POST_TYPE.WISH_LIST:
+                return this.props.bike.wishList;
+            case POST_TYPE.MY_RIDE:
+                return this.props.bike.customizations;
+        }
+    }
+
     render() {
-        const { postType } = this.props;
-        const { customizations, wishList } = this.props.bike;
         return <View style={styles.fill}>
             <View style={APP_COMMON_STYLES.statusBar}>
                 <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
@@ -120,10 +131,7 @@ class BikeSpecList extends Component {
                 {this.renderHeader()}
                 <View style={styles.pageContent}>
                     {
-                        postType === POST_TYPE.WISH_LIST && wishList && this.renderList(wishList)
-                    }
-                    {
-                        postType === POST_TYPE.MY_RIDE && customizations && this.renderList(customizations)
+                        this.renderList(this.getCurrentPosts())
                     }
                 </View>
             </View>
@@ -134,24 +142,20 @@ class BikeSpecList extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { hasNetwork, postTypes } = state.PageState;
-    const { currentBikeId, activeBikeIndex } = state.GarageInfo;
-    const currentBikeIndex = state.GarageInfo.spaceList.findIndex(({ spaceId }) => spaceId === currentBikeId);
-    const bike = currentBikeIndex === -1 ? null : state.GarageInfo.spaceList[currentBikeIndex];
-    return { user, hasNetwork, bike, activeBikeIndex, currentBikeIndex, postTypes };
+    const { currentBike: bike, activeBikeIndex } = state.GarageInfo;
+    return { user, hasNetwork, bike, activeBikeIndex, postTypes };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        getPosts: (userId, postType, postTypeId, spaceId, successCallback, errorCallback, pageNumber) => dispatch(getPosts(userId, postTypeId, spaceId, (res) => {
+        getPosts: (userId, postType, postTypeId, spaceId, pageNumber, successCallback, errorCallback) => dispatch(getPosts(userId, postTypeId, spaceId, pageNumber, (res) => {
             if (typeof successCallback === 'function') successCallback(res);
             switch (postType) {
                 case POST_TYPE.WISH_LIST:
-                    pageNumber === 0
-                        ? dispatch(updateBikeListAction({ wishList: res }))
-                        : dispatch(updateBikeListAction({ wishList: res }));
+                    dispatch(updateBikeWishListAction({ updates: res, reset: !pageNumber }))
                     break;
                 case POST_TYPE.MY_RIDE:
-                    dispatch(updateBikeListAction({ customizations: res }));
+                    dispatch(updateBikeCustomizationsAction({ updates: res, reset: !pageNumber }));
                     break;
                 case POST_TYPE.STORIES_FROM_ROAD:
                     break;
@@ -160,7 +164,8 @@ const mapDispatchToProps = (dispatch) => {
             }
         }, (err) => {
             if (typeof errorCallback === 'function') errorCallback(err);
-        }, pageNumber))
+        })),
+        getCurrentBikeSpec: (postType, postId) => dispatch(getCurrentBikeSpecAction({ postType, postId })),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BikeSpecList);

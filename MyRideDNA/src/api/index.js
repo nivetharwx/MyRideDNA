@@ -3,7 +3,7 @@ import {
     replaceRideListAction, deleteRideAction, updateRideListAction, updateEmailStatusAction, updateFriendListAction, replaceFriendListAction, replaceGarageInfoAction, updateBikeListAction, addToBikeListAction, deleteBikeFromListAction, updateActiveBikeAction, updateGarageNameAction, replaceShortSpaceListAction, replaceSearchListAction, updateRelationshipAction, createFriendGroupAction, replaceFriendGroupListAction, addMembersToCurrentGroupAction, resetMembersFromCurrentGroupAction, updateMemberAction, removeMemberAction, addWaypointAction,
     deleteWaypointAction, removeFriendGroupAction, updatePasswordSuccessAction, updatePasswordErrorAction, screenChangeAction, addToPassengerListAction, replacePassengerListAction, updatePassengerInListAction, updateFriendAction, doUnfriendAction, updateFriendRequestResponseAction, updateOnlineStatusAction, resetNotificationListAction, updateNotificationAction, deleteNotificationsAction, replaceFriendRequestListAction, updateFriendRequestListAction, updateInvitationResponseAction, updateCurrentFriendAction, resetStateOnLogout, addFriendsLocationAction,
     apiLoaderActions, replaceFriendInfooAction, resetNotificationCountAction, isloadingDataAction, updateRideInListAction, updateSourceOrDestinationAction, updatePageNumberAction, isRemovedAction, removeFromPassengerListAction, updateChatMessagesAction, replaceChatMessagesAction, updateChatListAction, updateFriendChatPicAction, resetMessageCountAction, storeUserAction, errorHandlingAction, resetErrorHandlingAction, addMembersLocationAction, storeUserMyWalletAction, updateUserMyWalletAction, updateFriendsLocationAction, updateGroupsLocationAction,
-    replaceAlbumListAction, updateFavouriteFriendAction, replaceCommunityListAction, updateCommunityListAction, updateCurrentGroupAction, updateSearchListAction, updatePostTypesAction, updatePrevProfileAction
+    replaceAlbumListAction, updateFavouriteFriendAction, replaceCommunityListAction, updateCommunityListAction, updateCurrentGroupAction, updateSearchListAction, updatePostTypesAction, updatePrevProfileAction, updateBikeAlbumAction
 } from '../actions';
 import { USER_BASE_URL, RIDE_BASE_URL, RECORD_RIDE_STATUS, RIDE_TYPE, PageKeys, USER_AUTH_TOKEN, FRIENDS_BASE_URL, HEADER_KEYS, RELATIONSHIP, GRAPH_BASE_URL, NOTIFICATIONS_BASE_URL, EVENTS_BASE_URL, APP_EVENT_NAME, APP_EVENT_TYPE, DEVICE_TOKEN, RIDE_POINT, CHAT_BASE_URL, POSTS_BASE_URL } from '../constants';
 import axios from 'axios';
@@ -2183,7 +2183,7 @@ export const addBikeToGarage = (userId, bike, pictureList, successCallback, erro
             })
     };
 }
-export const editBike = (userId, bike, pictureList, index, successCallback, errorCallback) => {
+export const editBike = (userId, bike, pictureList, successCallback, errorCallback) => {
     return dispatch => {
         axios.put(USER_BASE_URL + `updateSpace/${userId}`, { ...bike, pictureList }, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(({ data }) => {
@@ -2194,18 +2194,18 @@ export const editBike = (userId, bike, pictureList, index, successCallback, erro
             .catch(er => {
                 console.log("updateSpace error: ", er.response || er);
                 errorCallback(false);
-                differentErrors(er, [userId, bike, pictureList, index, successCallback, errorCallback], editBike, true);
+                differentErrors(er, [userId, bike, pictureList, successCallback, errorCallback], editBike, true);
             })
     };
 }
-export const setBikeAsActive = (userId, spaceId, newActiveIndex) => {
+export const setBikeAsActive = (userId, spaceId) => {
     return dispatch => {
         dispatch(apiLoaderActions(true));
         axios.put(USER_BASE_URL + `setDefaultSpace/${userId}/${spaceId}`, undefined, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 dispatch(apiLoaderActions(false));
                 dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
-                dispatch(updateActiveBikeAction(newActiveIndex));
+                dispatch(updateActiveBikeAction(spaceId));
             })
             .catch(er => {
                 console.log(`setDefaultSpace error: `, er.response || er);
@@ -2214,22 +2214,18 @@ export const setBikeAsActive = (userId, spaceId, newActiveIndex) => {
             })
     };
 }
-export const deleteBike = (userId, bikeId, index) => {
+export const deleteBike = (userId, bikeId) => {
     return dispatch => {
-        // dispatch(toggleLoaderAction(true));
         dispatch(apiLoaderActions(true));
         axios.delete(USER_BASE_URL + `deleteSpace/${userId}/${bikeId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
-                // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
-                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                dispatch(deleteBikeFromListAction(index))
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+                dispatch(deleteBikeFromListAction(bikeId));
             })
             .catch(er => {
                 console.log(`deleteBike: `, er.response);
-                differentErrors(er, [userId, bikeId, index], deleteBike, true);
-                // TODO: Dispatch error info action
-                // dispatch(toggleLoaderAction(false));
+                differentErrors(er, [userId, bikeId], deleteBike, true);
                 dispatch(apiLoaderActions(false));
             })
     };
@@ -2240,15 +2236,17 @@ export const getBikeAlbum = (userId, spaceId, pageNumber, successCallback, error
         axios.get(`${USER_BASE_URL}getPicturesBySpaceId/${userId}/spaceId/${spaceId}?pageNumber=${pageNumber}&preference=${preference}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(({ data }) => {
                 dispatch(apiLoaderActions(false));
-                console.log("getPicturesBySpaceId success: ", data);
                 if (data.pictures.length > 0) {
                     typeof successCallback === 'function' && successCallback(data);
-                    dispatch(updateBikeListAction({ pictures: data.pictures }));
+                    dispatch(updateBikeAlbumAction({ updates: data.pictures, reset: !pageNumber }));
+                } else {
+                    typeof errorCallback === 'function' && errorCallback({ isEmpty: true });
                 }
             }).catch(er => {
                 console.log(`getPicturesBySpaceId error: `, er.response || er);
                 differentErrors(er, [userId, spaceId], getBikeAlbum, false);
                 dispatch(apiLoaderActions(false));
+                typeof errorCallback === 'function' && errorCallback(er);
             })
     }
 }
@@ -2682,7 +2680,7 @@ export const createPost = (userId, spaceId, postData, successCallback, errorCall
             })
     }
 }
-export const getPosts = (userId, postTypeId, spaceId, successCallback, errorCallback, pageNumber = 0) => {
+export const getPosts = (userId, postTypeId, spaceId, pageNumber = 0, successCallback, errorCallback) => {
     return dispatch => {
         dispatch(apiLoaderActions(true));
         axios.get(`${POSTS_BASE_URL}user/${userId}/postType/${postTypeId}?spaceId=${spaceId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
