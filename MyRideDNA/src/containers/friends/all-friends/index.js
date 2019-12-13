@@ -409,7 +409,7 @@ class AllFriendsTab extends Component {
                         }
                     </View>
                 </BaseModal>
-                <View style={{ marginHorizontal: widthPercentageToDP(8) }}>
+                <View style={{ flex: 1, marginHorizontal: widthPercentageToDP(8) }}>
                     <SearchBoxFilter
                         searchQuery={searchQuery} onChangeSearchValue={this.onChangeSearchValue}
                         placeholder='Name' outerContainer={{ marginTop: 16 }}
@@ -425,7 +425,6 @@ class AllFriendsTab extends Component {
                     />
                     <FlatList
                         showsVerticalScrollIndicator={false}
-                        style={{ flexDirection: 'column' }}
                         contentContainerStyle={styles.friendList}
                         data={this.filteredFriends}
                         refreshing={isRefreshing}
@@ -513,8 +512,7 @@ const styles = StyleSheet.create({
         paddingTop: heightPercentageToDP(5)
     },
     friendList: {
-        // marginHorizontal: widthPercentageToDP(3),
-        paddingTop: 16
+        paddingTop: 16,
     },
     relationshipAction: {
         color: APP_COMMON_STYLES.headerColor

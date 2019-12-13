@@ -223,7 +223,7 @@ class FavoriteListTab extends Component {
         }
         return (
             <View style={styles.fill}>
-                <View style={{ marginHorizontal: widthPercentageToDP(8) }}>
+                <View style={{ flex: 1, marginHorizontal: widthPercentageToDP(8) }}>
                     <SearchBoxFilter
                         searchQuery={searchQuery} onChangeSearchValue={this.onChangeSearchValue}
                         placeholder='Name' outerContainer={{ marginTop: 16 }}
