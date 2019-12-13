@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import { Actions } from 'react-native-router-flux';
 import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions, FRIEND_TYPE, CUSTOM_FONTS, GET_PICTURE_BY_ID } from '../../../constants/index';
@@ -10,7 +10,7 @@ import { Thumbnail } from '../../../components/images';
 import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction, updateFriendInListAction, updatePassengerInListAction, setCurrentFriendAction } from '../../../actions';
 import { Accordion } from 'native-base';
 import ImagePicker from 'react-native-image-crop-picker';
-import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo, getRoadBuddies, getPictureList, getMyWallet, getPassengerList } from '../../../api';
+import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo, getRoadBuddies, getPictureList, getMyWallet, getPassengerList, getUser } from '../../../api';
 import { ImageLoader } from '../../../components/loader';
 import { SmallCard } from '../../../components/cards';
 import { getFormattedDateFromISO } from '../../../util';
@@ -34,7 +34,7 @@ class MyProfileTab extends Component {
         this.state = {
             activeTab: -1,
             bikes: [10, 20, 30, 40, 50],
-            isLoadingProfPic: false,
+            isLoadingUpdates: false,
             pictureLoader: {},
         };
     }
@@ -47,43 +47,50 @@ class MyProfileTab extends Component {
     }
 
     async componentDidMount() {
-        if (this.props.user.profilePictureId && !this.props.user.profilePicture) {
-            this.profilePicture = await AsyncStorage.getItem('profilePicture');
-            if (this.profilePicture) {
-                this.profilePicture = JSON.parse(this.profilePicture);
-                if (Object.keys(this.profilePicture)[0] === this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)) {
-                    this.props.updateUser({ profilePicture: this.profilePicture[this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)] });
-                    return;
-                }
-            }
-            if (this.props.user.profilePictureId) {
-                this.setState({ isLoadingProfPic: true });
-                this.props.getUserProfilePicture(this.props.user.profilePictureId);
-            }
-        }
-
-
+        this.props.getUser(this.props.user.userId);
+        // if (this.props.user.profilePictureId && !this.props.user.profilePicture) {
+        //     this.profilePicture = await AsyncStorage.getItem('profilePicture');
+        //     if (this.profilePicture) {
+        //         this.profilePicture = JSON.parse(this.profilePicture);
+        //         if (Object.keys(this.profilePicture)[0] === this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)) {
+        //             this.props.updateUser({ profilePicture: this.profilePicture[this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)] });
+        //             return;
+        //         }
+        //     }
+        //     if (this.props.user.profilePictureId) {
+        //         this.setState({ isLoadingProfPic: true });
+        //         this.props.getUserProfilePicture(this.props.user.profilePictureId);
+        //     }
+        // }
     }
 
+    fetchUserUpdates = () => {
+        this.props.getUser(this.props.user.userId, this.userUpdatesSuccessCallback, this.userUpdatesErrorCallback);
+    }
+
+    userUpdatesSuccessCallback = () => this.setState({ isLoadingUpdates: false });
+
+    userUpdatesErrorCallback = () => this.setState({ isLoadingUpdates: false });
+
     async componentDidUpdate(prevProps, prevState) {
-        if (prevProps.user.profilePictureId !== this.props.user.profilePictureId || !this.props.user.profilePicture) {
-            if (this.profilePicture) {
-                if (Object.keys(this.profilePicture)[0] === this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)) {
-                    this.props.updateUser({ profilePicture: this.profilePicture[this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)] });
-                    return;
-                }
-            }
-            if (this.props.user.profilePictureId) {
-                this.props.getUserProfilePicture(this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
-            }
-        } else if (prevState.isLoadingProfPic) {
-            if (this.props.user.profilePicture) {
-                this.profilePicture = {};
-                this.profilePicture[this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)] = this.props.user.profilePicture;
-                AsyncStorage.setItem('profilePicture', JSON.stringify(this.profilePicture));
-            }
-            this.setState({ isLoadingProfPic: false });
-        }
+        // if (prevProps.user.profilePictureId !== this.props.user.profilePictureId || !this.props.user.profilePicture) {
+        //     if (this.profilePicture) {
+        //         if (Object.keys(this.profilePicture)[0] === this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)) {
+        //             this.props.updateUser({ profilePicture: this.profilePicture[this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)] });
+        //             return;
+        //         }
+        //     }
+        //     if (this.props.user.profilePictureId) {
+        //         this.props.getUserProfilePicture(this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
+        //     }
+        // } else if (prevState.isLoadingProfPic) {
+        //     if (this.props.user.profilePicture) {
+        //         this.profilePicture = {};
+        //         this.profilePicture[this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)] = this.props.user.profilePicture;
+        //         AsyncStorage.setItem('profilePicture', JSON.stringify(this.profilePicture));
+        //     }
+        //     this.setState({ isLoadingProfPic: false });
+        // }
 
         // if (prevProps.allFriends !== this.props.allFriends) {
         //     const pictureIdList = [];
@@ -187,7 +194,7 @@ class MyProfileTab extends Component {
 
     render() {
         const { user, allFriends, passengerList } = this.props;
-        const { isLoadingProfPic } = this.state;
+        const { isLoadingUpdates } = this.state;
         return (
             <View style={styles.fill}>
                 <View style={styles.header}>
@@ -198,14 +205,18 @@ class MyProfileTab extends Component {
                         <DefaultText style={styles.subTitle}>{user.nickname ? user.nickname.toUpperCase() : null}</DefaultText>
                     </View>
                 </View>
-                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: APP_COMMON_STYLES.tabContainer.height }}>
+                <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingBottom: APP_COMMON_STYLES.tabContainer.height }}
+                    refreshControl={<RefreshControl refreshing={isLoadingUpdates} onRefresh={this.fetchUserUpdates} />}
+                >
                     <View style={styles.profilePic}>
-                        <ImageBackground source={user.profilePicture ? { uri: user.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
-                            {
+                        <ImageBackground source={user.profilePictureId ? { uri: `${GET_PICTURE_BY_ID}${user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
+                            {/* {
                                 isLoadingProfPic
                                     ? <ImageLoader show={isLoadingProfPic} />
                                     : null
-                            }
+                            } */}
                         </ImageBackground>
                     </View>
                     <Image source={require('../../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} />
@@ -370,6 +381,7 @@ const mapDispatchToProps = (dispatch) => {
         getMyWallet: (userId) => dispatch(getMyWallet(userId)),
         getPassengerList: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getPassengerList(userId, pageNumber, preference, successCallback, errorCallback)),
         setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
+        getUser: (userId, successCallback, errorCallback) => dispatch(getUser(userId, successCallback, errorCallback)),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MyProfileTab);
@@ -460,12 +472,12 @@ const styles = StyleSheet.create({
         paddingBottom: 7
     },
     profilePicBtmBorder: {
-        width: '100%',
+        width: widthPercentageToDP(100),
         height: 13
     },
     profilePic: {
+        width: widthPercentageToDP(100),
         height: 255,
-        width: WindowDimensions.width,
     },
     scrollBottomContent: {
         flex: 1
