@@ -103,7 +103,7 @@ class BikeDetails extends Component {
         this.hideOptionsModal();
     }
 
-    addStoryFromRoad = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.STORIES_FROM_ROAD, currentBikeId: this.props.bike.spaceId });
+    addStoryFromRoad = () => null; // Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.STORIES_FROM_ROAD, currentBikeId: this.props.bike.spaceId });
 
     addWish = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.WISH_LIST, currentBikeId: this.props.bike.spaceId });
 
@@ -163,7 +163,7 @@ class BikeDetails extends Component {
                 <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
                     <View style={APP_COMMON_STYLES.optionsContainer}>
                         <LinkButton style={APP_COMMON_STYLES.optionBtn} title='EDIT BIKE' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.openBikeForm} />
-                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='DELETE BIKE' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.onPressDeleteBike} />
+                        <LinkButton disabled style={APP_COMMON_STYLES.optionBtn} title='DELETE BIKE' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.onPressDeleteBike} />
                         <LinkButton style={APP_COMMON_STYLES.optionBtn} title='CANCEL' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.hideOptionsModal} />
                     </View>
                 </BaseModal>
@@ -201,7 +201,7 @@ class BikeDetails extends Component {
                                 </ImageBackground>
                             </View>
                             <ImageBackground source={require('../../../../assets/img/odometer-small.png')} style={{ position: 'absolute', marginTop: styles.bikePic.height - 55.5, alignSelf: 'center', height: 111, width: 118, justifyContent: 'center' }}>
-                                <DefaultText style={styles.miles}>114,526</DefaultText>
+                                <DefaultText style={[styles.miles, { fontSize: 12 }]}>{`Coming\nsoon`}</DefaultText>
                             </ImageBackground>
                             <View style={styles.odometerLblContainer}>
                                 <DefaultText style={styles.odometerLbl}>TOTAL</DefaultText>
@@ -287,6 +287,7 @@ class BikeDetails extends Component {
                                         <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={this.addStoryFromRoad} />
                                     </View>
                                     <View style={styles.greyBorder} />
+                                    <DefaultText style={{ marginTop: 10, color: 'gray', textAlign: 'center' }}> - NOT CODED YET - </DefaultText>
                                 </View>
                             </View>
                             <LinkButton style={styles.fullWidthImgLink} onPress={this.openBikeAlbum}>
