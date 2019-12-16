@@ -1,16 +1,16 @@
 import React, { Component } from 'react';
 import { View, ImageBackground, StatusBar, FlatList, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import { connect } from 'react-redux';
-import { IconButton, ShifterButton, ImageButton } from '../../../../../components/buttons';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE, PORTRAIT_TAIL_TAG, CUSTOM_FONTS, GET_PICTURE_BY_ID, RIDE_TYPE } from '../../../../../constants';
+import { IconButton, ShifterButton, ImageButton } from '../../components/buttons';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE, PORTRAIT_TAIL_TAG, CUSTOM_FONTS, GET_PICTURE_BY_ID, RIDE_TYPE } from '../../constants';
 import { Actions } from 'react-native-router-flux';
-import { BasicHeader } from '../../../../../components/headers';
-import { DefaultText } from '../../../../../components/labels';
-import { appNavMenuVisibilityAction, updateBikeLoggedRideAction, screenChangeAction, clearRideAction } from '../../../../../actions';
-import { RideCard, PostCard } from '../../../../../components/cards';
-import { getRecordRides, getRideByRideId } from '../../../../../api';
+import { BasicHeader } from '../../components/headers';
+import { DefaultText } from '../../components/labels';
+import { appNavMenuVisibilityAction, updateBikeLoggedRideAction, screenChangeAction, clearRideAction } from '../../actions';
+import { PostCard } from '../../components/cards';
+import { getRecordRides, getRideByRideId } from '../../api';
 
-class LogggedRide extends Component {
+class Journal extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -29,7 +29,7 @@ class LogggedRide extends Component {
         return [dateInfo[0], (dateInfo[2] + '').slice(-2)].join(joinBy);
     }
 
-    rideKeyExtractor = item => item.rideId;
+    rideKeyExtractor = item => item.id;
 
     renderPostCard = ({ item, index }) => {
         return (
@@ -40,18 +40,18 @@ class LogggedRide extends Component {
                 </View>
                 }
                 image={item.picture ? `${GET_PICTURE_BY_ID}${item.picture.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` : null}
-                placeholderImage={require('../../../../../assets/img/ride-placeholder-image.png')}
+                placeholderImage={require('../../assets/img/ride-placeholder-image.png')}
                 footerContent={<View style={{ flexDirection: 'row', justifyContent: 'space-around', height: 40, backgroundColor: '#585756', }}>
                     <View style={{ flexDirection: 'row' }}>
-                        <ImageButton imageSrc={require('../../../../../assets/img/distance.png')} imgStyles={styles.footerIcon} />
+                        <ImageButton imageSrc={require('../../assets/img/distance.png')} imgStyles={styles.footerIcon} />
                         <DefaultText style={styles.footerText}>{`${item.totalDistance} ${this.props.user.distanceUnit === 'km' ? 'km' : 'mi'}`}</DefaultText>
                     </View>
                     <View style={{ flexDirection: 'row' }}>
-                        <ImageButton imageSrc={require('../../../../../assets/img/duration.png')} imgStyles={styles.footerIcon} />
+                        <ImageButton imageSrc={require('../../assets/img/duration.png')} imgStyles={styles.footerIcon} />
                         <DefaultText style={styles.footerText}>{item.totalTime} m</DefaultText>
                     </View>
                     <View style={{ flexDirection: 'row' }}>
-                        <ImageButton imageSrc={require('../../../../../assets/img/date.png')} imgStyles={styles.footerIcon} />
+                        <ImageButton imageSrc={require('../../assets/img/date.png')} imgStyles={styles.footerIcon} />
                         <DefaultText style={styles.footerText}>{this.getFormattedDate(item.date)}</DefaultText>
                     </View>
                 </View>}
@@ -100,8 +100,8 @@ class LogggedRide extends Component {
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={styles.fill}>
-                    <BasicHeader title='Logged Rides' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
-                    <View style={{ flex: 1 }}>
+                    <BasicHeader title='My Journal' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
+                    {/* <View style={{ flex: 1 }}>
                         <FlatList
                             showsVerticalScrollIndicator={false}
                             contentContainerStyle={styles.loggedRideList}
@@ -113,7 +113,7 @@ class LogggedRide extends Component {
                             onEndReached={this.loadMoreData}
                             onEndReachedThreshold={0.1}
                         />
-                    </View>
+                    </View> */}
                 </View>
                 <ShifterButton onPress={this.showAppNavMenu} size={18} alignLeft={this.props.user.handDominance === 'left'} />
             </View>
@@ -141,7 +141,7 @@ const mapDispatchToProps = (dispatch) => {
         loadRideOnMap: (rideId, rideInfo) => dispatch(getRideByRideId(rideId, rideInfo)),
     };
 }
-export default connect(mapStateToProps, mapDispatchToProps)(LogggedRide);
+export default connect(mapStateToProps, mapDispatchToProps)(Journal);
 
 const styles = StyleSheet.create({
     fill: {

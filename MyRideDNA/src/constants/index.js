@@ -75,6 +75,7 @@ export const PageKeys = {
     OFFERS: 'offers',
     MY_WALLET_FORM: 'myWalletForm',
     ALBUM: 'album',
+    JOURNAL: 'journal',
     BIKE_DETAILS: 'bikeDetails',
     POST_FORM: 'postForm',
     BUDDY_FRIENDS: 'buddyFriends',
