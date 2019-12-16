@@ -5,7 +5,7 @@ import styles from './styles';
 import { appNavMenuVisibilityAction, resetMessageCountAction, updateChatDatatAction, resetChatMessageAction } from '../../actions';
 import { ShifterButton, IconButton, LinkButton } from '../../components/buttons';
 import { Thumbnail, Item, Icon as NBIcon } from 'native-base';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, IS_ANDROID } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, IS_ANDROID, GET_PICTURE_BY_ID } from '../../constants';
 import { ChatBubble } from '../../components/bubble';
 import { sendMessage, getAllMessages, deleteMessagesById, deleteMessagesByIdForEveryone, seenMessage, getPicture, deleteAllMessages, getPictureList } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
@@ -371,9 +371,9 @@ class Chat extends Component {
                                                     isMemberLastMsg
                                                         ? this.props.chatInfo.isGroup
                                                             ? (chatData && chatData.memberPictures)
-                                                                ? <Thumbnail style={[styles.thumbnail, { marginRight: 5 }]} source={{ uri: chatData.memberPictures[item.senderPictureId] }} />
+                                                                ? <Thumbnail style={[styles.thumbnail, { marginRight: 5 }]} source={{ uri: `${GET_PICTURE_BY_ID}${item.senderPictureId}` }} />
                                                                 : <View style={{ marginRight: styles.thumbnail.width + 5 }} />
-                                                            : <Thumbnail style={[styles.thumbnail, { marginRight: 5 }]} source={{ uri: chatData.profilePicture }} />
+                                                            : <Thumbnail style={[styles.thumbnail, { marginRight: 5 }]} source={{ uri: `${GET_PICTURE_BY_ID}${chatData.profilePictureId}` }} />
                                                         : <View style={{ marginRight: styles.thumbnail.width + 5 }} />
                                                 }
                                                 <ChatBubble

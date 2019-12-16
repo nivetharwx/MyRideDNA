@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, Animated, FlatList, View, ImageBackground, StatusBar, Easing } from 'react-native';
 import { IconButton, LinkButton } from '../../../components/buttons';
-import { widthPercentageToDP, heightPercentageToDP, PageKeys, APP_COMMON_STYLES, CUSTOM_FONTS } from '../../../constants';
+import { widthPercentageToDP, heightPercentageToDP, PageKeys, APP_COMMON_STYLES, CUSTOM_FONTS, GET_PICTURE_BY_ID } from '../../../constants';
 import { ListItem, Left, Thumbnail } from 'native-base';
 import { BasicHeader } from '../../../components/headers';
 import { ShifterButton } from '../../../components/buttons';
@@ -33,31 +33,31 @@ class ChatList extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.chatList !== this.props.chatList) {
-            const chatIdList = [];
-            const grpPicObj = {};
-            this.props.chatList.forEach((chat) => {
-                if (!chat.profilePicture || (chat.isGroup && !chat.profilePictureList)) {
-                    if (chat.isGroup) {
-                        if (chat.groupProfilePictureId) {
-                            chatIdList.push(chat.groupProfilePictureId);
-                        } else if (chat.profilePictureIdList) {
-                            grpPicObj[chat.id] = chat.profilePictureIdList;
-                        }
-                    } else if (chat.profilePictureId) {
-                        chatIdList.push(chat.profilePictureId);
-                    }
-                }
-            })
-            if (chatIdList.length > 0 && !this.frndChatPicLoading) {
-                this.frndChatPicLoading = true;
-                this.props.getChatListPic(chatIdList);
-            }
-            if (Object.keys(grpPicObj).length > 0 && !this.grpChatPicLoading) {
-                this.grpChatPicLoading = true;
-                this.props.getGroupMembersPic(grpPicObj);
-            }
-        }
+        // if (prevProps.chatList !== this.props.chatList) {
+        //     const chatIdList = [];
+        //     const grpPicObj = {};
+        //     this.props.chatList.forEach((chat) => {
+        //         if (!chat.profilePicture || (chat.isGroup && !chat.profilePictureList)) {
+        //             if (chat.isGroup) {
+        //                 if (chat.groupProfilePictureId) {
+        //                     chatIdList.push(chat.groupProfilePictureId);
+        //                 } else if (chat.profilePictureIdList) {
+        //                     grpPicObj[chat.id] = chat.profilePictureIdList;
+        //                 }
+        //             } else if (chat.profilePictureId) {
+        //                 chatIdList.push(chat.profilePictureId);
+        //             }
+        //         }
+        //     })
+        //     if (chatIdList.length > 0 && !this.frndChatPicLoading) {
+        //         this.frndChatPicLoading = true;
+        //         this.props.getChatListPic(chatIdList);
+        //     }
+        //     if (Object.keys(grpPicObj).length > 0 && !this.grpChatPicLoading) {
+        //         this.grpChatPicLoading = true;
+        //         this.props.getGroupMembersPic(grpPicObj);
+        //     }
+        // }
     }
 
     retryApiFunction = () => {
@@ -109,9 +109,9 @@ class ChatList extends Component {
         return `${time.join(':')} ${period}`;
         // return new Date(dateTime).toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
     }
-    
+
     showAppNavigation = () => this.props.showAppNavMenu();
-    
+
     goToChatPage = (item) => {
         if (item.isGroup) {
             Actions.push(PageKeys.CHAT, { comingFrom: PageKeys.CHAT_LIST, isGroup: true, chatInfo: item })
@@ -148,7 +148,7 @@ class ChatList extends Component {
                 {
                     item.totalUnseenMessage > 0
                         ? <View style={styles.messageNumber}>
-                            <DefaultText style={{ alignSelf: 'center', color: '#FFFFFF' }}>{'99+'}</DefaultText>
+                            <DefaultText style={{ alignSelf: 'center', color: '#FFFFFF' }}>{item.totalUnseenMessage > 99 ? '99+' : item.totalUnseenMessage}</DefaultText>
                         </View>
                         : null
                 }
@@ -163,12 +163,12 @@ class ChatList extends Component {
                     item.isGroup
                         ? <Left style={styles.leftCont}>
                             {
-                                item.profilePicture
-                                    ? <Thumbnail style={styles.iconContComm} source={{ uri: item.profilePicture }} />
-                                    : item.profilePictureList
+                                item.groupProfilePictureId
+                                    ? <Thumbnail style={styles.iconContComm} source={{ uri: `${GET_PICTURE_BY_ID}${item.groupProfilePictureId}` }} />
+                                    : item.profilePictureIdList
                                         ? <View style={[styles.iconContComm, { backgroundColor: '#ffffff' }]}>
-                                            <Thumbnail style={styles.smallThumbanail} source={{ uri: item.profilePictureList[0] }} />
-                                            <Thumbnail style={[styles.smallThumbanail, { position: 'absolute', zIndex: 10, left: 17.5, top: 12 }]} source={{ uri: item.profilePictureList[1] }} />
+                                            <Thumbnail style={styles.smallThumbanail} source={{ uri: `${GET_PICTURE_BY_ID}${item.profilePictureIdList[0]}` }} />
+                                            <Thumbnail style={[styles.smallThumbanail, { position: 'absolute', zIndex: 10, left: 17.5, top: 12 }]} source={{ uri: `${GET_PICTURE_BY_ID}${item.profilePictureIdList[1]}` }} />
                                         </View>
                                         : <IconButton disabled style={[styles.iconContComm, styles.groupIconCont]} iconProps={{ name: 'users', type: 'FontAwesome', style: styles.iconComm }} />
                             }
@@ -176,8 +176,8 @@ class ChatList extends Component {
                         </Left>
                         : <Left style={styles.leftCont}>
                             {
-                                item.profilePicture
-                                    ? <Thumbnail style={styles.iconContComm} source={{ uri: item.profilePicture }} />
+                                item.profilePictureId
+                                    ? <Thumbnail style={styles.iconContComm} source={{ uri: `${GET_PICTURE_BY_ID}${item.profilePictureId}` }} />
                                     : <IconButton disabled style={[styles.iconContComm, styles.userIconCont]} iconProps={{ name: 'user', type: 'FontAwesome', style: styles.iconComm }} />
                             }
                             {this.renderItemBodyContent(item)}
@@ -185,7 +185,6 @@ class ChatList extends Component {
                 }
             </ListItem>
         );
-
     }
 
 
