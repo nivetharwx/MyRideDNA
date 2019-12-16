@@ -79,19 +79,19 @@
 		<string>SimpleLineIcons.ttf</string>
 		<string>Zocial.ttf</string>
 		<string>Roboto_medium.ttf</string>
-    <string>Roboto-Bold.ttf</string>
+		<string>Roboto-Bold.ttf</string>
 		<string>Roboto.ttf</string>
 		<string>rubicon-icon-font.ttf</string>
-    <string>RobotoSlab-Regular_Light.ttf</string>
-    <string>RobotoSlab-Regular_Bold.ttf</string>
-    <string>Gotham-Medium.otf</string>
-    <string>GothamNarrow-Black.otf</string>
-    <string>Gotham-Ultra.otf</string>
-    <string>GothamNarrow-Ultra.otf</string>
-    <string>Gotham-Bold.otf</string>
-    <string>Gotham-Light.otf</string>
-    <string>D-DINCondensed.otf</string>
-    <string>D-DINCondensed-Bold.otf</string>
+		<string>RobotoSlab-Regular_Light.ttf</string>
+		<string>RobotoSlab-Regular_Bold.ttf</string>
+		<string>Gotham-Medium.otf</string>
+		<string>GothamNarrow-Black.otf</string>
+		<string>Gotham-Ultra.otf</string>
+		<string>GothamNarrow-Ultra.otf</string>
+		<string>Gotham-Bold.otf</string>
+		<string>Gotham-Light.otf</string>
+		<string>D-DINCondensed.otf</string>
+		<string>D-DINCondensed-Bold.otf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
