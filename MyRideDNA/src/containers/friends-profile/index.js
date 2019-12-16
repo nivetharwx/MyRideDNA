@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView, BackHandler, TouchableOpacity } from 'react-native';
 import { Actions } from 'react-native-router-flux';
-import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions, FRIEND_TYPE, CUSTOM_FONTS } from '../../constants/index';
+import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions, FRIEND_TYPE, CUSTOM_FONTS, GET_PICTURE_BY_ID } from '../../constants/index';
 import { IconButton, LinkButton, ShifterButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, updateUserAction, updateBikePictureListAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction, setCurrentFriendAction, updateCurrentFriendAction, updatePicturesAction, undoLastAction, resetPersonProfileAction, goToPrevProfileAction } from '../../actions';
 import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo, getRoadBuddies, getPictureList, getFriendInfo, getFriendProfile, getPassengersById, getRoadBuddiesById, getUserProfile, doUnfriend } from '../../api';
@@ -55,40 +55,40 @@ class FriendsProfile extends Component {
                 }, (error) => {
                 });
             }
-            if (!this.state.isLoadingProfPic && !this.props.person.profilePicture && this.props.person.profilePictureId) {
-                this.setState({ isLoadingProfPic: true });
-                this.props.getProfilePicture(this.props.person.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), this.props.person.userId);
-            } else if (this.state.isLoadingProfPic && this.props.person.profilePicture) {
-                this.setState({ isLoadingProfPic: false });
-            }
-            if (prevProps.person.passengerList !== this.props.person.passengerList) {
-                if (!this.isLoadingPassPic) {
-                    const passPicIdList = [];
-                    this.props.person.passengerList.forEach((passenger) => {
-                        if (!passenger.profilePicture && passenger.profilePictureId) {
-                            passPicIdList.push(passenger.profilePictureId);
-                        }
-                    })
-                    if (passPicIdList.length > 0) {
-                        this.isLoadingPassPic = true;
-                        this.props.getPictureList(passPicIdList, 'passenger', () => this.isLoadingPassPic = false, () => this.isLoadingPassPic = false);
-                    }
-                }
-            }
-            if (prevProps.person.friendList !== this.props.person.friendList) {
-                if (!this.isLoadingFrndsPic) {
-                    const frndPicIdList = [];
-                    this.props.person.friendList.forEach((frnd) => {
-                        if (!frnd.profilePicture && frnd.profilePictureId) {
-                            frndPicIdList.push(frnd.profilePictureId);
-                        }
-                    })
-                    if (frndPicIdList.length > 0) {
-                        this.isLoadingFrndsPic = true;
-                        this.props.getPictureList(frndPicIdList, 'roadBuddies', () => this.isLoadingFrndsPic = false, () => this.isLoadingFrndsPic = false);
-                    }
-                }
-            }
+            // if (!this.state.isLoadingProfPic && !this.props.person.profilePicture && this.props.person.profilePictureId) {
+            //     this.setState({ isLoadingProfPic: true });
+            //     this.props.getProfilePicture(this.props.person.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), this.props.person.userId);
+            // } else if (this.state.isLoadingProfPic && this.props.person.profilePicture) {
+            //     this.setState({ isLoadingProfPic: false });
+            // }
+            // if (prevProps.person.passengerList !== this.props.person.passengerList) {
+            //     if (!this.isLoadingPassPic) {
+            //         const passPicIdList = [];
+            //         this.props.person.passengerList.forEach((passenger) => {
+            //             if (!passenger.profilePicture && passenger.profilePictureId) {
+            //                 passPicIdList.push(passenger.profilePictureId);
+            //             }
+            //         })
+            //         if (passPicIdList.length > 0) {
+            //             this.isLoadingPassPic = true;
+            //             this.props.getPictureList(passPicIdList, 'passenger', () => this.isLoadingPassPic = false, () => this.isLoadingPassPic = false);
+            //         }
+            //     }
+            // }
+            // if (prevProps.person.friendList !== this.props.person.friendList) {
+            //     if (!this.isLoadingFrndsPic) {
+            //         const frndPicIdList = [];
+            //         this.props.person.friendList.forEach((frnd) => {
+            //             if (!frnd.profilePicture && frnd.profilePictureId) {
+            //                 frndPicIdList.push(frnd.profilePictureId);
+            //             }
+            //         })
+            //         if (frndPicIdList.length > 0) {
+            //             this.isLoadingFrndsPic = true;
+            //             this.props.getPictureList(frndPicIdList, 'roadBuddies', () => this.isLoadingFrndsPic = false, () => this.isLoadingFrndsPic = false);
+            //         }
+            //     }
+            // }
         }
     }
 
@@ -176,17 +176,18 @@ class FriendsProfile extends Component {
                 </View>
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={styles.profilePic}>
-                        <ImageBackground source={require('../../assets/img/profile-bg.png')} style={{ flex: 1, height: null, width: null }}>
+                        <ImageBackground source={person.profilePictureId ? { uri: `${GET_PICTURE_BY_ID}${person.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` } : require('../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
+                            {/* <ImageBackground source={require('../../assets/img/profile-bg.png')} style={{ flex: 1, height: null, width: null }}>
                             <ImageBackground source={person.profilePicture ? { uri: person.profilePicture } : require('../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} resizeMode='contain'>
                                 {
                                     isLoadingProfPic
                                         ? <ImageLoader show={isLoadingProfPic} />
                                         : null
                                 }
-                            </ImageBackground>
+                            </ImageBackground> */}
                         </ImageBackground>
                     </View>
-                    {/* <Image source={require('../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} /> */}
+                    <Image source={require('../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} />
                     <View style={styles.container}>
                         <View style={{ flexDirection: 'column' }}>
                             <DefaultText style={styles.labels}>LOCATION</DefaultText>
@@ -243,7 +244,7 @@ class FriendsProfile extends Component {
                                                         renderItem={({ item, index }) => (
                                                             <SmallCard
                                                                 placeholderImage={require('../../assets/img/profile-pic.png')}
-                                                                image={item.profilePicture}
+                                                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
                                                                 onPress={() => this.openRoadBuddy(item.userId)}
                                                                 imageStyle={styles.imageStyle}
                                                             />
@@ -276,7 +277,7 @@ class FriendsProfile extends Component {
                                                         renderItem={({ item, index }) => (
                                                             <SmallCard
                                                                 placeholderImage={require('../../assets/img/profile-pic.png')}
-                                                                image={item.profilePicture}
+                                                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
                                                                 onPress={() => this.openPassengerProfile(item, index)}
                                                                 imageStyle={styles.imageStyle}
                                                             />
@@ -334,7 +335,6 @@ const mapDispatchToProps = (dispatch) => {
         }),
         getSpaceList: (userId) => dispatch(getSpaceList(userId)),
         updateProfilePicture: (profilePicStr, mimeType, userId) => dispatch(updateProfilePicture(profilePicStr, mimeType, userId)),
-
         setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
         getGarageInfo: (userId) => {
             dispatch(apiLoaderActions(true));

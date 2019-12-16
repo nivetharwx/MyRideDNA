@@ -113,12 +113,16 @@ class PostForm extends Component {
         const { postType, postTypes, currentBikeId, user, bike, comingFrom } = this.props;
         const { bikeList, title, description, selectedImgs, isPrivate, selectedBikeId } = this.state;
 
-        const postProps = { title, description, isPrivate, postTypeId: postTypes[postType].id, pictures: selectedImgs };
+        if (selectedImgs.length > 0 || title || description) {
+            const postProps = { title, description, isPrivate, postTypeId: postTypes[postType].id, pictures: selectedImgs };
+            this.props.createPost(user.userId, selectedBikeId, postType, postProps, this.onPressBackButton);
+        } else {
+            Alert.alert('Please check the fields', 'Please select any image or enter title/description');
+        }
         // this.props.createPost(user.userId, selectedBikeId, postType, postProps, () => {
         //     const selBike = bike ? bike.spaceId : bikeList.length > 0 ? bikeList[0].spaceId : null;
         //     this.setState({ title: '', description: '', selectedImgs: [], selectedBikeId: selBike, isPrivate: (postType === POST_TYPE.WISH_LIST || postType === POST_TYPE.MY_RIDE) ? false : true });
         // });
-        this.props.createPost(user.userId, selectedBikeId, postType, postProps, this.onPressBackButton);
         // let formdata = new FormData();
         // formdata.append("picture", {
         //     uri: selectedImgs[0].path,
@@ -154,6 +158,20 @@ class PostForm extends Component {
         }
         if (this.props.postType === POST_TYPE.WISH_LIST || this.props.postType === POST_TYPE.MY_RIDE) {
             return <View style={styles.fill}>
+                <View style={{ marginHorizontal: CONTAINER_H_SPACE }}>
+                    {
+                        selectedImgs.filter(item => item.isHidden).length !== selectedImgs.length
+                            ? <FlatList
+                                style={styles.listStyles}
+                                numColumns={5}
+                                columnWrapperStyle={styles.imgPreviewArea}
+                                data={selectedImgs}
+                                keyExtractor={this.imgKeyExtractor}
+                                renderItem={this.renderSelectedImg}
+                            />
+                            : null
+                    }
+                </View>
                 <View style={{ flex: 1, marginLeft: widthPercentageToDP(12) }}>
                     <LabeledInputPlaceholder
                         inputValue={title} inputStyle={{ paddingBottom: 0 }}

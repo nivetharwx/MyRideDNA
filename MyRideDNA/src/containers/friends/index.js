@@ -119,7 +119,7 @@ class Friends extends Component {
     onChangeTab = ({ from, i }) => {
         this.setState({ activeTab: i, headerSearchMode: false }, () => {
             if (this.state.activeTab === 2) {
-                this.props.getAllRequest(this.props.user.userId, true);
+                // this.props.getAllRequest(this.props.user.userId, true);
             }
             if (i === 0 || i === 1 || i === 2) {
                 this.setState({ searchQuery: '' })
@@ -135,7 +135,7 @@ class Friends extends Component {
             }, (err) => {
             });
         }
-        if (i === 1) {
+        if (i === 2) {
             this.props.getFriendGroups(this.props.user.userId, true, 0, (res) => {
             }, (err) => {
             });
