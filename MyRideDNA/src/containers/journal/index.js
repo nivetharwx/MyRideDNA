@@ -6,9 +6,9 @@ import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys,
 import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../components/headers';
 import { DefaultText } from '../../components/labels';
-import { appNavMenuVisibilityAction, updateBikeLoggedRideAction, screenChangeAction, clearRideAction } from '../../actions';
+import { appNavMenuVisibilityAction, updateBikeLoggedRideAction, screenChangeAction, clearRideAction, updateJournalAction } from '../../actions';
 import { PostCard } from '../../components/cards';
-import { getRecordRides, getRideByRideId } from '../../api';
+import { getRecordRides, getRideByRideId, getPosts, handleServiceErrors } from '../../api';
 
 class Journal extends Component {
     constructor(props) {
@@ -20,41 +20,46 @@ class Journal extends Component {
         };
     }
 
+    componentDidMount() {
+        this.props.getPosts(this.props.user.userId, this.props.JOURNAL_POST_ID, undefined, 0);
+    }
+
     showAppNavMenu = () => this.props.showAppNavMenu()
 
     onPressBackButton = () => Actions.pop();
 
     getFormattedDate = (isoDateString = new Date().toISOString(), joinBy = ' ') => {
         const dateInfo = new Date(isoDateString).toString().substr(4, 12).split(' ');
-        return [dateInfo[0], (dateInfo[2] + '').slice(-2)].join(joinBy);
+        return `${dateInfo[0]} ${dateInfo[1]}, ${dateInfo[2]}`;
     }
 
-    rideKeyExtractor = item => item.id;
+    openPostForm = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.JOURNAL });
+
+    journalKeyExtractor = item => item.id;
 
     renderPostCard = ({ item, index }) => {
         return (
             <PostCard
-                headerContent={<View style={styles.rideCardHeader}>
-                    <DefaultText style={{ fontSize: 19, color: '#585756', fontFamily: CUSTOM_FONTS.robotoBold }}>{item.name ? item.name : 'Name of Ride'}</DefaultText>
-                    <IconButton iconProps={{ name: 'options', type: 'SimpleLineIcons', style: styles.headerIcon }} />
-                </View>
+                headerContent={
+                    <View style={styles.rideCardHeader}>
+                        <View />
+                        <IconButton iconProps={{ name: 'options', type: 'SimpleLineIcons', style: styles.headerIcon }} />
+                    </View>
                 }
-                image={item.picture ? `${GET_PICTURE_BY_ID}${item.picture.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` : null}
-                placeholderImage={require('../../assets/img/ride-placeholder-image.png')}
-                footerContent={<View style={{ flexDirection: 'row', justifyContent: 'space-around', height: 40, backgroundColor: '#585756', }}>
-                    <View style={{ flexDirection: 'row' }}>
-                        <ImageButton imageSrc={require('../../assets/img/distance.png')} imgStyles={styles.footerIcon} />
-                        <DefaultText style={styles.footerText}>{`${item.totalDistance} ${this.props.user.distanceUnit === 'km' ? 'km' : 'mi'}`}</DefaultText>
+                image={item.pictureIds && item.pictureIds[0] ? `${GET_PICTURE_BY_ID}${item.pictureIds[0].id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` : null}
+                footerContent={
+                    <View>
+                        <View style={styles.postCardFtrIconCont}>
+                            <IconButton title='0 Likes' titleStyle={styles.postCardFtrIconTitle} iconProps={{ name: 'ios-thumbs-up', type: 'Ionicons', style: { color: '#fff' } }} />
+                            <IconButton title='0 Comments' titleStyle={styles.postCardFtrIconTitle} iconProps={{ name: 'ios-chatbubbles', type: 'Ionicons', style: { color: '#fff' } }} />
+                        </View>
+                        <View style={styles.postCardFtrTxtCont}>
+                            <DefaultText style={styles.postCardFtrTitle}>{item.title}</DefaultText>
+                            <DefaultText numberOfLines={3}>{item.description}</DefaultText>
+                            <DefaultText style={styles.postCardFtrDate}>{this.getFormattedDate(item.date)}</DefaultText>
+                        </View>
                     </View>
-                    <View style={{ flexDirection: 'row' }}>
-                        <ImageButton imageSrc={require('../../assets/img/duration.png')} imgStyles={styles.footerIcon} />
-                        <DefaultText style={styles.footerText}>{item.totalTime} m</DefaultText>
-                    </View>
-                    <View style={{ flexDirection: 'row' }}>
-                        <ImageButton imageSrc={require('../../assets/img/date.png')} imgStyles={styles.footerIcon} />
-                        <DefaultText style={styles.footerText}>{this.getFormattedDate(item.date)}</DefaultText>
-                    </View>
-                </View>}
+                }
             />
         );
     }
@@ -62,7 +67,7 @@ class Journal extends Component {
     loadMoreData = ({ distanceFromEnd }) => {
         if (this.state.isLoading === true || distanceFromEnd < 0) return;
         this.setState({ isLoading: true }, () => {
-            this.props.getRecordRides(this.props.user.userId, this.props.bike.spaceId, this.state.pageNumber, this.fetchSuccessCallback, this.fetchErrorCallback);
+            this.props.getPosts(this.props.user.userId, this.props.JOURNAL_POST_ID, undefined, this.state.pageNumber, this.fetchSuccessCallback, this.fetchErrorCallback);
         });
     }
 
@@ -92,28 +97,30 @@ class Journal extends Component {
     }
 
     render() {
-        const { bike } = this.props;
-        if (!bike) return null;
+        const { isEditable, journal } = this.props;
         return (
             <View style={styles.fill}>
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
                 <View style={styles.fill}>
-                    <BasicHeader title='My Journal' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
-                    {/* <View style={{ flex: 1 }}>
+                    <BasicHeader title={isEditable ? 'My Journal' : 'Journal'}
+                        leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
+                        rightIconProps={isEditable ? { reverse: true, name: 'md-add', type: 'Ionicons', containerStyle: styles.rightIconContStyle, style: { color: '#fff', fontSize: 19 }, onPress: this.openPostForm } : null}
+                    />
+                    <View style={{ flex: 1 }}>
                         <FlatList
                             showsVerticalScrollIndicator={false}
-                            contentContainerStyle={styles.loggedRideList}
-                            data={bike.loggedRides}
-                            keyExtractor={this.rideKeyExtractor}
+                            contentContainerStyle={styles.listContent}
+                            data={journal}
+                            keyExtractor={this.journalKeyExtractor}
                             renderItem={this.renderPostCard}
                             initialNumToRender={4}
                             ListFooterComponent={this.renderFooter}
                             onEndReached={this.loadMoreData}
                             onEndReachedThreshold={0.1}
                         />
-                    </View> */}
+                    </View>
                 </View>
                 <ShifterButton onPress={this.showAppNavMenu} size={18} alignLeft={this.props.user.handDominance === 'left'} />
             </View>
@@ -123,22 +130,27 @@ class Journal extends Component {
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { hasNetwork } = state.PageState;
+    const { id: JOURNAL_POST_ID } = state.PageState.postTypes[POST_TYPE.JOURNAL];
     const { currentBike: bike } = state.GarageInfo;
     const { ride } = state.RideInfo.present;
-    return { user, hasNetwork, bike, ride };
+    const { journal } = state.Journal;
+    return { user, hasNetwork, bike, ride, JOURNAL_POST_ID, journal };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        getRecordRides: (userId, spaceId, pageNumber, successCallback, errorCallback) => dispatch(getRecordRides(userId, spaceId, pageNumber, (res) => {
-            if (typeof successCallback === 'function') successCallback(res);
-            dispatch(updateBikeLoggedRideAction({ updates: res, reset: !pageNumber }))
-        }, (err) => {
-            if (typeof errorCallback === 'function') errorCallback(err);
-        })),
         changeScreen: (screenKey) => dispatch(screenChangeAction(screenKey)),
-        clearRideFromMap: () => dispatch(clearRideAction()),
-        loadRideOnMap: (rideId, rideInfo) => dispatch(getRideByRideId(rideId, rideInfo)),
+        getPosts: (userId, postTypeId, spaceId, pageNumber, successCallback, errorCallback) => getPosts(userId, postTypeId, spaceId, pageNumber)
+            .then(({ data, ...otherRes }) => {
+                console.log("getPosts success: ", data, otherRes);
+                dispatch(updateJournalAction({ updates: data, reset: !pageNumber }));
+                typeof successCallback === 'function' && successCallback(data);
+            })
+            .catch(er => {
+                console.log("getPosts error: ", er);
+                typeof errorCallback === 'function' && errorCallback(er);
+                handleServiceErrors(er, [userId, postTypeId, spaceId, pageNumber], getPosts, true);
+            })
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Journal);
@@ -148,7 +160,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
-    loggedRideList: {
+    listContent: {
         marginTop: APP_COMMON_STYLES.headerHeight,
     },
     rideCardHeader: {
@@ -173,5 +185,37 @@ const styles = StyleSheet.create({
         fontFamily: CUSTOM_FONTS.robotoBold,
         marginTop: 11,
         marginLeft: 5
+    },
+    rightIconContStyle: {
+        height: 27,
+        width: 27,
+        backgroundColor: '#F5891F',
+        borderRadius: 13.5
+    },
+    postCardFtrIconTitle: {
+        color: '#fff',
+        marginLeft: 10
+    },
+    postCardFtrTitle: {
+        fontSize: 13,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        letterSpacing: 1.3
+    },
+    postCardFtrDate: {
+        marginTop: 6,
+        fontSize: 9,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        letterSpacing: 0.9,
+        color: '#8D8D8D'
+    },
+    postCardFtrIconCont: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        height: 40,
+        backgroundColor: '#585756'
+    },
+    postCardFtrTxtCont: {
+        marginHorizontal: 26,
+        marginVertical: 10
     }
 })  
