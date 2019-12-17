@@ -254,9 +254,8 @@ export const PostCard = ({ outerContainer, headerStyle, nameOfRide, nameOfRideSt
     <View onPress={() => onPress ? onPress() : null} style={[{
         flex: 1,
         backgroundColor: '#FFFFFF',
-        height: 310,
         borderBottomWidth: 1,
-        borderBottomColor: '#D8D8D8'
+        borderBottomColor: '#D8D8D8',
     }, outerContainer]}>
         {headerContent}
         <TouchableOpacity style={[{ height: 190, backgroundColor: '#A9A9A9', justifyContent: 'center' }, imageStyle]} onPress={onPress}>
