@@ -213,7 +213,7 @@ class Passengers extends Component {
                     <BasicHeader
                         title='Passengers'
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                        rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', onPress: this.openPassengerForm, rightIconPropsStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 } }}
+                        rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', containerStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 } }}
                     />
                     <FlatList
                         showsVerticalScrollIndicator={false}
@@ -312,7 +312,6 @@ const styles = StyleSheet.create({
         height: 27,
         width: 27,
         backgroundColor: '#F5891F',
-        borderRadius: 13.5,
-        marginRight: 10
+        borderRadius: 13.5
     }
 });
