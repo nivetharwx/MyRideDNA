@@ -79,6 +79,7 @@ import {
     UPDATE_BIKE_CUSTOMIZATIONS,
     GET_CURRENT_BIKE_SPEC,
     UPDATE_BIKE_LOGGED_RIDE,
+    UPDATE_JOURNAL,
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -402,6 +403,12 @@ export const updateBikeCustomizationsAction = (data) => (
 export const updateBikeLoggedRideAction = (data) => (
     {
         type: UPDATE_BIKE_LOGGED_RIDE,
+        data: data
+    }
+);
+export const updateJournalAction = (data) => (
+    {
+        type: UPDATE_JOURNAL,
         data: data
     }
 );
