@@ -146,6 +146,8 @@ class FriendsProfile extends Component {
         this.setState({ showOptionsModal: false })
     }
 
+    openJournalPage = () => Actions.push(PageKeys.JOURNAL, { isEditable: this.props.person.userId === this.props.user.userId, personId: this.props.person.userId });
+
     render() {
         const { person, prevProfiles } = this.props;
         const { isLoadingProfPic, showOptionsModal } = this.state;
@@ -291,18 +293,18 @@ class FriendsProfile extends Component {
                                 : null
                         }
                     </View>
-                    <View style={styles.usersExtraDetailContainer}>
-                        <ImageBackground source={require('../../assets/img/my-journal.png')} style={styles.usersExtraDetail}>
+                    <LinkButton style={styles.fullWidthContainer} onPress={this.openJournalPage}>
+                        <ImageBackground source={require('../../assets/img/my-journal.png')} style={styles.imgBG}>
                             <DefaultText style={styles.txtOnImg}>Journal</DefaultText>
                         </ImageBackground>
-                    </View>
-                    <View style={styles.usersExtraDetailContainer}>
-                        <ImageBackground source={require('../../assets/img/my-vest.png')} style={styles.usersExtraDetail}>
+                    </LinkButton>
+                    <View style={styles.fullWidthContainer}>
+                        <ImageBackground source={require('../../assets/img/my-vest.png')} style={styles.imgBG}>
                             <DefaultText style={styles.txtOnImg}>Vest</DefaultText>
                         </ImageBackground>
                     </View>
-                    <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.BUDDY_ALBUM)}>
-                        <ImageBackground source={require('../../assets/img/my-photos.png')} style={styles.usersExtraDetail}>
+                    <TouchableOpacity style={styles.fullWidthContainer} onPress={() => Actions.push(PageKeys.BUDDY_ALBUM)}>
+                        <ImageBackground source={require('../../assets/img/my-photos.png')} style={styles.imgBG}>
                             <DefaultText style={styles.txtOnImg}>Photos</DefaultText>
                         </ImageBackground>
                     </TouchableOpacity>
@@ -492,13 +494,14 @@ const styles = StyleSheet.create({
         marginHorizontal: widthPercentageToDP(1),
         paddingTop: widthPercentageToDP(1),
     },
-    usersExtraDetail: {
-        width: WindowDimensions.width,
+    imgBG: {
+        width: widthPercentageToDP(100),
         height: heightPercentageToDP(30),
         justifyContent: 'center',
         paddingLeft: 20
     },
-    usersExtraDetailContainer: {
+    fullWidthContainer: {
+        flex: 1,
         marginTop: 20,
         borderTopWidth: 9,
         borderTopColor: '#f69039',

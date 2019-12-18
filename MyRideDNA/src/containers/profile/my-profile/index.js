@@ -192,7 +192,7 @@ class MyProfileTab extends Component {
         Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId });
     }
 
-    openJournalPage = () => Actions.push(PageKeys.JOURNAL, { isEditable: true });
+    openJournalPage = () => Actions.push(PageKeys.JOURNAL, { isEditable: true, personId: this.props.user.userId });
 
     render() {
         const { user, allFriends, passengerList } = this.props;
@@ -515,7 +515,6 @@ const styles = StyleSheet.create({
         paddingLeft: 20
     },
     fullWidthContainer: {
-        paddingHorizontal: 0,
         flex: 1,
         marginTop: 20,
         borderTopWidth: 9,

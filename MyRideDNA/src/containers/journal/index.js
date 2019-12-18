@@ -10,6 +10,7 @@ import { appNavMenuVisibilityAction, updateBikeLoggedRideAction, screenChangeAct
 import { PostCard } from '../../components/cards';
 import { getRecordRides, getRideByRideId, getPosts, handleServiceErrors } from '../../api';
 
+const NUM_OF_DESC_LINES = 3;
 class Journal extends Component {
     constructor(props) {
         super(props);
@@ -17,11 +18,13 @@ class Journal extends Component {
             isLoading: false,
             spinValue: new Animated.Value(0),
             pageNumber: 1,
+            isEditable: props.isEditable || false,
+            showMoreSections: {}
         };
     }
 
     componentDidMount() {
-        this.props.getPosts(this.props.user.userId, this.props.JOURNAL_POST_ID, undefined, 0);
+        this.props.getPosts(this.props.personId, this.props.JOURNAL_POST_ID, undefined, 0);
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu()
@@ -37,13 +40,19 @@ class Journal extends Component {
 
     journalKeyExtractor = item => item.id;
 
+    onDescriptionLayout({ nativeEvent: { lines } }, id) {
+        lines.length >= NUM_OF_DESC_LINES && this.setState(prevState => ({ showMoreSections: { ...prevState.showMoreSections, [id]: true } }));
+    }
+
     renderPostCard = ({ item, index }) => {
         return (
             <PostCard
                 headerContent={
                     <View style={styles.rideCardHeader}>
                         <View />
-                        <IconButton iconProps={{ name: 'options', type: 'SimpleLineIcons', style: styles.headerIcon }} />
+                        {
+                            this.state.isEditable ? <IconButton iconProps={{ name: 'options', type: 'SimpleLineIcons', style: styles.headerIcon }} /> : null
+                        }
                     </View>
                 }
                 image={item.pictureIds && item.pictureIds[0] ? `${GET_PICTURE_BY_ID}${item.pictureIds[0].id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` : null}
@@ -55,7 +64,7 @@ class Journal extends Component {
                         </View>
                         <View style={styles.postCardFtrTxtCont}>
                             <DefaultText style={styles.postCardFtrTitle}>{item.title}</DefaultText>
-                            <DefaultText numberOfLines={3}>{item.description}</DefaultText>
+                            <DefaultText onTextLayout={(evt) => this.onDescriptionLayout(evt, item.id)} numberOfLines={NUM_OF_DESC_LINES}>{item.description}</DefaultText>{this.state.showMoreSections[item.id] ? <DefaultText>more</DefaultText> : null}
                             <DefaultText style={styles.postCardFtrDate}>{this.getFormattedDate(item.date)}</DefaultText>
                         </View>
                     </View>
@@ -67,7 +76,7 @@ class Journal extends Component {
     loadMoreData = ({ distanceFromEnd }) => {
         if (this.state.isLoading === true || distanceFromEnd < 0) return;
         this.setState({ isLoading: true }, () => {
-            this.props.getPosts(this.props.user.userId, this.props.JOURNAL_POST_ID, undefined, this.state.pageNumber, this.fetchSuccessCallback, this.fetchErrorCallback);
+            this.props.getPosts(this.props.personId, this.props.JOURNAL_POST_ID, undefined, this.state.pageNumber, this.fetchSuccessCallback, this.fetchErrorCallback);
         });
     }
 
@@ -94,6 +103,10 @@ class Journal extends Component {
             );
         }
         return null
+    }
+
+    componentWillUnmount() {
+        this.props.clearJournal();
     }
 
     render() {
@@ -150,7 +163,8 @@ const mapDispatchToProps = (dispatch) => {
                 console.log("getPosts error: ", er);
                 typeof errorCallback === 'function' && errorCallback(er);
                 handleServiceErrors(er, [userId, postTypeId, spaceId, pageNumber], getPosts, true);
-            })
+            }),
+        clearJournal: () => dispatch(updateJournalAction({ updates: null, reset: true }))
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Journal);
