@@ -105,10 +105,10 @@ class Album extends Component {
         this.isLoadingData = true;
     }
 
-    onPressSwipeRight = () => {
+    onPressAdvanceRight = () => {
         this.setState({ selectedIndex: this.state.selectedIndex + 1 });
     }
-    onPressSwipeLeft = () => {
+    onPressAdvanceLeft = () => {
         this.setState({ selectedIndex: this.state.selectedIndex - 1 });
     }
 
@@ -127,14 +127,14 @@ class Album extends Component {
             <BaseModal alignCenter={true} isVisible={selectedIndex !== -1} onCancel={this.onCancelVisiblePicture} >
                 {
                     selectedIndex > -1
-                        ? <View style={{ backgroundColor: '#fff', height: heightPercentageToDP(70), width: widthPercentageToDP(92), padding: 20, paddingBottom: 0, alignItems: 'center', justifyContent: 'center' }}>
-                            <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={this.onCancelVisiblePicture} />
-                            <View style={{ width: widthPercentageToDP(92) - 40, height: heightPercentageToDP(70) - 20 }}>
-                                <ImageBackground source={{ uri: `${GET_PICTURE_BY_ID}${albumList[selectedIndex].profilePictureId.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={{ height: null, width: null, flex: 1, borderRadius: 0, backgroundColor: '#A9A9A9' }} />
-                                {albumList[selectedIndex].description ? <DefaultText numberOfLines={1} style={{ letterSpacing: 0.38, fontSize: 15, marginVertical: 20 }}>{albumList[selectedIndex].description}</DefaultText> : <View style={{ height: 20 }} />}
+                        ? <View style={styles.imgModalContent}>
+                            <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: styles.closeIcon }} onPress={this.onCancelVisiblePicture} />
+                            <View style={styles.enlargedImgContainer}>
+                                <ImageBackground source={{ uri: `${GET_PICTURE_BY_ID}${albumList[selectedIndex].profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` }} style={styles.enlargedImg} />
+                                {albumList[selectedIndex].description ? <DefaultText numberOfLines={1} style={styles.imgDescription}>{albumList[selectedIndex].description}</DefaultText> : <View style={{ height: 20 }} />}
                             </View>
-                            {selectedIndex < albumList.length - 1 ? <ImageButton imageSrc={require('../../assets/img/photo-advance-right.png')} imgStyles={{ width: 18, height: 120 }} containerStyles={{ position: 'absolute', left: 320 }} onPress={this.onPressSwipeRight} /> : null}
-                            {selectedIndex > 0 ? <ImageButton imageSrc={require('../../assets/img/photo-advance-left.png')} imgStyles={{ width: 18, height: 120 }} containerStyles={{ position: 'absolute', right: 320 }} onPress={this.onPressSwipeLeft} /> : null}
+                            {selectedIndex > 0 ? <IconButton activeOpacity={0.8} style={[styles.imgAdvanceBtn, styles.prevBtn]} iconProps={{ name: 'triangle-left', type: 'Entypo', style: styles.prevBtnIcon }} onPress={this.onPressAdvanceLeft} /> : <View />}
+                            {selectedIndex < albumList.length - 1 ? <IconButton activeOpacity={0.8} style={[styles.imgAdvanceBtn, styles.nextBtn]} iconProps={{ name: 'triangle-left', type: 'Entypo', style: styles.nextBtnIcon }} onPress={this.onPressAdvanceRight} /> : <View />}
                         </View>
                         : null
                 }
@@ -230,5 +230,55 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-end',
         top: heightPercentageToDP(-1.5),
         right: widthPercentageToDP(-1.5)
+    },
+    closeIcon: {
+        fontSize: widthPercentageToDP(5),
+        color: '#fff'
+    },
+    imgModalContent: {
+        backgroundColor: '#fff',
+        height: heightPercentageToDP(70),
+        width: widthPercentageToDP(92),
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    enlargedImgContainer: {
+        padding: 20,
+        paddingBottom: 0,
+        width: widthPercentageToDP(92),
+        height: heightPercentageToDP(70)
+    },
+    enlargedImg: {
+        height: null,
+        width: null,
+        flex: 1,
+        borderRadius: 0,
+        backgroundColor: '#A9A9A9'
+    },
+    imgAdvanceBtn: {
+        position: 'absolute',
+        height: 120,
+        width: 22,
+        backgroundColor: '#C4C6C8'
+    },
+    prevBtn: {
+        alignSelf: 'flex-start',
+        left: -10,
+    },
+    nextBtn: {
+        alignSelf: 'flex-end',
+        right: -10,
+    },
+    prevBtnIcon: {
+        right: 4
+    },
+    nextBtnIcon: {
+        left: 4,
+        transform: [{ rotate: '180deg' }]
+    },
+    imgDescription: {
+        letterSpacing: 0.38,
+        fontSize: 15,
+        marginVertical: 20
     }
 });

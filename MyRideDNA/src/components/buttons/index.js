@@ -56,7 +56,7 @@ export const RoundButton = ({ title, onPress, style, titleStyle }) => (
     </TouchableOpacity>
 );
 
-export const IconButton = ({ title, titleStyle, iconRight, iconProps = {}, onPress, onPressOut, style, disabled, disabledColor = '#DBDBDB' }) => {
+export const IconButton = ({ title, titleStyle, iconRight, iconProps = {}, onPress, onPressOut, style, disabled, disabledColor = '#DBDBDB', activeOpacity = 0.6 }) => {
     return disabled
         ? iconRight
             ? <View style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style, { borderColor: disabledColor }]}>
@@ -78,7 +78,7 @@ export const IconButton = ({ title, titleStyle, iconRight, iconProps = {}, onPre
                 }
             </View>
         : iconRight
-            ? <TouchableOpacity style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} activeOpacity={0.6} onPress={onPress} onPressOut={onPressOut}>
+            ? <TouchableOpacity style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} activeOpacity={activeOpacity} onPress={onPress} onPressOut={onPressOut}>
                 {
                     title !== undefined || title !== null
                         ? <DefaultText style={titleStyle}>{title}</DefaultText >
@@ -87,7 +87,7 @@ export const IconButton = ({ title, titleStyle, iconRight, iconProps = {}, onPre
                 <NBIcon name={iconProps.name}
                     type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style]} />
             </TouchableOpacity>
-            : <TouchableOpacity style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} activeOpacity={0.6} onPress={onPress} onPressOut={onPressOut}>
+            : <TouchableOpacity style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} activeOpacity={activeOpacity} onPress={onPress} onPressOut={onPressOut}>
                 <NBIcon name={iconProps.name}
                     type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style]} />
                 {
