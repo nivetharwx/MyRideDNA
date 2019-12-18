@@ -2500,26 +2500,15 @@ export const getAlbum = (userId, pageNumber, preference, successCallback, errorC
             })
     };
 }
-export const getBuddyAlbum = (userId, friendId, pageNumber, preference, successCallback, errorCallback) => {
-    console.log('pageNumber buddyalbum : ', pageNumber)
+export const getBuddyAlbum = (userId, friendId, pageNumber, preference, buddyAlbum, successCallback, errorCallback) => {
+    console.log('pageNumber : ', pageNumber)
     return dispatch => {
         axios.get(`${USER_BASE_URL}users/${userId}/friend/${friendId}/album?pageNumber=${pageNumber}&preference=${preference}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log("getBuddyAlbum success: ", res.data);
                 if (res.status === 200) {
-                    // if (res.data.pictureList.length > 0) {
-                    //     const pictureList = res.data.pictureList.map(picId => ({ profilePictureId: picId }));
-                    //     dispatch(replaceAlbumListAction({ pageNumber, pictureList }))
-                    //     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    //     dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
-                    //     // dispatch(toggleLoaderAction(false));
-                    //     successCallback(res.data)
-                    // }
-                    // else {
-                    //     successCallback(res.data)
-                    //     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    // }
-                    res.data.pictures.length > 0 && dispatch(updateCurrentFriendAction({ pictures: res.data.pictures, userId: friendId }));
+                    const updatedBuddyAlbum = [...buddyAlbum, ...res.data.pictures]
+                    res.data.pictures.length > 0 && dispatch(updateCurrentFriendAction({ pictures: updatedBuddyAlbum, userId: friendId }));
                     successCallback(res.data)
                 }
             })

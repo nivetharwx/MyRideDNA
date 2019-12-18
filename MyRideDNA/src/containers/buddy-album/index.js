@@ -3,12 +3,13 @@ import { View, ImageBackground, StatusBar, FlatList, StyleSheet, ActivityIndicat
 import { connect } from 'react-redux';
 import { Actions } from 'react-native-router-flux';
 import { BaseModal } from '../../components/modal';
-import { IconButton } from '../../components/buttons';
-import { widthPercentageToDP, APP_COMMON_STYLES, heightPercentageToDP, GET_PICTURE_BY_ID } from '../../constants';
+import { IconButton, ImageButton } from '../../components/buttons';
+import { widthPercentageToDP, APP_COMMON_STYLES, heightPercentageToDP, GET_PICTURE_BY_ID, THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG } from '../../constants';
 import { BasicHeader } from '../../components/headers';
 import { SquareCard } from '../../components/cards';
 import { getBuddyAlbum, getPictureList } from '../../api';
 import { clearAlbumAction, updatePicturesAction } from '../../actions';
+import { DefaultText } from '../../components/labels';
 
 class BuddyAlbum extends Component {
 
@@ -17,8 +18,8 @@ class BuddyAlbum extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            selectedIndex: -1,
             isVisiblePicture: false,
-            selectedPicture: null,
             isLoading: false,
             // isLoadingData: false,
             spinValue: new Animated.Value(0),
@@ -26,7 +27,10 @@ class BuddyAlbum extends Component {
         };
     }
     componentDidMount() {
-        this.props.getBuddyAlbum(this.props.user.userId, this.props.person.userId, this.state.pageNumber, 15, (res) => {
+        this.props.getBuddyAlbum(this.props.user.userId, this.props.person.userId, this.state.pageNumber, 15, undefined, (res) => {
+            if (res.pictures.length > 0) {
+                this.setState({ pageNumber: this.state.pageNumber + 1 })
+            }
         }, (error) => {
         })
     }
@@ -50,31 +54,31 @@ class BuddyAlbum extends Component {
         Actions.pop()
     }
 
-    openPicture = (item) => {
-        this.setState({ selectedPicture: item, isVisiblePicture: true });
+    openPicture = (index) => {
+        this.setState({ selectedIndex: index });
     }
 
     onCancelVisiblePicture = () => {
-        this.setState({ selectedPicture: null, isVisiblePicture: false })
+        this.setState({ selectedIndex: -1 })
     }
 
-    albumKeyExtractor = (item) => item.profilePictureId
+    albumKeyExtractor = (item) => item.id
 
     loadMoreData = ({ distanceFromEnd }) => {
         // this.setState({ isLoading: true, isLoadingData: false })
         if (this.state.isLoading === true || distanceFromEnd < 0) return;
-            this.setState((prevState) => ({ isLoading: true }),
-                () => {
-                    this.props.getBuddyAlbum(this.props.user.userId, this.props.person.userId, this.state.pageNumber, 15, (res) => {
-                        if (res.pictures.length > 0) {
-                            this.setState({ pageNumber: this.state.pageNumber + 1 })
-                        }
+        this.setState((prevState) => ({ isLoading: true }),
+            () => {
+                this.props.getBuddyAlbum(this.props.user.userId, this.props.person.userId, this.state.pageNumber, 15, this.props.person.pictures, (res) => {
+                    if (res.pictures.length > 0) {
+                        this.setState({ pageNumber: this.state.pageNumber + 1 })
+                    }
+                    this.setState({ isLoading: false })
+                },
+                    (er) => {
                         this.setState({ isLoading: false })
-                    },
-                        (er) => {
-                            this.setState({ isLoading: false })
-                        });
-                })
+                    });
+            })
     }
 
     renderFooter = () => {
@@ -100,6 +104,12 @@ class BuddyAlbum extends Component {
         // this.setState(prevState => ({ isLoadingData: true }), () => console.log('onMomemntum : ', { ...this.state }))
         this.isLoadingData = true;
     }
+    onPressSwipeRight = () => {
+        this.setState({ selectedIndex: this.state.selectedIndex + 1 });
+    }
+    onPressSwipeLeft = () => {
+        this.setState({ selectedIndex: this.state.selectedIndex - 1 });
+    }
 
     componentWillUnmount() {
         this.props.clearAlbum();
@@ -107,24 +117,29 @@ class BuddyAlbum extends Component {
 
     render() {
         const { user, person } = this.props;
-        const { isVisiblePicture, selectedPicture } = this.state;
-        console.log('this.state/isLoading : ', this.state.isLoading);
+        const { selectedIndex } = this.state;
         const spin = this.state.spinValue.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
         });
         return <View style={styles.fill}>
-            <BaseModal alignCenter={true} isVisible={isVisiblePicture} onCancel={this.onCancelVisiblePicture} onPressOutside={this.onCancelVisiblePicture}>
+            <BaseModal alignCenter={true} isVisible={selectedIndex !== -1} onCancel={this.onCancelVisiblePicture} >
                 <View style={{ backgroundColor: '#fff' }}>
-                    <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={() => this.setState({ isVisiblePicture: false, selectedPicture: null })} />
+                    <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={this.onCancelVisiblePicture} />
                     <View style={{ height: heightPercentageToDP(70), width: widthPercentageToDP(92), justifyContent: 'center', alignItems: 'center', paddingBottom: heightPercentageToDP(6) }}>
-                        <View style={{ height: heightPercentageToDP(58), width: widthPercentageToDP(82) }}>
-                            {
-                                selectedPicture === null ?
-                                    null :
-                                    <ImageBackground source={selectedPicture.profilePicture ? { uri: selectedPicture.profilePicture } : require('../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} />
-                            }
-                        </View>
+                        {
+                            selectedIndex > -1 ?
+                                <View style={{ height: heightPercentageToDP(58), width: widthPercentageToDP(82), justifyContent: 'center' }}>
+                                    <View style={{ width: widthPercentageToDP(92) - 40, height: heightPercentageToDP(70) - 20 }}>
+                                        <ImageBackground source={{ uri: `${GET_PICTURE_BY_ID}${person.pictures[selectedIndex].id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={{ height: null, width: null, flex: 1, borderRadius: 0, backgroundColor: '#A9A9A9' }} />
+                                        {person.pictures[selectedIndex].description ? <DefaultText numberOfLines={1} style={{ letterSpacing: 0.38, fontSize: 15, marginVertical: 20 }}>{person.pictures[selectedIndex].description}</DefaultText> : <View style={{ height: 20 }} />}
+                                    </View>
+                                    {selectedIndex < person.pictures.length - 1 ? <ImageButton imageSrc={require('../../assets/img/photo-advance-right.png')} imgStyles={{ width: 18, height: 120 }} containerStyles={{ position: 'absolute', left: 300 }} onPress={this.onPressSwipeRight} /> : null}
+                                    {selectedIndex > 0 ? <ImageButton imageSrc={require('../../assets/img/photo-advance-left.png')} imgStyles={{ width: 18, height: 120 }} containerStyles={{ position: 'absolute', right: 304 }} onPress={this.onPressSwipeLeft} /> : null}
+                                </View>
+                                : null
+                        }
+
                     </View>
                 </View>
             </BaseModal>
@@ -146,13 +161,13 @@ class BuddyAlbum extends Component {
                             <SquareCard
                                 image={item.id ? `${GET_PICTURE_BY_ID}${item.id}` : null}
                                 imageStyle={[styles.imageStyle, index % 3 === 1 ? { marginHorizontal: widthPercentageToDP(1) } : null]}
-                                onPress={() => this.openPicture(item)}
+                                onPress={() => this.openPicture(index)}
                             />
                         )}
                         initialNumToRender={15}
                         ListFooterComponent={this.renderFooter}
                         onEndReached={this.loadMoreData}
-                        onEndReachedThreshold={0.5}
+                        onEndReachedThreshold={0.1}
                     />
 
                 </View>
@@ -171,7 +186,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         // showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         // getAlbum: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getAlbum(userId, pageNumber, preference, successCallback, errorCallback)),
-        getBuddyAlbum: (userId, friendId, pageNumber, preference, successCallback, errorCallback) => dispatch(getBuddyAlbum(userId, friendId, pageNumber, preference, successCallback, errorCallback)),
+        getBuddyAlbum: (userId, friendId, pageNumber, preference, buddyAlbum = [], successCallback, errorCallback) => dispatch(getBuddyAlbum(userId, friendId, pageNumber, preference, buddyAlbum, successCallback, errorCallback)),
         // getBuddyPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
         //     console.log('getBuddyPictureList : ', pictureObj)
         //     dispatch(updatePicturesAction({ pictureObj, type: callingFrom }))
