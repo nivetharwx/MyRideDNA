@@ -520,7 +520,6 @@ const styles = StyleSheet.create({
     },
     fullWidthImgLink: {
         flex: 1,
-        paddingHorizontal: 0,
         marginTop: 20,
         borderTopWidth: 9,
         borderTopColor: '#f69039',

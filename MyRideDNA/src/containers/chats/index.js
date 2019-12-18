@@ -14,7 +14,7 @@ import { Actions } from 'react-native-router-flux';
 import { DefaultText } from '../../components/labels';
 
 class Chat extends Component {
-    CHAT_OPTIONS = [{ text: 'Clear Chat', id: 'clearAll', handler: () => this.clearChat() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
+    CHAT_OPTIONS = [{ text: 'Clear Chat', id: 'clearAll', handler: () => this.clearChat() }, { text: 'Close', id: 'close', handler: () => this.hideOptionsModal() }];
     constructor(props) {
         super(props);
         this.state = {
@@ -78,12 +78,22 @@ class Chat extends Component {
     showAppNavigation = () => this.props.showAppNavMenu();
 
     clearChat = () => {
-        this.props.deleteAllMessages(this.props.chatInfo.id, this.props.user.userId, this.props.isGroup)
-        this.setState({ isVisibleOptionsModal: false })
+        this.setState({ isVisibleOptionsModal: false });
+        setTimeout(() => Alert.alert(
+            'Delete Confirmation',
+            'Are you sure to delete all the messages?',
+            [
+                {
+                    text: 'Delete', onPress: () => this.props.deleteAllMessages(this.props.chatInfo.id, this.props.user.userId, this.props.isGroup)
+                },
+                { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+            ],
+            { cancelable: false }
+        ), 100);
     }
 
     onChangeMessageToBeSend = (messageToBeSend) => {
-        this.setState({ messageToBeSend })
+        this.setState({ messageToBeSend });
     }
 
     sendMessage = () => {
@@ -231,7 +241,9 @@ class Chat extends Component {
         Actions.pop();
     }
 
-    onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false });
+    showOptionsModal = () => this.setState({ isVisibleOptionsModal: true });
+
+    hideOptionsModal = () => this.setState({ isVisibleOptionsModal: false });
 
     renderMenuOptions = () => {
         let options = null;
@@ -248,10 +260,6 @@ class Chat extends Component {
                 />
             ))
         )
-    }
-
-    showOptionsModal = () => {
-        this.setState({ isVisibleOptionsModal: true });
     }
 
     componentWillUnmount() {
@@ -274,6 +282,12 @@ class Chat extends Component {
         const { user, chatMessages, totalUnseenMessage, chatData } = this.props;
         const { messageToBeSend, selectedMessage, isVisibleDeleteModal, isVisibleOptionsModal } = this.state;
         return <View style={styles.fill}>
+            <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={isVisibleOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
+                <View style={APP_COMMON_STYLES.optionsContainer}>
+                    <LinkButton style={APP_COMMON_STYLES.optionBtn} title='CLEAR CHAT' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.clearChat} />
+                    <LinkButton style={APP_COMMON_STYLES.optionBtn} title='CANCEL' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.hideOptionsModal} />
+                </View>
+            </BaseModal>
             <View style={APP_COMMON_STYLES.statusBar}>
                 <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
             </View>
@@ -320,13 +334,6 @@ class Chat extends Component {
                 }
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={[styles.fill, !IS_ANDROID && this.state.iOSKeyboardShown ? { marginBottom: 35 } : null]}>
                     <ImageBackground style={styles.fill} source={require('../../assets/img/chat-bg.jpg')}>
-                        <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
-                            <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
-                                {
-                                    this.renderMenuOptions()
-                                }
-                            </View>
-                        </BaseModal>
                         <View style={styles.fill}>
                             <FlatList
                                 ref={'flatList'}

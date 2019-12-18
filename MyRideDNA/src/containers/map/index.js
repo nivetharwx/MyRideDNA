@@ -856,7 +856,7 @@ export class Map extends Component {
     async componentDidMount() {
         // DOC: Get all post types:
         this.props.getPostTypes();
-        
+
         this.unregisterNetworkListener = NetInfo.addEventListener(this.handleNetworkConnectivityChange);
         if (this.props.user.isNewUser) {
             this.props.changeScreen({ name: PageKeys.PROFILE })
@@ -2278,7 +2278,7 @@ export class Map extends Component {
                             : null
                     }
                     <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
-                        <LinkButton style={{ paddingVertical: 20 }} title='CLOSE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressCloseRide} />
+                        <LinkButton style={{ padding: 20 }} title='CLOSE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressCloseRide} />
                     </View>
                 </View>
             )
@@ -2287,9 +2287,9 @@ export class Map extends Component {
                 <View style={{ flex: 1, flexDirection: 'row' }}>
                     <IconButton style={{ paddingHorizontal: widthPercentageToDP(4), paddingVertical: widthPercentageToDP(4) }} title='TRACKING' titleStyle={{ color: '#fff', fontSize: 16 }} iconProps={{ name: 'ios-arrow-dropdown', type: 'Ionicons', style: { color: '#fff', marginLeft: 5, fontSize: widthPercentageToDP(5) } }} iconRight onPress={this.openTrackingList} />
                     <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
-                        <LinkButton style={{ paddingVertical: 20 }} title='CONTINUE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressContinueRide} />
-                        <LinkButton style={{ paddingVertical: 20 }} title='STOP' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressStopRide} />
-                        <LinkButton style={{ paddingVertical: 20 }} title='CLOSE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressCloseRide} />
+                        <LinkButton style={{ padding: 20 }} title='CONTINUE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressContinueRide} />
+                        <LinkButton style={{ padding: 20 }} title='STOP' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressStopRide} />
+                        <LinkButton style={{ padding: 20 }} title='CLOSE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressCloseRide} />
                     </View>
                 </View>
             )
@@ -2298,8 +2298,8 @@ export class Map extends Component {
                 <View style={{ flex: 1, flexDirection: 'row' }}>
                     <IconButton style={{ paddingHorizontal: widthPercentageToDP(4), paddingVertical: widthPercentageToDP(4) }} title='TRACKING' titleStyle={{ color: '#fff', fontSize: 16 }} iconProps={{ name: 'ios-arrow-dropdown', type: 'Ionicons', style: { color: '#fff', marginLeft: 5, fontSize: widthPercentageToDP(5) } }} iconRight onPress={this.openTrackingList} />
                     <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
-                        <LinkButton style={{ paddingVertical: 20 }} title='PAUSE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressPauseRide} />
-                        <LinkButton style={{ paddingVertical: 20 }} title='STOP' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressStopRide} />
+                        <LinkButton style={{ padding: 20 }} title='PAUSE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressPauseRide} />
+                        <LinkButton style={{ padding: 20 }} title='STOP' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressStopRide} />
                     </View>
                 </View>
             )
@@ -2794,18 +2794,18 @@ export class Map extends Component {
                                                 {/* {
                                                     this.state.friendsLocationCollection.features.length > 0
                                                         ? <View style={{ flexDirection: 'row' }}>
-                                                            <LinkButton style={{ paddingVertical: 20 }} title='HIDE FRIENDS' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.openTrackingList} />
+                                                            <LinkButton style={{padding: 20}} title='HIDE FRIENDS' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.openTrackingList} />
                                                         </View>
                                                         : <View style={{ flexDirection: 'row' }}>
-                                                            <LinkButton style={{ paddingVertical: 20 }} title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
-                                                            <LinkButton style={{ paddingVertical: 20 }} title='RECORD RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
+                                                            <LinkButton style={{padding: 20}} title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
+                                                            <LinkButton style={{padding: 20}} title='RECORD RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
                                                         </View>
                                                 } */}
                                                 {
                                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                         <IconButton style={{ paddingHorizontal: widthPercentageToDP(4) }} title='TRACKING' titleStyle={{ color: '#fff', fontSize: 16 }} iconProps={{ name: 'ios-arrow-dropdown', type: 'Ionicons', style: { color: '#fff', marginLeft: 5, fontSize: widthPercentageToDP(5) } }} iconRight onPress={this.openTrackingList} />
-                                                        <LinkButton title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
-                                                        <LinkButton title='RECORD' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
+                                                        <LinkButton style={{ paddingHorizontal: 20 }} title='+ RIDE' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.createRide} />
+                                                        <LinkButton style={{ paddingHorizontal: 20 }} title='RECORD' titleStyle={{ color: '#fff', fontSize: 16 }} onPress={this.onPressRecordRide} />
                                                     </View>
                                                 }
                                                 <IconButton iconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }}

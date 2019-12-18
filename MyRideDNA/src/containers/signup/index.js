@@ -197,7 +197,7 @@ class Signup extends Component {
                         </Item>
                         <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 10, justifyContent: 'space-between', alignItems: 'flex-end' }}>
                             <RoundButton title='GO' style={{ height: 100, width: 100, borderRadius: 100 }} titleStyle={{ fontSize: 25, fontFamily: CUSTOM_FONTS.robotoBold }} onPress={this.onSubmit} />
-                            <LinkButton title='Privacy policy' titleStyle={{ color: '#0083CA', fontSize: 17 }} />
+                            <LinkButton style={{ paddingHorizontal: 20 }} title='Privacy policy' titleStyle={{ color: '#0083CA', fontSize: 17 }} />
                         </View>
                         <View style={{ paddingVertical: heightPercentageToDP(5), backgroundColor: '#EB861E', alignItems: 'flex-end', paddingEnd: 10 }}>
                             <View style={{ flexDirection: 'row', width: '50%', justifyContent: 'space-around' }}>

@@ -116,7 +116,7 @@ export const LinkButton = ({ style, title, titleStyle, onPress, highlightColor, 
                 <DefaultText style={titleStyle}>{title}</DefaultText>
             </View>
         </TouchableHighlight>
-        : <TouchableOpacity activeOpacity={disabled ? 1 : 0.6} style={[{ paddingHorizontal: 20 }, style, disabled ? { backgroundColor: 'gray' } : null]} onPress={disabled ? null : onPress || null}>
+        : <TouchableOpacity activeOpacity={disabled ? 1 : 0.6} style={[style, disabled ? { backgroundColor: 'gray' } : null]} onPress={disabled ? null : onPress || null}>
             {
                 otherProps.children
                     ? otherProps.children

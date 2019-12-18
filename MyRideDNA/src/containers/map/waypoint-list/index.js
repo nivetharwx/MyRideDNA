@@ -299,7 +299,7 @@ class WaypointList extends React.Component {
                         {
                             this.props.ride.isRecorded
                                 ? null
-                                : <LinkButton title='Itinerary' titleStyle={[styles.whiteFont, { fontSize: widthPercentageToDP(3.5), fontWeight: 'bold', textDecorationLine: 'underline' }]} style={{ marginTop: 10 }} onPress={this.props.changeToItineraryMode} />
+                                : <LinkButton title='Itinerary' titleStyle={[styles.whiteFont, { fontSize: widthPercentageToDP(3.5), fontWeight: 'bold', textDecorationLine: 'underline' }]} style={{ marginTop: 10, paddingRight: 20 }} onPress={this.props.changeToItineraryMode} />
                         }
                     </View>
                     {/* <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab tabsContainerStyle={{ width: BOTTOM_TAB_CONTAINER_WIDTH }} style={{ width: BOTTOM_TAB_CONTAINER_WIDTH }} ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor={APP_COMMON_STYLES.statusBarColor} underlineStyle={{ height: 0 }} />}>
@@ -435,7 +435,8 @@ const styles = StyleSheet.create({
         backgroundColor: APP_COMMON_STYLES.headerColor,
         height: APP_COMMON_STYLES.headerHeight,
         position: 'absolute',
-        zIndex: 100,
+        zIndex: 999,
+        elevation: 31,
         width: '100%',
         alignItems: 'center',
         flexDirection: 'row'

@@ -461,7 +461,7 @@ class Group extends Component {
                             </View>
                             : null
                     }
-                    <View style={{ marginHorizontal: w = widthPercentageToDP(9) }}>
+                    <View style={{ flex: 1, marginHorizontal: w = widthPercentageToDP(9) }}>
                         <SearchBoxFilter
                             searchQuery={searchQuery} onChangeSearchValue={this.onChangeSearchValue}
                             placeholder='Name' outerContainer={{ marginTop: 80 }}
