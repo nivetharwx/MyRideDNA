@@ -41,7 +41,7 @@ export const getPicture = (pictureId, successCallback, errorCallback) => {
         })
         .catch(er => {
             errorCallback(er.response || er);
-            differentErrors(er, [pictureId, successCallback, errorCallback], getPicture, false);
+            handleServiceErrors(er, [pictureId, successCallback, errorCallback], getPicture, false);
         })
 }
 export const getPictureList = (pictureIdList, successCallback, errorCallback) => {
@@ -49,7 +49,7 @@ export const getPictureList = (pictureIdList, successCallback, errorCallback) =>
         .then(res => {
             if (res.status === 200) {
                 if (Object.keys(res.data).length === 0) {
-                    differentErrors(er, [pictureIdList, successCallback, errorCallback], getPictureList, false);
+                    handleServiceErrors(er, [pictureIdList, successCallback, errorCallback], getPictureList, false);
                     // errorCallback(res.data);
                 } else {
                     successCallback(res.data);
@@ -58,7 +58,7 @@ export const getPictureList = (pictureIdList, successCallback, errorCallback) =>
             }
         })
         .catch(er => {
-            differentErrors(er, [pictureIdList, successCallback, errorCallback], getPictureList, false);
+            handleServiceErrors(er, [pictureIdList, successCallback, errorCallback], getPictureList, false);
             // errorCallback(er.response || er);
         })
 }
@@ -68,7 +68,7 @@ export const getPostTypes = () => {
             .then(res => dispatch(updatePostTypesAction(res.data)))
             .catch(er => {
                 console.log(`${POSTS_BASE_URL}postTypes error: `, er);
-                differentErrors(er, [], getPostTypes, false);
+                handleServiceErrors(er, [], getPostTypes, false);
             })
     }
 }
@@ -78,7 +78,7 @@ export const getRidePictureList = (pictureIdList, successCallback, errorCallback
             if (res.status === 200) {
                 if (Object.keys(res.data).length === 0) {
                     // errorCallback(res.data);
-                    differentErrors(er, [pictureIdList, successCallback, errorCallback], getRidePictureList, false);
+                    handleServiceErrors(er, [pictureIdList, successCallback, errorCallback], getRidePictureList, false);
                 } else {
                     successCallback(res.data);
                     store.dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
@@ -87,7 +87,7 @@ export const getRidePictureList = (pictureIdList, successCallback, errorCallback
         })
         .catch(er => {
             errorCallback(er.response || er);
-            differentErrors(er, [pictureIdList, successCallback, errorCallback], getRidePictureList, false);
+            handleServiceErrors(er, [pictureIdList, successCallback, errorCallback], getRidePictureList, false);
         })
 }
 
@@ -144,7 +144,7 @@ export const getAllNotifications = (userId, pageNumber, date, comingFrom, succes
             })
             .catch(er => {
                 // dispatch(isloadingDataAction(false));
-                differentErrors(er, [userId, pageNumber, date, successCallback, errorCallback], getAllNotifications, false);
+                handleServiceErrors(er, [userId, pageNumber, date, successCallback, errorCallback], getAllNotifications, false);
                 errorCallback(er)
                 console.log("getNotifications error: ", er.response || er);
             })
@@ -190,7 +190,7 @@ export const deleteNotifications = (notificationIds) => {
                 }
             })
             .catch(er => {
-                differentErrors(er, [notificationIds], deleteNotifications, true);
+                handleServiceErrors(er, [notificationIds], deleteNotifications, true);
                 dispatch(apiLoaderActions(false))
                 console.log("deleteNotifications error: ", er.response || er);
             })
@@ -262,7 +262,7 @@ export const logoutUser = (userId, accessToken, deviceToken) => {
             .catch(er => {
                 console.log(er.response);
                 dispatch(apiLoaderActions(false))
-                differentErrors(er, [userId, accessToken, deviceToken], logoutUser, true);
+                handleServiceErrors(er, [userId, accessToken, deviceToken], logoutUser, true);
                 // TODO: Dispatch error info action
             })
     };
@@ -334,7 +334,7 @@ export const updateUserInfo = (userData, successCallback, errorCallback) => {
             .catch(er => {
                 errorCallback(false)
                 console.log("updateUserInfo: ", er.response || er);
-                differentErrors(er, [userData, successCallback, errorCallback], updateUserInfo, true);
+                handleServiceErrors(er, [userData, successCallback, errorCallback], updateUserInfo, true);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -354,7 +354,7 @@ export const addClubs = (userId, clubName, clubs) => {
             })
             .catch(er => {
                 console.log("addClubs: ", er.response || er);
-                differentErrors(er, [userId, clubName, clubs], addClubs, true);
+                handleServiceErrors(er, [userId, clubName, clubs], addClubs, true);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -377,7 +377,7 @@ export const updateClubs = (userId, clubName, clubId, clubs) => {
             })
             .catch(er => {
                 console.log("updateClubs: ", er.response || er);
-                differentErrors(er, [userId, clubName, clubId, clubs], updateClubs, true);
+                handleServiceErrors(er, [userId, clubName, clubId, clubs], updateClubs, true);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -399,7 +399,7 @@ export const removeClubs = (userId, clubId, clubs) => {
             })
             .catch(er => {
                 console.log("removeClubs: ", er.response || er);
-                differentErrors(er, [userId, clubId, clubs], removeClubs, true);
+                handleServiceErrors(er, [userId, clubId, clubs], removeClubs, true);
                 // TODO: Dispatch error info action
                 dispatch(toggleLoaderAction(false));
             })
@@ -425,7 +425,7 @@ export const updatePassword = (passwordInfo) => {
                 console.log("updatePassword error: ", er.response || er);
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
-                differentErrors(er, [passwordInfo], updatePassword, true);
+                handleServiceErrors(er, [passwordInfo], updatePassword, true);
                 dispatch(updatePasswordErrorAction(er.response.data));
             })
     };
@@ -446,7 +446,7 @@ export const updateUserSettings = (userSettings) => {
             })
             .catch(er => {
                 console.log("updateUserSettings error: ", er.response || er);
-                differentErrors(er, [userSettings], updateUserSettings, true);
+                handleServiceErrors(er, [userSettings], updateUserSettings, true);
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
             })
@@ -468,7 +468,7 @@ export const updateShareLocationState = (userId, shareLocState) => {
             })
             .catch(er => {
                 console.log("updateShareLocationState: ", er.response || er);
-                differentErrors(er, [userId, shareLocState], updateShareLocationState, true);
+                handleServiceErrors(er, [userId, shareLocState], updateShareLocationState, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -489,7 +489,7 @@ export const updateProfilePicture = (profilePicStr, mimeType, userId) => {
             .catch(er => {
                 // dispatch(profileLoaderActions(false))
                 console.log(er.response);
-                differentErrors(er, [profilePicStr, mimeType, userId], updateProfilePicture, true);
+                handleServiceErrors(er, [profilePicStr, mimeType, userId], updateProfilePicture, true);
                 // TODO: Dispatch error info action
             });
 
@@ -529,7 +529,7 @@ export const getAllBuildRides = (userId, toggleLoader, pageNumber, successCallba
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
-                differentErrors(er, [userId, toggleLoader, pageNumber, successCallback, errorCallback], getAllBuildRides, false);
+                handleServiceErrors(er, [userId, toggleLoader, pageNumber, successCallback, errorCallback], getAllBuildRides, false);
                 errorCallback(er)
             })
     };
@@ -556,7 +556,7 @@ export const getAllPublicRides = (userId, toggleLoader, pageNumber, successCallb
             })
             .catch(er => {
                 console.log(er.response);
-                differentErrors(er, [userId, toggleLoader, pageNumber, successCallback, errorCallback], getAllPublicRides, false);
+                handleServiceErrors(er, [userId, toggleLoader, pageNumber, successCallback, errorCallback], getAllPublicRides, false);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
@@ -586,7 +586,7 @@ export const getAllRecordedRides = (userId, toggleLoader, pageNumber, spaceId, s
             })
             .catch(er => {
                 console.log(er.response);
-                differentErrors(er, [userId, toggleLoader, pageNumber, successCallback, errorCallback], getAllRecordedRides, false);
+                handleServiceErrors(er, [userId, toggleLoader, pageNumber, successCallback, errorCallback], getAllRecordedRides, false);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -610,7 +610,7 @@ export const getRecordRides = (userId, spaceId, pageNumber = 0, successCallback,
             })
             .catch(er => {
                 console.log(er.response);
-                differentErrors(er, [userId, pageNumber, spaceId, successCallback, errorCallback], getRecordRides, false);
+                handleServiceErrors(er, [userId, pageNumber, spaceId, successCallback, errorCallback], getRecordRides, false);
                 // TODO: Dispatch error info action
                 dispatch(apiLoaderActions(false))
                 errorCallback(er);
@@ -638,7 +638,7 @@ export const getFriendsRideList = (friendUserId, relationship) => {
             .catch(er => {
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
-                differentErrors(er, [friendUserId, relationship], getFriendsRideList, false);
+                handleServiceErrors(er, [friendUserId, relationship], getFriendsRideList, false);
                 console.log('friendsRideError : ', er)
             })
     }
@@ -699,7 +699,7 @@ export const copySharedRide = (rideId, name, rideType, userId, date) => {
             })
             .catch(er => {
                 console.log(er.response);
-                differentErrors(er, [rideId, name, rideType, userId, date], copySharedRide, true);
+                handleServiceErrors(er, [rideId, name, rideType, userId, date], copySharedRide, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -721,7 +721,7 @@ export const copyRide = (rideId, name, rideType, date) => {
             })
             .catch(er => {
                 console.log(er.response);
-                differentErrors(er, [rideId, name, rideType, date], copyRide, true);
+                handleServiceErrors(er, [rideId, name, rideType, date], copyRide, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -743,7 +743,7 @@ export const renameRide = (ride, rideType, userId, index) => {
             })
             .catch(er => {
                 console.log(er.response);
-                differentErrors(er, [ride, rideType, userId, index], renameRide, true);
+                handleServiceErrors(er, [ride, rideType, userId, index], renameRide, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -766,7 +766,7 @@ export const deleteRide = (rideId, index, rideType) => {
             })
             .catch(er => {
                 console.log(er.response);
-                differentErrors(er, [rideId, index, rideType], deleteRide, true);
+                handleServiceErrors(er, [rideId, index, rideType], deleteRide, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1213,7 +1213,7 @@ export const getRideByRideId = (rideId, rideInfo = {}) => {
             })
             .catch(er => {
                 console.log(`getRideByRideId: ${RIDE_BASE_URL}getRideByRideId?rideId=${rideId}`, er.response);
-                differentErrors(er, [rideId, rideInfo = {}], getRideByRideId, true);
+                handleServiceErrors(er, [rideId, rideInfo = {}], getRideByRideId, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1346,7 +1346,7 @@ export const getAllFriends = (friendType, userId, pageNumber, toggleLoader, succ
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
-                differentErrors(er, [friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback], getAllFriends, false);
+                handleServiceErrors(er, [friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback], getAllFriends, false);
                 // errorCallback(er);
             })
     };
@@ -1369,7 +1369,7 @@ export const getFriendInfo = (friendType, userId, friendsIdList) => {
             .catch(er => {
                 console.log(`getFriend: `, er.response || er);
                 dispatch(apiLoaderActions(false));
-                differentErrors(er, [friendType, userId, friendIdList], getFriendInfo, false);
+                handleServiceErrors(er, [friendType, userId, friendIdList], getFriendInfo, false);
             })
     };
 }
@@ -1387,7 +1387,7 @@ export const getFriendProfile = (userId, friendId) => {
             .catch(er => {
                 console.log(`getFriendProfile error: `, er.response || er);
                 dispatch(apiLoaderActions(false));
-                differentErrors(er, [userId, friendId], getFriendProfile, false);
+                handleServiceErrors(er, [userId, friendId], getFriendProfile, false);
             })
     };
 }
@@ -1407,7 +1407,7 @@ export const getPassengersById = (userId, friendId, pageNumber, passengerList, s
             .catch(er => {
                 console.log(`getPassengersById error: `, er.response || er);
                 dispatch(apiLoaderActions(false));
-                differentErrors(er, [userId, friendId, pageNumber], getPassengersById, false);
+                handleServiceErrors(er, [userId, friendId, pageNumber], getPassengersById, false);
                 errorCallback(er);
             })
     };
@@ -1429,7 +1429,7 @@ export const getRoadBuddiesById = (userId, friendId, pageNumber, friendList, suc
             .catch(er => {
                 console.log(`getRoadBuddiesById error: `, er.response || er);
                 dispatch(apiLoaderActions(false));
-                differentErrors(er, [userId, friendId, pageNumber], getRoadBuddiesById, false);
+                handleServiceErrors(er, [userId, friendId, pageNumber], getRoadBuddiesById, false);
                 errorCallback(er)
             })
     };
@@ -1451,7 +1451,7 @@ export const getMutualFriends = (userId, friendId, pageNumber, preference, mutua
             .catch(er => {
                 console.log(`getMutualFriends error: `, er.response || er);
                 dispatch(apiLoaderActions(false));
-                differentErrors(er, [userId, friendId, pageNumber, preference, successCallback, errorCallback], getMutualFriends, false);
+                handleServiceErrors(er, [userId, friendId, pageNumber, preference, successCallback, errorCallback], getMutualFriends, false);
                 errorCallback(er)
             })
     };
@@ -1472,7 +1472,7 @@ export const getUserProfile = (userId, friendId) => {
             .catch(er => {
                 console.log(`getUserProfile error: `, er.response || er);
                 dispatch(apiLoaderActions(false));
-                differentErrors(er, [userId, friendId], getUserProfile, false);
+                handleServiceErrors(er, [userId, friendId], getUserProfile, false);
             })
     };
 }
@@ -1511,7 +1511,7 @@ export const getAllFriends1 = (friendType, userId, pageNumber, toggleLoader, suc
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
-                differentErrors(er, [friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback], getAllFriends, false);
+                handleServiceErrors(er, [friendType, userId, pageNumber, toggleLoader, successCallback, errorCallback], getAllFriends, false);
                 // errorCallback(er);
             })
     };
@@ -1562,7 +1562,7 @@ export const searchForFriend = (searchParam, userId, pageNumber, preference) => 
             })
             .catch(er => {
                 console.log(`searchFriend: `, er.response || er);
-                differentErrors(er, [searchParam, userId, pageNumber, preference], searchForFriend, true);
+                handleServiceErrors(er, [searchParam, userId, pageNumber, preference], searchForFriend, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
             })
@@ -1588,7 +1588,7 @@ export const addFavorite = (userId, senderId) => {
             })
             .catch(er => {
                 console.log(`addFavorite error: `, er.response || er);
-                differentErrors(er, [userId, senderId], addFavorite, true);
+                handleServiceErrors(er, [userId, senderId], addFavorite, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1614,7 +1614,7 @@ export const removeFavorite = (userId, senderId) => {
             })
             .catch(er => {
                 console.log(`removeFavorite error: `, er.response || er);
-                differentErrors(er, [userId, senderId], removeFavorite, true);
+                handleServiceErrors(er, [userId, senderId], removeFavorite, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1641,7 +1641,7 @@ export const sendInvitationOrRequest = (requestBody) => {
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
-                differentErrors(er, [requestBody], sendInvitationOrRequest, true);
+                handleServiceErrors(er, [requestBody], sendInvitationOrRequest, true);
                 dispatch(updateInvitationResponseAction({ error: er.response.data || "Something went wrong" }));
             })
     };
@@ -1664,7 +1664,7 @@ export const sendFriendRequest = (requestBody, successCallback, errorCallback) =
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
-                differentErrors(er, [requestBody], sendFriendRequest, true);
+                handleServiceErrors(er, [requestBody], sendFriendRequest, true);
                 typeof errorCallback === "function" && errorCallback(er);
             })
     };
@@ -1688,7 +1688,7 @@ export const cancelFriendRequest = (senderId, personId, requestId, successCallba
             })
             .catch(er => {
                 console.log(`cancelFriendRequest: `, er, er.response);
-                differentErrors(er, [senderId, personId, requestId], cancelFriendRequest, true);
+                handleServiceErrors(er, [senderId, personId, requestId], cancelFriendRequest, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1709,7 +1709,7 @@ export const getAllFriendRequests = (userId, toggleLoader) => {
                 }
             })
             .catch(err => {
-                differentErrors(err, [userId, toggleLoader], getAllFriendRequests, false);
+                handleServiceErrors(err, [userId, toggleLoader], getAllFriendRequests, false);
                 dispatch(apiLoaderActions(false))
                 console.log(err)
             })
@@ -1734,7 +1734,7 @@ export const approveFriendRequest = (senderId, personId, actionDate, requestId, 
             })
             .catch(er => {
                 console.log(`approveFriendRequest: `, er, er.response);
-                differentErrors(er, [senderId, personId, actionDate, requestId], getAllFriendRequests, true);
+                handleServiceErrors(er, [senderId, personId, actionDate, requestId], getAllFriendRequests, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1761,7 +1761,7 @@ export const rejectFriendRequest = (senderId, personId, requestId, successCallba
             })
             .catch(er => {
                 console.log(`rejectFriendRequest error : `, er, er.response);
-                differentErrors(er, [senderId, personId, requestId], rejectFriendRequest, true);
+                handleServiceErrors(er, [senderId, personId, requestId], rejectFriendRequest, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1787,7 +1787,7 @@ export const doUnfriend = (senderId, personId) => {
             })
             .catch(er => {
                 console.log(`unfriend: `, er.response || er);
-                differentErrors(er, [senderId, personId], doUnfriend, true);
+                handleServiceErrors(er, [senderId, personId], doUnfriend, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1810,7 +1810,7 @@ export const getFriendsLocationList = (userId, friendsIdList) => {
             })
             .catch(er => {
                 console.log(`getFriendLocationList: `, er.response || er);
-                differentErrors(er, [userId, friendsIdList], getFriendsLocationList, true);
+                handleServiceErrors(er, [userId, friendsIdList], getFriendsLocationList, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1864,7 +1864,7 @@ export const getFriendGroups = (userId, toggleLoader, pageNumber, successCallbac
                 }
             })
             .catch(er => {
-                differentErrors(er, [userId, toggleLoader, pageNumber, successCallback, errorCallback], getFriendGroups, false);
+                handleServiceErrors(er, [userId, toggleLoader, pageNumber, successCallback, errorCallback], getFriendGroups, false);
                 dispatch(apiLoaderActions(false))
                 errorCallback(er)
                 // TODO: Dispatch error info action
@@ -1893,7 +1893,7 @@ export const createFriendGroup = (newGroupInfo) => {
             })
             .catch(er => {
                 console.log(`createFriendGroup error: `, er.response);
-                differentErrors(er, [newGroupInfo], createFriendGroup, true);
+                handleServiceErrors(er, [newGroupInfo], createFriendGroup, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1922,7 +1922,7 @@ export const updateFriendGroup = (updatedGroupInfo) => {
             })
             .catch(er => {
                 console.log(`updatedGroupInfo error: `, er.response);
-                differentErrors(er, [updatedGroupInfo], updatedGroupInfo, true);
+                handleServiceErrors(er, [updatedGroupInfo], updatedGroupInfo, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1945,7 +1945,7 @@ export const exitFriendGroup = (groupId, memberId) => {
             })
             .catch(er => {
                 console.log(`exitFriendGroup error: `, er.response);
-                differentErrors(er, [groupId, memberId], exitFriendGroup, true);
+                handleServiceErrors(er, [groupId, memberId], exitFriendGroup, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -1997,7 +1997,7 @@ export const getGroupMembers = (groupId, userId, groupName, toggleLoader, pageNu
             })
             .catch(er => {
                 console.log(`getGroupMembers error: `, er.response ? er.response : er);
-                differentErrors(er, [groupId, userId, groupName, toggleLoader, pageNumber, successCallback, errorCallback], getGroupMembers, false)
+                handleServiceErrors(er, [groupId, userId, groupName, toggleLoader, pageNumber, successCallback, errorCallback], getGroupMembers, false)
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -2021,7 +2021,7 @@ export const addMembers = (groupId, memberDetails) => {
             })
             .catch(er => {
                 console.log(`addMembers error: `, er)
-                differentErrors(er, [groupId, memberDetails], addMembers, true)
+                handleServiceErrors(er, [groupId, memberDetails], addMembers, true)
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -2043,7 +2043,7 @@ export const makeMemberAsAdmin = (groupId, memberId) => {
             })
             .catch(er => {
                 console.log(`makeMemberAsAdmin: `, er.response ? er.response : er);
-                differentErrors(er, [groupId, memberId], makeMemberAsAdmin, true)
+                handleServiceErrors(er, [groupId, memberId], makeMemberAsAdmin, true)
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -2065,7 +2065,7 @@ export const dismissMemberAsAdmin = (groupId, memberId) => {
             })
             .catch(er => {
                 console.log(`dismissMemberAsAdmin: `, er.response ? er.response : er);
-                differentErrors(er, [groupId, memberId], dismissMemberAsAdmin, true)
+                handleServiceErrors(er, [groupId, memberId], dismissMemberAsAdmin, true)
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -2087,7 +2087,7 @@ export const removeMember = (groupId, memberId) => {
             })
             .catch(er => {
                 console.log(`removeMember: `, er.response ? er.response : er);
-                differentErrors(er, [groupId, memberId], removeMember, true)
+                handleServiceErrors(er, [groupId, memberId], removeMember, true)
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -2106,7 +2106,7 @@ export const getAllMembersLocation = (groupId, userId) => {
             .catch(er => {
                 console.log(`getAllMembersLocation error: `, er.response || er);
                 dispatch(apiLoaderActions(false));
-                differentErrors(er, [userId], getAllMembersLocation, false);
+                handleServiceErrors(er, [userId], getAllMembersLocation, false);
             })
     }
 }
@@ -2158,7 +2158,7 @@ export const getGarageInfo = (userId, successCallback, errorCallback) => {
         })
         .catch(er => {
             console.log("getGarage error: ", er.response || er);
-            differentErrors(er, [userId, successCallback, errorCallback], getGarageInfo, false);
+            handleServiceErrors(er, [userId, successCallback, errorCallback], getGarageInfo, false);
             errorCallback(er.response || er);
         })
 }
@@ -2175,7 +2175,7 @@ export const updateGarageName = (garageName, garageId) => {
             })
             .catch(er => {
                 console.log(`updateGarageName: `, er.response);
-                differentErrors(er, [garageName, garageId], updateGarageName, true);
+                handleServiceErrors(er, [garageName, garageId], updateGarageName, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false));
@@ -2197,7 +2197,7 @@ export const addBikeToGarage = (userId, bike, pictureList, successCallback, erro
             .catch(er => {
                 console.log(`addSpace error: `, er.response || er);
                 errorCallback(false);
-                differentErrors(er, [userId, bike, pictureList, successCallback, errorCallback], addBikeToGarage, true);
+                handleServiceErrors(er, [userId, bike, pictureList, successCallback, errorCallback], addBikeToGarage, true);
             })
     };
 }
@@ -2212,7 +2212,7 @@ export const editBike = (userId, bike, pictureList, successCallback, errorCallba
             .catch(er => {
                 console.log("updateSpace error: ", er.response || er);
                 errorCallback(false);
-                differentErrors(er, [userId, bike, pictureList, successCallback, errorCallback], editBike, true);
+                handleServiceErrors(er, [userId, bike, pictureList, successCallback, errorCallback], editBike, true);
             })
     };
 }
@@ -2227,7 +2227,7 @@ export const setBikeAsActive = (userId, spaceId) => {
             })
             .catch(er => {
                 console.log(`setDefaultSpace error: `, er.response || er);
-                differentErrors(er, [userId, spaceId, newActiveIndex], setBikeAsActive, true);
+                handleServiceErrors(er, [userId, spaceId, newActiveIndex], setBikeAsActive, true);
                 dispatch(apiLoaderActions(false));
             })
     };
@@ -2243,7 +2243,7 @@ export const deleteBike = (userId, bikeId) => {
             })
             .catch(er => {
                 console.log(`deleteBike: `, er.response);
-                differentErrors(er, [userId, bikeId], deleteBike, true);
+                handleServiceErrors(er, [userId, bikeId], deleteBike, true);
                 dispatch(apiLoaderActions(false));
             })
     };
@@ -2262,7 +2262,7 @@ export const getBikeAlbum = (userId, spaceId, pageNumber, successCallback, error
                 }
             }).catch(er => {
                 console.log(`getPicturesBySpaceId error: `, er.response || er);
-                differentErrors(er, [userId, spaceId], getBikeAlbum, false);
+                handleServiceErrors(er, [userId, spaceId], getBikeAlbum, false);
                 dispatch(apiLoaderActions(false));
                 typeof errorCallback === 'function' && errorCallback(er);
             })
@@ -2282,7 +2282,7 @@ export const getRoadBuddies = (userId) => {
             })
             .catch(er => {
                 console.log(`getRoadBuddies error: `, er.response || er);
-                differentErrors(er, [userId], getRoadBuddies, false);
+                handleServiceErrors(er, [userId], getRoadBuddies, false);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -2306,7 +2306,7 @@ export const updateMyWallet = (userId, insurance, roadsideAssistance, successCal
             })
             .catch(er => {
                 console.log(`updateMyWallet error: `, er.response || er);
-                differentErrors(er, [userId, insurance, roadsideAssistance, successCallback, errorCallback], updateMyWallet, true);
+                handleServiceErrors(er, [userId, insurance, roadsideAssistance, successCallback, errorCallback], updateMyWallet, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -2328,7 +2328,7 @@ export const getMyWallet = (userId) => {
             })
             .catch(er => {
                 console.log(`getMyWallet error: `, er.response || er);
-                differentErrors(er, [userId], getMyWallet, false);
+                handleServiceErrors(er, [userId], getMyWallet, false);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -2360,7 +2360,7 @@ export const getPassengerList = (userId, pageNumber, preference, successCallback
             })
             .catch(er => {
                 console.log(`getAllPassengersByUserId error: `, er.response || er);
-                differentErrors(er, [userId, pageNumber, preference, successCallback, errorCallback], getPassengerList, false);
+                handleServiceErrors(er, [userId, pageNumber, preference, successCallback, errorCallback], getPassengerList, false);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -2387,7 +2387,7 @@ export const registerPassenger = (userId, passenger) => {
             })
             .catch(er => {
                 console.log(`registerPassenger error: `, er.response || er);
-                differentErrors(er, [userId, passenger], registerPassenger, true);
+                handleServiceErrors(er, [userId, passenger], registerPassenger, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -2409,7 +2409,7 @@ export const updatePassengerDetails = (psngId, passenger) => {
             })
             .catch(er => {
                 console.log(`updatePassengerDetails error: `, er.response || er);
-                differentErrors(er, [passenger], updatePassengerDetails, true);
+                handleServiceErrors(er, [passenger], updatePassengerDetails, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -2430,7 +2430,7 @@ export const deletePassenger = (passengerId) => {
             })
             .catch(er => {
                 console.log(`deletePassenger error: `, er.response || er);
-                differentErrors(er, [passengerId], deletePassenger, true);
+                handleServiceErrors(er, [passengerId], deletePassenger, true);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -2462,7 +2462,7 @@ export const getCommunityFriendsList = (userId, pageNumber, preference, successC
             })
             .catch(er => {
                 console.log(`getCommunityFriendsList error: `, er.response || er);
-                differentErrors(er, [userId, pageNumber, preference, successCallback, errorCallback], getCommunityFriendsList, false);
+                handleServiceErrors(er, [userId, pageNumber, preference, successCallback, errorCallback], getCommunityFriendsList, false);
                 // TODO: Dispatch error info action
                 // dispatch(toggleLoaderAction(false));
                 dispatch(apiLoaderActions(false))
@@ -2494,7 +2494,7 @@ export const getAlbum = (userId, pageNumber, preference, successCallback, errorC
             })
             .catch(er => {
                 console.log(`getAlbum error: `, er.response || er);
-                differentErrors(er, [userId, pageNumber, preference = 15, successCallback, errorCallback], getAlbum, false);
+                handleServiceErrors(er, [userId, pageNumber, preference = 15, successCallback, errorCallback], getAlbum, false);
                 // TODO: Dispatch error info action
                 errorCallback(er)
             })
@@ -2514,7 +2514,7 @@ export const getBuddyAlbum = (userId, friendId, pageNumber, preference, buddyAlb
             })
             .catch(er => {
                 console.log(`getBuddyAlbum error: `, er.response || er);
-                differentErrors(er, [userId, friendId, pageNumber, preference, successCallback, errorCallback], getBuddyAlbum, false);
+                handleServiceErrors(er, [userId, friendId, pageNumber, preference, successCallback, errorCallback], getBuddyAlbum, false);
                 // TODO: Dispatch error info action
                 errorCallback(er)
             })
@@ -2536,7 +2536,7 @@ export const getAllChats = (userId) => {
             })
             .catch(er => {
                 console.log(`getAllChats error: `, er.response || er);
-                differentErrors(er, [userId], getAllChats, false);
+                handleServiceErrors(er, [userId], getAllChats, false);
                 // TODO: Dispatch error info action
             })
     };
@@ -2557,7 +2557,7 @@ export const getAllMessages = (id, userId, isGroup) => {
             })
             .catch(er => {
                 console.log(`getAllMessages error: `, er);
-                differentErrors(er, [id, userId, isGroup], getAllMessages, false);
+                handleServiceErrors(er, [id, userId, isGroup], getAllMessages, false);
                 // TODO: Dispatch error info action
             })
     };
@@ -2604,7 +2604,7 @@ export const deleteMessagesById = (isGroup, id, userId, messageToBeDeleted, newC
                 }
             })
             .catch(er => {
-                differentErrors(er, [isGroup, id, userId, messageToBeDeleted, newChatMessages], deleteMessagesById, true);
+                handleServiceErrors(er, [isGroup, id, userId, messageToBeDeleted, newChatMessages], deleteMessagesById, true);
                 console.log('deleteMessagesById  error : ', er);
             })
     };
@@ -2626,7 +2626,7 @@ export const deleteMessagesByIdForEveryone = (isGroup, id, userId, messageToBeDe
                 }
             })
             .catch(er => {
-                differentErrors(er, [isGroup, id, userId, messageToBeDeleted, newChatMessages], deleteMessagesByIdForEveryone, true);
+                handleServiceErrors(er, [isGroup, id, userId, messageToBeDeleted, newChatMessages], deleteMessagesByIdForEveryone, true);
                 console.log('deleteMessagesByIdForEveryone   error : ', er);
             })
     };
@@ -2644,7 +2644,7 @@ export const deleteAllMessages = (id, userId, isGroup) => {
             })
             .catch(er => {
                 console.log(`deleteAllMessages error: `, er.response || er);
-                differentErrors(er, [isGroup, id, userId, messageToBeDeleted, newChatMessages], deleteAllMessages, true);
+                handleServiceErrors(er, [isGroup, id, userId, messageToBeDeleted, newChatMessages], deleteAllMessages, true);
                 // TODO: Dispatch error info action
             })
     };
@@ -2683,29 +2683,15 @@ export const createPost = (userId, spaceId, postData, successCallback, errorCall
                 dispatch(apiLoaderActions(false));
                 console.log(`createPost error: `, er.response || er);
                 typeof errorCallback === 'function' && errorCallback(er.response || er);
-                differentErrors(er, [userId, spaceId, postData, successCallback, errorCallback], createPost, true);
+                handleServiceErrors(er, [userId, spaceId, postData, successCallback, errorCallback], createPost, true);
             })
     }
 }
-export const getPosts = (userId, postTypeId, spaceId, pageNumber = 0, successCallback, errorCallback) => {
-    return dispatch => {
-        dispatch(apiLoaderActions(true));
-        axios.get(`${POSTS_BASE_URL}user/${userId}/postType/${postTypeId}?spaceId=${spaceId}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
-            .then(res => {
-                if (res.status === 200) {
-                    dispatch(apiLoaderActions(false));
-                    console.log("getPosts success: ", res.data);
-                    typeof successCallback === 'function' && successCallback(res.data);
-                }
-            })
-            .catch(er => {
-                dispatch(apiLoaderActions(false));
-                console.log(`getPosts error: `, er.response || er);
-                typeof errorCallback === 'function' && errorCallback(er.response || er);
-                differentErrors(er, [userId, postTypeId, spaceId, successCallback, errorCallback], getPosts, true);
-            })
-    }
+export const getPosts = (userId, postTypeId, spaceId, pageNumber = 0) => {
+    const URL_ENDPOINT = `user/${userId}/postType/${postTypeId}` + (spaceId ? `?spaceId=${spaceId}` : '');
+    return axios.get(`${POSTS_BASE_URL}${URL_ENDPOINT}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT });
 }
+
 export const deletePost = (postId, successCallback, errorCallback) => {
     return dispatch => {
         dispatch(apiLoaderActions(true));
@@ -2719,12 +2705,12 @@ export const deletePost = (postId, successCallback, errorCallback) => {
                 dispatch(apiLoaderActions(false));
                 console.log(`deletePost error: `, er.response || er);
                 typeof errorCallback === 'function' && errorCallback(er.response || er);
-                differentErrors(er, [postId, successCallback, errorCallback], deletePost, true);
+                handleServiceErrors(er, [postId, successCallback, errorCallback], deletePost, true);
             })
     }
 }
 
-const differentErrors = (error, params, api, isTimeout) => {
+export const handleServiceErrors = (error, params, api, isTimeout) => {
     console.log('error.message : ', error.message)
     if (error.message === 'Network Error' && store.getState().PageState.hasNetwork === false && isTimeout === false) {
         store.dispatch(errorHandlingAction({ currentScene: Actions.currentScene, config: error.config, params: params, api: api, isRetryApi: false }));

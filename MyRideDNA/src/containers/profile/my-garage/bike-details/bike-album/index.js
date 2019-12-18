@@ -106,7 +106,7 @@ class BikeAlbum extends Component {
             <View style={styles.fill}>
                 <BasicHeader title='Photos'
                     leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                    rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', rightIconPropsStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 }, onPress: this.openPostForm }} />
+                    rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', containerStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 }, onPress: this.openPostForm }} />
                 <View style={{ marginTop: heightPercentageToDP(9.6), flex: 1 }}>
                     <FlatList
                         showsVerticalScrollIndicator={false}

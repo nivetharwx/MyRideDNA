@@ -192,6 +192,8 @@ class MyProfileTab extends Component {
         Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId });
     }
 
+    openJournalPage = () => Actions.push(PageKeys.JOURNAL, { isEditable: true });
+
     render() {
         const { user, allFriends, passengerList } = this.props;
         const { isLoadingUpdates } = this.state;
@@ -317,23 +319,23 @@ class MyProfileTab extends Component {
                             }
                         </View>
                     </View>
-                    <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.MY_WALLET_FORM)}>
-                        <ImageBackground source={require('../../../assets/img/my-wallet.png')} style={styles.usersExtraDetail}>
+                    <TouchableOpacity style={styles.fullWidthContainer} onPress={() => Actions.push(PageKeys.MY_WALLET_FORM)}>
+                        <ImageBackground source={require('../../../assets/img/my-wallet.png')} style={styles.imgBG}>
                             <DefaultText style={styles.txtOnImg}>My Wallet</DefaultText>
                         </ImageBackground>
                     </TouchableOpacity >
-                    <View style={styles.usersExtraDetailContainer}>
-                        <ImageBackground source={require('../../../assets/img/my-journal.png')} style={styles.usersExtraDetail}>
+                    <LinkButton style={styles.fullWidthContainer} onPress={this.openJournalPage}>
+                        <ImageBackground source={require('../../../assets/img/my-journal.png')} style={styles.imgBG}>
                             <DefaultText style={styles.txtOnImg}>My Journal</DefaultText>
                         </ImageBackground>
-                    </View>
-                    <View style={styles.usersExtraDetailContainer}>
-                        <ImageBackground source={require('../../../assets/img/my-vest.png')} style={styles.usersExtraDetail}>
+                    </LinkButton>
+                    <View style={styles.fullWidthContainer}>
+                        <ImageBackground source={require('../../../assets/img/my-vest.png')} style={styles.imgBG}>
                             <DefaultText style={styles.txtOnImg}>My Vest</DefaultText>
                         </ImageBackground>
                     </View>
-                    <TouchableOpacity style={styles.usersExtraDetailContainer} onPress={() => Actions.push(PageKeys.ALBUM)}>
-                        <ImageBackground source={require('../../../assets/img/my-photos.png')} style={styles.usersExtraDetail}>
+                    <TouchableOpacity style={styles.fullWidthContainer} onPress={() => Actions.push(PageKeys.ALBUM)}>
+                        <ImageBackground source={require('../../../assets/img/my-photos.png')} style={styles.imgBG}>
                             <DefaultText style={styles.txtOnImg}>My Photos</DefaultText>
                         </ImageBackground>
                     </TouchableOpacity>
@@ -506,13 +508,15 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         zIndex: 999
     },
-    usersExtraDetail: {
-        width: WindowDimensions.width,
+    imgBG: {
+        width: widthPercentageToDP(100),
         height: heightPercentageToDP(30),
         justifyContent: 'center',
         paddingLeft: 20
     },
-    usersExtraDetailContainer: {
+    fullWidthContainer: {
+        paddingHorizontal: 0,
+        flex: 1,
         marginTop: 20,
         borderTopWidth: 9,
         borderTopColor: '#f69039',

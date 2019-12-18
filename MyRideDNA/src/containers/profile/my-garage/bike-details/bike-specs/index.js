@@ -52,7 +52,7 @@ class BikeSpecList extends Component {
         }
         return <BasicHeader title={title}
             leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-            rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', rightIconPropsStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 }, onPress: this.openPostForm }}
+            rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', containerStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 }, onPress: this.openPostForm }}
         />
     }
 
@@ -151,23 +151,20 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        getPosts: (userId, postType, postTypeId, spaceId, pageNumber, successCallback, errorCallback) => dispatch(getPosts(userId, postTypeId, spaceId, pageNumber, (res) => {
-            if (typeof successCallback === 'function') successCallback(res);
-            switch (postType) {
-                case POST_TYPE.WISH_LIST:
-                    dispatch(updateBikeWishListAction({ updates: res, reset: !pageNumber }))
-                    break;
-                case POST_TYPE.MY_RIDE:
-                    dispatch(updateBikeCustomizationsAction({ updates: res, reset: !pageNumber }));
-                    break;
-                case POST_TYPE.STORIES_FROM_ROAD:
-                    break;
-                case POST_TYPE.LOGGED_RIDES:
-                    break;
-            }
-        }, (err) => {
-            if (typeof errorCallback === 'function') errorCallback(err);
-        })),
+        getPosts: (userId, postType, postTypeId, spaceId, pageNumber, successCallback, errorCallback) => getPosts(userId, postTypeId, spaceId, pageNumber)
+            .then(({ data }) => {
+                if (typeof successCallback === 'function') successCallback(data);
+                switch (postType) {
+                    case POST_TYPE.WISH_LIST:
+                        dispatch(updateBikeWishListAction({ updates: data, reset: !pageNumber }))
+                        break;
+                    case POST_TYPE.MY_RIDE:
+                        dispatch(updateBikeCustomizationsAction({ updates: data, reset: !pageNumber }));
+                        break;
+                    case POST_TYPE.STORIES_FROM_ROAD:
+                        break;
+                }
+            }).catch(err => typeof errorCallback === 'function' && errorCallback(err)),
         getCurrentBikeSpec: (postType, postId) => dispatch(getCurrentBikeSpecAction({ postType, postId })),
     }
 }

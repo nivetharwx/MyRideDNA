@@ -16,15 +16,16 @@ import FriendRequest from './FriendRequest';
 import ChatList from './ChatList';
 import Album from './Album';
 import CurrentProfile from './CurrentProfile';
+import Journal from './Journal';
 
 const rootReducer = (state, action) => {
-    if (action.type === 'RESETING_STATE_ON_LOGOUT') {
-      state = undefined
-    }
-  
-    return appReducer(state, action)
+  if (action.type === 'RESETING_STATE_ON_LOGOUT') {
+    state = undefined
   }
-// export default  combineReducers({ UserAuth, TabVisibility, RideInfo, RideList, GPSState, PageState, FriendList, GarageInfo, PageOverTab, FriendGroupList, PassengerList, CommunitySearchList, NotificationList, FriendRequest });
- const appReducer = combineReducers({ UserAuth, TabVisibility, RideInfo, RideList, GPSState, PageState, FriendList, GarageInfo, PageOverTab, FriendGroupList, PassengerList, CommunitySearchList, NotificationList, FriendRequest,ChatList, Album, CurrentProfile });
 
- export default rootReducer;
+  return appReducer(state, action)
+}
+// export default  combineReducers({ UserAuth, TabVisibility, RideInfo, RideList, GPSState, PageState, FriendList, GarageInfo, PageOverTab, FriendGroupList, PassengerList, CommunitySearchList, NotificationList, FriendRequest });
+const appReducer = combineReducers({ UserAuth, TabVisibility, RideInfo, RideList, GPSState, PageState, FriendList, GarageInfo, PageOverTab, FriendGroupList, PassengerList, CommunitySearchList, NotificationList, FriendRequest, ChatList, Album, CurrentProfile, Journal });
+
+export default rootReducer;

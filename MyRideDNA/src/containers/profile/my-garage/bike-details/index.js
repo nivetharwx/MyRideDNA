@@ -331,30 +331,25 @@ const mapDispatchToProps = (dispatch) => {
         getCurrentBike: (bikeId) => dispatch(getCurrentBikeAction(bikeId)),
         getRecordRides: (userId, spaceId, successCallback, errorCallback) => dispatch(getRecordRides(userId, spaceId, 0, (res) => {
             if (typeof successCallback === 'function') successCallback(res);
-            console.log('getRecordRides bike-detail :', res);
             dispatch(updateBikeLoggedRideAction({ updates: res, reset: true }))
         }, (err) => {
             if (typeof errorCallback === 'function') errorCallback(err);
         })),
-        getPosts: (userId, postType, postTypeId, spaceId, successCallback, errorCallback) => dispatch(getPosts(userId, postTypeId, spaceId, 0, (res) => {
-            dispatch(updatePageContentStatusAction(null));
-            if (typeof successCallback === 'function') successCallback(res);
-            console.log('myride : ', res)
-            switch (postType) {
-                case POST_TYPE.WISH_LIST:
-                    dispatch(updateBikeWishListAction({ updates: res, reset: true }));
-                    break;
-                case POST_TYPE.MY_RIDE:
-                    dispatch(updateBikeCustomizationsAction({ updates: res, reset: true }));
-                    break;
-                case POST_TYPE.STORIES_FROM_ROAD:
-                    break;
-                case POST_TYPE.LOGGED_RIDES:
-                    break;
-            }
-        }, (err) => {
-            if (typeof errorCallback === 'function') errorCallback(err);
-        })),
+        getPosts: (userId, postType, postTypeId, spaceId) => getPosts(userId, postTypeId, spaceId, 0)
+            .then(({ data }) => {
+                dispatch(updatePageContentStatusAction(null));
+                if (typeof successCallback === 'function') successCallback(data);
+                switch (postType) {
+                    case POST_TYPE.WISH_LIST:
+                        dispatch(updateBikeWishListAction({ updates: data, reset: true }));
+                        break;
+                    case POST_TYPE.MY_RIDE:
+                        dispatch(updateBikeCustomizationsAction({ updates: data, reset: true }));
+                        break;
+                    case POST_TYPE.STORIES_FROM_ROAD:
+                        break;
+                }
+            }).catch(err => typeof errorCallback === 'function' && errorCallback(err)),
         getCurrentBikeSpec: (postType, postId) => dispatch(getCurrentBikeSpecAction({ postType, postId })),
     }
 }

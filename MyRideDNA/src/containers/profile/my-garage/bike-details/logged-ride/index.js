@@ -34,6 +34,7 @@ class LogggedRide extends Component {
     renderPostCard = ({ item, index }) => {
         return (
             <PostCard
+                outerContainer={{ paddingBottom: 10 }}
                 headerContent={<View style={styles.rideCardHeader}>
                     <DefaultText style={{ fontSize: 19, color: '#585756', fontFamily: CUSTOM_FONTS.robotoBold }}>{item.name ? item.name : 'Name of Ride'}</DefaultText>
                     <IconButton iconProps={{ name: 'options', type: 'SimpleLineIcons', style: styles.headerIcon }} />
