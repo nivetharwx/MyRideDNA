@@ -20,12 +20,15 @@ class Album extends Component {
         this.state = {
             selectedIndex: -1,
             isLoading: false,
-            // isLoadingData: false,
             spinValue: new Animated.Value(0),
+            pageNumber: 0
         };
     }
     componentDidMount() {
-        this.props.getAlbum(this.props.user.userId, 0, 15, (res) => {
+        this.props.getAlbum(this.props.user.userId, this.state.pageNumber, 15, (res) => {
+            if (res.pictures.length > 0) {
+                this.setState({ pageNumber: this.state.pageNumber + 1 })
+            }
         }, (er) => {
         });
     }
@@ -68,12 +71,15 @@ class Album extends Component {
         this.setState({ selectedIndex: -1 });
     }
 
-    albumKeyExtractor = (item) => item.profilePictureId;
+    albumKeyExtractor = (item) => item.id;
 
     loadMoreData = ({ distanceFromEnd }) => {
         if (this.state.isLoading === true || distanceFromEnd < 0) return;
         this.setState((prevState) => ({ isLoading: true }), () => {
-            this.props.getAlbum(this.props.user.userId, this.props.pageNumber, 15, (res) => {
+            this.props.getAlbum(this.props.user.userId, this.state.pageNumber, 15, (res) => {
+                if (res.pictures.length > 0) {
+                    this.setState({ pageNumber: this.state.pageNumber + 1 })
+                }
                 this.setState({ isLoading: false })
             }, (er) => {
                 this.setState({ isLoading: false })
@@ -100,17 +106,13 @@ class Album extends Component {
 
     openPostForm = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.ALBUM });
 
-    onScrollBegin = () => {
-        // this.setState(prevState => ({ isLoadingData: true }), () => console.log('onMomemntum : ', { ...this.state }))
-        this.isLoadingData = true;
-    }
-
     onPressAdvanceRight = () => {
-        this.setState({ selectedIndex: this.state.selectedIndex + 1 });
+        this.setState((prevState) => ({ selectedIndex: prevState.selectedIndex + 1 }));
     }
     onPressAdvanceLeft = () => {
-        this.setState({ selectedIndex: this.state.selectedIndex - 1 });
+        this.setState((prevState) => ({ selectedIndex: prevState.selectedIndex - 1 }));
     }
+
 
     componentWillUnmount() {
         this.props.clearAlbum();
@@ -130,7 +132,7 @@ class Album extends Component {
                         ? <View style={styles.imgModalContent}>
                             <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: styles.closeIcon }} onPress={this.onCancelVisiblePicture} />
                             <View style={styles.enlargedImgContainer}>
-                                <ImageBackground source={{ uri: `${GET_PICTURE_BY_ID}${albumList[selectedIndex].profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` }} style={styles.enlargedImg} />
+                                <ImageBackground source={{ uri: `${GET_PICTURE_BY_ID}${albumList[selectedIndex].id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={styles.enlargedImg} />
                                 {albumList[selectedIndex].description ? <DefaultText numberOfLines={1} style={styles.imgDescription}>{albumList[selectedIndex].description}</DefaultText> : <View style={{ height: 20 }} />}
                             </View>
                             {selectedIndex > 0 ? <IconButton activeOpacity={0.8} style={[styles.imgAdvanceBtn, styles.prevBtn]} iconProps={{ name: 'triangle-left', type: 'Entypo', style: styles.prevBtnIcon }} onPress={this.onPressAdvanceLeft} /> : <View />}
@@ -151,11 +153,11 @@ class Album extends Component {
                         showsVerticalScrollIndicator={false}
                         numColumns={3}
                         data={albumList}
-                        columnWrapperStyle={{ justifyContent: 'flex-start', marginBottom: widthPercentageToDP(1) }}
+                        columnWrapperStyle={styles.columnWrapper}
                         keyExtractor={this.albumKeyExtractor}
                         renderItem={({ item, index }) => (
                             <SquareCard
-                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` : null}
+                                image={item.id ? `${GET_PICTURE_BY_ID}${item.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` : null}
                                 imageStyle={[styles.imageStyle, index % 3 === 1 ? { marginHorizontal: widthPercentageToDP(1) } : null]}
                                 onPress={() => this.openPicture(index)}
                             />
@@ -165,13 +167,6 @@ class Album extends Component {
                         onEndReachedThreshold={0.1}
                     />
                     {
-                        // this.props.hasNetwork === false && albumList.length === 0 && <View style={{ height: heightPercentageToDP(30), justifyContent:'center' }}>
-                        //     <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                        //         <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', fontSize: heightPercentageToDP(15) } }} onPress={this.retryApiFunction} />
-                        //     </Animated.View>
-                        //     <DefaultText style={{ alignSelf:'center', fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
-                        //     <DefaultText style={{ alignSelf: 'center' }}>Please connect to internet</DefaultText>
-                        // </View>
                         this.props.hasNetwork === false && albumList.length === 0 && <View style={{ marginTop: heightPercentageToDP(25), flexDirection: 'column', justifyContent: 'space-between', height: 100 }}>
                             <IconButton iconProps={{ name: 'broadcast-tower', type: 'FontAwesome5', style: { fontSize: 60, color: '#505050' } }} />
                             <DefaultText style={{ alignSelf: 'center', fontSize: 14 }}>Please Connect To Internet</DefaultText>
@@ -217,6 +212,10 @@ const styles = StyleSheet.create({
     imageStyle: {
         height: widthPercentageToDP(98 / 3),
         width: widthPercentageToDP(98 / 3)
+    },
+    columnWrapper: {
+        justifyContent: 'flex-start',
+        marginBottom: widthPercentageToDP(1)
     },
     closeIconContainer: {
         position: 'absolute',

@@ -21,7 +21,6 @@ class BuddyAlbum extends Component {
             selectedIndex: -1,
             isVisiblePicture: false,
             isLoading: false,
-            // isLoadingData: false,
             spinValue: new Animated.Value(0),
             pageNumber: 0
         };
@@ -65,7 +64,6 @@ class BuddyAlbum extends Component {
     albumKeyExtractor = (item) => item.id
 
     loadMoreData = ({ distanceFromEnd }) => {
-        // this.setState({ isLoading: true, isLoadingData: false })
         if (this.state.isLoading === true || distanceFromEnd < 0) return;
         this.setState((prevState) => ({ isLoading: true }),
             () => {
@@ -98,17 +96,11 @@ class BuddyAlbum extends Component {
         return null
     }
 
-    // openPostForm = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: POST_TYPE.ALBUM });
-
-    onScrollBegin = () => {
-        // this.setState(prevState => ({ isLoadingData: true }), () => console.log('onMomemntum : ', { ...this.state }))
-        this.isLoadingData = true;
+    onPressAdvanceRight = () => {
+        this.setState((prevState) => ({ selectedIndex: prevState.selectedIndex + 1 }));
     }
-    onPressSwipeRight = () => {
-        this.setState({ selectedIndex: this.state.selectedIndex + 1 });
-    }
-    onPressSwipeLeft = () => {
-        this.setState({ selectedIndex: this.state.selectedIndex - 1 });
+    onPressAdvanceLeft = () => {
+        this.setState((prevState) => ({ selectedIndex: prevState.selectedIndex - 1 }));
     }
 
     componentWillUnmount() {
@@ -124,38 +116,32 @@ class BuddyAlbum extends Component {
         });
         return <View style={styles.fill}>
             <BaseModal alignCenter={true} isVisible={selectedIndex !== -1} onCancel={this.onCancelVisiblePicture} >
-                <View style={{ backgroundColor: '#fff' }}>
-                    <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: { fontSize: widthPercentageToDP(5), color: '#fff' } }} onPress={this.onCancelVisiblePicture} />
-                    <View style={{ height: heightPercentageToDP(70), width: widthPercentageToDP(92), justifyContent: 'center', alignItems: 'center', paddingBottom: heightPercentageToDP(6) }}>
-                        {
-                            selectedIndex > -1 ?
-                                <View style={{ height: heightPercentageToDP(58), width: widthPercentageToDP(82), justifyContent: 'center' }}>
-                                    <View style={{ width: widthPercentageToDP(92) - 40, height: heightPercentageToDP(70) - 20 }}>
-                                        <ImageBackground source={{ uri: `${GET_PICTURE_BY_ID}${person.pictures[selectedIndex].id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={{ height: null, width: null, flex: 1, borderRadius: 0, backgroundColor: '#A9A9A9' }} />
-                                        {person.pictures[selectedIndex].description ? <DefaultText numberOfLines={1} style={{ letterSpacing: 0.38, fontSize: 15, marginVertical: 20 }}>{person.pictures[selectedIndex].description}</DefaultText> : <View style={{ height: 20 }} />}
-                                    </View>
-                                    {selectedIndex < person.pictures.length - 1 ? <ImageButton imageSrc={require('../../assets/img/photo-advance-right.png')} imgStyles={{ width: 18, height: 120 }} containerStyles={{ position: 'absolute', left: 300 }} onPress={this.onPressSwipeRight} /> : null}
-                                    {selectedIndex > 0 ? <ImageButton imageSrc={require('../../assets/img/photo-advance-left.png')} imgStyles={{ width: 18, height: 120 }} containerStyles={{ position: 'absolute', right: 304 }} onPress={this.onPressSwipeLeft} /> : null}
-                                </View>
-                                : null
-                        }
-
-                    </View>
-                </View>
+                {
+                    selectedIndex > -1 ?
+                        <View style={styles.imgModalContent}>
+                            <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: styles.closeIcon }} onPress={this.onCancelVisiblePicture} />
+                            <View style={styles.enlargedImgContainer}>
+                                <ImageBackground source={{ uri: `${GET_PICTURE_BY_ID}${person.pictures[selectedIndex].id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={styles.enlargedImg} />
+                                {person.pictures[selectedIndex].description ? <DefaultText numberOfLines={1} style={styles.imgDescription}>{person.pictures[selectedIndex].description}</DefaultText> : <View style={{ height: 20 }} />}
+                            </View>
+                            {selectedIndex > 0 ? <IconButton activeOpacity={0.8} style={[styles.imgAdvanceBtn, styles.prevBtn]} iconProps={{ name: 'triangle-left', type: 'Entypo', style: styles.prevBtnIcon }} onPress={this.onPressAdvanceLeft} /> : <View />}
+                            {selectedIndex < person.pictures.length - 1 ? <IconButton activeOpacity={0.8} style={[styles.imgAdvanceBtn, styles.nextBtn]} iconProps={{ name: 'triangle-left', type: 'Entypo', style: styles.nextBtnIcon }} onPress={this.onPressAdvanceRight} /> : <View />}
+                        </View>
+                        : null
+                }
             </BaseModal>
             <View style={APP_COMMON_STYLES.statusBar}>
                 <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
             </View>
             <View style={styles.fill}>
                 <BasicHeader title='Buddy Photos'
-                    leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                    rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', containerStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 }, onPress: this.openPostForm }} />
-                <View style={{ marginTop: heightPercentageToDP(9.6), flex: 1 }}>
+                    leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} />
+                <View style={styles.container}>
                     <FlatList
                         showsVerticalScrollIndicator={false}
                         numColumns={3}
                         data={person.pictures}
-                        columnWrapperStyle={{ justifyContent: 'flex-start', marginBottom: widthPercentageToDP(1) }}
+                        columnWrapperStyle={styles.columnWrapper}
                         keyExtractor={this.albumKeyExtractor}
                         renderItem={({ item, index }) => (
                             <SquareCard
@@ -209,11 +195,40 @@ const styles = StyleSheet.create({
         borderRadius: 13.5,
         backgroundColor: '#F5891F'
     },
+    container: {
+        marginTop: heightPercentageToDP(9.6),
+        flex: 1
+    },
+    columnWrapper: {
+        justifyContent: 'flex-start',
+        marginBottom: widthPercentageToDP(1)
+    },
     imageStyle: {
         height: widthPercentageToDP(98 / 3),
         width: widthPercentageToDP(98 / 3)
     },
+    imgModalContent: {
+        backgroundColor: '#fff',
+        height: heightPercentageToDP(70),
+        width: widthPercentageToDP(92),
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    enlargedImgContainer: {
+        padding: 20,
+        paddingBottom: 0,
+        width: widthPercentageToDP(92),
+        height: heightPercentageToDP(70)
+    },
+    enlargedImg: {
+        height: null,
+        width: null,
+        flex: 1,
+        borderRadius: 0,
+        backgroundColor: '#A9A9A9'
+    },
     closeIconContainer: {
+        position: 'absolute',
         height: widthPercentageToDP(8),
         width: widthPercentageToDP(8),
         borderRadius: widthPercentageToDP(4),
@@ -224,5 +239,35 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-end',
         top: heightPercentageToDP(-1.5),
         right: widthPercentageToDP(-1.5)
+    },
+    closeIcon: {
+        fontSize: widthPercentageToDP(5),
+        color: '#fff'
+    },
+    imgAdvanceBtn: {
+        position: 'absolute',
+        height: 120,
+        width: 22,
+        backgroundColor: '#C4C6C8'
+    },
+    prevBtn: {
+        alignSelf: 'flex-start',
+        left: -10,
+    },
+    nextBtn: {
+        alignSelf: 'flex-end',
+        right: -10,
+    },
+    prevBtnIcon: {
+        right: 4
+    },
+    nextBtnIcon: {
+        left: 4,
+        transform: [{ rotate: '180deg' }]
+    },
+    imgDescription: {
+        letterSpacing: 0.38,
+        fontSize: 15,
+        marginVertical: 20
     }
 });
