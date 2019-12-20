@@ -198,7 +198,7 @@ class FriendsProfile extends Component {
                         <View style={[styles.basicAlignment, styles.horizontalContainer]}>
                             <View style={styles.individualComponent}>
                                 <DefaultText style={styles.labels}>DOB</DefaultText>
-                                <DefaultText style={styles.labelsData}>{person.dob ? getFormattedDateFromISO(person.dob) : '---'}</DefaultText>
+                                <DefaultText style={styles.labelsData}>{person.dob ? getFormattedDateFromISO(new Date(person.dob).toISOString()) : '---'}</DefaultText>
                             </View>
                             <View style={styles.individualComponent}>
                                 <DefaultText style={[styles.labels, { paddingHorizontal: 9 }]}>YEARS RIDING</DefaultText>
