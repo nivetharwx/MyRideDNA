@@ -3,6 +3,7 @@ import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROI
 import { App } from 'react-native-firebase';
 
 const THUMBNAIL_SIZE = IS_ANDROID ? heightPercentageToDP(6.5) : heightPercentageToDP(8);
+export const FOOTER_HEIGHT = 75;
 const styles = StyleSheet.create({
     fill: {
         flex: 1
@@ -38,7 +39,7 @@ const styles = StyleSheet.create({
     },
     chatHeaderNickname: {
         color: APP_COMMON_STYLES.infoColor,
-        fontFamily:CUSTOM_FONTS.gothamBold,
+        fontFamily: CUSTOM_FONTS.gothamBold,
         marginLeft: widthPercentageToDP(2)
     },
     chatArea: {
@@ -58,7 +59,7 @@ const styles = StyleSheet.create({
     },
     footer: {
         backgroundColor: '#3E3E3E',
-        height: 75,
+        height: FOOTER_HEIGHT,
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 10
@@ -125,8 +126,8 @@ const styles = StyleSheet.create({
     },
     time: {
         // color: '#8D8D8D', 
-        color: '#adacac', 
-        alignSelf: 'center', 
+        color: '#adacac',
+        alignSelf: 'center',
         marginVertical: 4,
         paddingHorizontal: 5,
         paddingVertical: 4,
@@ -137,6 +138,54 @@ const styles = StyleSheet.create({
         // borderRadius: 20,
         // backgroundColor: 'rgba(255,255,255, 0.9)'
 
-    }
+    },
+    picker: {
+        position: 'absolute',
+        zIndex: 500,
+        overflow: 'hidden',
+        bottom: 0,
+        width: widthPercentageToDP(100),
+    },
+    pickerBackdrop: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        paddingBottom: FOOTER_HEIGHT
+    },
+    noBorder: {
+        borderBottomWidth: 0,
+        borderBottomColor: 'transparent'
+    },
+    imagesContainer: {
+        flex: 1,
+        backgroundColor: '#fff',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        paddingHorizontal: 10,
+        paddingVertical: 10,
+    },
+    thumbnailContainer: {
+        width: ((widthPercentageToDP(100) - 20) / 3) - 10,
+        height: ((widthPercentageToDP(100) - 20) / 3) - 10,
+        marginHorizontal: 5,
+        marginVertical: 5,
+    },
+    squareThumbnail: {
+        flex: 1,
+        width: null,
+        height: null,
+        alignItems: 'flex-end'
+    },
+    closeIconContainer: {
+        height: 18,
+        width: 18,
+        borderRadius: 18,
+        backgroundColor: '#F5891F',
+        top: -5,
+        right: -5
+    },
+    closeIcon: {
+        fontSize: 19,
+        color: '#fff'
+    },
 });
 export default styles;
