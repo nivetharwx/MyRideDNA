@@ -65,9 +65,6 @@ class Chat extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevState.selectedImgs.length > 0 && this.state.selectedImgs.length === 0) {
-            this.showImgPrevArea(0, () => this.setState({ imgPrevAreaMinHeight: 0 }));
-        }
         if (!prevProps.chatInfo || prevProps.chatInfo.id !== this.props.chatInfo.id) {
             this.props.getAllMessages(this.props.chatInfo.id, this.props.user.userId, this.props.chatInfo.isGroup)
             this.props.updateChatData(this.props.chatInfo)
@@ -363,6 +360,10 @@ class Chat extends Component {
         ).start(() => typeof callback === 'function' && callback());
     }
 
+    hideImgPrevArea = () => {
+        this.setState({ selectedImgs: [], imgPrevAreaMinHeight: 0 }, () => this.showImgPrevArea(0));
+    }
+
     renderChatDate = (date) => {
         const todaysDate = getFormattedDateFromISO();
         let chatDate = getFormattedDateFromISO(date);
@@ -382,10 +383,10 @@ class Chat extends Component {
             { ...prevState.selectedImgs.slice(idx), isHidden: true },
             ...prevState.selectedImgs.slice(idx + 1)
         ];
-        return {
-            selectedImgs: hiddenImgs === prevState.selectedImgs.length ? [] : newArr
-        }
-    });
+        return hiddenImgs === prevState.selectedImgs.length
+            ? { selectedImgs: [], imgPrevAreaMinHeight: 0 }
+            : { selectedImgs: newArr }
+    }, () => this.state.imgPrevAreaMinHeight === 0 && this.showImgPrevArea(0));
 
     renderSelectedImg = (item, index) => {
         return <View key={index + ''} style={[styles.thumbnailContainer, item.isHidden ? { display: 'none' } : null]}>
@@ -416,7 +417,7 @@ class Chat extends Component {
                                 selectedMessage={selectedMessage && selectedMessage[item.messageId]}
                                 onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
                             />
-                            : this.renderImageContent(item, { borderColor: styles.myMsgBubble.backgroundColor })
+                            : this.renderImageContent(item, { backgroundColor: selectedMessage && selectedMessage[item.messageId] ? '#99C8F7' : styles.myMsgBubble.backgroundColor, borderBottomRightRadius: 0 })
                     }
                     <View style={{ marginRight: styles.thumbnail.width + 5 }} />
                 </Item>
@@ -446,7 +447,7 @@ class Chat extends Component {
                                 selectedMessage={selectedMessage && selectedMessage[item.messageId]}
                                 onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
                             />
-                            : this.renderImageContent(item, { borderColor: styles.friendMsgBubble.backgroundColor })
+                            : this.renderImageContent(item, { backgroundColor: selectedMessage && selectedMessage[item.messageId] ? '#99C8F7' : styles.friendMsgBubble.backgroundColor, borderBottomLeftRadius: 0 })
                     }
                 </Item>
             </View>
@@ -455,40 +456,60 @@ class Chat extends Component {
 
     renderImageContent = (item, containerStyle) => {
         const width = (widthPercentageToDP(100) - (styles.chatArea.paddingHorizontal * 2) - styles.thumbnail.width - 10);
-        return <View style={[{ borderWidth: 5, borderRadius: 9, borderBottomLeftRadius: 0, width, flexWrap: 'wrap', flexDirection: 'row', marginTop: 16, overflow: 'hidden', borderColor: styles.myMsgBubble.backgroundColor }, containerStyle]}>
-            <View style={{ width: item.media[1] ? (width - 18) / 2 : (width - 18), height: (width - 18) / 2, margin: 2, borderColor: '#fff' }}>
-                <Image source={{ uri: `${GET_PICTURE_BY_ID}${item.media[0].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={styles.squareThumbnail} />
+        return <TouchableOpacity activeOpacity={1} style={[{ padding: 5, paddingBottom: 2, borderRadius: 9, marginTop: 16, alignItems: 'center', overflow: 'hidden' }, containerStyle]}
+            onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)} onPress={() => this.onSelectMessage(item.messageId, item.senderId)}>
+            <View style={{ justifyContent: 'center', width, flexWrap: 'wrap', flexDirection: 'row' }}>
+                <TouchableOpacity activeOpacity={0.8} style={{ width: item.media[1] ? (width - 18) / 2 : (width - 18), height: (width - 18) / 2, margin: 2, borderColor: '#fff' }} onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)} onPress={() => this.onTapImage(item)}>
+                    <Image source={{ uri: `${GET_PICTURE_BY_ID}${item.media[0].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={styles.squareThumbnail} />
+                </TouchableOpacity>
+                {
+                    item.media[1]
+                        ? <TouchableOpacity activeOpacity={0.8} style={{ width: (width - 18) / 2, height: (width - 18) / 2, margin: 2, borderColor: '#fff' }} onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)} onPress={() => this.onTapImage(item)}>
+                            <Image source={{ uri: `${GET_PICTURE_BY_ID}${item.media[1].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={styles.squareThumbnail} />
+                        </TouchableOpacity>
+                        : null
+                }
+                {
+                    item.media[2]
+                        ? <TouchableOpacity activeOpacity={0.8} style={{ width: item.media[3] ? (width - 18) / 2 : width - 18, height: (width - 18) / 2, margin: 2, borderColor: '#fff' }} onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)} onPress={() => this.onTapImage(item)}>
+                            <Image source={{ uri: `${GET_PICTURE_BY_ID}${item.media[2].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={styles.squareThumbnail} />
+                        </TouchableOpacity>
+                        : null
+                }
+                {
+                    item.media[3]
+                        ? <View style={{ width: (width - 18) / 2, height: (width - 18) / 2, margin: 2, borderColor: '#fff' }}>
+                            <ImageBackground source={{ uri: `${GET_PICTURE_BY_ID}${item.media[3].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={[styles.squareThumbnail, { alignItems: 'center' }]}>
+                                {
+                                    item.media[4]
+                                        ? <TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', width: (width - 18) / 2, height: (width - 18) / 2, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' }}
+                                            onLongPress={() => this.changeToMessageSelectionMode(item.messageId, item.senderId)} onPress={() => this.onTapImage(item)}>
+                                            <DefaultText style={{ color: '#fff', fontSize: 20, fontFamily: CUSTOM_FONTS.roboto }}>+{`${item.media.length - 4}`} more</DefaultText>
+                                        </TouchableOpacity>
+                                        : null
+                                }
+                            </ImageBackground>
+                        </View>
+                        : null
+                }
             </View>
-            {
-                item.media[1]
-                    ? <View style={{ width: (width - 18) / 2, height: (width - 18) / 2, margin: 2, borderColor: '#fff' }}>
-                        <Image source={{ uri: `${GET_PICTURE_BY_ID}${item.media[1].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={styles.squareThumbnail} />
-                    </View>
-                    : null
-            }
-            {
-                item.media[2]
-                    ? <View style={{ width: item.media[3] ? (width - 18) / 2 : width - 18, height: (width - 18) / 2, margin: 2, borderColor: '#fff' }}>
-                        <Image source={{ uri: `${GET_PICTURE_BY_ID}${item.media[2].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={styles.squareThumbnail} />
-                    </View>
-                    : null
-            }
-            {
-                item.media[3]
-                    ? <View style={{ width: (width - 18) / 2, height: (width - 18) / 2, margin: 2, borderColor: '#fff' }}>
-                        <ImageBackground source={{ uri: `${GET_PICTURE_BY_ID}${item.media[3].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }} style={[styles.squareThumbnail, { alignItems: 'center' }]}>
-                            {
-                                item.media[4]
-                                    ? <View style={{ position: 'absolute', width: (width - 18) / 2, height: (width - 18) / 2, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' }}>
-                                        <DefaultText style={{ color: '#fff', fontSize: 20 }}>{`+${item.media.length - 4} more`}</DefaultText>
-                                    </View>
-                                    : null
-                            }
-                        </ImageBackground>
-                    </View>
-                    : null
-            }
-        </View >
+            <View style={{ width: (width - 18) }}>
+                {
+                    item.content
+                        ? <DefaultText style={{ fontFamily: CUSTOM_FONTS.roboto, paddingTop: 10, paddingBottom: 3 }}>{item.content}</DefaultText>
+                        : null
+                }
+                <DefaultText style={{ alignSelf: 'flex-end', fontSize: 10, letterSpacing: 0.8, fontFamily: CUSTOM_FONTS.robotoBold }}>{this.getFormattedTime(item.date)}</DefaultText>
+            </View>
+        </TouchableOpacity>
+    }
+
+    onTapImage = ({ messageId, senderId }) => {
+        if (!this.state.messageSelectionMode) {
+            console.log("Enlarge image");
+        } else {
+            this.onSelectMessage(messageId, senderId);
+        }
     }
 
     render() {
@@ -513,6 +534,11 @@ class Chat extends Component {
                     selectedMessage
                         ? <View style={[styles.chatHeader, { justifyContent: 'space-between' }]}>
                             <IconButton iconProps={{ name: 'cross', type: 'Entypo', style: { fontSize: 27, color: '#fff' } }} onPress={this.unSelectAllMessage} />
+                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                                <DefaultText numberOfLines={1} style={styles.chatHeaderName}>
+                                    {`${Object.keys(selectedMessage).length} selected`}
+                                </DefaultText>
+                            </View>
                             <IconButton iconProps={{ name: 'delete', type: 'MaterialCommunityIcons', style: { fontSize: 25, color: '#fff' } }} onPress={this.openDeleteModal} />
                         </View>
                         : <View style={styles.chatHeader}>
@@ -548,7 +574,7 @@ class Chat extends Component {
                             </View>
                             {
                                 this.state.imgPrevAreaMinHeight > 0
-                                    ? <IconButton iconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { color: '#fff', fontSize: 25 } }} onPress={() => this.setState({ selectedImgs: [] })} />
+                                    ? <IconButton iconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { color: '#fff', fontSize: 25 } }} onPress={this.hideImgPrevArea} />
                                     : <IconButton iconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 25 } }} onPress={this.showOptionsModal} />
                             }
                         </View>
@@ -585,7 +611,7 @@ class Chat extends Component {
 
                         </View>
                         <ShifterButton onPress={this.showAppNavigation} containerStyles={styles.shifterContainer} alignLeft={this.props.user.handDominance === 'left'} />
-                        <Animated.View style={[styles.picker, { height: this.state.imagePrevAreaAnim, paddingTop: TOTAL_HEADER_HEIGHT + FOOTER_HEIGHT }]}>
+                        <Animated.View style={[styles.picker, { height: this.state.imagePrevAreaAnim, paddingTop: this.state.imgPrevAreaMinHeight > 0 ? TOTAL_HEADER_HEIGHT + FOOTER_HEIGHT : 0 }]}>
                             {/* <IconButton style={{ backgroundColor: 'rgba(0,0,0,0.7)', alignSelf: 'center', height: 30, width: 30, borderRadius: 30, display: selectedImgs.length > 0 ? 'flex' : 'none' }} iconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { color: '#fff' } }} onPress={() => this.setState({ selectedImgs: [] })} /> */}
                             <View style={{ flex: 1, backgroundColor: '#fff', minHeight: this.state.imgPrevAreaMinHeight }}>
                                 {
