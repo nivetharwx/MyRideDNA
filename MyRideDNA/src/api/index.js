@@ -2479,8 +2479,8 @@ export const getAlbum = (userId, pageNumber, preference, successCallback, errorC
             .then(res => {
                 if (res.status === 200) {
                     if (res.data.pictureList.length > 0) {
-                        const pictureList = res.data.pictureList.map(picId => ({ profilePictureId: picId }));
-                        dispatch(replaceAlbumListAction({ pageNumber, pictureList }))
+                        // const pictureList = res.data.pictureList.map(picId => ({ profilePictureId: picId }));
+                        dispatch(replaceAlbumListAction({ pageNumber, pictureList: res.data.pictures }))
                         dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                         dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
                         // dispatch(toggleLoaderAction(false));

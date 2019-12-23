@@ -74,29 +74,6 @@ class BuddyFriends extends Component {
         });
     }
 
-
-
-    // sendFriendRequest = (person) => {
-    //     const { user } = this.props;
-    //     const { selectedPerson } = this.state;
-    //     person = person || selectedPerson;
-    //     const requestBody = {
-    //         senderId: user.userId,
-    //         senderName: user.name,
-    //         senderNickname: user.nickname,
-    //         senderEmail: user.email,
-    //         userId: person.userId,
-    //         name: person.name,
-    //         nickname: person.nickname,
-    //         email: person.email,
-    //         actionDate: new Date().toISOString(),
-    //     };
-    //     if (this.state.isVisibleOptionsModal) this.onCancelOptionsModal();
-    //     this.props.sendFriendRequest(requestBody, person.userId);
-    // }
-
-
-
     openChatPage = (person) => {
         const { selectedPerson } = this.state;
         person = person || selectedPerson;
@@ -255,7 +232,6 @@ class BuddyFriends extends Component {
             case RELATIONSHIP.UNKNOWN: return { isIconImage: true, imgSrc: require('../../assets/img/add-friend-from-community.png'), id: 4, onPressActions: () => this.sendFriendRequest(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
             default: return { isIconImage: true, imgSrc: require('../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
         }
-        // return { isIconImage: true, imgSrc: require('../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
     }
 
     _renderItem = ({ item, index }) => {

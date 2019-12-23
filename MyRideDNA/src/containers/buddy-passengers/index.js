@@ -16,7 +16,6 @@ class BuddyPassengers extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            isLoadingData: false,
             isLoading: false,
             spinValue: new Animated.Value(0),
             pageNumber: 1
@@ -67,8 +66,6 @@ class BuddyPassengers extends Component {
 
     }
 
-    onPressBackButton = () => Actions.pop();
-
     onPressBackButton = () => {
         Actions.pop()
         this.props.hasPrevProfiles
@@ -76,15 +73,11 @@ class BuddyPassengers extends Component {
             : this.props.resetPersonProfile();
     }
 
-
-    onCancelOptionsModal = () => this.setState({ selectedPassenger: null, isVisibleOptionsModal: false })
-
-
     passengerKeyExtractor = (item) => item.passengerId;
 
-    loadMoreData = () => {
-        if (this.state.isLoadingData && this.state.isLoading === false) {
-            this.setState({ isLoading: true, isLoadingData: false })
+    loadMoreData = ({ distanceFromEnd }) => {
+        if (this.state.isLoading === true || distanceFromEnd < 0) return;
+        this.setState((prevState) => ({ isLoading: true }), () => {
             this.props.getPassengersById(this.props.user.userId, this.props.person.userId, this.state.pageNumber, this.props.person.passengerList, (res) => {
                 if (res.passengerList.length > 0) {
                     this.setState({ pageNumber: this.state.pageNumber + 1 })
@@ -93,7 +86,7 @@ class BuddyPassengers extends Component {
             }, (error) => {
                 this.setState({ isLoading: false })
             });
-        }
+        });
     }
 
     renderFooter = () => {
@@ -145,9 +138,9 @@ class BuddyPassengers extends Component {
                     />
                     <FlatList
                         showsVerticalScrollIndicator={false}
-                        contentContainerStyle={{ paddingTop: 40 + APP_COMMON_STYLES.headerHeight }}
+                        contentContainerStyle={styles.contentContainer}
                         style={{ flexDirection: 'column' }}
-                        columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: heightPercentageToDP(4), marginHorizontal: 25 }}
+                        columnWrapperStyle={styles.columnWrapper}
                         numColumns={2}
                         data={person.passengerList}
                         keyExtractor={this.passengerKeyExtractor}
@@ -158,13 +151,12 @@ class BuddyPassengers extends Component {
                                 title={item.name}
                                 subtitle={item.homeAddress ? (item.homeAddress.city && item.homeAddress.state) ? `${item.homeAddress.city}, ${item.homeAddress.state}` : item.homeAddress.city ? item.homeAddress.city : item.homeAddress.state : null}
                                 onPress={() => this.openPassengerProfile(item, index)}
-                                imageStyle={{ height: widthPercentageToDP(40), width: widthPercentageToDP(40) }}
+                                imageStyle={styles.imageStyle}
                             />
                         )}
                         ListFooterComponent={this.renderFooter}
                         onEndReached={this.loadMoreData}
                         onEndReachedThreshold={0.1}
-                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
                     />
 
                     {
@@ -213,4 +205,16 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff'
     },
+    contentContainer: {
+        paddingTop: 40 + APP_COMMON_STYLES.headerHeight
+    },
+    columnWrapper: {
+        justifyContent: 'space-between',
+        marginBottom: heightPercentageToDP(4),
+        marginHorizontal: 25
+    },
+    imageStyle: {
+        height: widthPercentageToDP(40),
+        width: widthPercentageToDP(40)
+    }
 });

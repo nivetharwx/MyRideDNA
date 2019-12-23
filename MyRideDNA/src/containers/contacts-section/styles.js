@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     },
     sectionDeviderText: {
         color: '#000',
-        fontFamily:CUSTOM_FONTS.robotoBold,
+        fontFamily: CUSTOM_FONTS.robotoBold,
         fontSize: widthPercentageToDP(5),
         marginVertical: heightPercentageToDP(5),
         alignSelf: 'center'
@@ -89,6 +89,17 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontFamily: CUSTOM_FONTS.robotoBold,
         letterSpacing: 0.6
+    },
+    plainTextContainer: {
+        borderBottomWidth: 3,
+        borderBottomColor: '#F5891F',
+        marginTop: 16
+    },
+    plainText: {
+        marginLeft: widthPercentageToDP(3),
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        letterSpacing: 0.6,
+        marginBottom: 2
     }
 });
 export default styles;

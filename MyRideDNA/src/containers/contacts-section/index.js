@@ -453,8 +453,8 @@ class ContactsSection extends PureComponent {
                                 <SearchBoxFilter
                                     searchQuery={searchName} onChangeSearchValue={this.searchInCommunity}
                                     placeholder='Name' outerContainer={{ marginTop: 16 }} />
-                                <View style={{ borderBottomWidth: 3, borderBottomColor: '#F5891F', marginTop: 16 }}>
-                                    <DefaultText style={{ marginLeft: widthPercentageToDP(3), fontFamily: CUSTOM_FONTS.robotoBold, letterSpacing: 0.6, marginBottom: 2 }}>SEARCH RESULTS</DefaultText>
+                                <View style={styles.plainTextContainer}>
+                                    <DefaultText style={styles.plainText}>SEARCH RESULTS</DefaultText>
                                 </View>
                                 <View style={{ marginTop: 16 }}>
                                     <FlatList
@@ -465,6 +465,7 @@ class ContactsSection extends PureComponent {
                                         renderItem={({ item, index }) => (
                                             <HorizontalCard
                                                 item={item}
+                                                // thumbnail={item.profilePicture}
                                                 thumbnail={item.profilePicture}
                                                 horizontalCardPlaceholder={require('../../assets/img/profile-pic.png')}
                                                 cardOuterStyle={styles.horizontalCardOuterStyle}
