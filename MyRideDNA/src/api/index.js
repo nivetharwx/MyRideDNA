@@ -2563,23 +2563,21 @@ export const getAllMessages = (id, userId, isGroup) => {
     };
 }
 
-export const sendMessage = (isGroup, id, userId, content, name, nickname, picId) => {
+export const sendMessage = (isGroup, id, userId, content, name, nickname, senderPictureId, type = 'text', media) => {
     return dispatch => {
-        const body = { isGroup: isGroup, id: id, senderId: userId, senderName: name, senderNickname: nickname, date: new Date().toISOString(), type: 'text', content: content };
-        if (picId) body.senderPictureId = picId;
+        const body = { senderPictureId, isGroup, id, senderId: userId, senderName: name, senderNickname: nickname, date: new Date().toISOString(), type, content, media };
         axios.post(CHAT_BASE_URL + `sendMessage`, body, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 if (res.status === 200) {
-                    const messageSent = {};
-                    messageSent['date'] = new Date().toISOString();
-                    messageSent['content'] = content;
-                    messageSent['messageId'] = res.data.messageId;
-                    messageSent['senderId'] = userId;
-                    messageSent['type'] = 'text';
-                    messageSent['senderName'] = name;
-                    messageSent['senderNickname'] = nickname;
-                    messageSent['senderPictureId'] = picId;
-                    console.log('messageSent : ', messageSent);
+                    const messageSent = {
+                        type, content, senderPictureId,
+                        date: new Date().toISOString(),
+                        media: res.data.media,
+                        messageId: res.data.messageId,
+                        senderId: userId,
+                        senderName: name,
+                        senderNickname: nickname
+                    };
                     dispatch(replaceChatMessagesAction(messageSent));
                     dispatch(updateChatListAction({ comingFrom: 'sendMessgaeApi', newMessage: messageSent, id: id }));
                 }

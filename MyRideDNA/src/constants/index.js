@@ -124,6 +124,8 @@ export const RIDE_POINT = { SOURCE: 'source', DESTINATION: 'destination', WAYPOI
 const HEADER_COLOR = '#2B77B4';
 const STATUS_BAR_COLOR = '#006297';
 
+export const CHAT_CONTENT_TYPE = { IMAGE: 'image', TEXT: 'text', VIDEO: 'video' };
+
 export const CUSTOM_FONTS = {
     roboto: 'Roboto',
     robotoBold: 'Roboto-Bold',
