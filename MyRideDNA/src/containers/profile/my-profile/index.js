@@ -213,15 +213,16 @@ class MyProfileTab extends Component {
                     refreshControl={<RefreshControl refreshing={isLoadingUpdates} onRefresh={this.fetchUserUpdates} />}
                 >
                     <View style={styles.profilePic}>
-                        <ImageBackground source={user.profilePictureId ? { uri: `${GET_PICTURE_BY_ID}${user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
+                        <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
                             {/* {
                                 isLoadingProfPic
                                     ? <ImageLoader show={isLoadingProfPic} />
                                     : null
                             } */}
+                            <Image resizeMode='center' source={user.profilePictureId ? { uri: `${GET_PICTURE_BY_ID}${user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` } : require('../../../assets/img/profile-pic.png')} style={{ flex: 1, height: null, width: null }} />
                         </ImageBackground>
                     </View>
-                    <Image source={require('../../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} />
+                    {/* <Image source={require('../../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} /> */}
                     <View style={styles.container}>
                         <View style={styles.basicAlignment}>
                             <View style={{ flexDirection: 'column' }}>
