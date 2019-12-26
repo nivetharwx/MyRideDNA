@@ -8,7 +8,7 @@ import {
 import { Icon as NBIcon } from 'native-base';
 import { AppMenuButton, ImageButton } from '../buttons';
 import { Actions } from 'react-native-router-flux';
-import { PageKeys, heightPercentageToDP, widthPercentageToDP, IS_ANDROID, APP_COMMON_STYLES, CUSTOM_FONTS } from '../../constants';
+import { PageKeys, heightPercentageToDP, widthPercentageToDP, IS_ANDROID, APP_COMMON_STYLES, CUSTOM_FONTS, WindowDimensions } from '../../constants';
 import { BasicHeader } from '../headers';
 import { appNavMenuVisibilityAction } from '../../actions';
 import { DefaultText } from '../labels';
@@ -22,7 +22,7 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                 transparent={true}
                 visible={isVisible}
                 onRequestClose={onClose}>
-                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)' }}>
+                <View style={{ height: heightPercentageToDP(100), width: widthPercentageToDP(100), backgroundColor: 'rgba(0,0,0,0.7)' }}>
                     <BasicHeader showShadow={false} style={[{ backgroundColor: 'transparent' }, IS_ANDROID ? null : { marginTop: 20 }]} headerHeight={heightPercentageToDP(8.5)}
                         rightIconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#AFAFAF' }, onPress: hideAppNavMenu }} />
                     <View style={{ flex: 1, marginTop: APP_COMMON_STYLES.headerHeight }}>
@@ -37,7 +37,7 @@ export const MenuModal = ({ isVisible, onClose, onPressNavMenu, activeMenu, noti
                                                     position: 'absolute', width: 29, height: 29, borderRadius: 29,
                                                     backgroundColor: '#0076B5', top: 0, right: 2, borderWidth: 2, borderColor: '#fff', justifyContent: 'center', alignItems: 'center'
                                                 }}>
-                                                    <DefaultText style={{ color: '#fff', fontFamily:CUSTOM_FONTS.roboto ,fontSize: widthPercentageToDP(3) }}>{notificationCount}</DefaultText>
+                                                    <DefaultText style={{ color: '#fff', fontFamily: CUSTOM_FONTS.roboto, fontSize: widthPercentageToDP(3) }}>{notificationCount}</DefaultText>
                                                 </View>
                                                 : null
                                         }
