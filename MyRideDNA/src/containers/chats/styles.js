@@ -187,5 +187,70 @@ const styles = StyleSheet.create({
         fontSize: 19,
         color: '#fff'
     },
+    mediaMsgContainer: {
+        padding: 5,
+        paddingBottom: 2,
+        borderRadius: 9,
+        marginTop: 16,
+        alignItems: 'center',
+        overflow: 'hidden'
+    },
+    imgMsgContainer: {
+        justifyContent: 'center',
+        flexWrap: 'wrap',
+        flexDirection: 'row'
+    },
+    imgMsgStyle: {
+        margin: 2,
+        borderColor: '#fff'
+    },
+    imgMoreContainer: {
+        position: 'absolute',
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    imgMoreTxt: {
+        color: '#fff',
+        fontSize: 20,
+        fontFamily: CUSTOM_FONTS.roboto
+    },
+    msgTime: {
+        alignSelf: 'flex-end',
+        fontSize: 10,
+        letterSpacing: 0.8,
+        fontFamily: CUSTOM_FONTS.robotoBold
+    },
+    txtWithImg: {
+        fontFamily: CUSTOM_FONTS.roboto,
+        paddingTop: 10,
+        paddingBottom: 3
+    },
+    headingView: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+    unseenMsgCountView: {
+        backgroundColor: APP_COMMON_STYLES.infoColor,
+        position: 'absolute',
+        bottom: heightPercentageToDP(6),
+        right: widthPercentageToDP(7),
+        height: widthPercentageToDP(5),
+        minWidth: widthPercentageToDP(5),
+        borderRadius: widthPercentageToDP(2.5),
+        textAlign: 'center',
+        justifyContent: 'center'
+    },
+    unseenMsgCountTxt: {
+        color: '#fff',
+        textAlign: 'center',
+        fontSize: heightPercentageToDP(1.7)
+    },
+    imgLoaderView: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
+    }
 });
 export default styles;
