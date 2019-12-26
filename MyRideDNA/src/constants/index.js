@@ -1,6 +1,7 @@
 import { Dimensions, Platform, StatusBar, PixelRatio } from 'react-native';
 
-var window = Dimensions.get("window");
+// DOC: Changed window to screen as it is not including soft navbar height in acndroid
+const window = Dimensions.get("screen");
 export const WindowDimensions = {
     height: window.height,
     width: window.width
@@ -191,22 +192,22 @@ export const APP_COMMON_STYLES = {
     },
     optionsModal: { justifyContent: 'flex-end' },
     optionsContainer: {
-        marginHorizontal: 15, 
-        backgroundColor: '#fff', 
-        borderColor: '#D8D8D8', 
-        borderWidth: 1, 
-        borderRadius: 30, 
+        marginHorizontal: 15,
+        backgroundColor: '#fff',
+        borderColor: '#D8D8D8',
+        borderWidth: 1,
+        borderRadius: 30,
         overflow: 'hidden',
     },
-    optionBtn: { 
-        paddingVertical: 15, 
-        borderBottomWidth: 1, 
+    optionBtn: {
+        paddingVertical: 15,
+        borderBottomWidth: 1,
         borderBottomColor: '#D8D8D8',
     },
-    optionBtnTxt: { 
-        color: '#585756', 
-        fontSize: 16, 
-        letterSpacing: 0.8, 
+    optionBtnTxt: {
+        color: '#585756',
+        fontSize: 16,
+        letterSpacing: 0.8,
         textAlign: 'center',
     }
 };

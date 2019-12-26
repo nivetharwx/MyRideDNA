@@ -127,12 +127,12 @@ class ChatList extends Component {
             return arr;
         }, []).join(', ');
         return <View style={{ flexDirection: 'row' }}>
-            <DefaultText numberOfLines={1} style={{ flex: 1, fontSize: 14, color: '#1D527C', fontFamily: CUSTOM_FONTS.robotoBold, marginRight: 10 }}>{item.groupName}
+            <DefaultText numberOfLines={1} style={[styles.itemNameTxt, styles.groupNameTxt]}>{item.groupName}
                 {
-                    firstNameStr ? <DefaultText numberOfLines={1} style={{ color: '#585756', fontSize: 13 }}>{` - ${firstNameStr}`}</DefaultText> : null
+                    firstNameStr ? <DefaultText numberOfLines={1} style={styles.groupMembersTxt}>{` - ${firstNameStr}`}</DefaultText> : null
                 }
             </DefaultText>
-            <DefaultText style={{ color: '#8D8D8D', letterSpacing: 0.8, fontSize: 10, fontFamily: CUSTOM_FONTS.robotoSlabBold }}>{item.message ? this.getFormattedTime(item.message.date) : null}</DefaultText>
+            <DefaultText style={styles.msgTime}>{item.message ? this.getFormattedTime(item.message.date) : null}</DefaultText>
         </View>
     }
 
@@ -141,10 +141,10 @@ class ChatList extends Component {
             {
                 item.isGroup
                     ? this.renderItemHeader(item)
-                    : <DefaultText style={{ fontSize: 14, color: '#1D527C', fontFamily: CUSTOM_FONTS.robotoBold }}>{item.name}</DefaultText>
+                    : <DefaultText style={styles.itemNameTxt}>{item.name}</DefaultText>
             }
-            <View style={{ flex: 1, flexDirection: 'row' }}>
-                <DefaultText numberOfLines={2} style={{ marginTop: 5, marginRight: 5, color: '#585756', flex: 1 }}>{item.message ? item.message.content : null}</DefaultText>
+            <View style={styles.itemMsgTxtView}>
+                <DefaultText numberOfLines={2} style={styles.itemMsgTxt}>{item.message ? item.message.content : null}</DefaultText>
                 {
                     item.totalUnseenMessage > 0
                         ? <View style={styles.messageNumber}>
@@ -168,7 +168,7 @@ class ChatList extends Component {
                                     : item.profilePictureIdList
                                         ? <View style={[styles.iconContComm, { backgroundColor: '#ffffff' }]}>
                                             <Thumbnail style={styles.smallThumbanail} source={{ uri: `${GET_PICTURE_BY_ID}${item.profilePictureIdList[0]}` }} />
-                                            <Thumbnail style={[styles.smallThumbanail, { position: 'absolute', zIndex: 10, left: 17.5, top: 12 }]} source={{ uri: `${GET_PICTURE_BY_ID}${item.profilePictureIdList[1]}` }} />
+                                            <Thumbnail style={[styles.smallThumbanail, styles.smallThumbanailTop]} source={{ uri: `${GET_PICTURE_BY_ID}${item.profilePictureIdList[1]}` }} />
                                         </View>
                                         : <IconButton disabled style={[styles.iconContComm, styles.groupIconCont]} iconProps={{ name: 'users', type: 'FontAwesome', style: styles.iconComm }} />
                             }
@@ -378,5 +378,34 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         borderWidth: 1,
         borderColor: '#ffffff'
+    },
+    smallThumbanailTop: {
+        position: 'absolute',
+        zIndex: 10,
+        left: 17.5,
+        top: 12
+    },
+    groupMembersTxt: { color: '#585756', fontSize: 13 },
+    msgTime: {
+        color: '#8D8D8D',
+        letterSpacing: 0.8,
+        fontSize: 10,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold
+    },
+    itemNameTxt: {
+        fontSize: 14,
+        color: '#1D527C',
+        fontFamily: CUSTOM_FONTS.robotoBold
+    },
+    groupNameTxt: {
+        flex: 1,
+        marginRight: 10
+    },
+    itemMsgTxtView: { flex: 1, flexDirection: 'row' },
+    itemMsgTxt: {
+        marginTop: 5,
+        marginRight: 5,
+        color: '#585756',
+        flex: 1
     }
 });

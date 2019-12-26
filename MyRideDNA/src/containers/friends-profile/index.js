@@ -178,7 +178,7 @@ class FriendsProfile extends Component {
                 </View>
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={styles.profilePic}>
-                        <ImageBackground source={person.profilePictureId ? { uri: `${GET_PICTURE_BY_ID}${person.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` } : require('../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
+                        <ImageBackground source={require('../../assets/img/profile-bg.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
                             {/* <ImageBackground source={require('../../assets/img/profile-bg.png')} style={{ flex: 1, height: null, width: null }}>
                             <ImageBackground source={person.profilePicture ? { uri: person.profilePicture } : require('../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} resizeMode='contain'>
                                 {
@@ -187,9 +187,10 @@ class FriendsProfile extends Component {
                                         : null
                                 }
                             </ImageBackground> */}
+                            <Image resizeMode='center' source={person.profilePictureId ? { uri: `${GET_PICTURE_BY_ID}${person.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` } : null} style={{ flex: 1, width: null, height: null }} />
                         </ImageBackground>
                     </View>
-                    <Image source={require('../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} />
+                    {/* <Image source={require('../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} /> */}
                     <View style={styles.container}>
                         <View style={{ flexDirection: 'column' }}>
                             <DefaultText style={styles.labels}>LOCATION</DefaultText>
