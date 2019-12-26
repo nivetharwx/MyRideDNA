@@ -3,7 +3,7 @@ import { SafeAreaView, View, Text, Platform, Image, ScrollView, StyleSheet, Flat
 import { Actions } from 'react-native-router-flux';
 
 import { BasicHeader } from '../../components/headers';
-import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, RELATIONSHIP } from '../../constants';
+import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, PageKeys, CUSTOM_FONTS, RELATIONSHIP, GET_PICTURE_BY_ID } from '../../constants';
 import { List, ListItem, Left, Thumbnail, Body, Right } from 'native-base';
 import { ShifterButton, IconButton, ImageButton, LinkButton } from '../../components/buttons';
 import { appNavMenuVisibilityAction, updateNotificationAction, screenChangeAction, isloadingDataAction, resetCurrentFriendAction, deleteNotificationsAction, resetPersonProfileAction } from '../../actions';
@@ -12,7 +12,7 @@ import { logoutUser, getAllNotifications, getPicture, readNotification, seenNoti
 import { getFormattedDateFromISO } from '../../util';
 import store from '../../store';
 import { Loader } from '../../components/loader';
-import { LabeledInputPlaceholder } from '../../components/inputs';
+import { LabeledInputPlaceholder, SearchBoxFilter } from '../../components/inputs';
 
 
 const FILTERED_ACTION_IDS = {
@@ -73,13 +73,16 @@ class Notifications extends Component {
             searchQuery: '',
             isFilter: null,
             notificationFilter: FILTERED_ACTION_IDS.ALL_NOTIFICATION,
-            isFilter: null
+            isFilter: null,
+            pageNumber: 0,
         }
     }
 
     componentDidMount() {
-        // this.props.getAllNotifications(this.props.user.userId);
-        this.props.getAllNotifications(this.props.user.userId, 0, new Date().toISOString(), 'notification', (res) => {
+        this.props.getAllNotifications(this.props.user.userId, this.state.pageNumber, new Date().toISOString(), 'notification', (res) => {
+            if (res.notification.length > 0) {
+                this.setState({ pageNumber: this.state.pageNumber + 1 })
+            }
         }, (err) => {
         });
         // this.props.seenNotification(this.props.user.userId);
@@ -108,17 +111,17 @@ class Notifications extends Component {
         //         }
         //     })
         // }
-        if (prevProps.notificationList.notification !== this.props.notificationList.notification || !this.props.notificationList.notification.profilePicture) {
-            const pictureIdList = []
-            this.props.notificationList.notification.forEach((notificationPic) => {
-                if (!notificationPic.profilePicture && notificationPic.profilPictureId) {
-                    pictureIdList.push(notificationPic.profilPictureId)
-                }
-            })
-            if (pictureIdList.length > 0) {
-                this.props.getNotificationPic(pictureIdList);
-            }
-        }
+        // if (prevProps.notificationList.notification !== this.props.notificationList.notification || !this.props.notificationList.notification.profilePicture) {
+        //     const pictureIdList = []
+        //     this.props.notificationList.notification.forEach((notificationPic) => {
+        //         if (!notificationPic.profilePicture && notificationPic.profilPictureId) {
+        //             pictureIdList.push(notificationPic.profilPictureId)
+        //         }
+        //     })
+        //     if (pictureIdList.length > 0) {
+        //         this.props.getNotificationPic(pictureIdList);
+        //     }
+        // }
     }
     retryApiFunction = () => {
         this.state.spinValue.setValue(0);
@@ -238,26 +241,11 @@ class Notifications extends Component {
 
     _renderItem = ({ item, index }) => {
         return (
-            // <ListItem avatar key={item.id}
-            //     // style={[styles.listItem, { backgroundColor: item.status === 'unread' ? APP_COMMON_STYLES.headerColor : '#fff' }]}
-            //     style={[styles.listItem, item.status === 'unread' ? { backgroundColor: '#daedf4' } : { backgroundColor: '#fff' }]}
-            //     onPress={() => this.onPressnotification(item)}  >
-            //     <Left style={[styles.noBorderTB, styles.avatarContainer]}>
-            //         <Thumbnail source={item.profilePicture ? { uri: item.profilePicture } : require('../../assets/img/friend-profile-pic.png')} />
-            //     </Left>
-            //     <Body style={[styles.noBorderTB, styles.itemBody]}>
-            //         <Text style={[styles.name, { fontWeight: 'bold', fontSize: 17 }]}>{item.fromUserName + ' '}<Text style={styles.message}>{item.message}</Text></Text>
-            //         <Text>{this.getDateAndTime(item)}</Text>
-            //     </Body>
-            //     <Right>
-            //         <IconButton iconProps={{ name: 'close', type: 'MaterialIcons', style: { fontSize: 25, color: '#6B7663' } }} onPress={() => this.deleteNotification(item, index)} />
-            //     </Right>
-            // </ListItem>
             <ListItem noIndent style={styles.itemCont} onPress={() => this.onPressnotification(item)}>
                 <Left style={styles.leftCont}>
                     {
-                        item.profilePicture
-                            ? <Thumbnail style={styles.iconContComm} source={{ uri: item.profilePicture }} />
+                        item.profilPictureId
+                            ? <Thumbnail style={styles.iconContComm} source={{ uri: `${GET_PICTURE_BY_ID}${item.profilPictureId}` }} />
                             : <IconButton disabled style={[styles.iconContComm, styles.userIconCont]} iconProps={{ name: 'user', type: 'FontAwesome', style: styles.iconComm }} />
                     }
 
@@ -279,15 +267,18 @@ class Notifications extends Component {
     onPressLogout = async () => {
         this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
     }
-    loadMoreData = () => {
-        if (this.state.isLoadingData && this.state.isLoading === false) {
-            this.setState({ isLoading: true, isLoadingData: false })
-            this.props.getAllNotifications(this.props.user.userId, this.props.pageNumber, this.props.notificationList.notification[this.props.notificationList.notification.length - 1].date, (res) => {
+    loadMoreData = ({ distanceFromEnd }) => {
+        if (this.state.isLoading === true || distanceFromEnd < 0) return;
+        this.setState((prevState) => ({ isLoading: true }), () => {
+            this.props.getAllNotifications(this.props.user.userId, this.state.pageNumber, this.props.notificationList.notification[this.props.notificationList.notification.length - 1].date, (res) => {
+                if (res.notification.length > 0) {
+                    this.setState({ pageNumber: this.state.pageNumber + 1 })
+                }
                 this.setState({ isLoading: false })
-            }, (err) => {
+            }, (er) => {
                 this.setState({ isLoading: false })
             });
-        }
+        });
     }
     onChangeSearchValue = (val) => { this.setState({ searchQuery: val }) }
 
@@ -371,43 +362,27 @@ class Notifications extends Component {
                 <View style={APP_COMMON_STYLES.statusBar}>
                     <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
                 </View>
-                <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
-                    <BasicHeader title='Notification'
-                    // rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }}
-                    // leftIconProps={this.props.comingFrom === PageKeys.PROFILE ? { reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton } : null}
-                    />
-                    <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 80, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
-                        <View style={{ flex: 2.89 }}>
-                            <LabeledInputPlaceholder
-                                placeholder='Name'
-                                inputValue={searchQuery} inputStyle={{ borderBottomWidth: 0, width: widthPercentageToDP(47), marginLeft: 15, backgroundColor: '#fff' }}
-                                onChange={this.onChangeSearchValue}
-                                hideKeyboardOnSubmit={false}
-                                containerStyle={styles.searchCont} />
-                        </View>
-                        <View style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }}>
-                            <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
-                        </View>
-                        {/* rightIcon={{name:'user', type:'FontAwesome', style:styles.rightIconStyle}} /> */}
+                <View style={{ flex: 1, backgroundColor: '#ffffff'}}>
+                    <BasicHeader title='Notification' />
+                    <View style={{marginHorizontal: widthPercentageToDP(8) }}>
+                        <SearchBoxFilter
+                            searchQuery={searchQuery} onChangeSearchValue={this.onChangeSearchValue}
+                            placeholder='Name' outerContainer={{ marginTop: 80 }}
+                            footer={<View style={styles.filterContainer}>
+                                <ImageButton imageSrc={this.state.isFilter === FILTERED_ACTION_IDS.RECEIVED_REQUEST_ENABLED ? require('../../assets/img/received-friend-request-blue.png') : require('../../assets/img/received-friend-request.png')} imgStyles={styles.filterImage} onPress={() => this.filterReceivedRequest()} />
+                                <ImageButton imageSrc={this.state.isFilter === FILTERED_ACTION_IDS.SENT_REQUEST_ENABLED ? require('../../assets/img/sent-friend-request-red.png') : require('../../assets/img/sent-friend-request.png')} imgStyles={styles.filterImage} onPress={() => this.filterSentRequest()} />
+                                <IconButton iconProps={{ name: 'group', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.GROUP_ENABLED ? '#81BA41' : '#C4C6C8', fontSize: 20 } }} onPress={() => this.filterGroup()} />
+                            </View>}
+                        />
+                    </View>
 
-                    </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', marginHorizontal: widthPercentageToDP(9), paddingBottom: 16 }}>
-                        <ImageButton imageSrc={this.state.isFilter === FILTERED_ACTION_IDS.RECEIVED_REQUEST_ENABLED ? require('../../assets/img/received-friend-request-blue.png') : require('../../assets/img/received-friend-request.png')} imgStyles={{ height: 25, width: 28, marginTop: 0 }} onPress={() => this.filterReceivedRequest()} />
-                        <ImageButton imageSrc={this.state.isFilter === FILTERED_ACTION_IDS.SENT_REQUEST_ENABLED ? require('../../assets/img/sent-friend-request-red.png') : require('../../assets/img/sent-friend-request.png')} imgStyles={{ height: 28, width: 30, marginTop: 0 }} onPress={() => this.filterSentRequest()} />
-                        <IconButton iconProps={{ name: 'group', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.GROUP_ENABLED ? '#81BA41' : '#C4C6C8', fontSize: 20 } }} onPress={() => this.filterGroup()} />
-                        {/* <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapFriends()} /> */}
-                    </View>
                     <FlatList
-                        // data={notificationList.notification}
                         data={filteredNotification}
                         keyExtractor={this._keyExtractor}
                         renderItem={this._renderItem}
                         ListFooterComponent={this.renderFooter}
-                        // onTouchStart={this.loadMoreData}
                         onEndReached={this.loadMoreData}
                         onEndReachedThreshold={0.1}
-                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
-
                     />
                     {
                         this.props.hasNetwork === false && notificationList.notification.length === 0 && <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
@@ -423,7 +398,7 @@ class Notifications extends Component {
                     <ShifterButton onPress={this.toggleAppNavigation} containerStyles={this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null} alignLeft={user.handDominance === 'left'} />
                 </View>
                 <Loader isVisible={showLoader} />
-            </View>
+            </View >
         );
     }
 }
@@ -545,7 +520,7 @@ const styles = StyleSheet.create({
         paddingBottom: 0,
         paddingTop: 0,
         paddingLeft: 0,
-        height: 68
+        height: 68,
     },
     iconContComm: {
         marginHorizontal: 15,
@@ -603,5 +578,18 @@ const styles = StyleSheet.create({
         letterSpacing: 0.8,
         fontSize: 10,
         fontFamily: CUSTOM_FONTS.robotoSlabBold
+    },
+    filterContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginTop: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#868686',
+        paddingBottom: 16
+    },
+    filterImage: {
+        height: 27,
+        width: 28,
+        marginTop: 0
     }
 });

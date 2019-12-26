@@ -4,7 +4,7 @@ import { StyleSheet, Platform, TouchableWithoutFeedback, StatusBar, FlatList, Sc
 import { Actions } from 'react-native-router-flux';
 import { DatePicker, Icon as NBIcon, Toast, ListItem, Left, Body, Right, Thumbnail } from 'native-base';
 import { BasicHeader } from '../../../components/headers';
-import { APP_COMMON_STYLES, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, heightPercentageToDP, IS_ANDROID, WindowDimensions, widthPercentageToDP, CUSTOM_FONTS } from '../../../constants';
+import { APP_COMMON_STYLES, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, heightPercentageToDP, IS_ANDROID, WindowDimensions, widthPercentageToDP, CUSTOM_FONTS, GET_PICTURE_BY_ID, PORTRAIT_TAIL_TAG } from '../../../constants';
 import { getPassengerList, getPicture, deletePassenger } from '../../../api';
 import { BaseModal } from '../../../components/modal';
 import { getPassengerInfoAction, updateCurrentPassengerAction, resetCurrentPassengerAction, appNavMenuVisibilityAction } from '../../../actions';
@@ -39,10 +39,10 @@ class PassengersProfile extends Component {
                 Actions.pop();
                 return;
             }
-            if (!this.props.currentPassenger.profilePicture && this.props.currentPassenger.profilePictureId) {
-                this.setState({ isLoadingProfPic: true })
-                this.props.getProfilePicture(this.props.currentPassenger.profilePictureId.replace(THUMBNAIL_TAIL_TAG, ''))
-            }
+            // if (!this.props.currentPassenger.profilePicture && this.props.currentPassenger.profilePictureId) {
+            //     this.setState({ isLoadingProfPic: true })
+            //     this.props.getProfilePicture(this.props.currentPassenger.profilePictureId.replace(THUMBNAIL_TAIL_TAG, ''))
+            // }
             else {
                 this.setState({ isLoadingProfPic: false })
             }
@@ -168,13 +168,13 @@ class PassengersProfile extends Component {
                     />
                     <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
                         <View style={styles.profilePic}>
-                            <ImageBackground source={currentPassenger.profilePicture ? { uri: currentPassenger.profilePicture } : require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}>
+                            <ImageBackground source={currentPassenger.profilePictureId ? { uri: `${GET_PICTURE_BY_ID}${currentPassenger.profilePictureId.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` } : require('../../../assets/img/profile-pic.png')} style={styles.profilePicture}>
                                 {/* <ImageBackground source={require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}> */}
-                                {
+                                {/* {
                                     isLoadingProfPic
                                         ? <ImageLoader show={isLoadingProfPic} />
                                         : null
-                                }
+                                } */}
                             </ImageBackground>
                         </View>
                     </ImageBackground>
@@ -250,4 +250,10 @@ const styles = StyleSheet.create({
     fieldsGapVertical: {
         marginTop: 14
     },
+    profilePicture: {
+        height: null,
+        width: null,
+        flex: 1,
+        borderRadius: 5
+    }
 });

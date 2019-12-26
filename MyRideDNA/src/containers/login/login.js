@@ -16,19 +16,19 @@ export const LoginScreen = (props) => (
             </ImageBackground> */}
         </Animatable.View>
         <View style={LoginStyles.loginForm}>
-            <Item style={{ marginLeft: widthPercentageToDP(5), marginRight: widthPercentageToDP(5) }}>
+            <Item style={LoginStyles.itemContainer}>
                 <NBIcon name='email' type='MaterialIcons' style={{ color: '#0083CA' }} />
-                <TextInput style={{ flex: 1, fontFamily: CUSTOM_FONTS.robotoSlab }} textContentType='emailAddress' keyboardType='email-address' placeholder='Email' onChangeText={props.onEmailChange} />
+                <TextInput style={LoginStyles.item} textContentType='emailAddress' keyboardType='email-address' placeholder='Email' onChangeText={props.onEmailChange} />
             </Item>
-            <Item style={{ marginLeft: widthPercentageToDP(5), marginRight: widthPercentageToDP(5) }}>
+            <Item style={LoginStyles.itemContainer}>
                 <NBIcon name='vpn-key' type='MaterialIcons' style={{ color: '#0083CA' }} />
-                <TextInput style={{ flex: 1, fontFamily: CUSTOM_FONTS.robotoSlab }} secureTextEntry={!props.isVisiblePassword} textContentType='password' keyboardType='default' placeholder='Password' onChangeText={props.onPasswordChange} onSubmitEditing={props.onSubmit} />
-                <IconButton onPress={props.togglePasswordVisibility} style={{ backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(6), height: widthPercentageToDP(6), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: props.isVisiblePassword ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(4), paddingRight: 0, color: 'white' } }} />
+                <TextInput style={LoginStyles.item} secureTextEntry={!props.isVisiblePassword} textContentType='password' keyboardType='default' placeholder='Password' onChangeText={props.onPasswordChange} onSubmitEditing={props.onSubmit} />
+                <IconButton onPress={props.togglePasswordVisibility} style={LoginStyles.visibileIconCont} iconProps={{ name: props.isVisiblePassword ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: LoginStyles.visibleIcon }} />
             </Item>
         </View>
-        <View style={{ width: widthPercentageToDP(100), height: heightPercentageToDP(47) }}>
+        <View style={LoginStyles.bottomContainer}>
             <View style={LoginStyles.loginButtonContainer}>
-                <View style={{ borderRadius: 100, padding: 10, backgroundColor: '#fff', alignSelf: 'center' }}>
+                <View style={LoginStyles.loginButtoninnerContainer}>
                     <LinkButton style={LoginStyles.loginButton} title='LOGIN' titleStyle={LoginStyles.loginButtonText} onPress={props.onSubmit} />
                 </View>
             </View>
