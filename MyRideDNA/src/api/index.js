@@ -122,29 +122,21 @@ export const getAllNotifications = (userId, pageNumber, date, comingFrom, succes
         axios.get(NOTIFICATIONS_BASE_URL + `getNotifications?userId=${userId}&pageNumber=${pageNumber}&date=${date}`, { cancelToken: axiosSource.token, timeout: API_TIMEOUT })
             .then(res => {
                 console.log('getAllNotifications : ', res.data)
-                if (res.status === 200 && res.data.notification.length > 0) {
+                if (res.status === 200 ) {
                     // dispatch(isloadingDataAction(false));
                     dispatch(resetNotificationListAction(res.data));
-                    dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                    dispatch(apiLoaderActions(false));
+                    // dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
                     dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
                     if (comingFrom === 'notification') {
                         seenNotification(userId)
                     }
                     successCallback(res.data)
                 }
-                else if (res.data.notification.length === 0) {
-                    dispatch(apiLoaderActions(false));
-                    if (comingFrom === 'notification') {
-                        seenNotification(userId)
-                    }
-                    dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
-                    // dispatch(isloadingDataAction(false));
-                    successCallback(false)
-                }
             })
             .catch(er => {
                 // dispatch(isloadingDataAction(false));
-                handleServiceErrors(er, [userId, pageNumber, date, successCallback, errorCallback], getAllNotifications, false);
+                handleServiceErrors(er, [userId, pageNumber, date,comingFrom, successCallback, errorCallback], getAllNotifications, false);
                 errorCallback(er)
                 console.log("getNotifications error: ", er.response || er);
             })

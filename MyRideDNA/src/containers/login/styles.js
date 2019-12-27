@@ -26,6 +26,12 @@ export const LoginStyles = {
         zIndex: 10,
         alignSelf: 'center'
     },
+    loginButtoninnerContainer: {
+        borderRadius: 100,
+        padding: 10,
+        backgroundColor: '#fff',
+        alignSelf: 'center'
+    },
     loginButton: {
         flexDirection: 'row',
         paddingHorizontal: 0,
@@ -72,5 +78,30 @@ export const LoginStyles = {
         backgroundColor: '#fff',
         fontSize: 60,
         borderRadius: 5
+    },
+    itemContainer: {
+        marginLeft: widthPercentageToDP(5),
+        marginRight: widthPercentageToDP(5)
+    },
+    item: {
+        flex: 1,
+        fontFamily: CUSTOM_FONTS.robotoSlab
+    },
+    visibileIconCont: {
+        backgroundColor: '#0083CA',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: widthPercentageToDP(6),
+        height: widthPercentageToDP(6),
+        borderRadius: widthPercentageToDP(4)
+    },
+    visibleIcon: {
+        fontSize: widthPercentageToDP(4),
+        paddingRight: 0,
+        color: 'white'
+    },
+    bottomContainer: {
+        width: widthPercentageToDP(100),
+        height: heightPercentageToDP(47)
     }
 }

@@ -139,18 +139,18 @@ class Passengers extends Component {
 
     passengerKeyExtractor = (item) => item.passengerId;
 
-    loadMoreData = () => {
-        if (this.state.isLoadingData && this.state.isLoading === false) {
-            this.setState({ isLoading: true, isLoadingData: false })
+    loadMoreData = ({ distanceFromEnd }) => {
+        if (this.state.isLoading === true || distanceFromEnd < 0) return;
+        this.setState((prevState) => ({ isLoading: true }), () => {
             this.props.getPassengerList(this.props.user.userId, this.state.pageNumber, 10, (res) => {
                 if (res.passengerList.length > 0) {
                     this.setState({ pageNumber: this.state.pageNumber + 1 })
                 }
                 this.setState({ isLoading: false })
-            }, (err) => {
+            }, (er) => {
                 this.setState({ isLoading: false })
             });
-        }
+        });
     }
 
     renderFooter = () => {
@@ -213,13 +213,13 @@ class Passengers extends Component {
                     <BasicHeader
                         title='Passengers'
                         leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                        rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', containerStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 } }}
+                        rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', containerStyle: styles.rightIconPropsStyle, style: styles.addIcon }}
                     />
                     <FlatList
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingTop: 40 + APP_COMMON_STYLES.headerHeight }}
                         style={{ flexDirection: 'column' }}
-                        columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: heightPercentageToDP(4), marginHorizontal: 25 }}
+                        columnWrapperStyle={styles.columnWrapper}
                         numColumns={2}
                         data={passengerList}
                         keyExtractor={this.passengerKeyExtractor}
@@ -231,13 +231,12 @@ class Passengers extends Component {
                                 subtitle={item.homeAddress ? (item.homeAddress.city && item.homeAddress.state) ? `${item.homeAddress.city}, ${item.homeAddress.state}` : item.homeAddress.city ? item.homeAddress.city : item.homeAddress.state : null}
                                 onLongPress={() => this.showOptionsModal(index)}
                                 onPress={() => this.openPassengerProfile(item, index)}
-                                imageStyle={{ height: widthPercentageToDP(40), width: widthPercentageToDP(40) }}
+                                imageStyle={styles.imageStyle}
                             />
                         )}
                         ListFooterComponent={this.renderFooter}
                         onEndReached={this.loadMoreData}
                         onEndReachedThreshold={0.1}
-                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
                     />
                     {
                         this.props.hasNetwork === false && passengerList.length === 0 && <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
@@ -313,5 +312,18 @@ const styles = StyleSheet.create({
         width: 27,
         backgroundColor: '#F5891F',
         borderRadius: 13.5
+    },
+    addIcon: {
+        color: '#fff',
+        fontSize: 19
+    },
+    columnWrapper: {
+        justifyContent: 'space-between',
+        marginBottom: heightPercentageToDP(4),
+        marginHorizontal: 25
+    },
+    imageStyle: {
+        height: widthPercentageToDP(40),
+        width: widthPercentageToDP(40)
     }
 });
