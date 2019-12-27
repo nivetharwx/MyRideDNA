@@ -5,7 +5,7 @@ import styles, { FOOTER_HEIGHT } from './styles';
 import { appNavMenuVisibilityAction, resetMessageCountAction, updateChatDatatAction, resetChatMessageAction } from '../../actions';
 import { ShifterButton, IconButton, LinkButton } from '../../components/buttons';
 import { Thumbnail, Item, Icon as NBIcon } from 'native-base';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, IS_ANDROID, GET_PICTURE_BY_ID, CHAT_CONTENT_TYPE, CUSTOM_FONTS, THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG } from '../../constants';
+import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, IS_ANDROID, GET_PICTURE_BY_ID, CHAT_CONTENT_TYPE, CUSTOM_FONTS, THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG, ScreenDimensions } from '../../constants';
 import { ChatBubble } from '../../components/bubble';
 import { sendMessage, getAllMessages, deleteMessagesById, deleteMessagesByIdForEveryone, seenMessage, getPicture, deleteAllMessages, getPictureList } from '../../api';
 import { getFormattedDateFromISO } from '../../util';
@@ -14,7 +14,6 @@ import { Actions } from 'react-native-router-flux';
 import { DefaultText } from '../../components/labels';
 import ImagePicker from 'react-native-image-crop-picker';
 
-const TOTAL_HEADER_HEIGHT = APP_COMMON_STYLES.headerHeight + APP_COMMON_STYLES.statusBar.height;
 class Chat extends Component {
     CHAT_OPTIONS = [{ text: 'Clear Chat', id: 'clearAll', handler: () => this.clearChat() }, { text: 'Close', id: 'close', handler: () => this.hideOptionsModal() }];
     constructor(props) {
@@ -29,10 +28,6 @@ class Chat extends Component {
             selectedsenderId: null,
             iOSKeyboardShown: false,
             pickerAnim: new Animated.Value(0),
-            imagePrevAreaAnim: new Animated.Value(0),
-            selectedImgs: [],
-            isLoadingImage: false,
-            imgPrevAreaMinHeight: 0,
         };
     }
 
@@ -80,50 +75,19 @@ class Chat extends Component {
         }
     }
 
-    getImageFromCamera = async () => {
-        this.setState({ isLoadingImage: true });
-        this.showImgPrevArea(100);
+    getImageFromCamera = () => {
         this.hidePicker(0);
-        try {
-            const imgs = await ImagePicker.openCamera({
-                mediaType: 'photo',
-                width: 300,
-                height: 300,
-                includeBase64: true,
-                multiple: true,
-                maxFiles: 5,
-                cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
-            });
-            this.setState({ imgPrevAreaMinHeight: 100, isLoadingImage: false, selectedImgs: imgs.slice(0, 5).map(item => ({ mimeType: item.mime, image: item.data })) });
-        } catch (er) {
-            this.setState({ imgPrevAreaMinHeight: 0, isLoadingImage: false }, () => this.showImgPrevArea(0));
-            console.log("Error occurd: ", er);
-        }
+        Actions.push(PageKeys.SELECTED_IMAGES_VIEW, { fromGallery: false, sendMessage: this.sendMessage });
     }
 
-    getImageFromGallery = async () => {
-        this.setState({ isLoadingImage: true });
-        this.showImgPrevArea(100, async () => {
-            this.hidePicker(0);
-            try {
-                const imgs = await ImagePicker.openPicker({
-                    mediaType: 'photo',
-                    width: 300,
-                    height: 300,
-                    cropping: false,
-                    multiple: true,
-                    maxFiles: 5,
-                    includeBase64: true,
-                });
-                this.setState({ imgPrevAreaMinHeight: 30, isLoadingImage: false, selectedImgs: imgs.slice(0, 5).map(item => ({ mimeType: item.mime, image: item.data })) });
-            } catch (er) {
-                this.setState({ imgPrevAreaMinHeight: 0, isLoadingImage: false }, () => this.showImgPrevArea(0));
-                console.log("Error occurd: ", er);
-            }
-        });
+    getImageFromGallery = () => {
+        this.hidePicker(0);
+        Actions.push(PageKeys.SELECTED_IMAGES_VIEW, { fromGallery: true, sendMessage: this.sendMessage });
     }
 
-    toggleIOSKeyboardStatus = () => this.setState(prevState => ({ iOSKeyboardShown: !prevState.iOSKeyboardShown }));
+    toggleIOSKeyboardStatus = () => {
+        this.setState(prevState => ({ iOSKeyboardShown: !prevState.iOSKeyboardShown }));
+    }
 
     showAppNavigation = () => this.props.showAppNavMenu();
 
@@ -146,7 +110,7 @@ class Chat extends Component {
         this.setState({ messageToBeSend });
     }
 
-    sendMessage = () => {
+    sendMessage = (message, images) => {
         // if (this.props.isGroup) {
         //     this.props.sendMessage(this.props.isGroup, this.props.group.groupId, this.props.user.userId, this.state.messageToBeSend, this.props.user.name, this.props.user.nickname);
         //     this.setState({ messageToBeSend: '' })
@@ -155,17 +119,18 @@ class Chat extends Component {
         //     this.props.sendMessage(this.props.isGroup, this.props.friend.userId, this.props.user.userId, this.state.messageToBeSend, this.props.user.nickname);
         //     
         // }
-        const imgsToSend = this.state.selectedImgs.filter(item => !item.isHidden);
-        if (this.state.messageToBeSend === '' && imgsToSend.length === 0) return;
-        const data = [this.props.chatInfo.isGroup, this.props.chatInfo.id, this.props.user.userId, this.state.messageToBeSend, this.props.user.name, this.props.user.nickname, this.props.user.profilePictureId];
-        if (imgsToSend.length > 0) {
+        // const imgsToSend = this.state.selectedImgs.filter(item => !item.isHidden);
+        // if (message === '' && images.length === 0) return;
+
+        const data = [this.props.chatInfo.isGroup, this.props.chatInfo.id, this.props.user.userId, message, this.props.user.name, this.props.user.nickname, this.props.user.profilePictureId];
+        if (images.length > 0) {
             data.push(CHAT_CONTENT_TYPE.IMAGE);
-            data.push(imgsToSend);
+            data.push(images);
         } else {
             data.push(CHAT_CONTENT_TYPE.TEXT);
+            this.setState({ messageToBeSend: '' });
         }
         this.props.sendMessage(...data);
-        this.setState({ messageToBeSend: '', selectedImgs: [] });
     }
 
     chatKeyExtractor = (item) => item.messageId;
@@ -349,21 +314,6 @@ class Chat extends Component {
         ).start();
     }
 
-    showImgPrevArea(percentage, callback) {
-        Animated.timing(
-            this.state.imagePrevAreaAnim,
-            {
-                toValue: heightPercentageToDP(percentage),
-                duration: 300,
-                // useNativeDriver: true
-            }
-        ).start(() => typeof callback === 'function' && callback());
-    }
-
-    hideImgPrevArea = () => {
-        this.setState({ selectedImgs: [], imgPrevAreaMinHeight: 0 }, () => this.showImgPrevArea(0));
-    }
-
     renderChatDate = (date) => {
         const todaysDate = getFormattedDateFromISO();
         let chatDate = getFormattedDateFromISO(date);
@@ -375,26 +325,6 @@ class Chat extends Component {
     }
 
     imgKeyExtractor = (item) => item.localIdentifier;
-
-    unselectImg = (idx) => this.setState(prevState => {
-        const hiddenImgs = prevState.selectedImgs.filter(item => item.isHidden).length + 1;
-        const newArr = [
-            ...prevState.selectedImgs.slice(0, idx),
-            { ...prevState.selectedImgs.slice(idx), isHidden: true },
-            ...prevState.selectedImgs.slice(idx + 1)
-        ];
-        return hiddenImgs === prevState.selectedImgs.length
-            ? { selectedImgs: [], imgPrevAreaMinHeight: 0 }
-            : { selectedImgs: newArr }
-    }, () => this.state.imgPrevAreaMinHeight === 0 && this.showImgPrevArea(0));
-
-    renderSelectedImg = (item, index) => {
-        return <View key={index + ''} style={[styles.thumbnailContainer, item.isHidden ? { display: 'none' } : null]}>
-            <ImageBackground source={{ uri: `data:${item.mimeType};base64,${item.image}` }} style={styles.squareThumbnail}>
-                <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: styles.closeIcon }} onPress={() => this.unselectImg(index)} />
-            </ImageBackground>
-        </View>
-    }
 
     renderChatBubble = ({ item, index }) => {
         const { user, chatMessages } = this.props;
@@ -417,7 +347,7 @@ class Chat extends Component {
                                 selectedMessage={selectedMessage && selectedMessage[item.messageId]}
                                 onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
                             />
-                            : this.renderImageContent(item, { backgroundColor: selectedMessage && selectedMessage[item.messageId] ? '#99C8F7' : styles.myMsgBubble.backgroundColor, borderBottomRightRadius: 0 })
+                            : this.renderImageContent(item, { backgroundColor: selectedMessage && selectedMessage[item.messageId] ? '#99C8F7' : styles.myMsgBubble.backgroundColor, borderBottomRightRadius: isMyLastMsg ? 0 : styles.mediaMsgContainer.borderRadius })
                     }
                     <View style={{ marginRight: styles.thumbnail.width + 5 }} />
                 </Item>
@@ -447,7 +377,7 @@ class Chat extends Component {
                                 selectedMessage={selectedMessage && selectedMessage[item.messageId]}
                                 onPress={() => this.onSelectMessage(item.messageId, item.senderId)}
                             />
-                            : this.renderImageContent(item, { backgroundColor: selectedMessage && selectedMessage[item.messageId] ? '#99C8F7' : styles.friendMsgBubble.backgroundColor, borderBottomLeftRadius: 0 })
+                            : this.renderImageContent(item, { backgroundColor: selectedMessage && selectedMessage[item.messageId] ? '#99C8F7' : styles.friendMsgBubble.backgroundColor, borderBottomLeftRadius: isMemberLastMsg ? 0 : styles.mediaMsgContainer.borderRadius })
                     }
                 </Item>
             </View>
@@ -515,7 +445,7 @@ class Chat extends Component {
 
     render() {
         const { chatMessages, totalUnseenMessage } = this.props;
-        const { messageToBeSend, selectedMessage, selectedImgs, isVisibleOptionsModal, isLoadingImage } = this.state;
+        const { messageToBeSend, selectedMessage, isVisibleOptionsModal } = this.state;
         return <View style={styles.fill}>
             <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={isVisibleOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
                 <View style={APP_COMMON_STYLES.optionsContainer}>
@@ -567,11 +497,7 @@ class Chat extends Component {
                                     }
                                 </DefaultText>
                             </View>
-                            {
-                                this.state.imgPrevAreaMinHeight > 0
-                                    ? <IconButton iconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { color: '#fff', fontSize: 25 } }} onPress={this.hideImgPrevArea} />
-                                    : <IconButton iconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 25 } }} onPress={this.showOptionsModal} />
-                            }
+                            <IconButton iconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 25 } }} onPress={this.showOptionsModal} />
                         </View>
                 }
                 <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={[styles.fill, !IS_ANDROID && this.state.iOSKeyboardShown ? { marginBottom: 35 } : null]}>
@@ -604,50 +530,25 @@ class Chat extends Component {
 
                         </View>
                         <ShifterButton onPress={this.showAppNavigation} containerStyles={styles.shifterContainer} alignLeft={this.props.user.handDominance === 'left'} />
-                        <Animated.View style={[styles.picker, { height: this.state.imagePrevAreaAnim, paddingTop: this.state.imgPrevAreaMinHeight > 0 ? TOTAL_HEADER_HEIGHT + FOOTER_HEIGHT : 0 }]}>
-                            <View style={{ flex: 1, backgroundColor: '#fff', minHeight: this.state.imgPrevAreaMinHeight }}>
-                                {
-                                    isLoadingImage
-                                        ? <View style={styles.imgLoaderView}>
-                                            <ActivityIndicator size='large' animating={isLoadingImage} />
-                                        </View>
-                                        : selectedImgs.length > 0
-                                            ? <ScrollView>
-                                                <View style={styles.imagesContainer}>
-                                                    {
-                                                        selectedImgs.filter(item => item.isHidden).length !== selectedImgs.length
-                                                            ? selectedImgs.map(this.renderSelectedImg)
-                                                            : null
-                                                    }
-                                                </View>
-                                            </ScrollView>
-                                            : null
-                                }
-                            </View>
-                        </Animated.View>
                     </ImageBackground>
                     <View style={[styles.footer, this.props.hasNetwork === false ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
                         <IconButton style={{ marginRight: 10, transform: [{ rotateY: '180deg' }] }} iconProps={{ name: 'camera', type: 'Entypo', style: { color: '#fff', fontSize: 18 } }} onPress={this.showPicker} />
                         <View style={styles.inputCont}>
                             <TextInput style={styles.inputBox} value={messageToBeSend} placeholder='Type a message...' placeholderTextColor='#3E3E3E' multiline={true} onChangeText={this.onChangeMessageToBeSend} />
                         </View>
-                        <IconButton style={styles.footerRtIcnCont} iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: styles.footerRightIcon }} onPress={this.sendMessage} />
+                        <IconButton style={styles.footerRtIcnCont} iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: styles.footerRightIcon }} onPress={() => this.sendMessage(this.state.messageToBeSend)} />
                     </View>
                     <Animated.View style={[styles.picker, { height: this.state.pickerAnim }]}>
-                        {
-                            !isLoadingImage && selectedImgs.length === 0
-                                ? <TouchableOpacity activeOpacity={1} style={styles.pickerBackdrop} onPress={() => this.hidePicker(300)}>
-                                    <View style={APP_COMMON_STYLES.optionsContainer}>
-                                        <LinkButton title='Camera' style={APP_COMMON_STYLES.optionBtn} titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.getImageFromCamera} />
-                                        <LinkButton title='Gallery' style={[APP_COMMON_STYLES.optionBtn, styles.noBorder]} titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.getImageFromGallery} />
-                                    </View>
-                                </TouchableOpacity>
-                                : null
-                        }
+                        <TouchableOpacity activeOpacity={1} style={styles.pickerBackdrop} onPress={() => this.hidePicker(300)}>
+                            <View style={APP_COMMON_STYLES.optionsContainer}>
+                                <LinkButton title='Camera' style={APP_COMMON_STYLES.optionBtn} titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.getImageFromCamera} />
+                                <LinkButton title='Gallery' style={[APP_COMMON_STYLES.optionBtn, styles.noBorder]} titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.getImageFromGallery} />
+                            </View>
+                        </TouchableOpacity>
                     </Animated.View>
                 </KeyboardAvoidingView>
             </View>
-        </View >
+        </View>
     }
 }
 const mapStateToProps = (state) => {
@@ -680,3 +581,160 @@ const mapDispatchToProps = (dispatch) => {
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Chat);
+
+const MAX_FILES_SELECTABLE = 5;
+export class SelectedImagesView extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            images: [],
+            messageWithImage: '',
+            isLoadingImage: false,
+        }
+    }
+
+    componentDidMount() {
+        this.fetchImage();
+    }
+
+    fetchImage(isAppend = false) {
+        !isAppend && this.setState({ messageWithImage: '', images: [] });
+        this.props.fromGallery
+            ? this.getImageFromGallery(isAppend)
+            : this.getImageFromCamera(isAppend);
+    }
+
+    getImageFromCamera = async (isAppend) => {
+        this.setState({ isLoadingImage: true });
+        try {
+            const imgs = await ImagePicker.openCamera({
+                mediaType: 'photo',
+                width: 300,
+                height: 300,
+                includeBase64: true,
+                multiple: true,
+                maxFiles: MAX_FILES_SELECTABLE,
+                cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
+            });
+            if (isAppend) {
+                const remainingLength = (MAX_FILES_SELECTABLE - this.state.images.length) + this.state.images.filter(item => item.isHidden).length;
+                this.setState({ isLoadingImage: false, images: [...this.state.images, ...imgs.slice(0, remainingLength).map(item => ({ mimeType: item.mime, image: item.data }))] });
+            } else {
+                this.setState({ isLoadingImage: false, images: imgs.slice(0, MAX_FILES_SELECTABLE).map(item => ({ mimeType: item.mime, image: item.data })) });
+            }
+        } catch (er) {
+            this.setState({ isLoadingImage: false });
+            if (!isAppend) this.goBack();
+            console.log("Error occurd: ", er);
+        }
+    }
+
+    getImageFromGallery = async (isAppend) => {
+        this.setState({ isLoadingImage: true });
+        try {
+            const imgs = await ImagePicker.openPicker({
+                mediaType: 'photo',
+                width: 300,
+                height: 300,
+                cropping: false,
+                multiple: true,
+                maxFiles: MAX_FILES_SELECTABLE,
+                includeBase64: true,
+            });
+            if (isAppend) {
+                const remainingLength = (MAX_FILES_SELECTABLE - this.state.images.length) + this.state.images.filter(item => item.isHidden).length;
+                this.setState({ isLoadingImage: false, images: [...this.state.images, ...imgs.slice(0, remainingLength).map(item => ({ mimeType: item.mime, image: item.data }))] });
+            } else {
+                this.setState({ isLoadingImage: false, images: imgs.slice(0, MAX_FILES_SELECTABLE).map(item => ({ mimeType: item.mime, image: item.data })) });
+            }
+        } catch (er) {
+            this.setState({ isLoadingImage: false });
+            if (!isAppend) this.goBack();
+            console.log("Error occurd: ", er);
+        }
+    }
+
+    onChangeMessageWithImage = (messageWithImage) => this.setState({ messageWithImage });
+
+    imgKeyExtractor = (item) => item.localIdentifier;
+
+    unselectImg = (idx) => this.setState(prevState => {
+        const hiddenImgCount = prevState.images.filter(item => item.isHidden).length + 1;
+        if (hiddenImgCount === prevState.images.length) {
+            return { images: [] };
+        } else {
+            const newArr = [
+                ...prevState.images.slice(0, idx),
+                { ...prevState.images.slice(idx), isHidden: true },
+                ...prevState.images.slice(idx + 1)
+            ];
+            return { images: newArr };
+        }
+    }, () => {
+        if (this.state.images.length > 0) return;
+        this.fetchImage();
+    });
+
+    renderSelectedImg = (item, index) => {
+        return <View key={index + ''} style={[styles.thumbnailContainer, item.isHidden ? { display: 'none' } : null]}>
+            <ImageBackground source={{ uri: `data:${item.mimeType};base64,${item.image}` }} style={styles.squareThumbnail}>
+                <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: styles.closeIcon }} onPress={() => this.unselectImg(index)} />
+            </ImageBackground>
+        </View>
+    }
+
+    goBack = () => Actions.pop();
+
+    returnContent = () => {
+        if (this.state.images.length === 0) return;
+        this.props.sendMessage(this.state.messageWithImage, this.state.images.filter(item => !item.isHidden));
+        this.goBack();
+    }
+
+    render() {
+        const { messageWithImage, images, isLoadingImage } = this.state;
+        const selectedImgCount = images.filter(item => !item.isHidden).length;
+        return <View style={styles.fill}>
+            <View style={APP_COMMON_STYLES.statusBar}>
+                <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
+            </View>
+            <View style={styles.fill}>
+                <View style={styles.chatHeader}>
+                    <TouchableOpacity style={styles.iconPadding} onPress={this.goBack}>
+                        <NBIcon name='md-arrow-round-back' type='Ionicons' style={{
+                            fontSize: 25,
+                            color: 'black'
+                        }} />
+                    </TouchableOpacity>
+                    <View style={styles.headingView}>
+                        {selectedImgCount > 0 ? <DefaultText numberOfLines={1} style={styles.chatHeaderName}>{`${selectedImgCount} selected`}</DefaultText> : null}
+                    </View>
+                    <IconButton iconProps={{ name: 'close', type: 'MaterialCommunityIcons', style: { color: '#fff', fontSize: 25 } }} onPress={() => this.fetchImage()} />
+                </View>
+                <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={[styles.fill]}>
+                    <View style={[styles.fill, { backgroundColor: '#fff' }]}>
+                        <ScrollView>
+                            <View style={styles.imagesContainer}>
+                                {
+                                    images.filter(item => item.isHidden).length !== images.length
+                                        ? images.map(this.renderSelectedImg)
+                                        : null
+                                }
+                            </View>
+                        </ScrollView>
+                        <View style={styles.imgLoaderView}>
+                            <ActivityIndicator size='large' animating={isLoadingImage} />
+                        </View>
+                    </View>
+                    <View style={[styles.footer, this.props.hasNetwork === false ? { marginBottom: heightPercentageToDP(8.2) } : null]}>
+                        <IconButton style={{ marginRight: 10, transform: [{ rotateY: '180deg' }] }} iconProps={{ name: 'camera', type: 'Entypo', style: { color: '#fff', fontSize: 18 } }} onPress={() => this.fetchImage(true)} />
+                        <View style={styles.inputCont}>
+                            <TextInput style={styles.inputBox} value={messageWithImage} placeholder='Type a message...' placeholderTextColor='#3E3E3E' multiline={true} onChangeText={this.onChangeMessageWithImage} />
+                        </View>
+                        <IconButton style={styles.footerRtIcnCont} iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: styles.footerRightIcon }} onPress={this.returnContent} />
+                    </View>
+                </KeyboardAvoidingView>
+            </View>
+        </View>
+    }
+}

@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     },
     picker: {
         position: 'absolute',
-        zIndex: 500,
+        zIndex: 999,
         overflow: 'hidden',
         bottom: 0,
         width: widthPercentageToDP(100),
@@ -248,9 +248,36 @@ const styles = StyleSheet.create({
         fontSize: heightPercentageToDP(1.7)
     },
     imgLoaderView: {
-        flex: 1,
+        top: '50%',
+        alignSelf: 'center',
+        position: 'absolute',
         alignItems: 'center',
         justifyContent: 'center'
+    },
+    modalRoot: {
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        flex: 1,
+        flexDirection: 'row',
+        elevation: 20
+    },
+    modalContainer: {
+        width: widthPercentageToDP(100),
+        height: '100%',
+        backgroundColor: '#fff'
+    },
+    modalHeader: {
+        backgroundColor: APP_COMMON_STYLES.headerColor,
+        height: APP_COMMON_STYLES.headerHeight,
+        position: 'absolute',
+        zIndex: 100,
+        width: '100%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    modalBodyContent: {
+        flex: 1,
+        // marginTop: APP_COMMON_STYLES.headerHeight
     }
 });
 export default styles;

@@ -17,7 +17,7 @@ import Rides from '../containers/rides';
 import Map from '../containers/map';
 import WaypointList from '../containers/map/waypoint-list';
 import CommentSection from '../containers/map/comment-scetion';
-import Chat from '../containers/chats';
+import Chat, { SelectedImagesView } from '../containers/chats';
 import Signup from '../containers/signup';
 import Passengers from '../containers/passengers';
 import PaasengerForm from '../containers/passengers/add-edit-passenger-from';
@@ -78,6 +78,7 @@ export default class Navigation extends Component {
                             <Scene gesturesEnabled={false} key={PageKeys.CONTACTS_SECTION} component={ContactsSection} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.FRIENDS_PROFILE} component={FriendsProfile} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.CHAT} component={Chat} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.SELECTED_IMAGES_VIEW} component={SelectedImagesView} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.OFFERS} component={Offers} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.CHAT_LIST} component={ChatList} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.ALBUM} component={Album} hideNavBar></Scene>

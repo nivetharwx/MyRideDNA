@@ -67,6 +67,7 @@ export const PageKeys = {
     FRIENDS_PROFILE: 'friendsProfile',
     CHAT_LIST: 'chatList',
     CHAT: 'chat',
+    SELECTED_IMAGES_VIEW: 'selectedImagesView',
     APP_NAVIGATION_MENU: 'appNavigation',
     RIDES: 'rides',
     MAP: 'map',
