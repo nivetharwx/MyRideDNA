@@ -4,7 +4,6 @@ import {
     ScrollView,
     Image,
     PermissionsAndroid,
-    CameraRoll,
     TouchableWithoutFeedback,
     StyleSheet,
     TouchableOpacity,
@@ -13,10 +12,11 @@ import {
     SafeAreaView,
     Platform
 } from 'react-native';
+import CameraRoll from '@react-native-community/cameraroll';
 
 import { Icon as NBIcon } from 'native-base';
 
-// import RNFetchBlob from 'rn-fetch-blob';
+import RNFetchBlob from 'rn-fetch-blob';
 import { WindowDimensions } from '../../constants';
 import { Actions } from 'react-native-router-flux';
 import { Toast } from 'native-base';
@@ -38,54 +38,57 @@ export class GalleryView extends Component {
             nextCursor: null,
             showLoader: true
         };
-        this.maximumSelection = props.count > MAXIMUM_SELECTION
+        this.maximumSelection = props.maxFiles > MAXIMUM_SELECTION
             ? MAXIMUM_SELECTION
-            : props.count < 0
+            : props.maxFiles < 0
                 ? 1
-                : props.count;
+                : props.maxFiles;
     }
 
-    componentWillMount() {
+    componentDidMount() {
         this.getGalleryPhotos();
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-    }
-
-    componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
-    }
-
-    handleBackButtonClick = () => {
-        this.onPressBackButton();
-        return true;
     }
 
     doBeforePop = () => {
-        if (typeof this.props.onDidDismiss === 'function') {
-            this.setState({ showLoader: true });
-            let picPromises = [];
-            this.state.selectedImages.forEach((uri, key) => {
-                // picPromises.push(RNFetchBlob.fs.readFile(uri, 'base64'));
-            });
-            Promise.all(picPromises).then((result) => {
-                let selectedImages = [];
-                for (let index = 0, length = result.length; index < length; index++) {
-                    selectedImages[index] = `data:image/jpg;base64,${result[index]}`;
-                }
-                // Pass data back to the callback function
-                this.props.onDidDismiss(selectedImages).then(_ => {
-                    console.log(selectedImages);
-                    this.setState({ showLoader: false }, () => Actions.pop());
-                });
-            }).catch((err) => {
-                console.log(err);
-                // Pass data back to the callback function
-                this.props.onDidDismiss([]).then(_ => {
-                    this.setState({ showLoader: false }, () => Actions.pop());
-                });
-            });
-        } else {
-            Actions.pop();
-        }
+
+        // Actions.push(PageKeys.GALLERY, {
+        //     maxFiles: 6,
+        //     onDidDismiss: (selectedFiles) => {
+        //         console.log("selectedFiles from map: ", selectedFiles);
+        //         return new Promise((resolve, reject) => resolve("Success"));
+        //     }
+        // });
+
+        if (typeof this.props.onDidDismiss !== 'function') return Actions.pop();
+
+        this.setState({ showLoader: true });
+        const selectedFiles = Array.from(this.state.selectedImages.values());
+        // Pass data back to the callback function
+        this.props.onDidDismiss(selectedFiles).then(_ => {
+            this.setState({ showLoader: false }, () => Actions.pop());
+        });
+
+        // let picPromises = [];
+        // this.state.selectedImages.forEach((uri, key) => {
+        //     picPromises.push(RNFetchBlob.fs.readFile(uri, 'base64'));
+        // });
+        // Promise.all(picPromises).then((result) => {
+        //     let selectedImages = [];
+        //     for (let index = 0, length = result.length; index < length; index++) {
+        //         selectedImages[index] = `data:image/jpg;base64,${result[index]}`;
+        //     }
+        //     console.log("selectedImages from gallery: ", selectedImages);
+        //     // Pass data back to the callback function
+        //     this.props.onDidDismiss(selectedImages).then(_ => {
+        //         this.setState({ showLoader: false }, () => Actions.pop());
+        //     });
+        // }).catch((err) => {
+        //     console.log(err);
+        //     // Pass data back to the callback function
+        //     this.props.onDidDismiss([]).then(_ => {
+        //         this.setState({ showLoader: false }, () => Actions.pop());
+        //     });
+        // });
     }
 
     onScroll = (e) => {
@@ -125,11 +128,22 @@ export class GalleryView extends Component {
         }
     }
 
+    _fetchAlbums() {
+        // let cameraRollOptions = { assetType: 'Photos' };
+        // CameraRoll.getAlbums(cameraRollOptions)
+    }
+
     _fetchPhotos() {
         let cameraRollOptions = {
             first: 50,
             assetType: 'Photos',
         };
+        // let cameraRollOptions = {
+        //     first: 20,
+        //     assetType: 'Photos',
+        //     groupName: group_name,
+        //     groupTypes: 'Album',
+        // }
         if (this.state.nextCursor) {
             cameraRollOptions.after = this.state.nextCursor;
         }
@@ -146,21 +160,15 @@ export class GalleryView extends Component {
         });
     }
 
-    onPressBackButton = () => {
-        if (this.state.selectedImages.size === 0) {
-            Actions.pop();
-        } else {
-            this.setState({ selectedImages: new Map() });
-        }
-    }
+    onPressBackButton = () => Actions.pop();
 
-    toggleImageSelection = (i, imageUri) => {
+    toggleImageSelection = (image) => {
         let { selectedImages } = this.state;
-        if (selectedImages.has(i)) {
-            selectedImages.delete(i);
+        if (selectedImages.has(image.name)) {
+            selectedImages.delete(image.name);
         } else {
             if (selectedImages.size < this.maximumSelection) {
-                selectedImages.set(i, imageUri);
+                selectedImages.set(image.name, image);
             } else {
                 Toast.show({ text: 'Maximum selection reached', position: 'bottom', duration: 1000, type: 'warning', style: styles.toast });
                 return;
@@ -177,7 +185,7 @@ export class GalleryView extends Component {
                     <View style={styles.galleryContainer}>
                         {this.state.media.map((p, i) => {
                             return (
-                                <TouchableWithoutFeedback key={'key' + i} onPress={() => this.toggleImageSelection(i, p.node.image.uri)}>
+                                <TouchableWithoutFeedback key={'key' + i} onPress={() => this.toggleImageSelection({ uri: p.node.image.uri, type: p.node.type, name: p.node.image.filename })}>
                                     <View style={[styles.galleryImage]}>
                                         <Image
                                             style={{
@@ -187,8 +195,9 @@ export class GalleryView extends Component {
                                             }}
                                             source={{ uri: p.node.image.uri }}
                                         />
-                                        <View style={[styles.selection, { height: this.state.selectedImages.has(i) ? '100%' : 0 }]}>
-                                            <NBIcon name='md-checkmark' type='Ionicons' style={{ color: 'white', fontSize: 30 }}></NBIcon>
+                                        <View style={[styles.selection, { height: this.state.selectedImages.has(p.node.image.filename) ? '100%' : 0 }]}>
+                                            {/* <NBIcon name='md-checkmark' type='Ionicons' style={{ color: 'white', fontSize: 30 }}></NBIcon> */}
+                                            <DefaultText style={{ color: 'white', fontSize: 30 }}>{Array.from(this.state.selectedImages.values()).findIndex(img => img.name === p.node.image.filename) + 1}</DefaultText>
                                         </View>
                                     </View>
                                 </TouchableWithoutFeedback>

@@ -1,15 +1,15 @@
 import React, { Component } from 'react';
-import { View, ImageBackground, StatusBar, FlatList, StyleSheet, ActivityIndicator, Animated } from 'react-native';
+import { View, FlatList, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { connect } from 'react-redux';
-import { IconButton } from '../../../../../components/buttons';
 import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, POST_TYPE, PORTRAIT_TAIL_TAG, GET_PICTURE_BY_ID } from '../../../../../constants';
-import { BaseModal } from '../../../../../components/modal';
 import { Actions } from 'react-native-router-flux';
 import { BasicHeader } from '../../../../../components/headers';
 import { SquareCard } from '../../../../../components/cards';
+import { updateBikeWishListAction, updateBikeCustomizationsAction, getCurrentBikeSpecAction, resetErrorHandlingAction } from '../../../../../actions';
+import { getPosts, getFriendsPosts, handleServiceErrors } from '../../../../../api';
+import { BasePage } from '../../../../../components/pages';
+import { IconButton } from '../../../../../components/buttons';
 import { DefaultText } from '../../../../../components/labels';
-import { appNavMenuVisibilityAction, updateBikeWishListAction, updateBikeCustomizationsAction, getCurrentBikeSpecAction } from '../../../../../actions';
-import { getPosts } from '../../../../../api';
 
 class BikeSpecList extends Component {
     constructor(props) {
@@ -17,28 +17,84 @@ class BikeSpecList extends Component {
         this.state = {
             isLoading: false,
             pageNumber: 0,
+            postData: [],
+            hasRemainingList: false,
         };
     }
 
     componentDidMount() {
-        this.props.getPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.bike.spaceId, 0, this.fetchSuccessCallback, this.fetchErrorCallback);
+        if (this.props.isEditable === true) {
+            if (this.props.isLoadedPostType) {
+                this.props.getPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.spaceId, this.state.pageNumber, this.fetchSuccessCallback, this.fetchErrorCallback);
+            }
+        } else {
+            if (this.props.isLoadedPostType) {
+                this.getFriendsPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.friendId, this.props.spaceId, 0);
+            }
+        }
+
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (this.props.updatePageContent && (!prevProps.updatePageContent || prevProps.updatePageContent !== this.props.updatePageContent)) {
-            this.props.getPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.bike.spaceId, 0, this.fetchSuccessCallback, this.fetchErrorCallback);
+            if (this.props.isLoadedPostType) {
+                this.props.getPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.spaceId, 0, this.fetchSuccessCallback, this.fetchErrorCallback);
+            }
+        }
+        if (prevProps.hasNetwork === false && this.props.hasNetwork === true) {
+            this.retryApiFunc();
+        }
+
+        if (prevProps.isRetryApi === false && this.props.isRetryApi === true) {
+            if (Actions.currentScene === this.props.lastApi.currentScene) {
+                Alert.alert(
+                    'Something went wrong ',
+                    '',
+                    [
+                        {
+                            text: 'Retry ', onPress: () => {
+                                this.retryApiFunc();
+                                this.props.resetErrorHandling(false)
+                            }
+                        },
+                        { text: 'Cancel', onPress: () => { this.props.resetErrorHandling(false) }, style: 'cancel' },
+                    ],
+                    { cancelable: false }
+                )
+            }
         }
     }
 
-    showAppNavMenu = () => this.props.showAppNavMenu();
+    retryApiFunc = () => {
+        if (this.props.lastApi && this.props.lastApi.currentScene === Actions.currentScene) {
+            this.props[`${this.props.lastApi.api}`](...this.props.lastApi.params)
+        }
+    }
+
+    async getFriendsPosts(userId, postType, postTypeId, friendId, spaceId, pageNumber) {
+        this.props.getFriendsPosts(userId, postTypeId, friendId, spaceId, pageNumber, (data) => {
+            if (pageNumber === 0) {
+                this.setState((prevState) => ({ postData: data.posts, pageNumber: data.posts.length > 0 ? prevState.pageNumber + 1 : prevState.pageNumber, hasRemainingList: data.remainingList > 0 }))
+            }
+            else {
+                this.setState((prevState) => ({ postData: [...prevState.postData, ...data.posts], pageNumber: data.posts.length > 0 ? prevState.pageNumber + 1 : prevState.pageNumber, hasRemainingList: data.remainingList > 0 }))
+            }
+        }, (er) => { })
+    }
+
 
     onPressBackButton = () => Actions.pop();
 
-    openPostForm = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: this.props.postType, currentBikeId: this.props.bike.spaceId });
+    openPostForm = () => Actions.push(PageKeys.POST_FORM, { comingFrom: Actions.currentScene, postType: this.props.postType, currentBikeId: this.props.spaceId });
 
-    openBikeSpecPage = (postId) => {
-        this.props.getCurrentBikeSpec(this.props.postType, postId);
-        Actions.push(PageKeys.BIKE_SPEC, { comingFrom: Actions.currentScene, postType: this.props.postType, postId });
+    openBikeSpecPage = (item) => {
+        if (this.props.isEditable) {
+            this.props.getCurrentBikeSpec(this.props.postType, item.id);
+            Actions.push(PageKeys.BIKE_SPEC, { comingFrom: Actions.currentScene, postType: this.props.postType, postId: item.id, isEditable: this.props.isEditable });
+        }
+        else {
+            Actions.push(PageKeys.BIKE_SPEC, { comingFrom: Actions.currentScene, postType: this.props.postType, bikeDetail: item, isEditable: this.props.isEditable });
+        }
     }
 
     renderHeader = () => {
@@ -52,15 +108,15 @@ class BikeSpecList extends Component {
         }
         return <BasicHeader title={title}
             leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-            rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', containerStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 }, onPress: this.openPostForm }}
+            rightIconProps={this.props.isEditable ? { reverse: true, name: 'md-add', type: 'Ionicons', containerStyle: styles.rightIconPropsStyle, style: { color: '#fff', fontSize: 19 }, onPress: this.openPostForm } : null}
         />
     }
 
     renderList = (data) => {
         if (!data) return null;
         return <FlatList
+            contentContainerStyle={{ paddingBottom: this.state.hasRemainingList ? 40 : 0, paddingTop: 40 + APP_COMMON_STYLES.headerHeight }}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingTop: 40 + APP_COMMON_STYLES.headerHeight }}
             style={{ flexDirection: 'column' }}
             columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: heightPercentageToDP(4), marginHorizontal: 25 }}
             numColumns={2}
@@ -75,9 +131,12 @@ class BikeSpecList extends Component {
 
     renderSquareCard = ({ item }) => {
         return <SquareCard
+            numberOfPicUploading={item.numberOfPicUploading || null}
+            showLoader={this.props.apiCallsInProgress[item.id]}
             image={item.pictureIds && item.pictureIds[0] ? `${GET_PICTURE_BY_ID}${item.pictureIds[0].id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` : null}
+            placeholderImage={this.props.postType === POST_TYPE.MY_RIDE ? require('../../../../../assets/img/my-ride.png') : this.props.postType === POST_TYPE.WISH_LIST ? require('../../../../../assets/img/wishlist.png') : null}
             title={item.title}
-            onPress={() => this.openBikeSpecPage(item.id)}
+            onPress={() => this.openBikeSpecPage(item)}
             imageStyle={styles.squareImg}
         />
     }
@@ -102,12 +161,21 @@ class BikeSpecList extends Component {
     loadMoreData = ({ distanceFromEnd }) => {
         if (this.state.isLoading === true || distanceFromEnd < 0) return;
         this.setState({ isLoading: true }, () => {
-            this.props.getPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.bike.spaceId, this.state.pageNumber, this.fetchSuccessCallback, this.fetchErrorCallback);
+            if (this.props.isEditable) {
+                if (this.props.isLoadedPostType) {
+                    this.props.getPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.spaceId, this.state.pageNumber, this.fetchSuccessCallback, this.fetchErrorCallback);
+                }
+            }
+            else {
+                if (this.props.isLoadedPostType) {
+                    this.getFriendsPosts(this.props.user.userId, this.props.postType, this.props.postTypes[this.props.postType].id, this.props.friendId, this.props.spaceId, this.state.pageNumber);
+                }
+            }
         });
     }
 
     fetchSuccessCallback = (res) => {
-        this.setState(prevState => ({ isLoading: false, pageNumber: res.length > 0 ? prevState.pageNumber + 1 : prevState.pageNumber }));
+        this.setState(prevState => ({ isLoading: false, pageNumber: res.posts.length > 0 ? prevState.pageNumber + 1 : prevState.pageNumber, hasRemainingList: res.remainingList > 0 }));
     }
 
     fetchErrorCallback = (er) => {
@@ -119,53 +187,72 @@ class BikeSpecList extends Component {
     getCurrentPosts() {
         switch (this.props.postType) {
             case POST_TYPE.WISH_LIST:
-                return this.props.bike.wishList;
+                return this.props.isEditable ? this.props.bike && this.props.bike.wishList : this.state.postData;
             case POST_TYPE.MY_RIDE:
-                return this.props.bike.customizations;
+                return this.props.isEditable ? this.props.bike && this.props.bike.customizations : this.state.postData;
         }
     }
 
     render() {
-        return <View style={styles.fill}>
-            <View style={APP_COMMON_STYLES.statusBar}>
-                <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-            </View>
+        return <BasePage defaultHeader={false} >
             <View style={styles.fill}>
                 {this.renderHeader()}
                 <View style={styles.pageContent}>
                     {
                         this.renderList(this.getCurrentPosts())
                     }
+                    {
+                        this.props.hasNetwork === false && this.getCurrentPosts().length === 0 && <View style={{ flexDirection: 'column', justifyContent: 'space-between', position: 'absolute', top: heightPercentageToDP(20), left: widthPercentageToDP(27), height: 100, }}>
+                            <IconButton iconProps={{ name: 'broadcast-tower', type: 'FontAwesome5', style: { fontSize: 60, color: '#505050' } }} />
+                            <DefaultText style={{ alignSelf: 'center', fontSize: 14 }}>Please Connect To Internet</DefaultText>
+                        </View>
+                    }
                 </View>
             </View>
-        </View>
+        </BasePage>
     }
 }
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { hasNetwork, postTypes, updatePageContent } = state.PageState;
+    const { hasNetwork, lastApi, isRetryApi, postTypes, updatePageContent, apiCallsInProgress } = state.PageState;
     const { currentBike: bike, activeBikeIndex } = state.GarageInfo;
-    return { user, hasNetwork, bike, activeBikeIndex, postTypes, updatePageContent };
+    return { user, hasNetwork, lastApi, isRetryApi, bike, activeBikeIndex, postTypes, updatePageContent, apiCallsInProgress, isLoadedPostType: Object.keys(postTypes).length > 0 };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         getPosts: (userId, postType, postTypeId, spaceId, pageNumber, successCallback, errorCallback) => getPosts(userId, postTypeId, spaceId, pageNumber)
             .then(({ data }) => {
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
                 if (typeof successCallback === 'function') successCallback(data);
                 switch (postType) {
                     case POST_TYPE.WISH_LIST:
-                        dispatch(updateBikeWishListAction({ updates: data, reset: !pageNumber }))
+                        dispatch(updateBikeWishListAction({ updates: data.posts, reset: !pageNumber }))
                         break;
                     case POST_TYPE.MY_RIDE:
-                        dispatch(updateBikeCustomizationsAction({ updates: data, reset: !pageNumber }));
+                        dispatch(updateBikeCustomizationsAction({ updates: data.posts, reset: !pageNumber }));
                         break;
                     case POST_TYPE.STORIES_FROM_ROAD:
                         break;
                 }
-            }).catch(err => typeof errorCallback === 'function' && errorCallback(err)),
+            }).catch(err => {
+                typeof errorCallback === 'function' && errorCallback(err)
+                handleServiceErrors(er, [userId, postType, postTypeId, spaceId, pageNumber, successCallback, errorCallback], 'getPosts', false, true);
+            }),
         getCurrentBikeSpec: (postType, postId) => dispatch(getCurrentBikeSpecAction({ postType, postId })),
+        getFriendsPosts: (userId, postTypeId, friendId, spaceId, pageNumber, successCallback, errorCallback) => getFriendsPosts(userId, postTypeId, friendId, spaceId, pageNumber).then(res => {
+            if (res.status === 200) {
+                console.log('getFriendsPosts : ', res.data);
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                successCallback(res.data)
+            }
+        }).catch(er => {
+            console.log('getFriendsPosts error : ', er.response);
+            errorCallback(er)
+            handleServiceErrors(er, [userId, postTypeId, friendId, spaceId, pageNumber, successCallback, errorCallback], 'getFriendsPosts', true, true);
+            dispatch(apiLoaderActions(false));
+        }),
+        resetErrorHandling: (state) => dispatch(resetErrorHandlingAction({ comingFrom: 'bike_specs', isRetryApi: state })),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(BikeSpecList);

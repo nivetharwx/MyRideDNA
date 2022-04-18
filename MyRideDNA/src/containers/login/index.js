@@ -5,21 +5,28 @@ import NetInfo from "@react-native-community/netinfo";
 import { Actions } from 'react-native-router-flux';
 import { connect } from 'react-redux';
 import axios from 'axios';
-import firebase from 'react-native-firebase';
-
+import messaging from '@react-native-firebase/messaging';
 import DeviceInfo from 'react-native-device-info'; // DOC: Check https://www.npmjs.com/package/react-native-device-info#usage
 import Md5 from 'react-native-md5'; // DOC: Check https://www.npmjs.com/package/react-native-md5
 
 import { LoginScreen } from './login';
-import { PageKeys, USER_AUTH_TOKEN, USER_BASE_URL, DEVICE_TOKEN, IS_ANDROID, APP_COMMON_STYLES } from '../../constants';
-import { storeUserAction, toggleNetworkStatusAction, updateTokenAction } from '../../actions';
+import { PageKeys, USER_AUTH_TOKEN, USER_BASE_URL, DEVICE_TOKEN, IS_ANDROID, CUSTOM_FONTS } from '../../constants';
+import { storeUserAction, toggleNetworkStatusAction, updateTokenAction, updateJwtTokenAction } from '../../actions';
 import ForgotPassword from '../forgot-password';
 import { Loader } from '../../components/loader'
 import { Toast } from 'native-base';
 import { AccessToken, LoginManager } from 'react-native-fbsdk';
-// import { GoogleSignin } from 'react-native-google-signin';
+import { GoogleSignin } from '@react-native-community/google-signin';
+import { BaseModal } from '../../components/modal';
+import { BasicButton } from '../../components/buttons';
+import { activateUserAccount } from '../../api';
+import { LoginStyles } from './styles';
+import { DefaultText } from '../../components/labels';
 
-// GoogleSignin.configure();
+
+GoogleSignin.configure({
+    webClientId:'72747364788-llavih65vml24e11hsttntmatgps275q.apps.googleusercontent.com'
+});
 
 class Login extends Component {
     unregisterNetworkListener = null;
@@ -31,7 +38,10 @@ class Login extends Component {
             spinner: false,
             isVisiblePassword: false,
             showForgotPasswordModal: false,
-            deviceToken: null
+            deviceToken: null,
+            isVisibleActivateModal: false,
+            userData: null,
+            isVisibleForgotPasswordModal: false
         };
     }
 
@@ -56,6 +66,10 @@ class Login extends Component {
         }
     }
 
+     componentDidUpdate(){
+         console.log('component did updae called login')
+     }
+     
     componentWillUnmount() {
         this.unregisterNetworkListener && this.unregisterNetworkListener();
     }
@@ -78,7 +92,7 @@ class Login extends Component {
             const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
             if (deviceToken === null) {
                 try {
-                    const token = await firebase.messaging().getToken();
+                    const token = await messaging().getToken();
                     if (token) {
                         AsyncStorage.setItem(DEVICE_TOKEN, token);
                         this.setState({ deviceToken: token }, () => this.doLogin());
@@ -95,6 +109,15 @@ class Login extends Component {
         }
     }
 
+    openMapPage = () => {
+        const { userData } = this.state;
+        AsyncStorage.setItem(USER_AUTH_TOKEN, userData.accessToken);
+        this.props.updateToken({ userAuthToken: userData.accessToken, deviceToken: this.state.deviceToken });
+        if (!userData.user.homeAddress) userData.user.homeAddress = {};
+        this.props.storeUser(userData.user);
+        Actions.reset(PageKeys.MAP);
+    }
+
     doLogin = async () => {
         const { username, password, deviceToken } = this.state;
         const userData = {};
@@ -103,31 +126,41 @@ class Login extends Component {
         userData.registrationToken = deviceToken;
         userData.deviceId = await DeviceInfo.getUniqueId();
         userData.date = new Date().toISOString();
-        userData.email = username;//'madhavan.v@reactiveworks.in'; // FIXME: Remove static value
-        userData.password = Md5.hex_md5(password + '');//Md5.hex_md5(890 + ''); // FIXME: Remove static value
+        userData.email = username;
+        userData.password = Md5.hex_md5(password + '');
 
         this.setState({ spinner: !this.state.spinner });
-
         axios.post(USER_BASE_URL + 'loginUser', userData)
             .then(res => {
+                console.log('loginUser : ', res.data);
                 if (res.status === 200) {
-                    if (!res.data.clubs) {
-                        res.data.clubs = [];
-                    }
-                    AsyncStorage.setItem(USER_AUTH_TOKEN, res.data.accessToken);
-                    this.props.updateToken({ userAuthToken: res.data.accessToken, deviceToken });
-                    this.props.storeUser(res.data.user);
-                    this.setState({ spinner: !this.state.spinner });
-                    Actions.reset(PageKeys.MAP);
+                    res.data.user.jwttoken = res.data.jwttoken;
+                    this.setState({ userData: res.data, spinner: !this.state.spinner }, () => res.data.user.accountStatus === 'deactivated' ? this.showActivateModal() : this.openMapPage());
                 }
             })
             .catch(error => {
+                if (error.message === 'Network Error' && this.props.hasNetwork === true) {
+                    this.setState({ spinner: !this.state.spinner });
+                    Alert.alert(
+                        'Something went wrong ',
+                        'Please try again after sometime',
+                        [
+                            { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+                        ],
+                        { cancelable: false }
+                    )
+                }
+                else if (error.message === 'Network Error' && store.getState().PageState.hasNetwork === false) {
+                    this.setState({ spinner: !this.state.spinner });
+                }
+                else {
+                    this.setState({ spinner: !this.state.spinner }, () => {
+                        setTimeout(() => {
+                            Alert.alert('Login failed', error.response.data.userMessage);
+                        }, 100);
+                    });
+                }
                 // TODO: Handle network error separately
-                this.setState({ spinner: !this.state.spinner }, () => {
-                    setTimeout(() => {
-                        Alert.alert('Login failed', error.response.data.userMessage);
-                    }, 100);
-                });
             });
     }
 
@@ -135,8 +168,11 @@ class Login extends Component {
         Actions.push(PageKeys.SIGNUP);
     }
 
-    toggleForgotPasswordForm = () => {
-        this.setState(prevState => ({ showForgotPasswordModal: !prevState.showForgotPasswordModal }));
+    openForgotPasswordModal = () => {
+        this.setState(prevState => ({ isVisibleForgotPasswordModal: true }));
+    }
+    hideForgotPasswordModal = () => {
+        this.setState({ isVisibleForgotPasswordModal: false })
     }
 
     togglePasswordVisibility = () => {
@@ -147,7 +183,7 @@ class Login extends Component {
         if (this.state.deviceToken === null) {
             const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
             if (deviceToken === null) {
-                const token = await firebase.messaging().getToken();
+                const token = await messaging().getToken();
                 AsyncStorage.setItem(DEVICE_TOKEN, token);
                 this.setState({ deviceToken: token }, () => this.thirdPartyLogin(user));
             }
@@ -160,21 +196,52 @@ class Login extends Component {
     }
 
     thirdPartyLogin = async (user) => {
+        this.setState({ spinner: !this.state.spinner });
+        console.log(JSON.stringify({ ...user, platform: IS_ANDROID ? 'android' : 'ios', date: new Date().toISOString(), registrationToken: this.state.deviceToken, deviceId: await DeviceInfo.getUniqueId() }))
         axios.post(USER_BASE_URL + 'loginUserUsingThirdParty', { ...user, platform: IS_ANDROID ? 'android' : 'ios', date: new Date().toISOString(), registrationToken: this.state.deviceToken, deviceId: await DeviceInfo.getUniqueId() })
             .then(res => {
-                AsyncStorage.setItem(USER_AUTH_TOKEN, res.data.accessToken);
-                this.props.updateToken({ userAuthToken: res.data.accessToken, deviceToken: this.state.deviceToken });
-                res.data.user.isNewUser = res.data.isNewUser
-                this.props.storeUser(res.data.user);
-                if (res.data.isNewUser) {
-                    Actions.reset(PageKeys.MAP);
-                }
-                else {
-                    Actions.reset(PageKeys.MAP);
-                }
+                console.log('loginUserUsingThirdParty : ', res.data)
+                // if(res.data.status!=="unRegistered"){
+                    res.data.user.isNewUser = res.data.isNewUser;
+                    res.data.user.jwttoken = res.data.jwttoken;
+                    this.setState({ userData: res.data, spinner: !this.state.spinner }, () => res.data.user.accountStatus === 'deactivated' ? this.showActivateModal() : this.openMapPage());
+                // }else{
+                //     Alert.alert('No Account Found',"Oops! It looks like you have not registered with MyRideDNA yet. \n\nWould you like to sign-up?",
+                //     [
+                //         {
+                //           text: "No",
+                //           onPress: () => {
+                //               this.setState({
+                //                 spinner: false,
+                //                 isVisiblePassword: false,
+                //                 showForgotPasswordModal: false,
+                //                 isVisibleActivateModal: false,
+                //                 userData: null,
+                //                 isVisibleForgotPasswordModal: false
+                //               })
+                //           },
+                //           style: "cancel"
+                //         },
+                //         { text: "Yes", onPress: () => {
+                //             this.setState({
+                //                 spinner: false,
+                //                 isVisiblePassword: false,
+                //                 showForgotPasswordModal: false,
+                //                 isVisibleActivateModal: false,
+                //                 userData: null,
+                //                 isVisibleForgotPasswordModal: false
+                //               })
+                //             Actions.push(PageKeys.SIGNUP,{
+                //                 userData:res.data.user
+                //             });
+                //         } }
+                //       ]
+                //  )
+                // }
+
             })
             .catch(error => {
-                console.log('loginUserUsingThirdParty error : ', error)
+                console.log('loginUserUsingThirdParty error : ', error.message)
             })
     }
 
@@ -183,8 +250,7 @@ class Login extends Component {
             const result = await LoginManager.logInWithPermissions(["public_profile", "email"]);
             if (result.isCancelled) {
             } else {
-                const data = await AccessToken.getCurrentAccessToken();
-                const { accessToken } = data;
+                const { accessToken } = await AccessToken.getCurrentAccessToken();
                 const res = await axios.get('https://graph.facebook.com/v2.5/me?fields=email,name,friends,picture&access_token=' + accessToken);
                 var user = {};
                 user.name = res.data.name;
@@ -200,33 +266,84 @@ class Login extends Component {
     doGoogleLogin = async () => {
         try {
             await GoogleSignin.hasPlayServices();
-            const userInfo = await GoogleSignin.signIn();
-            userInfo.user.signUpSource = 'google';
-            this.fetchingDeviceToken(userInfo.user);
+            const { user } = await GoogleSignin.signIn();
+            console.log(user)
+            const tokens= await GoogleSignin.getTokens()
+            // console.log(tokens)
+            user.signUpSource = 'google';
+            user.accessToken = tokens.accessToken
+            this.fetchingDeviceToken(user);
         } catch (error) {
             console.log('error google : ', error);
         }
     }
 
+    activateAccount = () => {
+        this.props.activateUserAccount(this.state.userData.user.userId, (res) => {
+            this.openMapPage()
+        }, (error) => {
+            if (error.message === 'Network Error' && this.props.hasNetwork === true) {
+                this.setState({ spinner: !this.state.spinner });
+                Alert.alert(
+                    'Something went wrong ',
+                    'Please try again after sometime',
+                    [
+                        { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+                    ],
+                    { cancelable: false }
+                )
+            }
+            else if (error.message === 'Network Error' && store.getState().PageState.hasNetwork === false) {
+                this.setState({ spinner: !this.state.spinner });
+            }
+            else {
+                this.setState({ spinner: !this.state.spinner }, () => {
+                    setTimeout(() => {
+                        Alert.alert('Login failed', error.response.data.userMessage);
+                    }, 100);
+                });
+            }
+        })
+    }
+
+    showActivateModal = () => this.setState({ isVisibleActivateModal: true });
+
+    hideActivateModal = () => {
+        this.setState({ isVisibleActivateModal: false, })
+    }
+
     render() {
         return (
             <View style={{ flex: 1 }}>
-                <StatusBar
-                    translucent
-                    backgroundColor={APP_COMMON_STYLES.statusBarColor}
-                    barStyle="default"
-                />
+                <StatusBar translucent={true} backgroundColor="transparent" />
+                <BaseModal containerStyle={{ justifyContent: 'center', alignItems: 'center' }} isVisible={this.state.isVisibleActivateModal} onCancel={this.hideActivateModal} >
+                    <View style={LoginStyles.alertBoxCont}>
+                        <DefaultText style={LoginStyles.alertBoxTitle}>Reactivate Account</DefaultText>
+                        <DefaultText numberOfLines={3} style={LoginStyles.alertBoxText}>This account has been deactivated. Do you wish to reactivate this account?</DefaultText>
+                        <View style={LoginStyles.btnContainer}>
+                            <BasicButton title='CANCEL' style={[LoginStyles.actionBtn, { backgroundColor: '#8D8D8D' }]} titleStyle={LoginStyles.actionBtnTxt} onPress={this.hideActivateModal} />
+                            <BasicButton title='CONFIRM' style={LoginStyles.actionBtn} titleStyle={LoginStyles.actionBtnTxt} onPress={this.activateAccount} />
+                        </View>
+                    </View>
+                </BaseModal>
+                <BaseModal containerStyle={LoginStyles.baseModalContainerStyle} isVisible={this.state.isVisibleForgotPasswordModal} onCancel={this.hideForgotPasswordModal} onPressOutside={this.hideForgotPasswordModal}>
+                    <View style={LoginStyles.optionsContainer}>
+                        <View style={LoginStyles.optionsView}>
+                            <DefaultText style={{ color: '#2B77B4', fontFamily: CUSTOM_FONTS.robotoBold, fontSize: 20, letterSpacing: 0.2 }}>FORGOT PASSWORD</DefaultText>
+                            <ForgotPassword isVisible={this.state.isVisibleForgotPasswordModal} onCancel={this.hideForgotPasswordModal} onPressOutside={this.hideForgotPasswordModal} />
+                        </View>
+                    </View>
+                </BaseModal>
                 <Loader isVisible={this.state.spinner} onCancel={() => this.setState({ spinner: false })} />
-                <ForgotPassword isVisible={this.state.showForgotPasswordModal} onCancel={this.toggleForgotPasswordForm} onPressOutside={this.toggleForgotPasswordForm} />
                 <LoginScreen
                     onEmailChange={(value) => this.onEmailChange(value)}
                     onPasswordChange={(value) => this.onPasswordChange(value)}
                     togglePasswordVisibility={this.togglePasswordVisibility}
                     onSubmit={this.onSubmit} onSignupPress={this.onSignupPress}
-                    onForgotPasswordPress={this.toggleForgotPasswordForm}
+                    onForgotPasswordPress={this.openForgotPasswordModal}
                     isVisiblePassword={this.state.isVisiblePassword}
-                // doGoogleLogin={this.doGoogleLogin}
-                // doFacebookLogin={this.doFacebookLogin}
+                    doGoogleLogin={this.doGoogleLogin}
+                    doFacebookLogin={this.doFacebookLogin}
                 />
             </View>
         );
@@ -244,6 +361,14 @@ const mapDispatchToProps = (dispatch) => {
         updateToken: (token) => dispatch(updateTokenAction(token)),
         storeUser: (userInfo) => dispatch(storeUserAction(userInfo)),
         toggleNetworkStatus: (status) => dispatch(toggleNetworkStatusAction(status)),
+        updateJwtToken: (unsyncedRides) => dispatch(updateJwtTokenAction(unsyncedRides)),
+        activateUserAccount: (userId, successCallback, errorCallback) => activateUserAccount(userId).then(res => {
+            console.log('activateUserAccount success  : ', res)
+            typeof successCallback === 'function' && successCallback()
+        }).catch(er => {
+            errorCallback(er);
+            console.log('activateUserAccount error  : ', er)
+        })
     }
 }
 

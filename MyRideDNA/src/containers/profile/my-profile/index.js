@@ -1,46 +1,34 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
-import AsyncStorage from '@react-native-community/async-storage';
+import { StyleSheet, View, ImageBackground, Image, FlatList, ScrollView, RefreshControl, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { Actions } from 'react-native-router-flux';
-import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, USER_AUTH_TOKEN, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions, FRIEND_TYPE, CUSTOM_FONTS, GET_PICTURE_BY_ID } from '../../../constants/index';
-import { BasicHeader } from '../../../components/headers';
+import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, CUSTOM_FONTS, GET_PICTURE_BY_ID, IS_ANDROID } from '../../../constants/index';
 import { IconButton, LinkButton } from '../../../components/buttons';
-import { Thumbnail } from '../../../components/images';
-import { appNavMenuVisibilityAction, updateUserAction, updateShortSpaceListAction, updateBikePictureListAction, toggleLoaderAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction, updateFriendInListAction, updatePassengerInListAction, setCurrentFriendAction } from '../../../actions';
-import { Accordion } from 'native-base';
-import ImagePicker from 'react-native-image-crop-picker';
-import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo, getRoadBuddies, getPictureList, getMyWallet, getPassengerList, getUser } from '../../../api';
-import { ImageLoader } from '../../../components/loader';
+import { screenChangeAction, setCurrentFriendAction } from '../../../actions';
+import { getRoadBuddies, getMyWallet, getPassengerList, getUser } from '../../../api';
 import { SmallCard } from '../../../components/cards';
 import { getFormattedDateFromISO } from '../../../util';
 import { DefaultText } from '../../../components/labels';
+import { BaseModal, GesturedCarouselModal } from '../../../components/modal';
+import FitImage from 'react-native-fit-image';
+import ProfilePlaceholder from '../../../assets/img/Profile-Placeholder.svg'
+import { CountComponent } from '../../../components/count';
+import ImageViewer from 'react-native-image-viewing'
+import { Icon as NBIcon } from 'native-base'
 
-const hasIOSAbove10 = parseInt(Platform.Version) > 10;
-const clubDummyData = [{ name: 'Black Rebel Motorcycle Club', id: "1" }, { name: 'Hell’s Angels', id: "2" }, { name: 'Milwaukee Outlaws', id: "3" }]
-const roadbuddiesDummyData = [{ name: 'person1', id: '1' }, { name: 'person2', id: '2' }, { name: 'person3', id: '3' }, { name: 'person4', id: '4' }]
+
 class MyProfileTab extends Component {
-    // DOC: Icon format is for Icon component from NativeBase Library
-    PROFILE_ICONS = {
-        gallery: { name: 'md-photos', type: 'Ionicons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(7) }, onPress: () => this.onPressGalleryIcon() },
-        camera: { name: 'camera', type: 'FontAwesome', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6) }, onPress: () => this.onPressCameraIcon() },
-        passengers: { name: 'users', type: 'Entypo', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(6) }, onPress: () => Actions.push(PageKeys.PASSENGERS) },
-        edit: { name: 'account-edit', type: 'MaterialCommunityIcons', style: { color: APP_COMMON_STYLES.infoColor, fontSize: widthPercentageToDP(8) }, onPress: () => Actions.push(PageKeys.EDIT_PROFILE_FORM) },
-    };
-    hScrollView = null;
     profilePicture = null;
     constructor(props) {
         super(props);
         this.state = {
-            activeTab: -1,
-            bikes: [10, 20, 30, 40, 50],
             isLoadingUpdates: false,
-            pictureLoader: {},
+            showOptionsModal: false,
+            isVisbleFullImage: false,
         };
     }
 
     componentWillMount() {
-        StatusBar.setBarStyle('light-content');
         this.props.getRoadBuddies(this.props.user.userId);
         this.props.getMyWallet(this.props.user.userId);
         this.props.getPassengerList(this.props.user.userId, 0, 10, (res) => { }, (err) => { });
@@ -48,20 +36,6 @@ class MyProfileTab extends Component {
 
     async componentDidMount() {
         this.props.getUser(this.props.user.userId);
-        // if (this.props.user.profilePictureId && !this.props.user.profilePicture) {
-        //     this.profilePicture = await AsyncStorage.getItem('profilePicture');
-        //     if (this.profilePicture) {
-        //         this.profilePicture = JSON.parse(this.profilePicture);
-        //         if (Object.keys(this.profilePicture)[0] === this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)) {
-        //             this.props.updateUser({ profilePicture: this.profilePicture[this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)] });
-        //             return;
-        //         }
-        //     }
-        //     if (this.props.user.profilePictureId) {
-        //         this.setState({ isLoadingProfPic: true });
-        //         this.props.getUserProfilePicture(this.props.user.profilePictureId);
-        //     }
-        // }
     }
 
     fetchUserUpdates = () => {
@@ -72,102 +46,6 @@ class MyProfileTab extends Component {
 
     userUpdatesErrorCallback = () => this.setState({ isLoadingUpdates: false });
 
-    async componentDidUpdate(prevProps, prevState) {
-        // if (prevProps.user.profilePictureId !== this.props.user.profilePictureId || !this.props.user.profilePicture) {
-        //     if (this.profilePicture) {
-        //         if (Object.keys(this.profilePicture)[0] === this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)) {
-        //             this.props.updateUser({ profilePicture: this.profilePicture[this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)] });
-        //             return;
-        //         }
-        //     }
-        //     if (this.props.user.profilePictureId) {
-        //         this.props.getUserProfilePicture(this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
-        //     }
-        // } else if (prevState.isLoadingProfPic) {
-        //     if (this.props.user.profilePicture) {
-        //         this.profilePicture = {};
-        //         this.profilePicture[this.props.user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)] = this.props.user.profilePicture;
-        //         AsyncStorage.setItem('profilePicture', JSON.stringify(this.profilePicture));
-        //     }
-        //     this.setState({ isLoadingProfPic: false });
-        // }
-
-        // if (prevProps.allFriends !== this.props.allFriends) {
-        //     const pictureIdList = [];
-        //     this.props.allFriends.forEach((friend) => {
-        //         if (!friend.profilePicture && friend.profilePictureId) {
-        //             pictureIdList.push(friend.profilePictureId);
-        //         }
-        //     })
-        //     if (pictureIdList.length > 0) {
-        //         this.props.getPictureList(pictureIdList, 'roadBuddies');
-        //     }
-        // }
-
-        // if (prevProps.passengerList !== this.props.passengerList) {
-        //     const pictureIdList = [];
-        //     this.props.passengerList.forEach((passenger) => {
-        //         if (!passenger.profilePicture && passenger.profilePictureId) {
-        //             pictureIdList.push(passenger.profilePictureId);
-        //         }
-        //     })
-        //     if (pictureIdList.length > 0) {
-        //         this.props.getPictureList(pictureIdList, 'passenger');
-        //     }
-        // }
-    }
-
-    onSpaceLongPress = (newSpaceIndex) => {
-        if (newSpaceIndex === 0) return;
-        this.hScrollView.scrollToIndex({ index: 0, animated: true });
-        const prevActiveBikeIndex = this.props.garage.spaceList.findIndex(bike => bike.isDefault);
-        this.props.setBikeAsActive(this.props.user.userId, this.props.garage.spaceList[newSpaceIndex].spaceId, prevActiveBikeIndex, newSpaceIndex);
-    }
-
-    renderAccordionItem = (item) => {
-        if (item.title === 'Change profile') {
-            this.props.updateMyProfileLastOptions(0)
-            return (
-                <View style={[styles.rowContent, this.props.hasNetwork === false ? { padding: heightPercentageToDP(2) } : { padding: heightPercentageToDP(5) }]}>
-                    {
-                        item.content.map(props => <IconButton key={props.name} iconProps={props} onPress={props.onPress} />)
-                    }
-                </View>
-            );
-        } else {
-            this.props.updateMyProfileLastOptions(1)
-            return (
-                <View style={[styles.rowContent, !this.props.hasNetwork === false ? { padding: heightPercentageToDP(2) } : { padding: heightPercentageToDP(5) }]}>
-                    <FlatList
-                        horizontal={true}
-                        data={this.props.garage.spaceList}
-                        keyExtractor={(item, index) => item.spaceId}
-                        renderItem={({ item, index }) => <View>
-                            <Thumbnail
-                                horizontal={false}
-                                height={heightPercentageToDP(12)}
-                                width={widthPercentageToDP(28)}
-                                active={item.isDefault}
-                                imagePath={item.pictureList ? { uri: item.pictureList[0] } : require('../../../assets/img/harley.jpg')}
-                                title={item.name}
-                                onLongPress={() => this.onSpaceLongPress(index)}
-                            />
-                            {
-                                this.state.pictureLoader[item.spaceId]
-                                    ? <ImageLoader show={this.state.pictureLoader[item.spaceId]} />
-                                    : null
-                            }
-                        </View>}
-                        ref={view => this.hScrollView = view}
-                    />
-                </View>
-            );
-        }
-    }
-
-    onPressLogout = async () => {
-        this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
-    }
     clubsKeyExtractor = (item) => item.clubId;
 
     roadBuddiesKeyExtractor = (item) => item.userId;
@@ -180,56 +58,101 @@ class MyProfileTab extends Component {
 
     openPassengerProfile = (item, index) => {
         if (item.isFriend) {
-            this.openRoadBuddy(item.passengerUserId);
+            this.openRoadBuddy(item.passengerUserId, item.passengerId);
         }
         else {
-            Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx: index });
+            Actions.push(PageKeys.PASSENGER_PROFILE, { passengerId: item.passengerId, onPassenger: true });
         }
     }
 
-    openRoadBuddy = (userId) => {
+    openRoadBuddy = (userId, passengerId = null) => {
         this.props.setCurrentFriend({ userId });
-        Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId });
+        Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId, passengerId });
     }
 
     openJournalPage = () => Actions.push(PageKeys.JOURNAL, { isEditable: true, personId: this.props.user.userId });
 
+    showOptionsModal = () => this.setState({ showOptionsModal: true });
+
+    hideOptionsModal = () => this.setState({ showOptionsModal: false });
+
+    openEditProfilePage = () => {
+        this.setState(prevState => ({ showOptionsModal: false }), () => Actions.push(PageKeys.EDIT_PROFILE_FORM))
+    }
+
+    showFullImage = () => this.setState({ isVisbleFullImage: true });
+
+    onCancelFullImage = () => this.setState({ isVisbleFullImage: false });
+
     render() {
         const { user, allFriends, passengerList } = this.props;
-        const { isLoadingUpdates } = this.state;
+        const { isLoadingUpdates, showOptionsModal, isVisbleFullImage } = this.state;
         return (
             <View style={styles.fill}>
+                {/* {user.profilePictureId && <GesturedCarouselModal
+                    isVisible={isVisbleFullImage}
+                    onCancel={this.onCancelFullImage}
+                    pictureIds={[{ id: user.profilePictureId }]}
+                    isGestureEnable={true}
+                    isZoomEnable={true}
+                />} */}
+                {
+                 user.profilePictureId && <ImageViewer HeaderComponent={()=>{
+                    return <View style={{height:IS_ANDROID?heightPercentageToDP(6):heightPercentageToDP(10),display:'flex',backgroundColor:'rgba(0, 0, 0, 0.37)',flexDirection:'row',justifyContent:'flex-end',alignItems:'flex-end',}}>
+                        <View style={{width:50,height:50,display:'flex',flexDirection:'row',justifyContent:'center',alignItems:'center'}}>
+                        <NBIcon name='close' fontSize={20}  style={{ color: '#fff'}} onPress={this.onCancelFullImage} />
+                        </View>
+                    </View>
+                }} visible={isVisbleFullImage} onRequestClose={this.onCancelFullImage} images={[{ id: user.profilePictureId }].map(image=>{
+                        return {
+                            ...image,uri: `${GET_PICTURE_BY_ID}${image.id.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}`
+                        }
+                    })} imageIndex={0} />
+                }
+                <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
+                    <View style={APP_COMMON_STYLES.optionsContainer}>
+                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='EDIT PROFILE' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.openEditProfilePage} />
+                    </View>
+                </BaseModal>
                 <View style={styles.header}>
                     <IconButton iconProps={{ name: 'ios-notifications', type: 'Ionicons', style: { fontSize: 26 } }}
                         style={styles.headerIconCont} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
+                         {
+                            this.props.notificationCount>0?
+                                    <CountComponent notificationCount={this.props.notificationCount} left={43} />:null
+                        }
                     <View style={styles.titleContainer}>
                         <DefaultText style={styles.title} >{user.name}</DefaultText>
                         <DefaultText style={styles.subTitle}>{user.nickname ? user.nickname.toUpperCase() : null}</DefaultText>
                     </View>
+                    <IconButton style={{ justifyContent: 'flex-end', marginRight: 17 }} iconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 20 } }} onPress={this.showOptionsModal} />
                 </View>
                 <ScrollView
+                    keyboardShouldPersistTaps={'handled'}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingBottom: APP_COMMON_STYLES.tabContainer.height }}
                     refreshControl={<RefreshControl refreshing={isLoadingUpdates} onRefresh={this.fetchUserUpdates} />}
                 >
-                    <View style={styles.profilePic}>
-                        <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
-                            {/* {
-                                isLoadingProfPic
-                                    ? <ImageLoader show={isLoadingProfPic} />
-                                    : null
-                            } */}
-                            <Image resizeMode='center' source={user.profilePictureId ? { uri: `${GET_PICTURE_BY_ID}${user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` } : require('../../../assets/img/profile-pic.png')} style={{ flex: 1, height: null, width: null }} />
-                        </ImageBackground>
+                    <TouchableOpacity activeOpacity={1} onPress={user.profilePictureId ? this.showFullImage : null} style={styles.profilePic}>
+                        {
+                            user.profilePictureId
+                                ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={{ height: null, width: null, flex: 1, overflow: 'hidden' }}>
+                                    <FitImage  resizeMode='contain' style={{height:310, width:widthPercentageToDP(100)}} source={{ uri: `${GET_PICTURE_BY_ID}${user.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` }} />
+                                </ImageBackground>                 
+                                : <ProfilePlaceholder />
+                                // <Image source={require('../../../assets/img/profile-pic-placeholder.png')} style={{ height: null, width: null, flex: 1 }} />
+                        }
+                    </TouchableOpacity>
+                    {/* <ProfilePlaceholder /> */}
+                    <View style={{ height: 13 }}>
+                        <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={{ height: null, width: null, flex: 1, overflow: 'hidden' }} />
                     </View>
-                    {/* <Image source={require('../../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} /> */}
                     <View style={styles.container}>
                         <View style={styles.basicAlignment}>
                             <View style={{ flexDirection: 'column' }}>
                                 <DefaultText style={styles.labels}>LOCATION</DefaultText>
                                 <DefaultText style={styles.labelsData}>{user.homeAddress.city ? user.homeAddress.city : '__ '}, {user.homeAddress.state ? user.homeAddress.state : '__'}</DefaultText>
                             </View>
-                            <IconButton iconProps={{ name: 'account-edit', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#f69039' } }} onPress={() => Actions.push(PageKeys.EDIT_PROFILE_FORM)} />
                         </View>
                         <View style={[styles.basicAlignment, styles.horizontalContainer]}>
                             <View style={styles.individualComponent}>
@@ -249,7 +172,7 @@ class MyProfileTab extends Component {
                             <DefaultText style={styles.labels}>CLUBS</DefaultText>
                             <FlatList
                                 style={{ marginBottom: 9 }}
-                                data={user.clubs}
+                                data={user.clubs ? user.clubs : []}
                                 keyExtractor={this.clubsKeyExtractor}
                                 renderItem={({ item, index }) => (
                                     <View style={{ paddingVertical: 2 }}>
@@ -260,9 +183,9 @@ class MyProfileTab extends Component {
                         </View>
                         <View style={{ marginTop: 19 }}>
                             <View style={styles.basicAlignment}>
-                                <TouchableOpacity style={styles.basicAlignment} onPress={this.onPressFriendsPage}>
-                                    <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Road Buddies</DefaultText>
-                                    <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
+                                <TouchableOpacity activeOpacity={allFriends.length === 0 ? 1 : 0.7} style={styles.basicAlignment} onPress={allFriends.length > 0 ? this.onPressFriendsPage : null}>
+                                    <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Road Crew</DefaultText>
+                                    {allFriends.length > 0 && <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>}
                                 </TouchableOpacity>
                                 <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={() => Actions.push(PageKeys.CONTACTS_SECTION)} />
                             </View>
@@ -277,7 +200,7 @@ class MyProfileTab extends Component {
                                             keyExtractor={this.roadBuddiesKeyExtractor}
                                             renderItem={({ item, index }) => (
                                                 <SmallCard
-                                                    placeholderImage={require('../../../assets/img/profile-pic.png')}
+                                                    placeholderImage={require('../../../assets/img/profile-pic-placeholder.png')}
                                                     image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
                                                     onPress={() => this.openRoadBuddy(item.userId)}
                                                     imageStyle={styles.imageStyle}
@@ -291,9 +214,9 @@ class MyProfileTab extends Component {
                         </View>
                         <View style={{ marginTop: 19 }}>
                             <View style={styles.basicAlignment}>
-                                <TouchableOpacity style={styles.basicAlignment} onPress={() => Actions.push(PageKeys.PASSENGERS)}>
+                                <TouchableOpacity activeOpacity={passengerList.length === 0 ? 1 : 0.7} style={styles.basicAlignment} onPress={() => passengerList.length > 0 && Actions.push(PageKeys.PASSENGERS)}>
                                     <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Passengers</DefaultText>
-                                    <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
+                                    {passengerList.length > 0 && <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>}
                                 </TouchableOpacity>
                                 <IconButton style={styles.addBtnCont} iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 10, color: '#fff' } }} onPress={() => Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: -1 })} />
                             </View>
@@ -308,7 +231,7 @@ class MyProfileTab extends Component {
                                             keyExtractor={this.passengerListKeyExtractor}
                                             renderItem={({ item, index }) => (
                                                 <SmallCard
-                                                    placeholderImage={require('../../../assets/img/profile-pic.png')}
+                                                    placeholderImage={require('../../../assets/img/profile-pic-placeholder.png')}
                                                     image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
                                                     onPress={() => this.openPassengerProfile(item, index)}
                                                     imageStyle={styles.imageStyle}
@@ -324,17 +247,18 @@ class MyProfileTab extends Component {
                         <ImageBackground source={require('../../../assets/img/my-wallet.png')} style={styles.imgBG}>
                             <DefaultText style={styles.txtOnImg}>My Wallet</DefaultText>
                         </ImageBackground>
-                    </TouchableOpacity >
+                    </TouchableOpacity>
                     <LinkButton style={styles.fullWidthContainer} onPress={this.openJournalPage}>
                         <ImageBackground source={require('../../../assets/img/my-journal.png')} style={styles.imgBG}>
-                            <DefaultText style={styles.txtOnImg}>My Journal</DefaultText>
+                            <DefaultText style={styles.txtOnImg}>The Road</DefaultText>
+                            <DefaultText style={[styles.txtOnImg,{marginTop:-50}]}>Stories From</DefaultText>
                         </ImageBackground>
                     </LinkButton>
-                    <View style={styles.fullWidthContainer}>
+                    <TouchableOpacity style={styles.fullWidthContainer} onPress={() => Actions.push(PageKeys.VEST)}>
                         <ImageBackground source={require('../../../assets/img/my-vest.png')} style={styles.imgBG}>
                             <DefaultText style={styles.txtOnImg}>My Vest</DefaultText>
                         </ImageBackground>
-                    </View>
+                    </TouchableOpacity>
                     <TouchableOpacity style={styles.fullWidthContainer} onPress={() => Actions.push(PageKeys.ALBUM)}>
                         <ImageBackground source={require('../../../assets/img/my-photos.png')} style={styles.imgBG}>
                             <DefaultText style={styles.txtOnImg}>My Photos</DefaultText>
@@ -347,40 +271,15 @@ class MyProfileTab extends Component {
 }
 
 const mapStateToProps = (state) => {
-    const { user, userAuthToken, deviceToken } = state.UserAuth;
-    const { profileLastOptions, hasNetwork } = state.PageState;
+    const { user } = state.UserAuth;
     const { allFriends } = state.FriendList;
     const { passengerList } = state.PassengerList;
-    const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
-    return { user, userAuthToken, deviceToken, garage, profileLastOptions, hasNetwork, allFriends, passengerList };
+    const notificationCount=state.NotificationList.notificationList.totalUnseen
+    return { user, allFriends, passengerList,notificationCount };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
-        updateUser: (updates) => dispatch(updateUserAction(updates)),
-        getUserProfilePicture: (pictureId) => getPicture(pictureId, ({ picture }) => {
-            pictureId.indexOf(THUMBNAIL_TAIL_TAG) > -1
-                ? dispatch(updateUserAction({ thumbnailProfilePicture: picture }))
-                : dispatch(updateUserAction({ profilePicture: picture }))
-        }, (error) => {
-            dispatch(updateUserAction({}))
-        }),
-        getSpaceList: (userId) => dispatch(getSpaceList(userId)),
-        updateProfilePicture: (profilePicStr, mimeType, userId) => dispatch(updateProfilePicture(profilePicStr, mimeType, userId)),
-        setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
-        updateMyProfileLastOptions: (expanded) => dispatch(updateMyProfileLastOptionsAction({ expanded })),
         getRoadBuddies: (userId) => dispatch(getRoadBuddies(userId)),
-        // getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
-        //     if (callingFrom === 'roadBuddies') {
-        //         dispatch(updateFriendInListAction({ pictureObj }))
-        //     }
-        //     else {
-        //         dispatch(updatePassengerInListAction({ pictureObj }))
-        //     }
-        // }, (error) => {
-        //     console.log('getPictureList error : ', error)
-        // }),
         getMyWallet: (userId) => dispatch(getMyWallet(userId)),
         getPassengerList: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getPassengerList(userId, pageNumber, preference, successCallback, errorCallback)),
         setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
@@ -393,10 +292,6 @@ const styles = StyleSheet.create({
     fill: {
         flex: 1,
         backgroundColor: '#fff'
-    },
-    rowContent: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
     },
     basicAlignment: {
         flexDirection: 'row',
@@ -422,14 +317,6 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#B1B1B1',
     },
-    profileHeader: {
-        position: 'absolute',
-        zIndex: 50,
-        width: '100%',
-        height: heightPercentageToDP(6),
-        flexDirection: 'row',
-        marginTop: IS_ANDROID ? 0 : hasIOSAbove10 ? APP_COMMON_STYLES.statusBar.height : 0
-    },
     headerIconCont: {
         paddingHorizontal: 0,
         width: widthPercentageToDP(9),
@@ -440,8 +327,9 @@ const styles = StyleSheet.create({
         marginLeft: 17
     },
     titleContainer: {
+        flex: 1,
         flexDirection: 'column',
-        marginLeft: 17,
+        marginHorizontal: 17,
         justifyContent: 'center',
         alignSelf: 'center'
     },
@@ -474,30 +362,10 @@ const styles = StyleSheet.create({
         fontSize: 12,
         paddingBottom: 7
     },
-    profilePicBtmBorder: {
-        width: widthPercentageToDP(100),
-        height: 13
-    },
     profilePic: {
         width: widthPercentageToDP(100),
         height: 255,
     },
-    scrollBottomContent: {
-        flex: 1
-    },
-    accordionHeader: {
-        backgroundColor: 'transparent',
-        marginHorizontal: widthPercentageToDP(10),
-        borderBottomWidth: 1,
-        borderBottomColor: '#000'
-    },
-    horizontalScroll: {
-        justifyContent: 'center',
-        alignContent: 'center',
-        alignItems: 'center',
-    },
-
-    //  new Design styles
     header: {
         height: APP_COMMON_STYLES.headerHeight,
         backgroundColor: APP_COMMON_STYLES.headerColor,
@@ -507,7 +375,7 @@ const styles = StyleSheet.create({
         shadowColor: '#000000',
         shadowOpacity: 0.9,
         shadowRadius: 5,
-        zIndex: 999
+        zIndex: 999,
     },
     imgBG: {
         width: widthPercentageToDP(100),
@@ -518,7 +386,7 @@ const styles = StyleSheet.create({
     fullWidthContainer: {
         flex: 1,
         marginTop: 20,
-        borderTopWidth: 9,
+        borderTopWidth: 12,
         borderTopColor: '#f69039',
         elevation: 20,
     },
@@ -534,10 +402,12 @@ const styles = StyleSheet.create({
         borderTopColor: '#DCDCDE'
     },
     txtOnImg: {
+        marginLeft:20,
         color: '#fff',
         fontSize: 18,
         letterSpacing: 2.7,
         fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        marginTop:-40
     },
     imageStyle: {
         marginRight: widthPercentageToDP(1.8),

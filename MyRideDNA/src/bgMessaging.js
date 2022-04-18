@@ -1,34 +1,39 @@
-import firebase from 'react-native-firebase';
+// import firebase from 'react-native-firebase';
+import { CHAT_CONTENT_TYPE } from './constants';
+import store from './store';
+var PushNotification = require("react-native-push-notification");
 
-export default async (message) => {
-    console.log('handled message : ', message);
-    let notification = new firebase.notifications.Notification();
-    notification = notification.setNotificationId(new Date().valueOf().toString())
-        .setTitle(message.data.name)
-        .setBody(message.data.content)
-        .setData(message.data)
-        .setSound("bell.mp3");
-    // DOC: Android notification options
-    notification.android.setPriority(firebase.notifications.Android.Priority.High);
-    notification.android.setTicker("My Notification Ticker");
-    notification.android.setAutoCancel(true);
-    notification.android.setSmallIcon("@drawable/myridedna_notif_icon");
-    notification.android.setBigText(message.data.content);
-    notification.android.setColor("black");
-    notification.android.setColorized(true);
-    notification.android.setVibrate([300]);
-    notification.android.setChannelId("default")
+export default async (notificationBody) => {
 
-    // DOC: iOS notification options
-    notification.ios.badge = 10;
-
-    // Couldn't find matching options in react-native-firebase
-    // FCM.presentLocalNotification({
-    //     wake_screen: true,
-    //     my_custom_data: message.data,
-    //     show_in_foreground: true,
-    // });
-
-    firebase.notifications().displayNotification(notification)
+    let recievedData=notificationBody.data
+    console.log('bgMessaging : ', notificationBody,recievedData)
+    if (notificationBody.data.messageIdList) return;
+    if(notificationBody.data.notifiedUserId && notificationBody.data.notifiedUserId === notificationBody.data.fromUserId) return;
+    console.log()
+    let notificationData =(() => {
+        console.log('recieved data ///', recievedData)
+        let newNotificationBody = null;
+        switch (recievedData.type) {
+            case CHAT_CONTENT_TYPE.RIDE:
+                let rideName = JSON.parse(recievedData.content).name;
+                newNotificationBody = { ...recievedData,content: `Shared a ride, ${rideName}`}  
+                break;
+            case CHAT_CONTENT_TYPE.IMAGE || CHAT_CONTENT_TYPE.VIDEO:
+                newNotificationBody = { ...recievedData, content: `Shared ${JSON.parse(recievedData.media).length} ${recievedData.type}${JSON.parse(recievedData.media).length > 1 ? 's' : ''}` }
+                break;
+            default:
+                newNotificationBody = recievedData
+        }
+        return newNotificationBody;
+    })()
+   
+    PushNotification.localNotification({
+        title: notificationData.name, // (optional)
+        message: notificationData.content, // (required)
+        userInfo: recievedData, // (optional) default: {} (using null throws a JSON value '<null>' error)
+        playSound: true, // (optional) default: true
+    })
     return Promise.resolve();
 }
+
+

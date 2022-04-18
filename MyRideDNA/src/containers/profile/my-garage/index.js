@@ -1,69 +1,81 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, View, FlatList, Animated, TouchableOpacity, Easing, ImageBackground } from 'react-native';
-import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, PORTRAIT_TAIL_TAG, CUSTOM_FONTS, GET_PICTURE_BY_ID } from '../../../constants';
+import { StyleSheet, View,Text, FlatList, Animated, TouchableOpacity, Easing, ImageBackground, Alert } from 'react-native';
+import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, CUSTOM_FONTS, GET_PICTURE_BY_ID } from '../../../constants';
 import { Actions } from 'react-native-router-flux';
-import { IconButton, LinkButton } from '../../../components/buttons';
-import { Item } from 'native-base';
-import { getPicture, getGarageInfo, setBikeAsActive, deleteBike, updateGarageName } from '../../../api';
-import { BaseModal } from '../../../components/modal';
-import { replaceGarageInfoAction, updateBikePictureAction, apiLoaderActions, setCurrentBikeIdAction, getCurrentBikeAction } from '../../../actions';
+import { IconButton } from '../../../components/buttons';
+import { getGarageInfo, handleServiceErrors } from '../../../api';
+import { replaceGarageInfoAction, apiLoaderActions, getCurrentBikeAction, resetErrorHandlingAction } from '../../../actions';
 import { DefaultText } from '../../../components/labels';
+import  {CountComponent}  from '../../../components/count';
 
 class MyGarageTab extends Component {
     spacelistRef = null;
     constructor(props) {
         super(props);
         this.state = {
-            isVisibleOptionsModal: false,
             spinValue: new Animated.Value(0),
+            bikeList: null
         };
     }
 
     componentDidMount() {
-        if (this.props.garage.garageId === null) {
-            this.props.getGarageInfo(this.props.user.userId);
+        if (this.props.isEditable) {
+            if (this.props.garage.garageId === null) {
+                this.props.getGarageInfo(this.props.user.userId);
+            }
         } else {
-            // this.props.garage.spaceList.forEach(bike => {
-            //     // if (bike.pictureIdList.length > 0) {
-            //     //     this.props.getBikePicture(bike.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG), bike.spaceId);
-            //     // }
-            //     bike.picture && this.props.getBikePicture(bike.picture.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG), bike.spaceId);
-            // });
+            this.props.getGarageInfo(this.props.friend.userId, (garage) => {
+                const activeIndex = garage.spaceList.findIndex(bike => bike.isDefault);
+                if (activeIndex === -1 || activeIndex === 0) {
+                    this.setState({ bikeList: garage.spaceList });
+                } else {
+                    this.setState({
+                        bikeList: [
+                            garage.spaceList[activeIndex],
+                            ...garage.spaceList.slice(0, activeIndex),
+                            ...garage.spaceList.slice(activeIndex + 1),
+                        ]
+                    });
+                }
+            }, () => { });
         }
     }
 
     componentDidUpdate(prevProps, prevState) {
+        if (this.props.isEditable === false) return;
         if (this.props.garage.spaceList.length > 0) {
-            if (prevProps.garage.garageId === null) {
-                // this.props.garage.spaceList.forEach(bike => {
-                //     // if (bike.pictureIdList.length > 0) {
-                //     //     this.props.getBikePicture(bike.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), bike.spaceId);
-                //     // }
-                //     bike.picture && this.props.getBikePicture(bike.picture.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG), bike.spaceId);
-                // });
-                // return;
-            }
             if (this.props.garage.activeBikeIndex !== prevProps.garage.activeBikeIndex) {
                 this.spacelistRef.scrollToIndex({ index: 0, viewPosition: 0 });
-            } else if (this.props.garage.spaceList.length > prevProps.garage.spaceList.length) {
-                this.spacelistRef.scrollToEnd();
-                const newBike = this.props.garage.spaceList[this.props.garage.spaceList.length - 1];
-                // if (newBike.pictureIdList.length > 0) {
-                //     this.props.getBikePicture(newBike.pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), newBike.spaceId);
-                // }
-                // newBike.picture && this.props.getBikePicture(newBike.picture.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG), newBike.spaceId);
-            } else if (this.props.garage.spaceList.length === prevProps.garage.spaceList.length) {
-                // prevProps.garage.spaceList.forEach(item => {
-                //     const index = this.props.garage.spaceList.findIndex(val => val.spaceId === item.spaceId && val.pictureIdList !== item.pictureIdList);
-                //     if (index > -1 && this.props.garage.spaceList[index].pictureIdList.length > 0) {
-                //         this.props.getBikePicture(this.props.garage.spaceList[index].pictureIdList[0].replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG), this.props.garage.spaceList[index].spaceId);
-                //     }
-                // })
             }
-            // if (!prevProps.currentBikeId && this.props.currentBikeId) {
-            //     Actions.push(PageKeys.BIKE_DETAILS, {});
-            // }
+        }
+        if (prevProps.hasNetwork === false && this.props.hasNetwork === true) {
+            this.retryApiFunc();
+        }
+
+        if (prevProps.isRetryApi === false && this.props.isRetryApi === true) {
+            if (Actions.currentScene === this.props.lastApi.currentScene) {
+                Alert.alert(
+                    'Something went wrong ',
+                    '',
+                    [
+                        {
+                            text: 'Retry ', onPress: () => {
+                                this.retryApiFunc();
+                                this.props.resetErrorHandling(false)
+                            }
+                        },
+                        { text: 'Cancel', onPress: () => { this.props.resetErrorHandling(false) }, style: 'cancel' },
+                    ],
+                    { cancelable: false }
+                )
+            }
+        }
+    }
+
+    retryApiFunc = () => {
+        if (this.props.lastApi && this.props.lastApi.currentScene === Actions.currentScene) {
+            this.props[`${this.props.lastApi.api}`](...this.props.lastApi.params)
         }
     }
 
@@ -76,10 +88,26 @@ class MyGarageTab extends Component {
             useNativeDriver: true
         }).start(() => {
             if (this.props.hasNetwork === true) {
-                this.props.getGarageInfo(this.props.user.userId);
+                if (this.props.isEditable) {
+                    this.props.getGarageInfo(this.props.user.userId);
+                } else {
+                    this.props.getGarageInfo(this.props.friend.userId, (garage) => {
+                        const activeIndex = garage.spaceList.findIndex(bike => bike.isDefault);
+                        if (activeIndex === -1 || activeIndex === 0) {
+                            this.setState({ bikeList: garage.spaceList });
+                        } else {
+                            this.setState({
+                                bikeList: [
+                                    garage.spaceList[activeIndex],
+                                    ...garage.spaceList.slice(0, activeIndex),
+                                    ...garage.spaceList.slice(activeIndex + 1),
+                                ]
+                            });
+                        }
+                    }, () => { });
+                }
             }
         });
-
     }
 
     openBikeForm = (bike) => {
@@ -93,7 +121,11 @@ class MyGarageTab extends Component {
 
     openBikeDetailsPage = (bike) => {
         this.props.getCurrentBike(bike.spaceId);
-        Actions.push(PageKeys.BIKE_DETAILS, { currentBikeId: bike.spaceId });
+        if (this.props.isEditable === true) {
+            Actions.push(PageKeys.BIKE_DETAILS, { currentBikeId: bike.spaceId, isEditable: true });
+        } else {
+            Actions.push(PageKeys.BIKE_DETAILS, { currentBikeId: bike.spaceId, isEditable: false, bike, friend: this.props.friend });
+        }
     }
 
     renderBike = ({ item, index }) => {
@@ -123,48 +155,53 @@ class MyGarageTab extends Component {
 
     render() {
         const { garage, user } = this.props;
-        const { isVisibleOptionsModal } = this.state;
         const spin = this.state.spinValue.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
         });
         return (
             <View style={styles.fill}>
-                <View style={styles.header}>
-                    <IconButton iconProps={{ name: 'ios-notifications', type: 'Ionicons', style: { fontSize: 26 } }}
-                        style={styles.headerIconCont} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
-                    <View style={styles.headerTitleContainer}>
-                        <DefaultText numberOfLines={1} style={styles.heading}>
-                            {user.name}
-                        </DefaultText>
-                        {
-                            user.nickname ?
-                                <DefaultText numberOfLines={1} style={styles.subheading}>
-                                    {user.nickname.toUpperCase()}
+                {
+                    this.props.isEditable
+                        ? <View style={styles.header}>
+                            <IconButton iconProps={{ name: 'ios-notifications', type: 'Ionicons', style: { fontSize: 26 } }}
+                                style={styles.headerIconCont} onPress={() => Actions.push(PageKeys.NOTIFICATIONS)} />
+                                {
+                                    this.props.notificationCount>0?
+                                    <CountComponent notificationCount={this.props.notificationCount} left={43} />:null
+                                }
+                               
+                            <View style={styles.headerTitleContainer}>
+                                <DefaultText numberOfLines={1} style={styles.heading}>
+                                    {user.name}
                                 </DefaultText>
-                                : null
-                        }
-                    </View>
-                    <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 19, color: '#fff' } }}
-                        style={styles.rightIconPropsStyle} onPress={() => this.openBikeForm()} />
-                </View>
+                                {
+                                    user.nickname ?
+                                        <DefaultText numberOfLines={1} style={styles.subheading}>
+                                            {user.nickname.toUpperCase()}
+                                        </DefaultText>
+                                        : null
+                                }
+                            </View>
+                            <IconButton iconProps={{ name: 'md-add', type: 'Ionicons', style: { fontSize: 19, color: '#fff' } }}
+                                style={styles.rightIconPropsStyle} onPress={() => this.openBikeForm()} />
+                        </View>
+                        : null
+                }
                 <View style={[styles.fill, styles.pageContent]}>
                     <FlatList
                         contentContainerStyle={{ paddingBottom: APP_COMMON_STYLES.tabContainer.height }}
-                        data={garage.spaceList}
+                        data={this.props.isEditable ? garage.spaceList : this.state.bikeList}
                         keyExtractor={(item, index) => item.spaceId + ''}
                         showsVerticalScrollIndicator={false}
-                        extraData={{ activeBikeIndex: garage.activeBikeIndex }}
+                        extraData={this.props.isEditable ? { activeBikeIndex: garage.activeBikeIndex } : null}
                         ref={elRef => this.spacelistRef = elRef}
                         renderItem={this.renderBike}
                     />
                     {
-                        this.props.hasNetwork === false && garage.spaceList.length === 0 && <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
-                            <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                            </Animated.View>
-                            <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
-                            <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet</DefaultText>
+                        this.props.hasNetwork === false && (this.props.isEditable ? ((garage.spaceList && garage.spaceList.length === 0) || !garage.spaceList) : ((this.state.bikeList && this.state.bikeList.length === 0) || !this.state.bikeList)) && <View style={{ flexDirection: 'column', justifyContent: 'space-between', position: 'absolute', top: heightPercentageToDP(20), left: widthPercentageToDP(27), height: 100, }}>
+                            <IconButton iconProps={{ name: 'broadcast-tower', type: 'FontAwesome5', style: { fontSize: 60, color: '#505050' } }} />
+                            <DefaultText style={{ alignSelf: 'center', fontSize: 14 }}>Please Connect To Internet</DefaultText>
                         </View>
                     }
                 </View>
@@ -173,26 +210,38 @@ class MyGarageTab extends Component {
     }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, props) => {
     const { user } = state.UserAuth;
-    const garage = { garageId, garageName, spaceList } = state.GarageInfo;
-    const { hasNetwork } = state.PageState;
-    return { user, garage, hasNetwork };
+    const { hasNetwork, lastApi, isRetryApi } = state.PageState;
+    const notificationCount=state.NotificationList.notificationList.totalUnseen
+    if (props.isEditable) {
+        const garage = { garageId, garageName, spaceList } = state.GarageInfo;
+        return { user, garage, hasNetwork, lastApi, isRetryApi ,notificationCount};
+    } else {
+        return { user, hasNetwork, lastApi, isRetryApi,notificationCount };
+    };
+   
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        getGarageInfo: (userId) => {
+        getGarageInfo: (userId, successCallback, errorCallback) => {
             dispatch(apiLoaderActions(true));
-            getGarageInfo(userId, (garage) => {
+            getGarageInfo(userId).then(({ data: garage }) => {
                 dispatch(apiLoaderActions(false));
-                dispatch(replaceGarageInfoAction(garage));
-            }, (error) => {
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+                if (successCallback) {
+                    successCallback(garage);
+                } else {
+                    dispatch(replaceGarageInfoAction(garage));
+                }
+            }).catch(error => {
                 dispatch(apiLoaderActions(false));
                 console.log(`getGarage error: `, error);
-            })
+                handleServiceErrors(error, [userId, successCallback, errorCallback], 'getGarageInfo', true, true);
+            });
         },
-        updateGarageName: (garageName, garageId) => dispatch(updateGarageName(garageName, garageId)),
         getCurrentBike: (bikeId) => dispatch(getCurrentBikeAction(bikeId)),
+        resetErrorHandling: (state) => dispatch(resetErrorHandlingAction({ comingFrom: 'garage', isRetryApi: state })),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(MyGarageTab);
@@ -205,13 +254,6 @@ const styles = StyleSheet.create({
     pageContent: {
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    addBikeItem: {
-        width: '100%',
-        height: heightPercentageToDP(30),
-    },
-    submitBtn: {
-        height: heightPercentageToDP(8.5),
     },
     header: {
         height: APP_COMMON_STYLES.headerHeight,

@@ -1,101 +1,31 @@
-import { UPDATE_RIDE_LIST, CLEAR_RIDE_LIST, DELETE_RIDE, REPLACE_RIDE_LIST, UPDATE_RIDE_SNAPSHOT, UPDATE_RIDE_CREATOR_PICTURE, UPDATE_RIDE_IN_LIST, IS_REMOVED, UPDATE_UNSYNCED_RIDES, DELETE_UNSYNCED_RIDE, REPLACE_UNSYNCED_RIDES, ADD_UNSYNCED_RIDE } from "../actions/actionConstants";
-import { RIDE_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, RIDE_TAIL_TAG, UNSYNCED_RIDE } from "../constants";
+import { UPDATE_RIDE_LIST, CLEAR_RIDE_LIST, DELETE_RIDE, REPLACE_RIDE_LIST, UPDATE_RIDE_SNAPSHOT, UPDATE_RIDE_CREATOR_PICTURE, UPDATE_RIDE_IN_LIST, IS_REMOVED, DELETE_UNSYNCED_RIDE, REPLACE_UNSYNCED_RIDES, ADD_UNSYNCED_RIDE, UPDATE_PUBLIC_RIDES, CLEAR_PUBLIC_RIDES, UPDATE_RIDE_LIKE_AND_COMMENT_COUNT } from "../actions/actionConstants";
+import { RIDE_TYPE, THUMBNAIL_TAIL_TAG, RIDE_TAIL_TAG, UNSYNCED_RIDE } from "../constants";
 
 const initialState = {
     buildRides: [],
     recordedRides: [],
     sharedRides: [],
     isRemoved: false,
-    unsyncedRides: []
+    unsyncedRides: [],
+    publicRides: [],
+    rideComments: null,
 };
 
 export default (state = initialState, action) => {
     const updatedState = { ...state };
     switch (action.type) {
-
         case REPLACE_RIDE_LIST:
             var rideKey = getRideListByType(action.data.rideType);
-            // updatedState[rideKey] = [...action.data.rideList];
-            if (action.data.pageNumber === 0) {
-                if (action.data.rideType === RIDE_TYPE.SHARED_RIDE) {
-                    updatedState[rideKey] = action.data.rideList.map(ride => {
-                        if (state.unsyncedRides.indexOf(`${UNSYNCED_RIDE}${ride.rideId}`) > -1) ride.unsynced = true;
-                        let rideIdx = updatedState[rideKey].findIndex(item => item.rideId === ride.rideId);
-                        if (rideIdx > -1) {
-                            let snapshot = null;
-                            let creatorProfPic = null;
-                            if (updatedState[rideKey][rideIdx].snapshotId === ride.snapshotId && updatedState[rideKey][rideIdx].snapshot) {
-                                snapshot = { snapshot: updatedState[rideKey][rideIdx].snapshot };
-                            }
-                            if (updatedState[rideKey][rideIdx].creatorProfilePictureId === ride.creatorProfilePictureId && updatedState[rideKey][rideIdx].creatorProfilePicture) {
-                                creatorProfPic = { creatorProfilePicture: updatedState[rideKey][rideIdx].creatorProfilePicture };
-                            }
-                            if (snapshot || creatorProfPic) {
-                                return { ...ride, ...snapshot, ...creatorProfPic };
-                            }
-                        }
-                        return ride;
-                    });
-                    return updatedState;
-
-                } else {
-                    updatedState[rideKey] = action.data.rideList.map(ride => {
-                        if (state.unsyncedRides.indexOf(`${UNSYNCED_RIDE}${ride.rideId}`) > -1) ride.unsynced = true;
-                        let rideIdx = updatedState[rideKey].findIndex(item => item.rideId === ride.rideId);
-                        if (rideIdx > -1) {
-                            if (updatedState[rideKey][rideIdx].snapshotId === ride.snapshotId && updatedState[rideKey][rideIdx].snapshot) {
-                                return { ...ride, snapshot: updatedState[rideKey][rideIdx].snapshot }
-                            }
-                        }
-                        return ride;
-                    });
-                    return updatedState;
-                }
-            }
-            else {
-                if (action.data.rideType === RIDE_TYPE.SHARED_RIDE) {
-                    const rideList = action.data.rideList.map(ride => {
-                        if (state.unsyncedRides.indexOf(`${UNSYNCED_RIDE}${ride.rideId}`) > -1) ride.unsynced = true;
-                        let rideIdx = updatedState[rideKey].findIndex(item => item.rideId === ride.rideId);
-                        if (rideIdx > -1) {
-                            let snapshot = null;
-                            let creatorProfPic = null;
-                            if (updatedState[rideKey][rideIdx].snapshotId === ride.snapshotId && updatedState[rideKey][rideIdx].snapshot) {
-                                snapshot = { snapshot: updatedState[rideKey][rideIdx].snapshot };
-                            }
-                            if (updatedState[rideKey][rideIdx].creatorProfilePictureId === ride.creatorProfilePictureId && updatedState[rideKey][rideIdx].creatorProfilePicture) {
-                                creatorProfPic = { creatorProfilePicture: updatedState[rideKey][rideIdx].creatorProfilePicture };
-                            }
-                            if (snapshot || creatorProfPic) {
-                                return { ...ride, ...snapshot, ...creatorProfPic };
-                            }
-                        }
-                        return ride;
-                    });
-                    updatedState[rideKey] = [...updatedState[rideKey], ...rideList]
-                    return updatedState;
-
-                } else {
-                    const rideList = action.data.rideList.map(ride => {
-                        if (state.unsyncedRides.indexOf(`${UNSYNCED_RIDE}${ride.rideId}`) > -1) ride.unsynced = true;
-                        let rideIdx = updatedState[rideKey].findIndex(item => item.rideId === ride.rideId);
-                        if (rideIdx > -1) {
-                            if (updatedState[rideKey][rideIdx].snapshotId === ride.snapshotId && updatedState[rideKey][rideIdx].snapshot) {
-                                return { ...ride, snapshot: updatedState[rideKey][rideIdx].snapshot }
-                            }
-                        }
-                        return ride;
-                    });
-                    updatedState[rideKey] = [...updatedState[rideKey], ...rideList]
-                    return updatedState;
-                }
-            }
+            const rideList = action.data.rideList.map(ride => {
+                return state.unsyncedRides.indexOf(`${UNSYNCED_RIDE}${ride.rideId}`) > -1
+                    ? { ...ride, unsynced: true } : ride;
+            });
+            updatedState[rideKey] = action.data.appendToList ? [...updatedState[rideKey], ...rideList] : rideList;
+            return updatedState;
 
         case UPDATE_RIDE_LIST:
             var rideKey = getRideListByType(action.data.rideType);
-            updatedState[rideKey] = typeof action.data.index === 'number' && action.data.index >= 0
-                ? [...state[rideKey].slice(0, action.data.index), ...action.data.rideList, ...state[rideKey].slice(action.data.index + 1)]
-                : [...state[rideKey], ...action.data.rideList]
+            updatedState[rideKey] = [...action.data.rideList, ...state[rideKey]]
             return updatedState;
 
         case REPLACE_UNSYNCED_RIDES:
@@ -127,13 +57,9 @@ export default (state = initialState, action) => {
         case UPDATE_RIDE_SNAPSHOT:
             var rideKey = getRideListByType(action.data.rideType);
             updatedState[rideKey] = updatedState[rideKey].map(ride => {
-                if (!ride.snapshotId) return ride;
-                // let id = ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG);
-                let id = ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, RIDE_TAIL_TAG);
-                if (typeof action.data.pictureObject[id] === 'string') {
-                    return { ...ride, snapshot: action.data.pictureObject[id] };
-                }
-                return ride;
+                return ride.rideId === action.data.rideId
+                ?{...ride,snapshotId:action.data.snapshotId}
+                :ride
             });
             return updatedState;
 
@@ -148,12 +74,6 @@ export default (state = initialState, action) => {
             return updatedState;
 
         case UPDATE_RIDE_CREATOR_PICTURE:
-            // var rideKey = getRideListByType(action.data.rideType);
-            // const rideIndex = updatedState[rideKey].findIndex(ride => ride.rideId === action.data.rideId);
-            // updatedState[rideKey] = rideIndex >= 0
-            //     ? [...state[rideKey].slice(0, rideIndex), { ...state[rideKey][rideIndex], creatorProfilePicture: action.data.picture }, ...state[rideKey].slice(rideIndex + 1)]
-            //     : [...state[rideKey], ...action.data.rideList]
-            // return updatedState;
             var rideKey = getRideListByType(action.data.rideType);
             updatedState[rideKey] = updatedState[rideKey].map(ride => {
                 if (!ride.creatorProfilePictureId) return ride;
@@ -165,14 +85,15 @@ export default (state = initialState, action) => {
             return updatedState;
 
         case DELETE_RIDE:
-            var rideKey = getRideListByType(action.data.rideType);
-            if (rideKey === 'recordedRides') {
-                const unsyncedKeyIdx = updatedState.unsyncedRides.indexOf(`${UNSYNCED_RIDE}${state.recordedRides[action.data.index].rideId}`);
+            const rideType = getRideListByType(action.data.rideType);
+            const rideIndex = state[rideType].findIndex(ride => ride.rideId === action.data.rideId);
+            if (rideType === 'recordedRides') {
+                const unsyncedKeyIdx = updatedState.unsyncedRides.indexOf(`${UNSYNCED_RIDE}${state.recordedRides[rideIndex].rideId}`);
                 if (unsyncedKeyIdx > -1) {
                     updatedState.unsyncedRides = [...updatedState.unsyncedRides.slice(0, unsyncedKeyIdx), ...updatedState.unsyncedRides.slice(unsyncedKeyIdx + 1)];
                 }
             }
-            updatedState[rideKey] = [...state[rideKey].slice(0, action.data.index), ...state[rideKey].slice(action.data.index + 1)];
+            updatedState[rideType] = [...state[rideType].slice(0, rideIndex), ...state[rideType].slice(rideIndex + 1)];
             return updatedState;
 
         case CLEAR_RIDE_LIST:
@@ -187,6 +108,31 @@ export default (state = initialState, action) => {
                 isRemoved: action.data
             }
 
+        case UPDATE_PUBLIC_RIDES:
+            return {
+                ...state,
+                publicRides: action.data.reset ?
+                    action.data.rides
+                    : [...state.publicRides, ...action.data.rides]
+            }
+
+        case CLEAR_PUBLIC_RIDES:
+            return {
+                ...state,
+                publicRides: []
+            }
+        case UPDATE_RIDE_LIKE_AND_COMMENT_COUNT:
+            var rideKey = getRideListByType(action.data.rideType);
+            if (updatedState[rideKey].length === 0) return state;
+            updatedState[rideKey] = updatedState[rideKey].map(ride => {
+                return ride.rideId === action.data.rideId
+                    ? action.data.isUpdateLike
+                        ? { ...ride, numberOfLikes: ride.numberOfLikes + (action.data.isAdded ? 1 : -1), isLiked: (action.data.isLiked ? (action.data.isAdded ? true : false) : ride.isLiked) }
+                        : { ...ride, numberOfComments: action.data.numberOfComments ? action.data.numberOfComments : (ride.numberOfComments + (action.data.isAdded ? 1 : -1)) }
+                    : ride;
+            });
+            return updatedState;
+
         default: return state
     }
 }
@@ -199,5 +145,7 @@ const getRideListByType = (rideType) => {
             return 'recordedRides'
         case RIDE_TYPE.SHARED_RIDE:
             return 'sharedRides'
+        case RIDE_TYPE.PUBLIC_RIDE:
+            return 'publicRides'
     }
 }

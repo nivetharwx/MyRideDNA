@@ -13,6 +13,7 @@ import { Icon as NBIcon, Thumbnail } from 'native-base';
 import { WindowDimensions, APP_COMMON_STYLES, widthPercentageToDP, IS_ANDROID, heightPercentageToDP, CUSTOM_FONTS } from '../../constants';
 import { IconButton } from '../buttons';
 import { DefaultText } from '../labels';
+import { CountComponent } from '../count';
 
 const THUMBNAIL_SIZE = IS_ANDROID ? heightPercentageToDP(6.5) : heightPercentageToDP(8);
 
@@ -58,8 +59,8 @@ export class BasicHeader extends React.Component {
     }
 
     render() {
-        const { leftIconProps, title, rightIconProps, onCancelSearchMode,
-            searchValue, onChangeSearchValue, hasEditableTitle, style, searchIconProps, thumbnail, titleStyle, showShadow = true } = this.props;
+        const { leftComponent, leftComponentStyle, leftIconProps, title, rightIconProps, onCancelSearchMode, rightComponent,
+            searchValue, onChangeSearchValue, hasEditableTitle, style, searchIconProps, thumbnail, titleStyle, showShadow = true, titleNumberOfLines } = this.props;
         const { searchbarAnim, searchbarMode, titleEditingMode } = this.state;
 
         const searchCancelAnim = searchbarAnim.interpolate({
@@ -77,46 +78,52 @@ export class BasicHeader extends React.Component {
                     searchbarMode === false || searchbarMode === undefined
                         ? <View style={{ flex: 1, flexDirection: 'row' }}>
                             {
-                                leftIconProps
-                                    // ? <View style={{ marginLeft: 17, alignItems: 'center', justifyContent: 'center' }}>
-                                    //     <TouchableOpacity style={leftIconProps.reverse ? styles.iconPadding : null} onPress={leftIconProps.onPress}>
-                                    //         <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
-                                    //             fontSize: 27,
-                                    //             color: leftIconProps.reverse ? 'black' : 'white'
-                                    //         }, leftIconProps.style]} />
-                                    //     </TouchableOpacity>
-                                    // </View>
-                                    ? thumbnail
-                                        ? thumbnail.picture
-                                            ? <TouchableHighlight underlayColor='rgba(0,0,0,0.3)' style={styles.buttonArea} onPress={leftIconProps.onPress}>
-                                                <View style={[leftIconProps.reverse ? styles.iconThumbPadding : null, { flexDirection: 'row', }]}>
-                                                    <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
-                                                        fontSize: 25,
-                                                        color: '#ffffff'
-                                                    }, leftIconProps.style]} />
-                                                    <Thumbnail style={styles.thumbnail} source={{ uri: thumbnail.picture }} />
-                                                </View>
-                                            </TouchableHighlight>
-                                            : <TouchableHighlight underlayColor='rgba(0,0,0,0.3)' style={styles.buttonArea} onPress={leftIconProps.onPress}>
-                                                <View style={styles.iconThumbPadding}>
-                                                    <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
-                                                        fontSize: 25,
-                                                        color: '#ffffff'
-                                                    }, leftIconProps.style]} />
-                                                    <View style={styles.groupIconStyle}>
-                                                        <NBIcon name='user' type='FontAwesome' style={{ color: 'white', fontSize: 25, alignSelf: 'center', paddingTop: 3 }} />
+                                leftComponent
+                                    ? <View style={[{ alignSelf: 'center', marginHorizontal: 20 }, leftComponentStyle]}>{leftComponent}</View>
+                                    : leftIconProps
+                                        // ? <View style={{ marginLeft: 17, alignItems: 'center', justifyContent: 'center' }}>
+                                        //     <TouchableOpacity style={leftIconProps.reverse ? styles.iconPadding : null} onPress={leftIconProps.onPress}>
+                                        //         <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
+                                        //             fontSize: 27,
+                                        //             color: leftIconProps.reverse ? 'black' : 'white'
+                                        //         }, leftIconProps.style]} />
+                                        //     </TouchableOpacity>
+                                        // </View>
+                                        ? thumbnail
+                                            ? thumbnail.picture
+                                                ? <TouchableHighlight underlayColor='rgba(0,0,0,0.3)' style={styles.buttonArea} onPress={leftIconProps.onPress}>
+                                                    <View style={[leftIconProps.reverse ? styles.iconThumbPadding : null, { flexDirection: 'row', }]}>
+                                                        <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
+                                                            fontSize: 25,
+                                                            color: '#ffffff'
+                                                        }, leftIconProps.style]} />
+                                                        <Thumbnail style={styles.thumbnail} source={{ uri: thumbnail.picture }} />
                                                     </View>
-                                                </View>
-                                            </TouchableHighlight>
-                                        : <View style={{ marginLeft: 10, alignItems: 'center', justifyContent: 'center' }}>
-                                            <TouchableOpacity style={leftIconProps.reverse ? styles.iconPadding : null} onPress={leftIconProps.onPress}>
-                                                <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
-                                                    fontSize: 25,
-                                                    color: leftIconProps.reverse ? 'black' : 'white'
-                                                }, leftIconProps.style]} />
-                                            </TouchableOpacity>
-                                        </View>
-                                    : null
+                                                </TouchableHighlight>
+                                                : <TouchableHighlight underlayColor='rgba(0,0,0,0.3)' style={styles.buttonArea} onPress={leftIconProps.onPress}>
+                                                    <View style={styles.iconThumbPadding}>
+                                                        <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
+                                                            fontSize: 25,
+                                                            color: '#ffffff'
+                                                        }, leftIconProps.style]} />
+                                                        <View style={styles.groupIconStyle}>
+                                                            <NBIcon name='user' type='FontAwesome' style={{ color: 'white', fontSize: 25, alignSelf: 'center', paddingTop: 3 }} />
+                                                        </View>
+                                                    </View>
+                                                </TouchableHighlight>
+                                            : <View style={{ marginLeft: 14, alignItems: 'center', justifyContent: 'center' }}>
+                                                <TouchableOpacity style={leftIconProps.reverse ? styles.iconPadding : null} onPress={leftIconProps.onPress}>
+                                                    <NBIcon name={leftIconProps.name} type={leftIconProps.type} style={[{
+                                                        fontSize: 25,
+                                                        color: leftIconProps.reverse ? 'black' : 'white'
+                                                    }, leftIconProps.style]} />
+                                                </TouchableOpacity>
+                                                {
+                                                        this.props.notificationCount&&this.props.notificationCount>0?
+                                                        <CountComponent notificationCount={this.props.notificationCount} left={22} />:null
+                                                    }
+                                            </View>
+                                        : null
                             }
                             {
                                 // thumbnail
@@ -132,12 +139,12 @@ export class BasicHeader extends React.Component {
                                     titleEditingMode === false
                                         ? hasEditableTitle
                                             ? <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <DefaultText numberOfLines={1} style={[{ color: 'white', fontSize: 20, letterSpacing: 0.2, fontFamily: CUSTOM_FONTS.gothamBold }, titleStyle]}>
+                                                <DefaultText numberOfLines={titleNumberOfLines} style={[{ color: 'white', fontSize: 20, letterSpacing: 0.2, fontFamily: CUSTOM_FONTS.gothamBold }, titleStyle]}>
                                                     {title}
                                                 </DefaultText>
                                                 <IconButton style={{ paddingHorizontal: 0 }} onPress={this.toggleTitleEditingMode} iconProps={{ name: 'edit', type: 'MaterialIcons', style: { color: '#fff' } }} />
                                             </View>
-                                            : <DefaultText numberOfLines={1} style={[{ color: 'white', fontSize: 20, letterSpacing: 0.2, marginLeft: leftIconProps ? 10 : 0, fontFamily: CUSTOM_FONTS.gothamBold }, titleStyle]}>
+                                            : <DefaultText numberOfLines={titleNumberOfLines} style={[{ color: 'white', fontSize: 20, letterSpacing: 0.2, marginLeft: leftIconProps ? 16 : 0, fontFamily: CUSTOM_FONTS.gothamBold }, titleStyle]}>
                                                 {title}
                                             </DefaultText>
                                         : <View style={{ flexDirection: 'row', marginRight: rightIconProps ? 20 : 0, justifyContent: 'space-between', alignItems: 'center' }}>
@@ -159,16 +166,18 @@ export class BasicHeader extends React.Component {
                                     : null
                             }
                             {
-                                rightIconProps
-                                    ? <Animated.View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
-                                        <TouchableOpacity style={[rightIconProps.reverse ? styles.iconPadding : null, rightIconProps.containerStyle]} onPress={rightIconProps.onPress && rightIconProps.onPress}>
-                                            <NBIcon name={rightIconProps.name} type={rightIconProps.type} style={[{
-                                                fontSize: 25,
-                                                color: rightIconProps.reverse ? 'black' : 'white'
-                                            }, rightIconProps.style]} />
-                                        </TouchableOpacity>
-                                    </Animated.View>
-                                    : null
+                                rightComponent
+                                    ? <View style={{ alignSelf: 'center', marginHorizontal: 20 }}>{rightComponent}</View>
+                                    : rightIconProps
+                                        ? <Animated.View style={{ marginHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
+                                            <TouchableOpacity style={[rightIconProps.reverse ? styles.iconPadding : null, rightIconProps.containerStyle]} onPress={rightIconProps.onPress && rightIconProps.onPress}>
+                                                <NBIcon name={rightIconProps.name} type={rightIconProps.type} style={[{
+                                                    fontSize: 25,
+                                                    color: rightIconProps.reverse ? 'black' : 'white'
+                                                }, rightIconProps.style]} />
+                                            </TouchableOpacity>
+                                        </Animated.View>
+                                        : null
                             }
                         </View>
                         : <Animated.View style={{ flex: 1, flexDirection: 'row', transform: [{ translateX: searchbarAnim }] }}>
@@ -245,7 +254,7 @@ const styles = StyleSheet.create({
         shadowColor: '#000000',
         shadowOpacity: 0.9,
         shadowRadius: 5,
-        zIndex: 999
+        zIndex: 900
     },
     iconPadding: {
         padding: 5,

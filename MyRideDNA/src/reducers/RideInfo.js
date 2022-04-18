@@ -24,7 +24,8 @@ const initialState = {
         fromRideId: null,
         totalDistance: 0,
         totalTime: 0,
-        unsynced: false
+        unsynced: false,
+        isUndoable: true
     },
 };
 
@@ -51,6 +52,7 @@ const rideInfo = (state = initialState, action) => {
                 }
             }
         case UPDATE_WAYPOINT:
+            console.log(action.data, '////// action data updates')
             return {
                 ...state,
                 ride: {

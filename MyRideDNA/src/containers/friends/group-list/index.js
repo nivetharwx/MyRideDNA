@@ -1,94 +1,103 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, TouchableWithoutFeedback, Animated, Text, Alert, Keyboard, FlatList, View, ImageBackground, ActivityIndicator, Easing } from 'react-native';
-import { IconButton, LinkButton } from '../../../components/buttons';
-import { widthPercentageToDP, heightPercentageToDP, PageKeys, APP_COMMON_STYLES } from '../../../constants';
-import { ListItem, Left, Thumbnail, Body, Right, Icon as NBIcon, CheckBox, Toast } from 'native-base';
-import { ThumbnailCard, HorizontalCard } from '../../../components/cards';
-import { createFriendGroup, getFriendGroups, addMembers, getAllGroupMembers, exitFriendGroup, getAllGroups, getAllMembersLocation, getPictureList } from '../../../api';
+import { StyleSheet, Animated, Keyboard, FlatList, View, ActivityIndicator, Easing, Alert } from 'react-native';
+import { IconButton } from '../../../components/buttons';
+import { widthPercentageToDP, heightPercentageToDP, PageKeys, GET_PICTURE_BY_ID } from '../../../constants';
+import { HorizontalCard } from '../../../components/cards';
+import { getFriendGroups, getAllMembersLocation, handleServiceErrors, searchForGroup, getAllGroupLocation } from '../../../api';
 import { Actions } from 'react-native-router-flux';
-import { BaseModal } from '../../../components/modal';
-import { hideMembersLocationAction, screenChangeAction, createFriendGroupAction } from '../../../actions';
-import { LabeledInputPlaceholder, SearchBoxFilter } from '../../../components/inputs';
+import { hideMembersLocationAction, screenChangeAction, updatePageNumberAction, clearGroupSearchResultsAction, replaceGroupSearchResultsAction, updateFriendGroupListAction, resetErrorHandlingAction } from '../../../actions';
+import { SearchBoxFilter } from '../../../components/inputs';
 import { DefaultText } from '../../../components/labels';
 
-const FILTERED_ACTION_IDS = {
-    ALL_GROUPS: 'all_friends',
-    VISIBLE_ON_MAP_GROUPS: 'visible-on-map-groups',
-    VISIBLE_ON_MAP: 'visible-on-map',
-};
 
-const CREATE_GROUP_WIDTH = widthPercentageToDP(9);
+const CARD_HEIGHT = 74;
 class GroupListTab extends Component {
-    createSecAnim = new Animated.Value(CREATE_GROUP_WIDTH / 2);
-    borderWidthAnim = new Animated.Value(0);
-    createGrpInputRef = null;
-    addMemberInputRef = null;
-    isAddingGroup = false;
+    filteredGroups = [];
     defaultBtmOffset = widthPercentageToDP(8);
+    _preference = 10;
     constructor(props) {
         super(props);
         this.defaultBtmOffset = widthPercentageToDP(props.user.handDominance === 'left' ? 20 : 8);
         this.state = {
-            selectedFriendList: [],
             isRefreshing: false,
-            searchFriendList: [],
-            newGroupName: null,
             kbdBtmOffset: this.defaultBtmOffset,
-            isVisibleOptionsModal: false,
             selectedGroup: null,
             isLoading: false,
-            isLoadingData: false,
             spinValue: new Animated.Value(0),
             searchQuery: '',
-            groupFilter: FILTERED_ACTION_IDS.ALL_GROUPS,
-            isFilter: null,
+            hasRemainingList: false,
+            pageNumber: 0,
+            groupIds: [],
+            onPressArrow: false
         };
     }
 
     componentDidMount() {
-        // this.props.getFriendGroups(this.props.user.userId, true);
-        this.props.getFriendGroups(this.props.user.userId, true, 0, (res) => {
+        
+        console.log('didmount called groups')
+        this._preference = parseInt(heightPercentageToDP(100) / CARD_HEIGHT);
+        this.props.getFriendGroups(this.props.user.userId, true, this.state.pageNumber, this._preference, (res) => {
+            if (res.groups.length > 0) {
+                this.setState(prevState=>({  pageNumber: res.groups.length > 0 ? prevState.pageNumber + 1 : prevState.pageNumber, hasRemainingList: res.remainingList > 0, groupIds: res.groups.map(group => group.groupId) }))
+            }
         }, (err) => {
-        });
+        },this.state.searchQuery);
     }
 
     adjustLayoutOnKeyboardVisibility = ({ endCoordinates }) => {
         this.setState({ kbdBtmOffset: endCoordinates.height });
     }
 
+
     componentDidUpdate(prevProps, prevState) {
+        
+        if (prevState.pageNumber !== this.state.pageNumber) {
+            this.props.getAllGroupLocation(this.state.groupIds)
+        }
         if (prevProps.friendGroupList !== this.props.friendGroupList) {
             if (prevState.isRefreshing === true) {
                 this.setState({ isRefreshing: false });
             }
-            const pictureIdList = [];
-            this.props.friendGroupList.forEach((group) => {
-                if (!group.profilePicture && group.profilePictureId) {
-                    pictureIdList.push(group.profilePictureId);
-                }
-            })
-            if (pictureIdList.length > 0) {
-                this.props.getPictureList(pictureIdList);
-            }
-            if (this.isAddingGroup) {
-                /** TODO: Open group details page with last group added
-                 *  this.props.friendGroupList[this.props.friendGroupList.length - 1]
-                 **/
+            // console.log(this.props.friendGroupList.length<=this._preference,this.props.friendGroupList.length,this._preference)
+            // if(this.props.friendGroupList.length<=this._preference){
+            //     this.setState({ pageNumber: 0 });
+            // }
+        }
+        if (this.state.onPressArrow) {
+            this.props.changeScreen({ name: PageKeys.MAP });
+        }
+        if (prevProps.hasNetwork === false && this.props.hasNetwork === true) {
+            this.retryApiFunc();
+        }
+
+        if (prevProps.isRetryApi === false && this.props.isRetryApi === true) {
+            if (Actions.currentScene === this.props.lastApi.currentScene) {
+                Alert.alert(
+                    'Something went wrong ',
+                    '',
+                    [
+                        {
+                            text: 'Retry ', onPress: () => {
+                                this.retryApiFunc();
+                                this.props.resetErrorHandling(false)
+                            }
+                        },
+                        { text: 'Cancel', onPress: () => { this.props.resetErrorHandling(false) }, style: 'cancel' },
+                    ],
+                    { cancelable: false }
+                )
             }
         }
-        if (this.props.membersLocationList && (Object.keys(this.props.membersLocationList).length > Object.keys(prevProps.membersLocationList || {}).length)) {
-            this.setState({ isVisibleOptionsModal: false }, () => {
-                this.props.changeScreen({ name: PageKeys.MAP });
-            });
-        }
-        // if (this.props.refreshContent === true && prevProps.refreshContent === false) {
-        //     // this.props.getFriendGroups(this.props.user.userId, true);
-        //     this.props.getFriendGroups(this.props.user.userId, true, 0, (res) => {
-        //     }, (err) => {
-        //     });
-        // }
+
     }
+
+    retryApiFunc = () => {
+        if (this.props.lastApi && this.props.lastApi.currentScene === Actions.currentScene) {
+            this.props[`${this.props.lastApi.api}`](...this.props.lastApi.params)
+        }
+    }
+
     retryApiFunction = () => {
         this.state.spinValue.setValue(0);
         Animated.timing(this.state.spinValue, {
@@ -98,17 +107,21 @@ class GroupListTab extends Component {
             useNativeDriver: true
         }).start(() => {
             if (this.props.hasNetwork === true) {
-                this.props.getFriendGroups(this.props.user.userId, true, 0, (res) => {
+                this.props.getFriendGroups(this.props.user.userId, true, 0, this._preference, (res) => {
                 }, (err) => {
-                });
+                },this.state.searchQuery);
             }
         });
-
     }
+    
     onPullRefresh = () => {
         this.setState({ isRefreshing: true });
-        // this.props.getFriendGroups(this.props.user.userId, false);
-        this.props.getFriendGroups(this.props.user.userId, false, 0, (res) => {
+        this._preference = parseInt(heightPercentageToDP(100) / CARD_HEIGHT);
+        this.props.getFriendGroups(this.props.user.userId, false, 0, this._preference, (res) => {
+            if (res.groups.length > 0) {
+                this.setState({ pageNumber: 1, hasRemainingList: res.remainingList > 0, groupIds: res.groups.map(group => group.groupId) })
+            }
+            this.props.getAllGroupLocation( res.groups.map(group => group.groupId))
         }, (err) => {
         });
     }
@@ -125,217 +138,68 @@ class GroupListTab extends Component {
         });
     }
 
-    componentWillUnmount() {
-    }
-
-    onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false, selectedGroup: null })
-
     openGroupInfo = (index) => {
-        this.state.isVisibleOptionsModal && this.setState({ isVisibleOptionsModal: false });
-        if (this.borderWidthAnim.__getValue() > 0) {
-            this.closeCreateGroupSection(() => Actions.push(PageKeys.GROUP, { grpIndex: index }));
-        } else {
-            Actions.push(PageKeys.GROUP, { grpIndex: index });
-        }
+        Actions.push(PageKeys.GROUP, { grpIndex: index });
     }
     openChatPage = (item) => {
         const groupDetail = this.state.selectedGroup || item;
         groupDetail['isGroup'] = true
         groupDetail['id'] = groupDetail.groupId
         Actions.push(PageKeys.CHAT, { isGroup: true, chatInfo: groupDetail })
-        this.setState({ isVisibleOptionsModal: false })
     }
 
-    openCreateGroupSection = () => {
-        if (this.borderWidthAnim.__getValue() > 0) {
-            this.closeCreateGroupSection();
-            return;
-        }
-        Animated.parallel([
-            Animated.timing(this.createSecAnim, {
-                toValue: widthPercentageToDP(65),
-                duration: 300
-            }),
-            Animated.timing(this.borderWidthAnim, {
-                toValue: 1,
-                duration: 300
-            })
-        ]).start(() => {
-            // this.addKeyboardListeners();
-            this.setState({ newGroupName: '' });
-            this.createGrpInputRef.focus();
-        });
-    }
-
-    closeCreateGroupSection = (callback) => {
-        Animated.parallel([
-            Animated.timing(this.createSecAnim, {
-                toValue: CREATE_GROUP_WIDTH / 2,
-                duration: 300
-            }),
-            Animated.timing(this.borderWidthAnim, {
-                toValue: 0,
-                duration: 300
-            })
-        ]).start(() => {
-            this.createGrpInputRef.clear();
-            this.createGrpInputRef.blur();
-            this.setState({ newGroupName: null });
-            if (typeof callback === 'function') callback();
-        });
-    }
-
-    toggleMembersLocation = (isVisible, groupId) => {
-        groupId = groupId || this.state.selectedGroup.groupId
+    toggleMembersLocation = (isVisible, item) => {
+        if (!item.locationEnable) return;
+        groupId = item.groupId
         isVisible
-            ? this.setState({ isVisibleOptionsModal: false }, () => {
-                this.props.hideMembersLocation(groupId);
+            ? this.props.hideMembersLocation(groupId)
+            : this.props.getAllMembersLocation(groupId, this.props.user.userId, false)
+    }
+
+    onPressNavigationIcon = (isVisible, item) => {
+        if (!item.locationEnable) return;
+        groupId = item.groupId
+        isVisible
+            ? this.setState({ onPressArrow: true })
+            : this.setState({ onPressArrow: true }, () => {
+                this.props.getAllMembersLocation(groupId, this.props.user.userId, true)
             })
-            : this.props.getAllMembersLocation(groupId, this.props.user.userId)
-    }
-
-    showOptionsModal = (index) => {
-        this.setState({ selectedGroup: this.props.friendGroupList[index], isVisibleOptionsModal: true });
-    }
-
-    renderMenuOptions = () => {
-        if (this.state.selectedGroup === null) return;
-        const index = this.props.friendGroupList.findIndex(item => item.groupId === this.state.selectedGroup.groupId);
-        const options = [{ text: 'Open group', id: 'openGroup', handler: () => this.openGroupInfo(index) }, { text: 'Chat', id: 'openChat', handler: () => this.openChatPage(index) }, { text: 'Exit group', id: 'exitGroup', handler: () => this.showExitGroupConfirmation() }];
-        const isVisible = this.props.membersLocationList !== null && this.props.membersLocationList[this.state.selectedGroup.groupId] !== undefined && this.props.membersLocationList[this.state.selectedGroup.groupId].filter(f => !f.isVisible).length === 0;
-        options.push({ text: isVisible === false ? `Show\nlocation` : `Hide\nlocation`, id: 'location', handler: () => this.toggleMembersLocation(isVisible) });
-        options.push({ text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() });
-        return (
-            options.map(option => (
-                <LinkButton
-                    key={option.id}
-                    onPress={option.handler}
-                    highlightColor={APP_COMMON_STYLES.infoColor}
-                    style={APP_COMMON_STYLES.menuOptHighlight}
-                    title={option.text}
-                    titleStyle={APP_COMMON_STYLES.menuOptTxt}
-                />
-            ))
-        )
-    }
-
-    showExitGroupConfirmation = () => {
-        const { groupId, groupName } = this.state.selectedGroup;
-        setTimeout(() => {
-            Alert.alert(
-                'Confirmation to exit group',
-                `Are you sure to exit from ${groupName}?`,
-                [
-                    {
-                        text: 'Yes', onPress: () => {
-                            this.props.exitFriendGroup(groupId, this.props.user.userId);
-                            this.onCancelOptionsModal();
-                        }
-                    },
-                    { text: 'Cancel', onPress: () => { }, style: 'cancel' },
-                ],
-                { cancelable: false }
-            );
-        }, 100);
     }
 
     renderGroup = ({ item, index }) => {
         return (
-            // DOC: Removed native-base ListItem as TouchableNativeFeedback is not working in react-native 0.59.0
-            // <TouchableWithoutFeedback style={{ width: widthPercentageToDP(100), marginTop: 20 }} onLongPress={() => this.showOptionsModal(index)} onPress={() => this.openGroupInfo(index)}>
-            //     <View style={{ flex: 1, flexDirection: 'row', height: heightPercentageToDP(10) }}>
-            //         <View style={{ width: widthPercentageToDP(15), alignItems: 'center', justifyContent: 'center' }}>
-            //             {
-            //                 item.groupProfilePictureThumbnail
-            //                     ? <Thumbnail source={{ uri: 'Image URL' }} />
-            //                     : <NBIcon active name="group" type='FontAwesome' style={{ width: '50%', alignSelf: 'center' }} />
-            //             }
-            //         </View>
-            //         <View style={{ flex: 1, justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.1)' }}>
-            //             <DefaultText>{item.groupName}</DefaultText>
-            //         </View>
-            //         <View>
-            //             <DefaultText note></DefaultText>
-            //         </View>
-            //     </View>
-            // </TouchableWithoutFeedback>
             <HorizontalCard
-                // horizontalCardPlaceholder={require('../../../assets/img/friend-profile-pic.png')}
                 item={item}
                 cardOuterStyle={styles.horizontalCardOuterStyle}
                 onPressLeft={() => this.openGroupInfo(index)}
                 leftIcon={{ name: 'group', type: 'FontAwesome' }}
-                thumbnail={item.profilePicture}
+                thumbnail={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
                 actionsBar={{
                     actions: [
-                        { name: 'location-arrow', type: 'FontAwesome', color: this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId][0].isVisible ? '#81BA41' : '#C4C6C8', onPressActions: () => this.toggleMembersLocation(this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId][0].isVisible, item.groupId) },
+                        { name: 'search', id: 2, type: 'FontAwesome', color: this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId].members[0].isVisible ? '#2B77B4' : '#C4C6C8', onPressActions: () => this.toggleMembersLocation(this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId].members[0].isVisible, item) },
+                        { name: 'location-arrow', type: 'FontAwesome', color: item.locationEnable ? '#81BA41' : '#C4C6C8', onPressActions: () => this.onPressNavigationIcon(this.props.membersLocationList[item.groupId] !== undefined && this.props.membersLocationList[item.groupId].members[0].isVisible, item) },
                         { isIconImage: true, imgSrc: require('../../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }]
-                    // { name: 'md-exit', type: 'Ionicons', color: '#707070', onPressActions: () => this.openChatPage(item) }]
                 }}
             />
         );
     }
 
-    toggleFriendSelection = (index) => {
-        let prevIndex = -1;
-        this.setState(prevState => {
-            prevIndex = prevState.selectedFriendList.findIndex(selFriend => prevState.searchFriendList[index].userId === selFriend.memberId);
-            if (prevIndex === -1) {
-                return {
-                    selectedFriendList: [
-                        ...prevState.selectedFriendList,
-                        { memberId: prevState.searchFriendList[index].userId, isAdmin: false }
-                    ]
+    groupKeyExtractor = (item,i) => item.groupId;
+
+    loadMoreData = ({ distanceFromEnd }) => {
+        if (this.state.isLoading === true || !this.state.hasRemainingList ) return;
+        this.setState((prevState) => ({ isLoading: true }), () => {
+            this.props.getFriendGroups(this.props.user.userId, false, this.state.pageNumber, this._preference, (res) => {
+                if (res.groups.length > 0) {
+                    this.setState(prevState=>({ groupIds: res.groups.map(group => group.groupId), pageNumber:res.groups.length > 0 ? prevState.pageNumber + 1 : prevState.pageNumber, hasRemainingList: res.remainingList > 0, isLoading: false }))
                 }
-            } else {
-                return {
-                    selectedFriendList: [
-                        ...prevState.selectedFriendList.slice(0, prevIndex),
-                        ...prevState.selectedFriendList.slice(prevIndex + 1)
-                    ]
+                else {
+                    this.setState({ isLoading: false })
                 }
-            }
-        });
-    }
-
-    groupKeyExtractor = (item) => item.groupId;
-
-    friendKeyExtractor = (item) => item.userId;
-
-    memberKeyExtractor = (item) => item.memberId;
-
-    onEnterGroupName = (val) => {
-        this.setState({ newGroupName: val });
-    }
-
-    createGroup = () => {
-        const { newGroupName } = this.state;
-        this.closeCreateGroupSection(() => {
-            if (newGroupName.trim().length === 0) {
-                // Toast.show({
-                //     text: 'Please provide a group name',
-                //     buttonText: 'Okay'
-                // });
-            } else {
-                this.isAddingGroup = true;
-                this.props.createFriendGroup({
-                    groupName: newGroupName,
-                    createdBy: this.props.user.userId,
-                    createdDate: new Date().toISOString(),
-                });
-            }
-        });
-    }
-
-    loadMoreData = () => {
-        if (this.state.isLoadingData && this.state.isLoading === false) {
-            this.setState({ isLoading: true, isLoadingData: false })
-            this.props.getFriendGroups(this.props.user.userId, false, this.props.pageNumber, (res) => {
+            }, (er) => {
                 this.setState({ isLoading: false })
-            }, (err) => {
-                this.setState({ isLoading: false })
-            });
-        }
+            },this.state.searchQuery);
+        });
     }
 
     renderFooter = () => {
@@ -354,87 +218,65 @@ class GroupListTab extends Component {
         }
         return null
     }
-    onChangeSearchValue = (val) => { this.setState({ searchQuery: val }) }
-
-    filterVisibleOnMapGroups = () => {
-        if (this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP) {
-            this.setState({ groupFilter: FILTERED_ACTION_IDS.ALL_GROUPS, isFilter: null })
-        }
-        else {
-            this.setState({ groupFilter: FILTERED_ACTION_IDS.VISIBLE_ON_MAP_GROUPS, isFilter: FILTERED_ACTION_IDS.VISIBLE_ON_MAP })
-        }
+    onChangeSearchValue = (val) => {
+        clearTimeout(this.searchQueryTimeout);
+        this.setState({ searchQuery: val ,pageNumber:0});
+        this.searchQueryTimeout = setTimeout(() => {
+              this._preference = parseInt(heightPercentageToDP(100) / CARD_HEIGHT);
+            this.props.getFriendGroups(this.props.user.userId, true, 0, this._preference, (res) => {
+            if (res.groups.length > 0) {
+                this.setState({ pageNumber:res.groups.length > 0 ? 1: 0, hasRemainingList: res.remainingList > 0, groupIds: res.groups.map(group => group.groupId) })
+            }
+        }, (err) => {
+        },this.state.searchQuery);
+            // } else {
+            //     this.props.searchForFriend('', this.props.user.userId, 0, 10,this.filterProps, this.props.addedMembers, (res)=>{
+            //         this.setState(prevState => ({ isLoading: false, pageNumber: 1 , hasRemainingList: res.remainingList > 0 }));
+            //     },(er)=>{
+            //         this.setState({isLoading:false})
+            //     });
+            // }
+        }, 300);
     }
 
-
     render() {
-        const { newGroupName, isVisibleOptionsModal, isRefreshing, searchQuery, groupFilter } = this.state;
+        const { isRefreshing, searchQuery } = this.state;
         const { friendGroupList, user, membersLocationList, onPressAddGroup } = this.props;
-        const spinAnim = this.borderWidthAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: ['0deg', '45deg']
-        });
         const spin = this.state.spinValue.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
         });
-        let filteredGroups = []
-        if (groupFilter === FILTERED_ACTION_IDS.ALL_GROUPS) {
-            filteredGroups = searchQuery === '' ? friendGroupList : friendGroupList.filter(group => {
-                return (group.groupName.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
-            });
-        }
-        else if (groupFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP_GROUPS) {
-            const groupsVisibleOnMap = friendGroupList.filter(group => membersLocationList[group.groupId] && membersLocationList[group.groupId][0].isVisible === true);
-            filteredGroups = searchQuery === '' ? groupsVisibleOnMap : groupsVisibleOnMap.filter(group => {
-                return (group.groupName.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1)
-            });
-        }
+       
 
         return (
             <View style={styles.fill}>
-                <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
-                    <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
-                        {
-                            this.renderMenuOptions()
-                        }
-                    </View>
-                </BaseModal>
-                <View style={{ flex: 1, marginHorizontal: widthPercentageToDP(8) }}>
+                <View style={styles.container}>
                     <SearchBoxFilter
                         searchQuery={searchQuery}
                         onChangeSearchValue={this.onChangeSearchValue}
                         placeholder='Name'
+                        placeholderTextColor="#505050"
                         outerContainer={{ marginTop: 16 }}
-                        footer={<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 16, borderBottomWidth: 1, borderBottomColor: '#868686', paddingBottom: 16 }}>
-                            <IconButton iconProps={{ name: 'group-add', type: 'MaterialIcons', style: { color: '#C4C6C8', fontSize: 27 } }} onPress={() => Actions.push(PageKeys.GROUP_FORM, { pageIndex: -1 })} />
-                            <IconButton iconProps={{ name: 'location-arrow', type: 'FontAwesome', style: { color: this.state.isFilter === FILTERED_ACTION_IDS.VISIBLE_ON_MAP ? '#81BA41' : '#C4C6C8', fontSize: 23 } }} onPress={() => this.filterVisibleOnMapGroups()} />
-                        </View>
-                        }
                     />
                     <FlatList
+                        contentContainerStyle={[{}, styles.friendList]}
+                        keyboardShouldPersistTaps={'handled'}
                         showsVerticalScrollIndicator={false}
-                        data={filteredGroups}
+                        data={friendGroupList}
                         refreshing={isRefreshing}
-                        contentContainerStyle={styles.friendList}
                         onRefresh={this.onPullRefresh}
                         keyExtractor={this.groupKeyExtractor}
                         renderItem={this.renderGroup}
                         extraData={this.state}
                         ListFooterComponent={this.renderFooter}
-                        // onTouchMove={this.loadMoreData}
-                        // onTouchStart={this.loadMoreData}
                         onEndReached={this.loadMoreData}
                         onEndReachedThreshold={0.1}
-                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
                     />
                 </View>
                 {
-                    this.props.hasNetwork === false && friendGroupList.length === 0 && <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
-                        <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                            <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                        </Animated.View>
-                        <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
-                        <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
+                    this.props.hasNetwork === false && friendGroupList.length === 0 && <View style={{ flexDirection: 'column', justifyContent: 'space-between', position: 'absolute', top: heightPercentageToDP(20), left: widthPercentageToDP(27), height: 100, }}>
+                        <IconButton iconProps={{ name: 'broadcast-tower', type: 'FontAwesome5', style: { fontSize: 60, color: '#505050' } }} />
+                        <DefaultText style={{ alignSelf: 'center', fontSize: 14 }}>Please Connect To Internet</DefaultText>
                     </View>
                 }
             </View>
@@ -444,28 +286,44 @@ class GroupListTab extends Component {
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
-    const { friendGroupList, currentGroup, membersLocationList } = state.FriendGroupList;
+    const { friendGroupList, currentGroup, membersLocationList, searchGroup } = state.FriendGroupList;
     const { allFriends } = state.FriendList;
-    const { pageNumber, hasNetwork } = state.PageState;
-    return { user, friendGroupList, allFriends, currentGroup, pageNumber, hasNetwork, membersLocationList };
+    const { pageNumber, hasNetwork, lastApi, isRetryApi } = state.PageState;
+    return { user, friendGroupList, allFriends, currentGroup, pageNumber, hasNetwork, lastApi, isRetryApi, membersLocationList, searchGroup };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
-        createFriendGroup: (newGroupInfo) => dispatch(createFriendGroup(newGroupInfo)),
-        // getFriendGroups: (userId, toggleLoader) => dispatch(getFriendGroups(userId, toggleLoader)),
-        getFriendGroups: (userId, toggleLoader, pageNumber, successCallback, errorCallback) => dispatch(getFriendGroups(userId, toggleLoader, pageNumber, successCallback, errorCallback)),
-        exitFriendGroup: (groupId, memberId) => dispatch(exitFriendGroup(groupId, memberId)),
-        addMembers: (groupId, memberDetails) => dispatch(addMembers(groupId, memberDetails)),
-        getAllGroupMembers: (groupId, userId) => dispatch(getAllGroupMembers(groupId, userId)),
-        getAllMembersLocation: (groupId, userId) => dispatch(getAllMembersLocation(groupId, userId)),
+        getFriendGroups: (userId, toggleLoader, pageNumber, preference, successCallback, errorCallback,searchValue) => dispatch(getFriendGroups(userId, toggleLoader, pageNumber, preference, successCallback, errorCallback,searchValue)),
+        getAllMembersLocation: (groupId, userId, isTempLocation) => dispatch(getAllMembersLocation(groupId, userId, isTempLocation)),
         hideMembersLocation: (groupId) => dispatch(hideMembersLocationAction(groupId)),
         changeScreen: (screenProps) => dispatch(screenChangeAction(screenProps)),
-        getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
-            dispatch(createFriendGroupAction({ pictureObj }))
-        }, (error) => {
-            console.log('getPictureList friendGroupList error : ', error)
-            // dispatch(updateFriendInListAction({ userId: friendId }))
+        searchForGroup: (memberId, searchParam, pageNumber, preference, successCallback, errorCallback) => searchForGroup(memberId, searchParam, pageNumber, preference).then(res => {
+            if (res.status === 200) {
+                typeof successCallback === 'function' && successCallback();
+                console.log("res.data: ", res.data);
+                dispatch(updatePageNumberAction({ pageNumber: pageNumber }));
+                dispatch(replaceGroupSearchResultsAction({ results: res.data.groupList, pageNumber }))
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+            } else {
+                typeof successCallback === 'function' && successCallback(); cd
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+            }
+        })
+            .catch(er => {
+                typeof errorCallback === 'function' && errorCallback();
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+                handleServiceErrors(er, [memberId, searchParam, pageNumber, preference], searchForGroup, true);
+            }),
+        clearGroupSearchResults: () => dispatch(clearGroupSearchResultsAction()),
+        getAllGroupLocation: (groupIds) => getAllGroupLocation(groupIds).then(res => {
+            console.log('getAllGroupLocation success : ', res)
+            dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+            dispatch(updateFriendGroupListAction(res.data));
+        }).catch(er => {
+            console.log('getAllGroupLocation error : ', er)
+            handleServiceErrors(er, [groupIds], 'getAllGroupLocation', true, true);
         }),
+        resetErrorHandling: (state) => dispatch(resetErrorHandlingAction({ comingFrom: 'group_list', isRetryApi: state })),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(GroupListTab);
@@ -474,66 +332,15 @@ const styles = StyleSheet.create({
     fill: {
         flex: 1
     },
-    createGrpContainer: {
-        position: 'absolute',
-        // bottom: widthPercentageToDP(20),
-        marginRight: widthPercentageToDP(20),
-        marginLeft: widthPercentageToDP(12.5),
-        width: 0,
-    },
-    createGrpActionSec: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    createGroupIcon: {
-        marginLeft: -CREATE_GROUP_WIDTH / 2,
-        backgroundColor: '#81BB41',
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    createGrpChildSize: {
-        width: CREATE_GROUP_WIDTH,
-        height: CREATE_GROUP_WIDTH,
-        borderRadius: CREATE_GROUP_WIDTH / 2,
-    },
-    memberList: {
-        marginHorizontal: widthPercentageToDP(5),
-        paddingTop: widthPercentageToDP(5)
-    },
-    backgroundImage: {
-        height: null,
-        width: null,
-        flex: 1,
-        alignItems: 'center',
-        paddingTop: heightPercentageToDP(5)
-    },
     horizontalCardOuterStyle: {
-        marginBottom: heightPercentageToDP(4),
+        marginBottom: 15,
+        height: CARD_HEIGHT,
     },
     friendList: {
-        paddingTop: widthPercentageToDP(5)
+        paddingTop: 5
     },
-    searchCont: {
-        marginBottom: 0,
+    container: {
         flex: 1,
-        width: widthPercentageToDP(47),
+        marginHorizontal: widthPercentageToDP(8)
     }
-});
-
-
-{/* <ListItem avatar>
-                <Left>
-                    {
-                        item.groupProfilePictureThumbnail
-                            ? < Thumbnail source={{ uri: 'Image URL' }} />
-                            : <NBIcon active name="group" type='FontAwesome' />
-                    }
-                </Left>
-                <Body>
-                    <DefaultText>{item.groupName}</DefaultText>
-                    <DefaultText note></DefaultText>
-                </Body>
-                <Right>
-                    <DefaultText note>3</DefaultText>
-                </Right>
-            </ListItem> */}
+}); 

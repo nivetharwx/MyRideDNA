@@ -1,122 +1,75 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Platform, TouchableWithoutFeedback, StatusBar, FlatList, ScrollView, View, Keyboard, Alert, TextInput, Text, ActivityIndicator, Animated, Easing, ImageBackground } from 'react-native';
+import { StyleSheet, View, ImageBackground, Image, TouchableOpacity, Alert } from 'react-native';
 import { Actions } from 'react-native-router-flux';
-import { DatePicker, Icon as NBIcon, Toast, ListItem, Left, Body, Right, Thumbnail } from 'native-base';
-import { BasicHeader } from '../../../components/headers';
-import { APP_COMMON_STYLES, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, heightPercentageToDP, IS_ANDROID, WindowDimensions, widthPercentageToDP, CUSTOM_FONTS, GET_PICTURE_BY_ID, PORTRAIT_TAIL_TAG } from '../../../constants';
-import { getPassengerList, getPicture, deletePassenger } from '../../../api';
-import { BaseModal } from '../../../components/modal';
-import { getPassengerInfoAction, updateCurrentPassengerAction, resetCurrentPassengerAction, appNavMenuVisibilityAction } from '../../../actions';
-import { ImageLoader } from '../../../components/loader';
-import { IconButton, ShifterButton, LinkButton } from '../../../components/buttons';
+import { APP_COMMON_STYLES, PageKeys, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, widthPercentageToDP, CUSTOM_FONTS, GET_PICTURE_BY_ID, RELATIONSHIP, IS_ANDROID, heightPercentageToDP, } from '../../../constants';
+import { deletePassenger, handleServiceErrors, getUserProfile, cancelFriendRequest, approveFriendRequest, rejectFriendRequest, sendFriendRequest } from '../../../api';
+import { BaseModal, GesturedCarouselModal } from '../../../components/modal';
+import { apiLoaderActions, removeFromPassengerListAction, resetErrorHandlingAction, updateSearchListAction, updateFriendRequestResponseAction, setCurrentFriendAction } from '../../../actions';
+import { BasicButton, LinkButton } from '../../../components/buttons';
 import { DefaultText } from '../../../components/labels';
 import { getFormattedDateFromISO } from '../../../util';
-
-const hasIOSAbove10 = parseInt(Platform.Version) > 10;
+import { getCurrentPassengerState } from '../../../selectors';
+import { BasePage } from '../../../components/pages';
+import FitImage from 'react-native-fit-image';
+import ImageViewer from 'react-native-image-viewing'
+import { Icon as NBIcon } from 'native-base';
 
 class PassengersProfile extends Component {
     constructor(props) {
         super(props);
         this.state = {
             selectedPassenger: null,
-            isVisibleOptionsModal: false,
-            isLoadingData: false,
-            isLoading: false,
-            spinValue: new Animated.Value(0),
-            isLoadingProfPic: false,
             showOptionsModal: false,
+            isVisbleFullImage: false,
+            status: this.props.person ? this.props.person.relationship : RELATIONSHIP.UNKNOWN,
+            showRequestModal:false,
+            showDeleteModal:false
         };
     }
 
     componentDidMount() {
-        this.props.getPassengerInfo(this.props.passengerIdx);
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        if (prevProps.currentPassenger !== this.props.currentPassenger) {
-            if (this.props.currentPassenger.passengerId === null) {
-                Actions.pop();
-                return;
-            }
-            // if (!this.props.currentPassenger.profilePicture && this.props.currentPassenger.profilePictureId) {
-            //     this.setState({ isLoadingProfPic: true })
-            //     this.props.getProfilePicture(this.props.currentPassenger.profilePictureId.replace(THUMBNAIL_TAIL_TAG, ''))
-            // }
-            else {
-                this.setState({ isLoadingProfPic: false })
-            }
-        }
-    }
-
-
-    retryApiFunction = () => {
-        this.state.spinValue.setValue(0);
-        Animated.timing(this.state.spinValue, {
-            toValue: 1,
-            duration: 300,
-            easing: Easing.linear,
-            useNativeDriver: true
-        }).start(() => {
-            if (this.props.hasNetwork === true) {
-                this.props.getPassengerList(this.props.user.userId, 0, 10, (res) => {
-                }, (err) => {
-                });
-            }
-        });
-
-    }
-
-    onPressBackButton = () => {
-        this.props.resetCurrentPassenger()
-    }
-
-    showOptionsModal = (index) => {
-        this.setState({ selectedPassenger: this.props.passengerList[index], isVisibleOptionsModal: true });
-    }
-
-    onCancelOptionsModal = () => this.setState({ selectedPassenger: null, isVisibleOptionsModal: false })
-
-    openPassengerForm = () => {
-        if (this.state.selectedPassenger) {
-            const passengerIdx = this.props.passengerList.findIndex(passenger => passenger.passengerId === this.state.selectedPassenger.passengerId);
-            Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx });
-        }
-        else {
-            Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: -1 });
-        }
-        this.onCancelOptionsModal();
-    }
-
-    showAppNavMenu = () => this.props.showAppNavMenu();
-
-    loadMoreData = () => {
-        if (this.state.isLoadingData && this.state.isLoading === false) {
-            this.setState({ isLoading: true, isLoadingData: false })
-            this.props.getPassengerList(this.props.user.userId, this.props.pageNumber, 10, (res) => {
-                this.setState({ isLoading: false })
-            }, (err) => {
-                this.setState({ isLoading: false })
+        if (this.props.isUnknown) {
+            this.props.getUserProfile(this.props.user.userId, this.props.person.userId, (res) => {
+                this.setState({ status: res.relationship })
+                Actions.refresh({ currentPassenger: res })
             });
         }
     }
 
-    renderFooter = () => {
-        if (this.state.isLoading) {
-            return (
-                <View
-                    style={{
-                        paddingVertical: 20,
-                        borderTopWidth: 1,
-                        borderColor: "#CED0CE"
-                    }}
-                >
-                    <ActivityIndicator animating size="large" />
-                </View>
-            );
+    componentDidUpdate(prevProps, prevState) {
+
+        if (prevProps.hasNetwork === false && this.props.hasNetwork === true) {
+            this.retryApiFunc();
         }
-        return null
+
+        if (prevProps.isRetryApi === false && this.props.isRetryApi === true) {
+            if (Actions.currentScene === this.props.lastApi.currentScene) {
+                Alert.alert(
+                    'Something went wrong ',
+                    '',
+                    [
+                        {
+                            text: 'Retry ', onPress: () => {
+                                this.retryApiFunc();
+                                this.props.resetErrorHandling(false)
+                            }
+                        },
+                        { text: 'Cancel', onPress: () => { this.props.resetErrorHandling(false) }, style: 'cancel' },
+                    ],
+                    { cancelable: false }
+                )
+            }
+        }
     }
+
+    retryApiFunc = () => {
+        if (this.props.lastApi && this.props.lastApi.currentScene === Actions.currentScene) {
+            this.props[`${this.props.lastApi.api}`](...this.props.lastApi.params)
+        }
+    }
+
+    onPressBackButton = () => Actions.pop();
 
     renderAddress() {
         const { homeAddress } = this.props.currentPassenger;
@@ -133,85 +86,252 @@ class PassengersProfile extends Component {
 
     openPassengerEditForm = () => {
         this.setState({ showOptionsModal: false });
-        return Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: this.props.passengerIdx })
+        return Actions.push(PageKeys.PASSENGER_FORM, { passengerIdx: this.props.currentPassenger.currentPassengerIndex })
     }
 
     removePassenger = () => {
-        this.props.deletePassenger(this.props.currentPassenger.passengerId);
-        this.setState({ showOptionsModal: false });
+        this.props.deletePassenger(this.props.currentPassenger.passengerId, (res) => {
+            this.setState({showDeleteModal:false, showOptionsModal: false },()=>{
+                this.onPressBackButton()
+            });
+        });
+
+        
     }
 
-    render() {
-        const { user, currentPassenger } = this.props;
-        const { isLoadingProfPic, showOptionsModal } = this.state;
-        const spin = this.state.spinValue.interpolate({
-            inputRange: [0, 1],
-            outputRange: ['0deg', '360deg']
+    showFullImage = () => this.setState({ isVisbleFullImage: true });
+
+    onCancelFullImage = () => this.setState({ isVisbleFullImage: false });
+
+    sendFriendRequest = () => {
+        const { user } = this.props;
+        const requestBody = {
+            senderId: user.userId,
+            senderName: user.name,
+            senderNickname: user.nickname,
+            senderEmail: user.email,
+            userId: this.props.currentPassenger.userId,
+            name: this.props.currentPassenger.name,
+            nickname: this.props.currentPassenger.nickname,
+            email: this.props.currentPassenger.email,
+            actionDate: new Date().toISOString()
+        };
+        this.props.sendFriendRequest(requestBody, (res) => {
+            this.setState({ status: RELATIONSHIP.SENT_REQUEST })
         });
-        return (
-            <View style={styles.fill}>
-                <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
-                    <View style={APP_COMMON_STYLES.optionsContainer}>
-                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='EDIT' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.openPassengerEditForm} />
-                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='REMOVE PASSENGER' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.removePassenger} />
-                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='CANCEL' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.hideOptionsModal} />
-                    </View>
-                </BaseModal>
-                <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                </View>
-                <View style={styles.fill}>
-                    <BasicHeader
-                        title={currentPassenger.name || ''}
-                        leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                        rightIconProps={{ reverse: false, name: 'options', type: 'SimpleLineIcons', onPress: this.showOptionsModal, style: { color: '#fff', fontSize: 19 } }}
-                    />
-                    <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
-                        <View style={styles.profilePic}>
-                            <ImageBackground source={currentPassenger.profilePictureId ? { uri: `${GET_PICTURE_BY_ID}${currentPassenger.profilePictureId.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` } : require('../../../assets/img/profile-pic.png')} style={styles.profilePicture}>
-                                {/* <ImageBackground source={require('../../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 5 }}> */}
-                                {/* {
-                                    isLoadingProfPic
-                                        ? <ImageLoader show={isLoadingProfPic} />
-                                        : null
-                                } */}
-                            </ImageBackground>
-                        </View>
-                    </ImageBackground>
-                    <View style={styles.contentContainer}>
-                        <DefaultText style={styles.fieldLabel}>DOB</DefaultText>
-                        <DefaultText fontFamily={CUSTOM_FONTS.robotoSlabBold}>{currentPassenger.dob ? getFormattedDateFromISO(currentPassenger.dob) : ''}</DefaultText>
-                        <DefaultText style={[styles.fieldLabel, styles.fieldsGapVertical]}>PHONE</DefaultText>
-                        <DefaultText fontFamily={CUSTOM_FONTS.robotoSlabBold}>{currentPassenger.phoneNumber || ''}</DefaultText>
-                        <DefaultText style={[styles.fieldLabel, styles.fieldsGapVertical]}>ADDRESS</DefaultText>
-                        {this.renderAddress()}
-                    </View>
-                </View>
-                {/* Shifter: - Brings the app navigation menu */}
-                <ShifterButton onPress={this.showAppNavMenu} alignLeft={user.handDominance === 'left'} />
+        this.hideOptionsModal()
+    }
+
+    cancelingFriendRequest = () => {
+        this.props.cancelRequest(this.props.user.userId, this.props.currentPassenger.userId, (res) => {
+            this.setState({ status: RELATIONSHIP.UNKNOWN })
+            this.hideRequestModal();
+            this.hideOptionsModal()
+        });
+    }
+
+    approvingFriendRequest = () => {
+        this.props.approvedRequest(this.props.user.userId, this.props.currentPassenger.userId, new Date().toISOString(), (res) => {
+            this.props.setCurrentFriend({ userId: this.props.currentPassenger.userId });
+            Actions.replace(PageKeys.FRIENDS_PROFILE, { frienduserId: this.props.currentPassenger.userId });
+        });
+        this.hideOptionsModal()
+    }
+    rejectingFriendRequest = () => {
+        this.props.rejectRequest(this.props.user.userId, this.props.currentPassenger.userId, (res) => {
+            this.setState({ status: RELATIONSHIP.UNKNOWN })
+        });
+        this.hideOptionsModal()
+    }
+
+
+    renderOptions = () => {
+        switch (this.state.status) {
+            case RELATIONSHIP.SENT_REQUEST: return <View style={APP_COMMON_STYLES.optionsContainer}>
+                <LinkButton style={APP_COMMON_STYLES.optionBtn} title='CANCEL REQUEST' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.openRequestModal} />
             </View>
+            case RELATIONSHIP.RECIEVED_REQUEST: return <View style={APP_COMMON_STYLES.optionsContainer}>
+                <LinkButton style={APP_COMMON_STYLES.optionBtn} title='ACCEPT REQUEST' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.approvingFriendRequest} />
+                <LinkButton style={APP_COMMON_STYLES.optionBtn} title='REJECT REQUEST' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.rejectingFriendRequest} />
+            </View>
+            default: return <View style={APP_COMMON_STYLES.optionsContainer}>
+                <LinkButton style={APP_COMMON_STYLES.optionBtn} title='SEND REQUEST' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.sendFriendRequest} />
+            </View>
+        }
+    }
+
+    openRequestModal = () => this.setState({ showRequestModal: true, });
+
+    hideRequestModal = () => this.setState({ showRequestModal: false});
+
+    openDeleteModal = () => this.setState({ showDeleteModal: true });
+
+    hideDeleteModal = () => this.setState({ showDeleteModal: false  });
+
+    render() {
+        const { currentPassenger, onPassenger, isUnknown } = this.props;
+        const { showOptionsModal, isVisbleFullImage, showRequestModal, showDeleteModal } = this.state;
+        if (!currentPassenger) return <BasePage />;
+        return (
+            <BasePage heading={currentPassenger.name}
+                headerRightIconProps={onPassenger || isUnknown === true ? {
+                    reverse: false, name: 'options', type: 'SimpleLineIcons', onPress: this.showOptionsModal, style: { color: '#fff', fontSize: 19 }
+                } : null
+                }>
+                {/* {
+                    currentPassenger.profilePictureId && <GesturedCarouselModal
+                        isVisible={isVisbleFullImage}
+                        onCancel={this.onCancelFullImage}
+                        pictureIds={[{ id: currentPassenger.profilePictureId }]}
+                        isGestureEnable={true}
+                        isZoomEnable={true}
+                    />
+                } */}
+                {
+                 currentPassenger.profilePictureId  && <ImageViewer HeaderComponent={()=>{
+                    return <View style={{height:IS_ANDROID?heightPercentageToDP(6):heightPercentageToDP(10),backgroundColor:'rgba(0, 0, 0, 0.37)',display:'flex',flexDirection:'row',justifyContent:'flex-end',alignItems:'flex-end'}}>
+                        <View style={{width:50,height:50,display:'flex',flexDirection:'row',justifyContent:'center',alignItems:'center'}}>
+                        <NBIcon name='close' fontSize={20}  style={{ color: '#fff'}} onPress={this.onCancelFullImage} />
+                        </View>
+                    </View>
+                }} visible={isVisbleFullImage} onRequestClose={this.onCancelFullImage} images={[{ id: currentPassenger.profilePictureId }].map(image=>{
+                        return {
+                            ...image,uri: `${GET_PICTURE_BY_ID}${image.id.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}`
+                        }
+                    })} imageIndex={0} />
+                }
+                < BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal} >
+                    <View>
+                    {
+                        onPassenger ?
+                            <View style={APP_COMMON_STYLES.optionsContainer}>
+                                <LinkButton style={APP_COMMON_STYLES.optionBtn} title='EDIT' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.openPassengerEditForm} />
+                                <LinkButton style={APP_COMMON_STYLES.optionBtn} title='REMOVE PASSENGER' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.openDeleteModal} />
+                            </View>
+                            :
+                            this.renderOptions()
+                    }
+                    {
+                        showRequestModal && <BaseModal containerStyle={{ justifyContent: 'center', alignItems: 'center' }} isVisible={showRequestModal} onCancel={this.hideRequestModal} >
+                            <View style={styles.deleteBoxCont}>
+                                <DefaultText style={styles.deleteTitle}>Cancel Friend Request</DefaultText>
+                                <DefaultText numberOfLines={3} style={styles.deleteText}>{`Are you sure you want to cancel your friend request sent to ${currentPassenger.name}?`}</DefaultText>
+                                <View style={styles.btnContainer}>
+                                    <BasicButton title='CANCEL' style={[styles.actionBtn, { backgroundColor: '#8D8D8D' }]} titleStyle={styles.actionBtnTxt} onPress={this.hideRequestModal} />
+                                    <BasicButton title='CONFIRM' style={styles.actionBtn} titleStyle={styles.actionBtnTxt} onPress={()=>this.cancelingFriendRequest()} />
+                                </View>
+                            </View>
+                        </BaseModal>
+                    }
+                    {
+                        showDeleteModal && <BaseModal containerStyle={{ justifyContent: 'center', alignItems: 'center' }} isVisible={showDeleteModal} onCancel={this.hideDeleteModal} >
+                            <View style={styles.deleteBoxCont}>
+                                <DefaultText style={styles.deleteTitle}>Remove Passenger</DefaultText>
+                                <DefaultText numberOfLines={3} style={styles.deleteText}>{`Are you sure you want to remove ${this.props.currentPassenger.name} from your passenger’s list?`}</DefaultText>
+                                <View style={styles.btnContainer}>
+                                    <BasicButton title='CANCEL' style={[styles.actionBtn, { backgroundColor: '#8D8D8D' }]} titleStyle={styles.actionBtnTxt} onPress={this.hideDeleteModal} />
+                                    <BasicButton title='CONFIRM' style={styles.actionBtn} titleStyle={styles.actionBtnTxt} onPress={()=>this.removePassenger()} />
+                                </View>
+                            </View>
+                        </BaseModal>
+                    }
+
+                    </View>
+                </BaseModal >
+                <TouchableOpacity activeOpacity={1} onPress={currentPassenger.profilePictureId ? this.showFullImage : null} style={styles.profilePic}>
+                    {currentPassenger.profilePictureId
+                        ? <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.profileBG}>
+                            <FitImage resizeMode='cover' source={{ uri: `${GET_PICTURE_BY_ID}${currentPassenger.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` }} />
+                        </ImageBackground>
+                        : <Image source={require('../../../assets/img/profile-pic-placeholder.png')} style={{ height: null, width: null, flex: 1 }} />}
+                </TouchableOpacity>
+                <View style={{ height: 13 }}>
+                    <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={{ height: null, width: null, flex: 1, overflow: 'hidden' }} />
+                </View>
+                <View style={styles.contentContainer}>
+                    {
+                        isUnknown ? null
+                            :
+                            onPassenger
+                                ? <View>
+                                    <DefaultText style={styles.fieldLabel}>DOB</DefaultText>
+                                    <DefaultText fontFamily={CUSTOM_FONTS.robotoSlabBold}>{currentPassenger.dob ? getFormattedDateFromISO(currentPassenger.dob) : ''}</DefaultText>
+                                    <DefaultText style={[styles.fieldLabel, styles.fieldsGapVertical]}>PHONE</DefaultText>
+                                    <DefaultText fontFamily={CUSTOM_FONTS.robotoSlabBold}>{currentPassenger.phoneNumber || ''}</DefaultText>
+                                </View>
+                                : null
+                    }
+                    <DefaultText style={[styles.fieldLabel, styles.fieldsGapVertical]}>LOCATION</DefaultText>
+                    {this.renderAddress()}
+                </View>
+            </BasePage >
         );
     }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, props) => {
     const { user } = state.UserAuth;
-    const { passengerList, currentPassenger } = state.PassengerList;
-    const { showLoader, pageNumber, hasNetwork, lastApi } = state.PageState;
-    return { user, passengerList, showLoader, pageNumber, hasNetwork, lastApi, currentPassenger };
+    const { hasNetwork, lastApi, isRetryApi } = state.PageState;
+    if (props.isUnknown) {
+        return { user, hasNetwork, lastApi, isRetryApi }
+    }
+    else {
+        return { user, hasNetwork, lastApi, isRetryApi, currentPassenger: getCurrentPassengerState(state, props) };
+    }
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        getPassengerInfo: (passengerId) => dispatch(getPassengerInfoAction(passengerId)),
-        getProfilePicture: (pictureId) => getPicture(pictureId, ({ picture }) => {
-            console.log('getPicture passenger profile success: ', picture)
-            dispatch(updateCurrentPassengerAction({ profilePicture: picture }))
-        }, (error) => {
-            console.log('getPicture passenger profile error: ', error)
+        deletePassenger: (passengerId, successCallback) => {
+            dispatch(apiLoaderActions(true));
+            deletePassenger(passengerId).then(res => {
+                console.log("deletePassenger success: ", res.data);
+                dispatch(apiLoaderActions(false));
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+                dispatch(removeFromPassengerListAction({passengerId}));
+                successCallback()
+            }).catch(er => {
+                console.log(`deletePassenger error: `, er.response || er);
+                handleServiceErrors(er, [passengerId, successCallback], 'deletePassenger', true, true);
+                dispatch(apiLoaderActions(false));
+            })
+        },
+        getUserProfile: (userId, friendId, successCallback) => getUserProfile(userId, friendId).then(res => {
+            console.log('getUserProfile  : ', res.data)
+            dispatch(apiLoaderActions(false));
+            dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+            successCallback(res.data)
+        }).catch(er => {
+            console.log(`getUserProfile error: `, er.response || er);
+            dispatch(apiLoaderActions(false));
+            handleServiceErrors(er, [userId, friendId, successCallback], 'getUserProfile', false, true);
         }),
-        resetCurrentPassenger: () => dispatch(resetCurrentPassengerAction()),
-        showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        deletePassenger: (passengerId) => dispatch(deletePassenger(passengerId)),
+        cancelRequest: (userId, personId, successCallback) => dispatch(cancelFriendRequest(userId, personId, (res) => {
+            console.log('\n\n\n cancelFriendRequest : ', res);
+            dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.UNKNOWN }))
+            successCallback();
+        }, (error) => {
+        })),
+        approvedRequest: (userId, personId, actionDate, successCallback) => dispatch(approveFriendRequest(userId, personId, actionDate, (res) => {
+            console.log('\n\n\n approveFriendRequest : ', res);
+            dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.FRIEND }));
+            successCallback();
+        }, (error) => {
+        })),
+        rejectRequest: (userId, personId, successCallback) => dispatch(rejectFriendRequest(userId, personId, (res) => {
+            console.log('\n\n\n rejectFriendRequest : ', res);
+            dispatch(updateSearchListAction({ userId: personId, relationship: RELATIONSHIP.UNKNOWN }));
+            successCallback();
+        }, (error) => {
+        })),
+        sendFriendRequest: (requestBody, successCallback) => dispatch(sendFriendRequest(requestBody, (res) => {
+            console.log('\n\n\n sendFriendRequest : ', res);
+            dispatch(updateSearchListAction({ userId: requestBody.userId, relationship: RELATIONSHIP.SENT_REQUEST }));
+            successCallback()
+        }, (error) => {
+            dispatch(updateFriendRequestResponseAction({ error: error.response.data || "Something went wrong" }));
+        })),
+        setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
+        resetErrorHandling: (state) => dispatch(resetErrorHandlingAction({ comingFrom: 'friends_profile', isRetryApi: state })),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(PassengersProfile);
@@ -227,19 +347,14 @@ const styles = StyleSheet.create({
         marginTop: 41
     },
     profileBG: {
-        width: '100%',
-        height: heightPercentageToDP(44),
-        paddingTop: IS_ANDROID ? 0 : hasIOSAbove10 ? heightPercentageToDP(1.5) : 0
+        width: null,
+        height: null,
+        flex: 1,
+        overflow: 'hidden',
     },
     profilePic: {
-        height: heightPercentageToDP(42),
-        width: WindowDimensions.width,
-        borderWidth: 1,
-    },
-    editPassenger: {
-        marginTop: 15,
-        marginRight: 25,
-        justifyContent: 'flex-end',
+        height: 255,
+        width: widthPercentageToDP(100),
     },
     fieldLabel: {
         fontSize: 8,
@@ -254,6 +369,43 @@ const styles = StyleSheet.create({
         height: null,
         width: null,
         flex: 1,
-        borderRadius: 5
-    }
+    },
+    btnContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20
+    },
+    actionBtn: {
+        height: 35,
+        backgroundColor: '#2B77B4',
+        width: 125,
+        alignSelf: 'center',
+        borderRadius: 20,
+        marginTop: 20
+    },
+    actionBtnTxt: {
+        letterSpacing: 1.4,
+        fontSize: 14,
+        fontFamily: CUSTOM_FONTS.robotoBold
+    },
+    deleteBoxCont: {
+        height: 263,
+        width: 327,
+        backgroundColor: '#F4F4F4',
+        borderRadius: 20,
+        padding: 31,
+        paddingRight: 40
+    },
+    deleteTitle: {
+        color: '#585756',
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        fontSize: 20
+    },
+    deleteText: {
+        color: '#585756',
+        fontFamily: CUSTOM_FONTS.roboto,
+        fontSize: 17,
+        letterSpacing: 0.17,
+        marginTop: 30
+    },
 });

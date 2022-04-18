@@ -2,6 +2,55 @@ import { StyleSheet } from 'react-native';
 import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, CUSTOM_FONTS } from '../../constants';
 
 const styles = StyleSheet.create({
+    header: {
+        height: APP_COMMON_STYLES.headerHeight,
+        backgroundColor: APP_COMMON_STYLES.headerColor,
+        flexDirection: 'row',
+        elevation: 30,
+        shadowOffset: { width: 0, height: 8 },
+        shadowColor: '#000000',
+        shadowOpacity: 0.9,
+        shadowRadius: 5,
+        zIndex: 999
+    },
+    headerIconCont: {
+        paddingHorizontal: 0,
+        width: widthPercentageToDP(9),
+        height: widthPercentageToDP(9),
+        borderRadius: widthPercentageToDP(9) / 2,
+        backgroundColor: '#fff',
+        alignSelf: 'center',
+        marginLeft: 17
+    },
+    titleContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        marginLeft: 17,
+        justifyContent: 'space-between',
+        alignSelf: 'center'
+    },
+    title: {
+        fontSize: 20,
+        color: '#FFFFFF',
+        backgroundColor: 'transparent',
+        letterSpacing: 0.8,
+        fontFamily: CUSTOM_FONTS.gothamBold,
+        alignSelf: 'center'
+    },
+    doneBtn: {
+        fontSize: 15,
+        color: '#F4F4F4',
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        alignSelf: 'center'
+    },
+    title: {
+        fontSize: 20,
+        color: '#FFFFFF',
+        backgroundColor: 'transparent',
+        letterSpacing: 0.2,
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        alignSelf: 'center'
+    },
     tabContentCont: {
         paddingHorizontal: 0
     },
@@ -93,13 +142,86 @@ const styles = StyleSheet.create({
     plainTextContainer: {
         borderBottomWidth: 3,
         borderBottomColor: '#F5891F',
-        marginTop: 16
+        marginTop: 25
     },
     plainText: {
         marginLeft: widthPercentageToDP(3),
         fontFamily: CUSTOM_FONTS.robotoBold,
         letterSpacing: 0.6,
         marginBottom: 2
+    },
+    friendList: {
+        paddingTop: 16,
+    },
+    InviteTextContainer: {
+        height:100,
+        width: widthPercentageToDP(100),
+        backgroundColor: '#F4F4F4',
+    },
+    confirmationTitle: {
+        color: '#585756',
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        fontSize: 20
+    },
+    confirmationText: {
+        color: '#585756',
+        fontFamily: CUSTOM_FONTS.roboto,
+        fontSize: 17,
+        letterSpacing: 0.17,
+        marginTop: 30
+    },
+    btnContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20
+    },
+    actionBtn: {
+        height: 35,
+        backgroundColor: '#2B77B4',
+        width: 125,
+        alignSelf: 'center',
+        borderRadius: 20,
+        marginTop: 20
+    },
+    actionBtnTxt: {
+        letterSpacing: 1.4,
+        fontSize: 14,
+        fontFamily: CUSTOM_FONTS.robotoBold
+    },
+    deleteBoxCont: {
+        height: 263,
+        width: 327,
+        backgroundColor: '#F4F4F4',
+        borderRadius: 20,
+        padding: 31,
+        paddingRight: 40
+    },
+    deleteTitle: {
+        color: '#585756',
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        fontSize: 20
+    },
+    deleteText: {
+        color: '#585756',
+        fontFamily: CUSTOM_FONTS.roboto,
+        fontSize: 17,
+        letterSpacing: 0.17,
+        marginTop: 30
+    },
+    labelStyle: {
+        fontSize: 11,
+        letterSpacing: 1.1,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold
+    },
+    cancelButton:{
+        height:50, 
+        backgroundColor:'#F4F4F4', 
+        marginTop:30, 
+        borderRadius:10, 
+        justifyContent:'center', 
+        alignItems:'center', 
+        width:200, 
+        marginLeft:105
     }
 });
 export default styles;

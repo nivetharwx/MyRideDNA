@@ -1,24 +1,18 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, StatusBar, ScrollView, View, Keyboard, Alert, KeyboardAvoidingView, Text, FlatList, Animated, ActivityIndicator, Easing } from 'react-native';
-import { BasicHeader } from '../../../components/headers';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, FRIEND_TYPE, CUSTOM_FONTS } from '../../../constants';
+import { StyleSheet, View, FlatList, Animated, ActivityIndicator, Easing } from 'react-native';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, CUSTOM_FONTS, GET_PICTURE_BY_ID } from '../../../constants';
 import { Actions } from 'react-native-router-flux';
-import { LabeledInput, IconicList, IconicDatePicker, LabeledInputPlaceholder } from '../../../components/inputs';
-import { BasicButton, IconButton } from '../../../components/buttons';
-import { Thumbnail } from '../../../components/images';
-import ImageCropPicker from 'react-native-image-crop-picker';
-import { addBikeToGarage, editBike, registerPassenger, updatePassengerDetails, getPictureList, getCommunityFriendsList } from '../../../api';
-import { toggleLoaderAction, updateFriendInListAction, updateCommunityListAction, resetCommunityListAction } from '../../../actions';
-import { Tabs, Tab, TabHeading, ScrollableTab, ListItem, Left, Body, Right, Icon as NBIcon, Toast } from 'native-base';
-import { IconLabelPair, DefaultText } from '../../../components/labels';
-import ImagePicker from 'react-native-image-crop-picker';
+import { SearchBoxFilter } from '../../../components/inputs';
+import { IconButton } from '../../../components/buttons';
+import { registerPassenger, getCommunityFriendsList, handleServiceErrors, deletePassenger } from '../../../api';
+import { apiLoaderActions, removeFromPassengerListAction, resetCommunityListAction, resetErrorHandlingAction } from '../../../actions';
+import { Tabs, Tab } from 'native-base';
+import { DefaultText } from '../../../components/labels';
 import PaasengerFormDisplay from './passenger-form';
 import { HorizontalCard } from '../../../components/cards';
-import { Loader } from '../../../components/loader';
+import { BasePage } from '../../../components/pages';
 
-
-const clubDummyData = [{ name: 'Black Rebel Motorcycle Club', id: "1" }, { name: 'Hell’s Angels', id: "2" }, { name: 'Milwaukee Outlaws', id: "3" }]
 class PaasengerForm extends Component {
     borderWidthAnim = new Animated.Value(0);
     fieldRefs = [];
@@ -31,31 +25,16 @@ class PaasengerForm extends Component {
             isLoadingData: false,
             isLoading: false,
             spinValue: new Animated.Value(0),
+            pageNumber: 0,
+            hasRemainingList: false,
         };
     }
 
-    componentDidMount() {
-
-    }
-
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.passengerList !== this.props.passengerList) {
-            // Actions.pop();
-        }
-
         if (prevProps.communityList !== this.props.communityList) {
             if (this.props.communityList.length === 0) {
                 Actions.pop();
                 return;
-            }
-            const pictureIdList = [];
-            this.props.communityList.forEach((friend) => {
-                if (!friend.profilePicture && friend.profilePictureId) {
-                    pictureIdList.push(friend.profilePictureId);
-                }
-            })
-            if (pictureIdList.length > 0) {
-                this.props.getPictureList(pictureIdList);
             }
         }
     }
@@ -69,46 +48,47 @@ class PaasengerForm extends Component {
             useNativeDriver: true
         }).start(() => {
             if (this.props.hasNetwork === true) {
-                this.props.getCommunityFriendsList(this.props.user.userId, 0, 10, (res) => {
-                },
-                    (error) => {
-                    })
+                this.props.getCommunityFriendsList(this.props.user.userId, 0, 10, (res) => { }, (error) => { });
             }
         });
-
     }
 
     onChangeTab = ({ from, i }) => {
         this.setState({ activeTab: i }, () => {
             if (i === 1) {
-                this.props.getCommunityFriendsList(this.props.user.userId, 0, 10, (res) => {
-                },
-                    (error) => {
-                    })
+                this.props.getCommunityFriendsList(this.props.user.userId, this.state.pageNumber, 10,
+                    (res) => {
+                        if (res.friendList.length > 0) {
+                            this.setState({ pageNumber: this.state.pageNumber + 1, hasRemainingList: res.remainingList > 0 })
+                        }
+                    }, (error) => { }
+                );
             }
         });
     }
 
-    onChangeSearchFriend = (val) => {
-        this.setState({ searchQuery: val })
-    }
+    onChangeSearchFriend = (val) => this.setState({ searchQuery: val });
 
     addFriendToCommunity = (item) => {
-        this.props.registerPassenger(this.props.user.userId, { passengerId: item.userId })
-    }
+        if(item.isPassenger){
+            this.props.deletePassenger(item.passengerId, item.userId);
+        }
+        else{
+            this.props.registerPassenger({ passengerId: item.userId, userId: this.props.user.userId })
+        }
+    };
 
     communityKeyExtractor = (item) => item.userId;
 
-
-    loadMoreData = () => {
-        if (this.state.isLoadingData && this.state.isLoading === false) {
-            this.setState({ isLoading: true, isLoadingData: false })
-            this.props.getCommunityFriendsList(this.props.user.userId, this.props.pageNumber, 10, (res) => {
-                this.setState({ isLoading: false })
-            }, (err) => {
-                this.setState({ isLoading: false })
-            });
-        }
+    loadMoreData = ({ distanceFromEnd }) => {
+        if (this.state.hasRemainingList === false || this.state.isLoading === true || distanceFromEnd < 0) return;
+        this.setState({ isLoading: true }, () => {
+            this.props.getCommunityFriendsList(this.props.user.userId, this.state.pageNumber, 10, (res) => {
+                if (res.friendList.length > 0) {
+                    this.setState({ pageNumber: this.state.pageNumber + 1, hasRemainingList: res.remainingList > 0, isLoading: false });
+                } else this.setState({ isLoading: false });
+            }, (err) => this.setState({ isLoading: false }));
+        });
     }
 
     renderFooter = () => {
@@ -125,130 +105,107 @@ class PaasengerForm extends Component {
                 </View>
             );
         }
-        return null
+        return null;
     }
 
-    onPressBackIcon = () => {
-        this.props.resetCommunityList()
-    }
+    onPressBackIcon = () => this.props.resetCommunityList();
 
     render() {
-        const { passenger, activeTab, searchQuery } = this.state;
-        const { communityList } = this.props;
-        const spinAnim = this.borderWidthAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: ['0deg', '45deg']
-        });
+        const { passenger, searchQuery } = this.state;
+        const { communityList, showLoader } = this.props;
         const spin = this.state.spinValue.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
         });
-        const GENDER_LIST = [{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }];
-        let filteredFriends = [];
-        filteredFriends = searchQuery === '' ? communityList : communityList.filter(friend => {
-            return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
-                (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
-        });
+        const filteredFriends = searchQuery === '' ? communityList : communityList.filter(friend => (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
+            (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false)));
         return (
-            <View style={styles.fill} >
-                <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                </View>
-                <View style={{ flex: 1 }}>
-                    <BasicHeader headerHeight={heightPercentageToDP(10.5)} title={passenger.passengerId ? 'Edit Passenger' : 'Add Passenger'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: () => this.onPressBackIcon() }} />
-                    {
-                        this.props.passengerIdx !== -1 ?
-                            <PaasengerFormDisplay passengerIdx={this.props.passengerIdx} topMargin={{ marginTop: heightPercentageToDP(10) }} />
-                            :
-                            <Tabs tabContainerStyle={APP_COMMON_STYLES.tabContainer} onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' style={{ marginTop: APP_COMMON_STYLES.headerHeight }} tabBarUnderlineStyle={{ height: 0 }}>
-                                <Tab heading='NEW PASSENGER' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
-                                    <PaasengerFormDisplay />
-                                </Tab>
-
-                                <Tab heading='FROM COMMUNITY' tabStyle={[styles.inActiveTab, styles.borderLeftWhite]} activeTabStyle={[styles.activeTab, styles.borderLeftWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
-                                    <View style={{ marginHorizontal: widthPercentageToDP(9), marginTop: 16, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', borderRadius: 20, height: 37 }}>
-                                        <View style={{ flex: 2.89 }}>
-                                            <LabeledInputPlaceholder
-                                                placeholder='Name'
-                                                inputValue={searchQuery} inputStyle={{ paddingBottom: 0, backgroundColor: '#fff', borderBottomWidth: 0 }}
-                                                inputRef={elRef => this.fieldRefs[7] = elRef} returnKeyType='next'
-                                                onChange={this.onChangeSearchFriend}
-                                                hideKeyboardOnSubmit={false}
-                                                containerStyle={styles.containerStyle}
-                                                outerContainer={{ marginLeft: 15 }}
+            <BasePage showLoader={showLoader} heading={passenger.passengerId ? 'Edit Passenger' : 'Add Passenger'} onBackButtonPress={this.onPressBackIcon}>
+                {
+                    this.props.passengerIdx !== -1
+                        ? <PaasengerFormDisplay passengerIdx={this.props.passengerIdx} />
+                        : <Tabs tabContainerStyle={APP_COMMON_STYLES.tabContainer} onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' style={{}} tabBarUnderlineStyle={{ height: 0 }}>
+                            <Tab heading='NEW PASSENGER' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
+                                <PaasengerFormDisplay />
+                            </Tab>
+                            <Tab heading='FROM COMMUNITY' tabStyle={[styles.inActiveTab, styles.borderLeftWhite]} activeTabStyle={[styles.activeTab, styles.borderLeftWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
+                                <View style={{ marginHorizontal: widthPercentageToDP(8) }}>
+                                    <SearchBoxFilter
+                                        searchQuery={searchQuery} onChangeSearchValue={this.onChangeSearchFriend}
+                                        placeholder='Name' outerContainer={{ marginTop: 16 }}
+                                    />
+                                </View>
+                                <View style={styles.searchResultLabelCont}>
+                                    <DefaultText style={styles.searchResultLabel}>SEARCH RESULTS</DefaultText>
+                                </View>
+                                <View style={{ marginTop: 16 }}>
+                                    <FlatList
+                                        contentContainerStyle={{ paddingBottom: this.state.hasRemainingList ? 40 : 0 }}
+                                        keyboardShouldPersistTaps={'handled'}
+                                        style={{ marginBottom: heightPercentageToDP(20) }}
+                                        data={filteredFriends}
+                                        keyExtractor={this.communityKeyExtractor}
+                                        renderItem={({ item, index }) => (
+                                            <HorizontalCard
+                                                item={item}
+                                                horizontalCardPlaceholder={require('../../../assets/img/profile-pic-placeholder.png')}
+                                                cardOuterStyle={styles.horizontalCardOuterStyle}
+                                                thumbnail={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
+                                                rightProps={
+                                                    item.isPassenger
+                                                        ? { righticonImage: require('../../../assets/img/add-passenger-from-community-true.png'), imgBGColor: '#81BA41', imgStyles: { width: 32, height: 32 } }
+                                                        : { righticonImage: require('../../../assets/img/add-passenger-from-community.png'), imgStyles: { width: 32, height: 32 } }
+                                                }
+                                                onPress={() => this.addFriendToCommunity(item)}
                                             />
+                                        )}
+                                        ListFooterComponent={this.renderFooter}
+                                        onEndReached={this.loadMoreData}
+                                        onEndReachedThreshold={0.1}
+                                    />
+                                    {
+                                        this.props.hasNetwork === false && communityList.length === 0 && <View style={{ flex: 1, position: 'absolute', top: 23 }}>
+                                            <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                                                <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
+                                            </Animated.View>
+                                            <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
+                                            <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
                                         </View>
-                                        <IconButton style={{ flex: 1, backgroundColor: '#C4C6C8', borderTopRightRadius: 20, borderBottomRightRadius: 20, justifyContent: 'center' }} iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 19 } }} />
-
-                                    </View>
-                                    <View style={{ borderBottomWidth: 3, borderBottomColor: '#F5891F', marginTop: 16, marginHorizontal: widthPercentageToDP(9) }}>
-                                        <DefaultText style={{ marginLeft: widthPercentageToDP(3), fontSize: 12, color: '#000', letterSpacing: 0.6, marginBottom: 2, fontFamily: CUSTOM_FONTS.robotoBold }}>SEARCH RESULTS</DefaultText>
-                                    </View>
-                                    <View style={{ marginTop: 16 }}>
-                                        <FlatList
-                                            style={{ marginBottom: heightPercentageToDP(20) }}
-                                            data={filteredFriends}
-                                            keyExtractor={this.communityKeyExtractor}
-                                            renderItem={({ item, index }) => (
-                                                <HorizontalCard
-                                                    item={item}
-                                                    horizontalCardPlaceholder={require('../../../assets/img/profile-pic.png')}
-                                                    cardOuterStyle={styles.horizontalCardOuterStyle}
-                                                    thumbnail={item.profilePicture}
-                                                    rightProps={
-                                                        item.isPassenger
-                                                            ? { righticonImage: require('../../../assets/img/add-passenger-from-community-true.png'), imgBGColor: '#81BA41', imgStyles: { width: 32, height: 32 } }
-                                                            : { righticonImage: require('../../../assets/img/add-passenger-from-community.png'), imgStyles: { width: 32, height: 32 } }
-                                                    }
-                                                    onPress={() => item.isPassenger === false && this.addFriendToCommunity(item)}
-                                                />
-                                            )}
-                                            ListFooterComponent={this.renderFooter}
-                                            // onTouchStart={this.loadMoreData}
-                                            onEndReached={this.loadMoreData}
-                                            onEndReachedThreshold={0.1}
-                                            onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
-                                        />
-                                        {
-                                            this.props.hasNetwork === false && communityList.length === 0 && <View style={{ flex: 1, position: 'absolute', top: 23 }}>
-                                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                                </Animated.View>
-                                                <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
-                                                <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
-                                            </View>
-                                        }
-                                    </View>
-                                </Tab>
-                            </Tabs>
-                    }
-
-                </View>
-                <Loader isVisible={this.props.showLoader} />
-            </View >
-        );
+                                    }
+                                </View>
+                            </Tab>
+                        </Tabs>
+                }
+            </BasePage>
+        )
     }
 }
 
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { passengerList, communityList } = state.PassengerList;
-    const { allFriends, paginationNum } = state.FriendList;
     const { showLoader, hasNetwork, pageNumber } = state.PageState;
-    return { user, passengerList, allFriends, paginationNum, showLoader, hasNetwork, pageNumber, communityList };
+    return { user, passengerList, showLoader, hasNetwork, pageNumber, communityList };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        registerPassenger: (userId, passenger) => dispatch(registerPassenger(userId, passenger)),
-        updatePassengerDetails: (passenger) => dispatch(updatePassengerDetails(passenger)),
-        getPictureList: (pictureIdList) => getPictureList(pictureIdList, (pictureObj) => {
-            dispatch(updateCommunityListAction({ pictureObj }))
-        }, (error) => {
-            console.log('getPictureList community list error : ', error)
-            // dispatch(updateFriendInListAction({ userId: friendId }))
-        }),
+        registerPassenger: (passenger) => dispatch(registerPassenger(passenger)),
         getCommunityFriendsList: (userId, pageNumber, preference, successCallback, errorCallback) => dispatch(getCommunityFriendsList(userId, pageNumber, preference, successCallback, errorCallback)),
-        resetCommunityList: () => dispatch(resetCommunityListAction())
+        resetCommunityList: () => dispatch(resetCommunityListAction()),
+        deletePassenger: (passengerId, friendId) => {
+            dispatch(apiLoaderActions(true));
+            deletePassenger(passengerId).then(res => {
+                console.log("deletePassenger success: ", res.data);
+                dispatch(apiLoaderActions(false));
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+                dispatch(removeFromPassengerListAction({passengerId, friendId}));
+                // Actions.refresh({ passengerId: null });
+            }).catch(er => {
+                console.log(`deletePassenger error: `, er.response || er);
+                handleServiceErrors(er, [passengerId], 'deletePassenger', true, true);
+                dispatch(apiLoaderActions(false));
+            })
+        }
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(PaasengerForm);
@@ -257,48 +214,22 @@ const styles = StyleSheet.create({
     fill: {
         flex: 1
     },
-    form: {
-        marginTop: APP_COMMON_STYLES.headerHeight,
+    searchResultLabelCont: {
+        borderBottomWidth: 3,
+        borderBottomColor: '#F5891F',
+        marginTop: 16,
+        marginHorizontal: widthPercentageToDP(9)
     },
-    formContent: {
-        paddingTop: 20,
-        flex: 1,
-        justifyContent: 'space-around'
-    },
-    imageUploadBtn: {
-        marginLeft: 10,
-        height: heightPercentageToDP(5),
-        width: '50%'
-    },
-    imgContainer: {
-        marginTop: heightPercentageToDP(2),
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-    },
-    tabContentCont: {
-        paddingHorizontal: 0
-    },
-    labelStyle: {
+    searchResultLabel: {
+        marginLeft: widthPercentageToDP(3),
         color: '#000',
-        fontSize: 10,
-        fontFamily:CUSTOM_FONTS.robotoSlabBold,
-        letterSpacing: 1.1
-    },
-    submitBtn: {
-        height: heightPercentageToDP(9),
-        backgroundColor: '#f69039',
-        marginTop: heightPercentageToDP(8)
+        letterSpacing: 0.6,
+        marginBottom: 2,
+        fontFamily: CUSTOM_FONTS.robotoBold
     },
     horizontalCardOuterStyle: {
         marginHorizontal: widthPercentageToDP(9),
         marginBottom: heightPercentageToDP(4)
-    },
-    rightIconStyle: {
-    },
-    containerStyle: {
-        marginBottom: 0,
-        flex: 1,
-        width: widthPercentageToDP(47),
     },
     activeTab: {
         backgroundColor: '#000000'

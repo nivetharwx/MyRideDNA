@@ -1,21 +1,22 @@
 import React, { Component } from 'react';
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, SafeAreaView, Platform, StatusBar, Alert } from 'react-native';
-import { Icon as NBIcon, Item, Toast } from 'native-base';
-import { Actions } from 'react-native-router-flux';
+import { View, ScrollView, StyleSheet, Alert, Image, Text, Switch, TouchableHighlight, TouchableOpacity, Linking } from 'react-native';
 import { connect } from 'react-redux';
-
-import { IconicInput, IconicList, LabeledInput } from '../../components/inputs';
-import { BasicHeader } from '../../components/headers';
-
-import { LoginStyles } from '../../containers/login/styles';
-import { WindowDimensions, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, heightPercentageToDP, CUSTOM_FONTS } from '../../constants';
-import { LoginButton, SocialButtons, IconButton, RoundButton, LinkButton } from '../../components/buttons';
+import { IconicList, LabeledInputPlaceholder } from '../../components/inputs';
+import { APP_COMMON_STYLES, IS_ANDROID, heightPercentageToDP, CUSTOM_FONTS, USER_BASE_URL, DEVICE_TOKEN } from '../../constants';
+import { IconButton, LinkButton } from '../../components/buttons';
 import { isValidEmailFormat } from '../../util';
-import Spinner from 'react-native-loading-spinner-overlay';
 import { validateEmailOnServer, registerUser } from '../../api';
 import Md5 from 'react-native-md5';
 import { toggleNetworkStatusAction } from '../../actions';
-import { Loader } from '../../components/loader';
+import { DefaultText } from '../../components/labels';
+import { Actions } from 'react-native-router-flux';
+import { BasePage } from '../../components/pages';
+import { GoogleSignin } from '@react-native-community/google-signin';
+import AsyncStorage from '@react-native-community/async-storage';
+import DeviceInfo from 'react-native-device-info';
+import Axios from 'axios';
+
+const ITEM_H_PADDING = 50;
 
 class Signup extends Component {
     isVerifyingEmail = false;
@@ -28,7 +29,18 @@ class Signup extends Component {
             hideConfPasswd: true,
             confirmPassword: '',
             showLoader: false,
+            termsAccepted:false,
+            deviceToken:null
         };
+    }
+
+    componentDidMount(){
+        const userData=this.props.userData
+        if(userData){
+            this.setState({
+                user:{...this.state.user,name:userData.name,email:userData.email}
+            })
+        }
     }
 
     componentDidUpdate(prevProps) {
@@ -57,6 +69,9 @@ class Signup extends Component {
         if (prevProps.hasNetwork === false && this.props.hasNetwork === true) {
             Toast.hide()
         }
+    }
+    onPressBackButton = () => {
+        Actions.pop();
     }
 
     onChangeName = (name) => {
@@ -146,68 +161,164 @@ class Signup extends Component {
         // TODO: All validations
         if (this.validateFields()) {
             this.setState({ showLoader: true });
-            this.props.registerUser({ ...this.state.user, password: Md5.hex_md5(this.state.user.password + '') });
+            this.props.registerUser({ ...this.state.user, password: Md5.hex_md5(this.state.user.password + '') }, (res) => {
+                this.setState({ showLoader: false });
+            }, (er) => {
+                this.setState({ showLoader: false });
+            });
         }
     }
 
-    onPressBackButton = () => {
-        console.log('action.prop')
-        Actions.pop();
+    doGoogleLogin = async () => {
+        try {
+            await GoogleSignin.hasPlayServices();
+            const { user } = await GoogleSignin.signIn();
+            console.log(user)
+            const tokens= await GoogleSignin.getTokens()
+            // console.log(tokens)
+            user.signUpSource = 'google';
+            user.accessToken = tokens.accessToken
+            this.fetchingDeviceToken(user);
+        } catch (error) {
+            console.log('error google : ', error);
+        }
     }
+
+    fetchingDeviceToken = async (user) => {
+        if (this.state.deviceToken === null) {
+            const deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
+            if (deviceToken === null) {
+                const token = await messaging().getToken();
+                AsyncStorage.setItem(DEVICE_TOKEN, token);
+                this.setState({ deviceToken: token }, () => this.thirdPartyLogin(user));
+            }
+            else {
+                this.setState({ deviceToken }, () => this.thirdPartyLogin(user));
+            }
+        } else {
+            this.thirdPartyLogin(user);
+        }
+    }
+
+    thirdPartyLogin = async (user) => {
+        this.setState({ showLoader: !this.state.showLoader });
+        console.log(JSON.stringify({ ...user, platform: IS_ANDROID ? 'android' : 'ios', date: new Date().toISOString(), registrationToken: this.state.deviceToken, deviceId: await DeviceInfo.getUniqueId() }))
+        Axios.post(USER_BASE_URL + 'loginUserUsingThirdParty', { ...user, platform: IS_ANDROID ? 'android' : 'ios', date: new Date().toISOString(), registrationToken: this.state.deviceToken, deviceId: await DeviceInfo.getUniqueId() })
+            .then(res => {
+                this.setState({ showLoader: !this.state.showLoader });
+                console.log('loginUserUsingThirdParty : ', res.data)
+                if(res.data.status!=="unRegistered"){
+                    Alert.alert('Account Already Exist',"Oops! it looks like you are already registered with MyRideDNA.",
+                    [
+                        { text: "Ok", onPress: () => {
+                            
+                        } }
+                      ])
+                }else{
+                    const userData=res.data.user
+                    this.setState({
+                        user:{...this.state.user,name:userData.name,email:userData.email}
+                    })
+                }
+
+            })
+            .catch(error => {
+                console.log('loginUserUsingThirdParty error : ', error.message)
+            })
+    }
+
 
     render() {
         const { user, hidePasswd, hideConfPasswd, showLoader, confirmPassword } = this.state;
         return (
-            <View style={{ flex: 1 }}>
-
-                <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                </View>
+            <BasePage defaultHeader={true} heading={'Signup'} showLoader={showLoader} showShifter={false}>
                 <View style={{ flex: 1, backgroundColor: 'white' }}>
-                    {/* <Spinner
-                        visible={showLoader}
-                        textContent={'Loading...'}
-                        textStyle={{ color: '#fff' }}
-                    /> */}
-                    <Loader isVisible={showLoader} onCancel={() => this.setState({ showLoader: false })} />
-                    <BasicHeader title='Signup' leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }} searchbarMode={false} />
-                    <ScrollView scrollEnabled={false} style={{ backgroundColor: 'white', marginTop: APP_COMMON_STYLES.headerHeight }} contentContainerStyle={{ flex: 1, paddingTop: 30, justifyContent: 'space-between' }}>
-                        <Item>
-                            <LabeledInput placeholderColor='#a9a9a9' inputStyle={{ flex: 1, borderBottomWidth: 0, fontFamily: CUSTOM_FONTS.robotoSlabBold }} inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChange={this.onChangeName} placeholder='Name' onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
-                        </Item>
-                        <Item>
-                            <IconicList
-                                textStyle={{ fontFamily: CUSTOM_FONTS.robotoSlabBold }}
-                                selectedValue={user.gender}
-                                placeholder='Gender'
-                                values={[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }]}
-                                pickerStyle={{ borderBottomWidth: 0 }}
-                                onChange={this.onGenderChange} />
-                        </Item>
-                        <Item>
-                            <LabeledInput placeholderColor='#a9a9a9' inputStyle={{ flex: 1, borderBottomWidth: 0, fontFamily: CUSTOM_FONTS.robotoSlabBold }} onBlur={this.validateEmail} inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next' onChange={this.onEmailChange} placeholder='Email' inputType='emailAddress' onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
-                        </Item>
-                        <Item>
-                            <TextInput placeholderColor='#a9a9a9' onBlur={this.passwordFormat} secureTextEntry={hidePasswd} style={{ flex: 1, fontFamily: CUSTOM_FONTS.robotoSlabBold }} value={user.password} ref={elRef => this.fieldRefs[2] = elRef} returnKeyType='next' onChangeText={this.onPasswordsChange} placeholder='New Password' onSubmitEditing={() => this.fieldRefs[3].focus()} blurOnSubmit={false} />
-                            <IconButton onPress={this.togglePasswordVisibility} style={{ backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: hidePasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
-                        </Item>
-                        <Item>
-                            <TextInput placeholderColor='#a9a9a9' secureTextEntry={hideConfPasswd} style={{ flex: 1, fontFamily: CUSTOM_FONTS.robotoSlabBold }} value={confirmPassword} ref={elRef => this.fieldRefs[3] = elRef} returnKeyType='next' onChangeText={this.onConfrimPasswordChange} placeholder='Confirm Password' onSubmitEditing={() => { }} blurOnSubmit={true} />
-                            <IconButton onPress={this.toggleConfirmPasswordVisibility} style={{ backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: hideConfPasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
-                        </Item>
-                        <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 10, justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                            <RoundButton title='GO' style={{ height: 100, width: 100, borderRadius: 100 }} titleStyle={{ fontSize: 25, fontFamily: CUSTOM_FONTS.robotoBold }} onPress={this.onSubmit} />
-                            <LinkButton style={{ paddingHorizontal: 20 }} title='Privacy policy' titleStyle={{ color: '#0083CA', fontSize: 17 }} />
+                    <ScrollView showsVerticalScrollIndicator={false} style={{ backgroundColor: 'white', marginTop: APP_COMMON_STYLES.statusBar.height, marginHorizontal: ITEM_H_PADDING }} contentContainerStyle={{}}>
+                        <LabeledInputPlaceholder
+                            containerStyle={{ borderBottomColor: '#9A9A9A', borderBottomWidth: 1 }}
+                            inputValue={user.name} inputStyle={{ paddingBottom: 0 }}
+                            outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
+                            inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next'
+                            onChange={this.onChangeName}
+                            placeholder={'Name'}
+                            placeholderColor={'#9A9A9A'}
+                            onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
+                        <IconicList
+                            iconProps={IS_ANDROID ? {} : { type: 'MaterialIcons', name: 'arrow-drop-down', style: { color: APP_COMMON_STYLES.infoColor, fontSize: 28 } }}
+                            pickerStyle={[{ borderBottomWidth: 0 }, IS_ANDROID ? { flex: 1 } : null]}
+                            textStyle={{ paddingLeft: 10, fontSize: 14, bottom: 6 }}
+                            selectedValue={user.gender}
+                            values={[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }]}
+                            placeholder={'Gender'}
+                            outerContainer={{ flex: 1, alignItems: 'flex-end' }}
+                            containerStyle={[styles.itemTopMargin, { flex: 1, borderBottomColor: '#9A9A9A', borderBottomWidth: 1 }]}
+                            innerContainerStyle={{ height: 24 }}
+                            onChange={this.onGenderChange} />
+                        <LabeledInputPlaceholder
+                            containerStyle={{ borderBottomColor: '#9A9A9A', borderBottomWidth: 1 }}
+                            inputValue={user.email} inputStyle={{ paddingBottom: 0 }}
+                            outerContainer={styles.itemTopMargin}
+                            inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next'
+                            onChange={this.onEmailChange}
+                            placeholder={'Email'}
+                            placeholderColor={'#9A9A9A'}
+                            onBlur={this.validateEmail}
+                            onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
+                        <LabeledInputPlaceholder
+                            containerStyle={{ borderBottomColor: '#9A9A9A', borderBottomWidth: 1, flex: 0, }}
+                            inputValue={user.password} inputStyle={{ paddingBottom: 0, }}
+                            outerContainer={styles.itemTopMargin}
+                            inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next'
+                            secureTextEntry={hidePasswd}
+                            onBlur={this.passwordFormat}
+                            placeholder={'Password'}
+                            placeholderColor={'#9A9A9A'}
+                            onChange={this.onPasswordsChange}
+                            onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false}
+                            iconProps={{ name: hidePasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: 15, paddingRight: 0, color: 'white' }, onPress: this.togglePasswordVisibility, containerStyle: { backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 11 } }}
+                        />
+                        <LabeledInputPlaceholder
+                            containerStyle={{ borderBottomColor: '#9A9A9A', borderBottomWidth: 1, flex: 0, }}
+                            inputValue={confirmPassword} inputStyle={{ paddingBottom: 0, }}
+                            outerContainer={styles.itemTopMargin}
+                            inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next'
+                            secureTextEntry={hideConfPasswd}
+                            placeholder={'Confirm Password'}
+                            onChange={this.onConfrimPasswordChange}
+                            hideKeyboardOnSubmit={true}
+                            placeholderColor={'#9A9A9A'}
+                            iconProps={{ name: hideConfPasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: 15, paddingRight: 0, color: 'white' }, onPress: this.toggleConfirmPasswordVisibility, containerStyle: { backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 11 } }}
+                        />
+                        <View style={styles.termsAndConditions}>
+                            <Text style={styles.termsAndConditionsText}>I have read and agree to the <Text style={{color:APP_COMMON_STYLES.infoColor}} onPress={()=>{
+                                Linking.openURL('https://mrdna-test.point2value.com/terms-and-conditions')
+                            }}>Terms of Services</Text> and <Text style={{color:APP_COMMON_STYLES.infoColor}}>Privacy Policy</Text></Text>
+                            <Switch trackColor={{true:APP_COMMON_STYLES.infoColor,false:'default'}} thumbColor={null} value={this.state.termsAccepted} onChange={()=>{
+                                this.setState({
+                                    termsAccepted:!this.state.termsAccepted
+                                })
+                            }}/>
                         </View>
-                        <View style={{ paddingVertical: heightPercentageToDP(5), backgroundColor: '#EB861E', alignItems: 'flex-end', paddingEnd: 10 }}>
-                            <View style={{ flexDirection: 'row', width: '50%', justifyContent: 'space-around' }}>
-                                <IconButton onPress={() => { }} style={{ paddingHorizontal: 0 }} iconProps={{ name: 'facebook', type: 'MaterialCommunityIcons', style: { backgroundColor: '#fff', color: '#EB861E', fontSize: 60, borderRadius: 5 } }} />
-                                <IconButton onPress={() => { }} style={{ paddingHorizontal: 0 }} iconProps={{ name: 'google-', type: 'Entypo', style: { backgroundColor: '#fff', color: '#EB861E', fontSize: 60, borderRadius: 5 } }} />
-                            </View>
-                        </View>
+                        <LinkButton style={{ alignSelf: 'center', width: 210, backgroundColor: APP_COMMON_STYLES.infoColor, borderRadius: 23, marginTop: 55 }} title={`LET'S RIDE`} titleStyle={{ color: '#FFFFFF', fontSize: 17, fontFamily: CUSTOM_FONTS.robotoBold, textAlign: 'center', paddingVertical: 14, paddingHorizontal: 20, letterSpacing: 0.9 }} disabled={!this.state.termsAccepted} onPress={this.onSubmit} />
+                        {/* <LinkButton style={{ alignSelf: 'center', marginTop: 20, marginBottom: 10 }} title='Privacy policy' titleStyle={{ color: '#9A9A9A', fontSize: 17 }} /> */}
+                        
                     </ScrollView>
+                    <View style={{ paddingVertical: heightPercentageToDP(7.5), backgroundColor: '#585756', alignItems: 'center' }}>
+                        <View style={{ alignItems: 'center', justifyContent: 'space-around' }}>
+                            <LinkButton disabled={!this.state.termsAccepted} onPress={() => { this.doGoogleLogin() }} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', padding: 9, width: 210, borderRadius: 5 }}>
+                                <View style={{ height: 23, width: 23 }}>
+                                    <Image source={require('../../assets/img/google-logo.png')} style={{ flex: 1, height: null, width: null }} />
+                                </View>
+                                <DefaultText text={'Signup with Google'} style={{ marginLeft: 15, color: '#575555', fontSize: 14 }} fontFamily={CUSTOM_FONTS.robotoBold} />
+                            </LinkButton>
+                            {/* <IconButton onPress={() => { }} style={{ marginTop: 15, backgroundColor: '#FFFFFF', padding: 7, width: 210, borderRadius: 5 }} iconProps={{ name: 'facebook-official', type: 'FontAwesome', style: { height: 30, width: 30, color: '#3B5998' } }}
+                                title={'Continue with Facebbok'}
+                                titleStyle={{ fontFamily: CUSTOM_FONTS.robotoBold, marginLeft: 7, color: '#575555', fontSize: 14 }}
+                            /> */}
+                        </View>
+                    </View>
                 </View>
-            </View>
+            </BasePage>
         );
     }
 }
@@ -221,7 +332,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         validateEmailOnServer: (email) => dispatch(validateEmailOnServer(email)),
-        registerUser: (user) => dispatch(registerUser(user)),
+        registerUser: (user, successCallback, errorCallback) => dispatch(registerUser(user, successCallback, errorCallback)),
         toggleNetworkStatus: (status) => dispatch(toggleNetworkStatusAction(status)),
     }
 }
@@ -229,27 +340,20 @@ const mapDispatchToProps = (dispatch) => {
 export default connect(mapStateToProps, mapDispatchToProps)(Signup);
 
 const styles = StyleSheet.create({
-    formFieldIcon: {
-        color: '#999999'
+    itemTopMargin: {
+        marginTop: 25
     },
-    termsConditionLink: {
-        marginLeft: 20,
-        marginVertical: 20,
-        color: '#EB861E',
-        fontSize: 18
+    termsAndConditions:{
+        width:'100%',
+        display:"flex",
+        flexDirection:'row',
+        marginTop:65,
+        justifyContent:'space-between',
     },
-    signupButton: {
-        backgroundColor: '#EB861E',
-        paddingVertical: 6,
-        borderRadius: 5,
-        marginHorizontal: 20,
-        width: WindowDimensions.width - 40,
-    },
-    socialButton: {
-        flexDirection: 'row',
-        height: 40,
-        alignItems: 'center',
-        borderRadius: 5,
-        paddingHorizontal: 10
+    termsAndConditionsText:{
+        width:'80%',
+        fontSize:13,
+        fontStyle:CUSTOM_FONTS.robotoBold['normal'],
+        fontWeight:'500'
     }
 });

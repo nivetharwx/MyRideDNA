@@ -1,4 +1,4 @@
-import { LOGIN_RESPONSE, CURRENT_USER, UPDATE_USER, UPDATE_EMAIL_STATUS, UPDATE_SIGNUP_RESULT, UPDATE_PASSWORD_SUCCESS, UPDATE_PASSWORD_ERROR, RESET_PASSWORD_ERROR, UPDATE_TOKEN, CURRENT_USER_MY_WALLET, UPDATE_USER_MY_WALLET } from "../actions/actionConstants";
+import { LOGIN_RESPONSE, CURRENT_USER, UPDATE_USER, UPDATE_EMAIL_STATUS, UPDATE_SIGNUP_RESULT, UPDATE_PASSWORD_SUCCESS, UPDATE_PASSWORD_ERROR, RESET_PASSWORD_ERROR, UPDATE_TOKEN, CURRENT_USER_MY_WALLET, UPDATE_USER_MY_WALLET, DELETE_USER_PROFILE_PICTURE } from "../actions/actionConstants";
 
 const initialState = {
     // loginResponse: null
@@ -78,6 +78,12 @@ export default (state = initialState, action) => {
                     insurance: action.data.insurance ? action.data.insurance : null,
                     roadsideAssistance: action.data.roadsideAssistance ? action.data.roadsideAssistance : null,
                 }
+            }
+        case DELETE_USER_PROFILE_PICTURE:
+            const { profilePictureId, ...otherData } = state.user;
+            return {
+                ...state,
+                user: otherData
             }
         default: return state
     }

@@ -1,12 +1,11 @@
 import { StyleSheet } from 'react-native';
 import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, IS_ANDROID, CUSTOM_FONTS } from '../../constants';
-import { App } from 'react-native-firebase';
 
 const THUMBNAIL_SIZE = IS_ANDROID ? heightPercentageToDP(6.5) : heightPercentageToDP(8);
 export const FOOTER_HEIGHT = 75;
 const styles = StyleSheet.create({
     fill: {
-        flex: 1
+        flex: 1,
     },
     chatHeader: {
         height: APP_COMMON_STYLES.headerHeight,
@@ -35,7 +34,8 @@ const styles = StyleSheet.create({
         letterSpacing: 0.2,
         marginLeft: 15,
         marginRight: 5,
-        fontFamily: CUSTOM_FONTS.gothamBold
+        fontFamily: CUSTOM_FONTS.gothamBold,
+        marginRight: 10
     },
     chatHeaderNickname: {
         color: APP_COMMON_STYLES.infoColor,
@@ -43,12 +43,11 @@ const styles = StyleSheet.create({
         marginLeft: widthPercentageToDP(2)
     },
     chatArea: {
-        paddingHorizontal: 13,
+        paddingHorizontal: 10,
         paddingTop: 10
     },
     friendMsgBubble: {
         backgroundColor: '#81c341',
-        // backgroundColor: '#81BA41',
     },
     myMsgBubble: {
         backgroundColor: '#00AEEF',
@@ -64,15 +63,27 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 10
     },
+    footerLtIcnCont: {
+        marginRight: 5,
+        backgroundColor: '#FFFFFF',
+        width: 25,
+        height: 25,
+        borderRadius: 18,
+        alignSelf: 'center',
+    },
+    footerLtIcon: {
+        fontSize: 18,
+        color: '#000000',
+    },
     footerRtIcnCont: {
         backgroundColor: '#00AEEF',
-        width: 20,
-        height: 20,
+        width: 25,
+        height: 25,
         borderRadius: 18,
         alignSelf: 'center',
         marginLeft: 10,
     },
-    footerRightIcon: {
+    footerRtIcon: {
         fontSize: 18,
         color: '#000000',
         paddingTop: 1,
@@ -98,7 +109,6 @@ const styles = StyleSheet.create({
         width: widthPercentageToDP(8.5),
         borderRadius: 17,
         alignSelf: 'flex-end'
-        // marginBottom: 17,
     },
     iconPadding: {
         padding: 5,
@@ -125,19 +135,13 @@ const styles = StyleSheet.create({
         borderRadius: 15
     },
     time: {
-        // color: '#8D8D8D', 
-        color: '#adacac',
+        color: '#ACACAC',
         alignSelf: 'center',
         marginVertical: 4,
         paddingHorizontal: 5,
         paddingVertical: 4,
         letterSpacing: 0.8,
         fontSize: 12,
-        // height: 24,
-        // width: 74,
-        // borderRadius: 20,
-        // backgroundColor: 'rgba(255,255,255, 0.9)'
-
     },
     picker: {
         position: 'absolute',
@@ -145,6 +149,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         bottom: 0,
         width: widthPercentageToDP(100),
+        elevation: 10,
     },
     pickerBackdrop: {
         flex: 1,
@@ -173,15 +178,20 @@ const styles = StyleSheet.create({
         flex: 1,
         width: null,
         height: null,
-        alignItems: 'flex-end'
+        alignItems: 'flex-end',
+        backgroundColor: '#A9A9A9'
     },
     closeIconContainer: {
+        position: 'absolute',
         height: 18,
         width: 18,
-        borderRadius: 18,
+        borderRadius: 9,
         backgroundColor: '#F5891F',
-        top: -5,
-        right: -5
+        top: -7,
+        right: -7,
+        alignItems: 'center',
+        justifyContent: 'center',
+        alignSelf: 'flex-end'
     },
     closeIcon: {
         fontSize: 19,
@@ -191,7 +201,6 @@ const styles = StyleSheet.create({
         padding: 5,
         paddingBottom: 2,
         borderRadius: 9,
-        marginTop: 16,
         alignItems: 'center',
         overflow: 'hidden'
     },
@@ -234,8 +243,8 @@ const styles = StyleSheet.create({
     unseenMsgCountView: {
         backgroundColor: APP_COMMON_STYLES.infoColor,
         position: 'absolute',
-        bottom: heightPercentageToDP(6),
-        right: widthPercentageToDP(7),
+        bottom: 110,
+        right: 10,
         height: widthPercentageToDP(5),
         minWidth: widthPercentageToDP(5),
         borderRadius: widthPercentageToDP(2.5),
@@ -277,7 +286,138 @@ const styles = StyleSheet.create({
     },
     modalBodyContent: {
         flex: 1,
-        // marginTop: APP_COMMON_STYLES.headerHeight
-    }
+    },
+    imgTimeStatusContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'flex-end'
+    },
+    msgStatusIcon: {
+        fontSize: 12,
+        width: 17,
+        left: 5
+    },
+    columnWrapper: {
+        justifyContent: 'space-between',
+        marginBottom: heightPercentageToDP(4),
+        marginHorizontal: 25
+    },
+    rideImgStyle: {
+        height: widthPercentageToDP(40),
+        width: widthPercentageToDP(40)
+    },
+    bubbleName: {
+        color: '#C4C4C4',
+        fontSize: 10,
+        letterSpacing: 0.8,
+        fontFamily: CUSTOM_FONTS.robotoBold
+    },
+    mediaCloseIconContainer: {
+        position: 'absolute',
+        height: widthPercentageToDP(8),
+        width: widthPercentageToDP(8),
+        borderRadius: widthPercentageToDP(4),
+        backgroundColor: '#F5891F',
+        marginLeft: widthPercentageToDP(16),
+        alignItems: 'center',
+        justifyContent: 'center',
+        alignSelf: 'flex-end',
+        top: heightPercentageToDP(-1.5),
+        right: widthPercentageToDP(-1.5)
+    },
+    mediaCloseIcon: {
+        fontSize: widthPercentageToDP(5),
+        color: '#fff'
+    },
+    mediaModalContent: {
+        backgroundColor: '#fff',
+        height: heightPercentageToDP(70),
+        width: widthPercentageToDP(92),
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    enlargedMediaContainer: {
+        paddingHorizontal: 20,
+        width: widthPercentageToDP(92),
+        height: heightPercentageToDP(50)
+    },
+    enlargedMedia: {
+        height: '100%',
+        width: null,
+    },
+    mediaAdvanceBtn: {
+        position: 'absolute',
+        height: 120,
+        width: 22,
+        backgroundColor: '#C4C6C8'
+    },
+    prevBtn: {
+        alignSelf: 'flex-start',
+        left: 5,
+    },
+    nextBtn: {
+        alignSelf: 'flex-end',
+        right: 5,
+    },
+    prevBtnIcon: {
+        right: 4
+    },
+    nextBtnIcon: {
+        left: 4,
+        transform: [{ rotate: '180deg' }]
+    },
+    mediaDescription: {
+        letterSpacing: 0.38,
+        fontSize: 15,
+        marginVertical: 20,
+        color: '#fff'
+    },
+    circle: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        marginLeft: 7,
+        alignSelf: 'center',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    deleteBoxCont: {
+        height: 263,
+        width: 327,
+        backgroundColor: '#F4F4F4',
+        borderRadius: 20,
+        padding: 31,
+        paddingRight: 40
+    },
+    deleteTitle: {
+        color: '#585756',
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        fontSize: 20
+    },
+    deleteText: {
+        color: '#585756',
+        fontFamily: CUSTOM_FONTS.roboto,
+        fontSize: 17,
+        letterSpacing: 0.17,
+        marginTop: 30
+    },
+    btnContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20
+    },
+    actionBtn: {
+        height: 35,
+        backgroundColor: '#2B77B4',
+        width: 125,
+        alignSelf: 'center',
+        borderRadius: 20,
+        marginTop: 20
+    },
+    actionBtnTxt: {
+        letterSpacing: 1.4,
+        fontSize: 14,
+        fontFamily: CUSTOM_FONTS.robotoBold
+    },
 });
 export default styles;

@@ -1,8 +1,8 @@
-import { UPDATE_EMAIL_STATUS, REPLACE_ALBUM_LIST, UPDATE_ALBUM_LIST, CLEAR_ALBUM } from "../actions/actionConstants";
+import { UPDATE_EMAIL_STATUS, REPLACE_ALBUM_LIST, UPDATE_ALBUM_LIST, CLEAR_ALBUM, DELETE_PICTURE_FROM_ALBUM } from "../actions/actionConstants";
 import { MEDIUM_TAIL_TAG, THUMBNAIL_TAIL_TAG } from "../constants";
 
 const initialState = {
-    albumList: []
+    albumList: [],
 };
 
 export default (state = initialState, action) => {
@@ -17,33 +17,31 @@ export default (state = initialState, action) => {
             else {
                 return {
                     ...state,
-                    albumList: [
-                        ...state.albumList,
-                        ...action.data.pictureList
-                    ]
+                    albumList: action.data.isNewPic ? [...action.data.pictureList, ...state.albumList] : [...state.albumList, ...action.data.pictureList]
                 }
             }
 
 
         case UPDATE_ALBUM_LIST:
-            if (action.data.pictureObj) {
-                let updatedAlbumList = state.albumList.map(item => {
-                    if (!item.profilePictureId) return item;
-                    if (typeof action.data.pictureObj[item.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)] === 'string') {
-                        return { ...item, profilePicture: action.data.pictureObj[item.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)] }
-                    }
-                    return item;
+            return {
+                ...state,
+                albumList: state.albumList.map(picture => {
+                    return picture.id === action.data.id ?
+                        { ...picture, ...action.data }
+                        : picture
                 })
-                return {
-                    ...state,
-                    albumList: updatedAlbumList
-                }
             }
 
         case CLEAR_ALBUM:
             return {
                 albumList: []
             }
+        case DELETE_PICTURE_FROM_ALBUM:
+            return {
+                ...state,
+                albumList: state.albumList.filter(({ id }) => id !== action.data[0].pictureName)
+            }
+
         default: return state
     }
 }

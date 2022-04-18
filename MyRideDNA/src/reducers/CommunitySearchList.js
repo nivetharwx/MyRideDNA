@@ -15,7 +15,7 @@ export default (state = initialState, action) => {
             if (action.data.pageNumber === 0) {
                 return {
                     ...state,
-                    searchResults: action.data.results
+                    searchResults: [...action.data.results]
                 };
             } else {
                 return {
@@ -27,12 +27,14 @@ export default (state = initialState, action) => {
         case UPDATE_SEARCH_RESULTS:
             return {
                 ...state,
-                searchResults: state.searchResults.map(res => {
+                searchResults: state.searchResults.length > 0 ? state.searchResults.map(res => {
                     if (res.userId === action.data.userId) {
                         return { ...res, relationship: action.data.relationship }
                     }
                     return res;
                 })
+                    :
+                    state.searchResults
             };
 
         case UPDATE_FRIEND_REQUEST_RESPONSE:

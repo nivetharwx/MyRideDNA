@@ -15,11 +15,19 @@
       },
       "oauth_client": [
         {
-          "client_id": "72747364788-p8h0ho7ng0qcgi88kbpt9mje8aipcjtg.apps.googleusercontent.com",
+          "client_id": "72747364788-aeuovhf7vt4o9slvbh41sqv39mnqvekc.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.myridedna",
-            "certificate_hash": "f9c0417287de77cccf55d1536cbd2dd9ce1ad30a"
+            "certificate_hash": "491581d6a310ca4d342bb1005324d2d03d42dc04"
+          }
+        },
+        {
+          "client_id": "72747364788-mm58veojglnuf80lr3eh4o1e3r0vc9jm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.myridedna",
+            "certificate_hash": "623b85a8d9f090ad0ecf53b2d3a984ee230a3441"
           }
         },
         {
@@ -29,15 +37,22 @@
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBkp_YbQW279SOyokFvzdyecOerdywid_k"
+          "current_key": "AIzaSyDgXcLnlMo--kcEHRzWoZo0RhrNwYiwod0"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "72747364788-llavih65vml24e11hsttntmatgps275q.apps.googleusercontent.com",
+              "client_id": "72747364788-12d5tr1lflppjc7iqivb76h07eh0jih7.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "72747364788-4ent02hjcq9sp22nt7tmrboed54nqo05.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.myridedna"
+              }
             }
           ]
         }

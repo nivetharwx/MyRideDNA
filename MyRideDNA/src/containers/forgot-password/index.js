@@ -1,18 +1,15 @@
 import React from 'react';
-import { StyleSheet, View, Alert, TouchableHighlight, Text, TextInput } from 'react-native';
+import { StyleSheet, View, Alert } from 'react-native';
 import { connect } from 'react-redux';
-import { LabeledInput } from '../../components/inputs';
+import { LabeledInputPlaceholder } from '../../components/inputs';
 import { toggleNetworkStatusAction } from '../../actions';
 import { isValidEmailFormat } from '../../util';
-import Spinner from 'react-native-loading-spinner-overlay';
-import { LinkButton, IconButton } from '../../components/buttons';
+import { BasicButton } from '../../components/buttons';
 import axios from 'axios';
-import { USER_BASE_URL, WindowDimensions, APP_COMMON_STYLES, widthPercentageToDP } from '../../constants';
-import { BaseModal } from '../../components/modal';
+import { USER_BASE_URL, WindowDimensions, widthPercentageToDP, CUSTOM_FONTS, IS_ANDROID, heightPercentageToDP, PageKeys } from '../../constants';
 import Md5 from 'react-native-md5';
-import { Toast, Item } from 'native-base';
-import { Loader } from '../../components/loader';
 import { DefaultText } from '../../components/labels';
+import { Actions } from 'react-native-router-flux';
 
 class ForgotPassword extends React.Component {
     initialState = {
@@ -26,6 +23,7 @@ class ForgotPassword extends React.Component {
         isVisibleConfirmPassword: false,
         isVisibleOTP: false,
     };
+    fieldRefs = [];
     cPasswdRef = null;
     constructor(props) {
         super(props);
@@ -34,33 +32,19 @@ class ForgotPassword extends React.Component {
         };
     }
 
+    togglePasswordVisibility = () => this.setState(prevState => ({ isVisiblePassword: !prevState.isVisiblePassword }));
 
-    togglePasswordVisibility = () => {
-        this.setState(prevState => ({ isVisiblePassword: !prevState.isVisiblePassword }));
-    }
-    toggleConfirmPasswordVisibility = () => {
-        this.setState(prevState => ({ isVisibleConfirmPassword: !prevState.isVisibleConfirmPassword }));
-    }
+    toggleConfirmPasswordVisibility = () => this.setState(prevState => ({ isVisibleConfirmPassword: !prevState.isVisibleConfirmPassword }));
 
-    onChangeEmail = (email) => {
-        this.setState({ email });
-    }
+    onChangeEmail = (email = '') => this.setState({ email: email.trim() });
 
-    onChangeOTP = (otp) => {
-        this.setState({ otp });
-    }
+    onChangeOTP = (otp) => this.setState({ otp });
 
-    onPasswordsChange = (password) => {
-        this.setState({ password });
-    }
+    onPasswordsChange = (password) => this.setState({ password });
 
-    onConfrimPassworddChange = (confirmPassword) => {
-        this.setState({ confirmPassword });
-    }
+    onConfrimPassworddChange = (confirmPassword) => this.setState({ confirmPassword });
 
-    showNetworkError() {
-        Alert.alert('Network Info', "Please connect to a network to continue", undefined, { cancelable: false });
-    }
+    showNetworkError() { Alert.alert('Network Info', "Please connect to a network to continue", undefined, { cancelable: false }); }
 
     onCloseModal = () => {
         this.setState(this.initialState);
@@ -69,15 +53,12 @@ class ForgotPassword extends React.Component {
 
     onPressSubmitButton = () => {
         if (this.state.formStep === 1) {
-            this.setState({ isVisibleOTP: true })
+            this.setState({ isVisibleOTP: true });
             this.onSubmitEmail(this.state.email);
         } else if (this.state.formStep === 2) {
             this.onSubmitOTP(this.state.otp);
         } else if (this.state.formStep === 3) {
             this.onSubmitNewPassword(this.state.password, this.state.confirmPassword);
-            this.setState({
-                formStep: 1
-            })
         }
     }
 
@@ -92,6 +73,8 @@ class ForgotPassword extends React.Component {
                                 Alert.alert('Updated successfully', 'Your password has changed successfully');
                             }, 100);
                             this.props.onCancel();
+                            Actions.reset(PageKeys.LOGIN);
+                            
                         });
                     })
                     .catch(error => {
@@ -126,12 +109,18 @@ class ForgotPassword extends React.Component {
             return;
         }
         this.setState({ showLoader: true });
+        console.log(this.state.email);
         axios.post(USER_BASE_URL + `validateOTP`, { otp: otp, email: this.state.email }, { timeout: 15 * 1000 })
             .then(res => {
                 this.setState({ showLoader: false, formStep: 3 });
             })
             .catch(error => {
-                console.log(error.response);
+                if (error.response) {
+                    console.log('validateOTP message: ', error.message);
+                    console.log('validateOTP response.data: ', error.response.data);
+                    console.log('validateOTP response.status: ', error.response.status);
+                    console.log('validateOTP response.headers: ', error.response.headers);
+                }
                 this.setState({ showLoader: false }, () => {
                     if ((error.message === 'timeout of 15000ms exceeded' || error.message === 'Network Error') && this.props.hasNetwork === true) {
                         Alert.alert(
@@ -147,8 +136,7 @@ class ForgotPassword extends React.Component {
                             ],
                             { cancelable: false }
                         )
-                    }
-                    else {
+                    } else {
                         setTimeout(() => {
                             Alert.alert('Error', 'Entered OTP is wrong');
                         }, 100);
@@ -158,16 +146,13 @@ class ForgotPassword extends React.Component {
             });
     }
 
-    getCPasswdRef = (inputRef) => {
-        this.cPasswdRef = inputRef;
-    }
+    getCPasswdRef = (inputRef) => this.cPasswdRef = inputRef;
 
-    onSubmitEditingPassword = () => {
-        this.cPasswdRef.focus();
-    }
+    onSubmitEditingPassword = () => this.cPasswdRef.focus();
+
     passwordFormat = () => {
         if (this.state.password.length < 5) {
-            Alert.alert('Error', 'Password should be greater than 5 character');
+            Alert.alert('Error', 'Password should have minimum 5 characters');
         } else if (this.state.password.search(/\d/) == -1) {
             Alert.alert('Error', 'Password should contain one number');
         }
@@ -181,13 +166,7 @@ class ForgotPassword extends React.Component {
         if (isValidEmailFormat(email)) {
             this.setState({ showLoader: true });
             axios.get(USER_BASE_URL + `sendOTPToMail/${email}`, undefined, { timeout: 15 * 1000 })
-                .then(res => {
-                    // Toast.show({
-                    //     text: 'We have sent an OTP to your email',
-                    //     buttonText: 'Okay'
-                    // });
-                    this.setState({ showLoader: false, formStep: 2 });
-                })
+                .then(res => this.setState({ showLoader: false, formStep: 2 }))
                 .catch(error => {
                     this.setState({ showLoader: false }, () => {
                         if ((error.message === 'timeout of 15000ms exceeded' || error.message === 'Network Error') && this.props.hasNetwork === true) {
@@ -195,11 +174,7 @@ class ForgotPassword extends React.Component {
                                 'Something went wrong ',
                                 '',
                                 [
-                                    {
-                                        text: 'Retry ', onPress: () => {
-                                            this.onSubmitEmail()
-                                        }
-                                    },
+                                    { text: 'Retry ', onPress: () => this.onSubmitEmail(this.state.email) },
                                     { text: 'Cancel', onPress: () => { }, style: 'cancel' },
                                 ],
                                 { cancelable: false }
@@ -212,7 +187,6 @@ class ForgotPassword extends React.Component {
                                 }
                             }, 100);
                         }
-
                     });
                 });
         } else {
@@ -224,71 +198,73 @@ class ForgotPassword extends React.Component {
         switch (formStep) {
             case 1:
                 return (
-                    <View style={styles.form}>
-                        <LabeledInput placeholder='Enter your registered email' onChange={this.onChangeEmail} onSubmit={this.onSubmitEmail} />
-                        <View style={styles.buttonContainer}>
-                            <LinkButton title='Cancel' onPress={this.onCloseModal} />
-                            <LinkButton title='Submit' onPress={this.onPressSubmitButton} />
-                        </View>
+                    <View>
+                        <DefaultText style={{color:'#707070', fontSize:14, marginTop:7}}>Oops! It looks like we’ve hit a roadblock! Did you forget your password?
+                        Enter the email you use for MyRideDNA and we’ll send you instructions to reset your password
+                        </DefaultText>
+                        <LabeledInputPlaceholder
+                            containerStyle={{ backgroundColor: '#F4F4F4', flex: 0, borderBottomColor: '#707070' }}
+                            inputValue={this.state.email} inputStyle={{ paddingBottom: 0, }} inputType={'emailAddress'}
+                            outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3), marginTop: 10, flex: 0 }}
+                            returnKeyType='done'
+                            onChange={this.onChangeEmail} label='EMAIL ADDRESS' labelStyle={styles.labelStyle}
+                            hideKeyboardOnSubmit={false}
+                            onSubmit={this.onPressSubmitButton} />
+                        <BasicButton title='SUBMIT' style={[styles.submitBtn, { backgroundColor: '#2B77B4' }]} titleStyle={styles.submitBtnTxt} onPress={this.onPressSubmitButton} />
                     </View>
                 )
             case 2:
                 return (
-                    <View style={styles.form}>
-                        <LabeledInput placeholder='Enter the OTP here' onChange={this.onChangeOTP} onSubmit={this.onSubmitOTP} />
+                    <View>
+                        <LabeledInputPlaceholder
+                            containerStyle={{ backgroundColor: '#F4F4F4', flex: 0, borderBottomColor: '#707070' }}
+                            inputValue={this.state.otp} inputStyle={{ paddingBottom: 0, }}
+                            outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3), marginTop: 10, flex: 0 }}
+                            returnKeyType='done'
+                            onChange={this.onChangeOTP} label='ENTER THE ONE-TIME PASSWORD HERE' labelStyle={styles.labelStyle}
+                            hideKeyboardOnSubmit={false}
+                            onSubmit={this.onPressSubmitButton} />
                         {
                             this.state.isVisibleOTP
-                                ?
-                                <DefaultText style={{ color: 'red', fontSize: 13 }}>OTP has been sent to your registerd email id</DefaultText>
+                                ? <DefaultText style={{ color: 'red', fontSize: 13 }}>This has been sent to your registered email</DefaultText>
                                 : null
                         }
-                        <View style={styles.buttonContainer}>
-                            <LinkButton title='Cancel' onPress={this.onCloseModal} />
-                            <LinkButton title='Resend OTP' onPress={() => this.onSubmitEmail(this.state.email)} />
-                            <LinkButton title='Submit' onPress={this.onPressSubmitButton} />
-                        </View>
-                    </View>
+                        <BasicButton title='SUBMIT' style={[styles.submitBtn, { backgroundColor: '#2B77B4' }]} titleStyle={styles.submitBtnTxt} onPress={this.onPressSubmitButton} />
+                    </View >
                 )
             case 3:
                 return (
-                    <View style={styles.form}>
-                        {/* <LabeledInput inputType='password' returnKeyType='next' secureTextEntry={this.state.isVisiblePassword} placeholder='Enter new password' onChange={this.onPasswordsChange} onSubmit={this.onSubmitEditingPassword} hideKeyboardOnSubmit={false} />
-                     */}
-                        <Item >
-                            <TextInput onBlur={this.passwordFormat} style={{ flex: 1 }} secureTextEntry={!this.state.isVisiblePassword} textContentType='password' keyboardType='default' placeholder='Enter new Password' onChangeText={this.onPasswordsChange} onSubmit={this.onSubmitEditingPassword} hideKeyboardOnSubmit={false} />
-                            <IconButton onPress={this.togglePasswordVisibility} style={{ backgroundColor: '#0083CA', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: this.state.isVisiblePassword ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
-                        </Item>
-                        {/* <LabeledInput inputType='password' placeholder='Confirm password' onChange={this.onConfrimPassworddChange} inputRef={this.getCPasswdRef} /> */}
-                        <Item>
-                            <TextInput style={{ flex: 1 }} secureTextEntry={!this.state.isVisibleConfirmPassword} textContentType='password' keyboardType='default' placeholder='Confirm password' onChangeText={this.onConfrimPassworddChange} inputRef={this.getCPasswdRef} />
-                            <IconButton onPress={this.toggleConfirmPasswordVisibility} style={{ backgroundColor: '#0083CA', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4), marginRight: widthPercentageToDP(0) }} iconProps={{ name: this.state.isVisibleConfirmPassword ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
-                        </Item >
-                        <View style={styles.buttonContainer}>
-                            <LinkButton title='Cancel' onPress={this.onCloseModal} />
-                            <LinkButton title='Submit' onPress={this.onPressSubmitButton} />
-                        </View>
+                    <View>
+                        <LabeledInputPlaceholder
+                            containerStyle={{ backgroundColor: '#F4F4F4', flex: 0, borderBottomColor: '#707070' }}
+                            inputValue={this.state.password} inputStyle={{ paddingBottom: 0, }}
+                            outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3), marginTop: 40, flex: 0 }}
+                            inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next'
+                            secureTextEntry={!this.state.isVisiblePassword}
+                            onChange={this.onPasswordsChange} label='NEW PASSWORD' labelStyle={styles.labelStyle}
+                            onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false}
+                            iconProps={{ name: this.state.isVisiblePassword ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' }, onPress: this.togglePasswordVisibility, containerStyle: { backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) } }}
+                        />
+                        <LabeledInputPlaceholder
+                            containerStyle={{ backgroundColor: '#F4F4F4', flex: 0, borderBottomColor: '#707070' }}
+                            inputValue={this.state.confirmPassword} inputStyle={{ paddingBottom: 0, }}
+                            outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3), marginTop: 40, flex: 0 }}
+                            inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='done'
+                            secureTextEntry={!this.state.isVisibleConfirmPassword}
+                            onChange={this.onConfrimPassworddChange} label='CONFIRM PASSWORD' labelStyle={styles.labelStyle}
+                            onSubmit={this.onPressSubmitButton}
+                            iconProps={{ name: this.state.isVisibleConfirmPassword ? 'eye-off' : 'eye', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' }, onPress: this.toggleConfirmPasswordVisibility, containerStyle: { backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) } }}
+                        />
+                        <BasicButton title='SUBMIT' style={[styles.submitBtn, { backgroundColor: '#2B77B4' }]} titleStyle={styles.submitBtnTxt} onPress={this.onPressSubmitButton} />
                     </View>
                 )
         }
     }
 
     render() {
-        const { formStep, showLoader } = this.state;
-        const { isVisible, onCancel, onPressOutside } = this.props;
+        const { formStep } = this.state;
         return (
-            <BaseModal isVisible={isVisible} alignCenter={true} onCancel={this.onCloseModal}>
-                <View style={styles.fill}>
-                    {/* <Spinner
-                        visible={showLoader}
-                        textContent={'Verifying...'}
-                        textStyle={{ color: '#fff' }}
-                    /> */}
-                    <Loader isVisible={showLoader} onCancel={() => this.setState({ showLoader: false })} />
-                    {
-                        this.renderForm(formStep)
-                    }
-                </View>
-            </BaseModal>
+            <View>{this.renderForm(formStep)}</View>
         );
     }
 
@@ -300,12 +276,12 @@ const mapStateToProps = (state) => {
 const mapDipatchToProps = (dispatch) => {
     return {
         toggleNetworkStatus: (status) => dispatch(toggleNetworkStatusAction(status)),
-    };
+    }; 
 }
 export default connect(mapStateToProps, mapDipatchToProps)(ForgotPassword);
 
 const styles = StyleSheet.create({
-    fill: {
+    container: {
         width: WindowDimensions.width * 0.8,
         height: WindowDimensions.height * 0.3,
         backgroundColor: '#fff',
@@ -319,5 +295,24 @@ const styles = StyleSheet.create({
     },
     form: {
         marginHorizontal: 10,
-    }
+    },
+    labelStyle: {
+        fontSize: 11,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        letterSpacing: 1.1
+    },
+    submitBtn: {
+        height: 35,
+        backgroundColor: '#f69039',
+        width: 213,
+        alignSelf: 'center',
+        marginTop: 32,
+        borderRadius: 20
+
+    },
+    submitBtnTxt: {
+        letterSpacing: 1.4,
+        fontSize: 14,
+        fontFamily: CUSTOM_FONTS.robotoBold
+    },
 });

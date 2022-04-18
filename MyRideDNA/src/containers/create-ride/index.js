@@ -6,49 +6,50 @@ import {
     Keyboard,
     TextInput,
     Text,
-    KeyboardAvoidingView
+    KeyboardAvoidingView,
+    TouchableOpacity
 } from 'react-native';
 import { connect } from 'react-redux';
 
 import { Switch } from 'react-native-switch';
 
-import { RideInfo } from '../../model/map-models';
 import { BasicHeader } from '../../components/headers';
-import { SearchBox } from '../../components/inputs';
+import { SearchBox, LabeledInputPlaceholder, IconicList } from '../../components/inputs';
 import styles from './styles';
 import { Actions } from 'react-native-router-flux';
-import { createNewRide } from '../../api';
+import { createNewRide, getSpaces } from '../../api';
 
 import Geolocation from 'react-native-geolocation-service';
-import { SwitchIconButton, LinkButton } from '../../components/buttons';
+import { SwitchIconButton, LinkButton, IconButton, BasicButton } from '../../components/buttons';
 
 import { Icon as NBIcon, Item, Toast } from 'native-base';
-import { WindowDimensions, JS_SDK_ACCESS_TOKEN, IS_ANDROID, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES } from '../../constants';
+import { WindowDimensions, JS_SDK_ACCESS_TOKEN, IS_ANDROID, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, CUSTOM_FONTS, PageKeys } from '../../constants';
 import { SearchResults } from '../../components/pages';
 import { DefaultText } from '../../components/labels';
 
 
-const ANDROID_HEADER_HEIGHT = 50;
-const IOS_HEADER_HEIGHT = 90;
-const HEADER_HEIGHT = IS_ANDROID ? ANDROID_HEADER_HEIGHT : IOS_HEADER_HEIGHT;
-const FORM_AREA_HEIGHT = (WindowDimensions.height / 2) - HEADER_HEIGHT;
 const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
 const geocodingClient = mbxGeocoding({ accessToken: JS_SDK_ACCESS_TOKEN });
-export class CreateRide extends Component {
+class CreateRide extends Component {
+    fieldRefs = [];
     constructor(props) {
         super(props);
         this.state = {
-            privacyMode: 'private',
-            rideName: '',
-            ride: new RideInfo(props.ride),
+            selectedBikeId: null,
+            rideDescription: '',
+            ride: {},
             searchQuery: 'Current location',
             placeSearchList: [],
+            bikeList: [],
             startRideFrom: null,
-            currentLocation: this.props.currentLocation || null
+            currentLocation: this.props.currentLocation || null,
+            isPrivate: true
         };
     }
 
     componentDidMount() {
+        console.log(this.props)
+       this.setState({bikeList:this.props.spaceList})
         if (this.props.currentLocation === null) {
             Geolocation.getCurrentPosition(
                 ({ coords }) => {
@@ -98,9 +99,18 @@ export class CreateRide extends Component {
         const { ride } = this.state;
         this.setState({ ride: { ...ride, name } });
     }
+    onChangeRideDescription = (description) => {
+        const { ride } = this.state;
+        this.setState({ ride: { ...ride, description } });
+    }
 
-    onChangePrivacyMode = (isPrivate) => {
-        this.setState({ ride: { ...this.state.ride, privacyMode: isPrivate ? 'private' : 'public' } });
+    onChangeBike = (val) => {
+        const { ride } = this.state;
+        this.setState({ ride: { ...ride, selectedBikeId: val } });
+    }
+    onChangePrivacyMode = (val) => {
+        const { ride } = this.state;
+        this.setState({ isPrivate: val });
     }
 
     onSearchPlace = async (placeQuery) => {
@@ -127,7 +137,6 @@ export class CreateRide extends Component {
 
     onSelectPlace = (place) => {
         // DOC: Useful keys: place.geometry.coordinates and place.place_name
-        Keyboard.dismiss();
         this.setState({
             startRideFrom: { name: place.place_name, lat: place.geometry.coordinates[1], lng: place.geometry.coordinates[0] },
             searchQuery: place.place_name,
@@ -145,120 +154,188 @@ export class CreateRide extends Component {
     }
 
     onSubmitForm = () => {
-        const { ride, startRideFrom, searchQuery } = this.state;
-        if (ride.name === null || ride.name.trim().length === 0) {
+        const { ride, startRideFrom, searchQuery, isPrivate } = this.state;
+        if (!ride.name || ride.name.trim().length === 0) {
             Toast.show({
                 text: 'Enter Ride Name',
                 buttonText: 'Okay'
             });
             return
         };
-        let rideDetails = {
-            name: ride.name,
-            privacyMode: ride.privacyMode,
-            userId: this.props.user.userId,
-            date: new Date().toISOString(),
-            isRecorded: false
-        };
-        if (startRideFrom !== null && searchQuery !== '') {
-            rideDetails = {
-                ...rideDetails,
-                source: startRideFrom
+        if (this.props.isRecorded) {
+            let rideDetails = {
+                name: ride.name?ride.name:'',
+                description: ride.description?ride.description:'',
+                privacyMode: isPrivate ? 'private' : 'public',
+                spaceId: ride.selectedBikeId ? ride.selectedBikeId : ''
             };
-            this.props.onSubmitForm(rideDetails);
-            // Actions.pop();
-            this.props.cancelPopup([startRideFrom.lng, startRideFrom.lat]);
-        } else {
-            this.setState({ searchQuery: 'Current location' });
-            if (this.props.currentLocation === null) {
-                Geolocation.getCurrentPosition(
-                    ({ coords }) => {
-                        this.props.onChangeStartRideFrom([coords.longitude, coords.latitude]);
-                        // TODO: Call geocoding API to get address of the location
-                        rideDetails = {
-                            ...rideDetails,
-                            source: {
-                                name: '',
-                                lat: coords.latitude,
-                                lng: coords.longitude
-                            }
-                        };
-                        this.props.onSubmitForm(rideDetails);
-                        this.props.cancelPopup([coords.longitude, coords.latitude]);
-                    },
-                    (error) => {
-                        // TODO: Handle no starting point
-                        console.log(error.code, error.message);
-                    },
-                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-                );
-            } else {
+            console.log(rideDetails,'///// Ride Details')
+            this.props.onSubmitRecordRide(rideDetails)
+        }
+        else {
+            let rideDetails = {
+                name: ride.name ,
+                description: ride.description,
+                privacyMode: isPrivate ? 'private' : 'public',
+                userId: this.props.user.userId,
+                date: new Date().toISOString(),
+                isRecorded: false,
+                spaceId: ride.selectedBikeId
+            };
+            if (startRideFrom !== null && searchQuery !== '') {
                 rideDetails = {
                     ...rideDetails,
-                    source: {
-                        name: this.props.currentLocation.name,
-                        lat: this.props.currentLocation.location[1],
-                        lng: this.props.currentLocation.location[0]
+                    source: startRideFrom
+                };
+                this.props.submitForm(rideDetails);
+                // Actions.pop();
+                this.props.cancelPopup([startRideFrom.lng, startRideFrom.lat]);
+            } else {
+                this.setState({ searchQuery: 'Current location' });
+                if (this.props.currentLocation === null) {
+                    Geolocation.getCurrentPosition(
+                        ({ coords }) => {
+                            this.props.onChangeStartRideFrom([coords.longitude, coords.latitude]);
+                            // TODO: Call geocoding API to get address of the location
+                            rideDetails = {
+                                ...rideDetails,
+                                source: {
+                                    name: '',
+                                    lat: coords.latitude,
+                                    lng: coords.longitude
+                                }
+                            };
+                            this.props.submitForm(rideDetails);
+                            this.props.cancelPopup([coords.longitude, coords.latitude]);
+                        },
+                        (error) => {
+                            // TODO: Handle no starting point
+                            console.log(error.code, error.message);
+                        },
+                        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+                    );
+                } else {
+                    rideDetails = {
+                        ...rideDetails,
+                        source: {
+                            name: this.props.currentLocation.name,
+                            lat: this.props.currentLocation.location[1],
+                            lng: this.props.currentLocation.location[0]
+                        }
                     }
+                    this.props.submitForm(rideDetails);
+                    this.props.cancelPopup(this.props.currentLocation.location);
                 }
-                this.props.onSubmitForm(rideDetails);
-                this.props.cancelPopup(this.props.currentLocation.location);
             }
         }
     }
+
+
 
     onPressUseCurrentLocation = () => {
         this.setState({ searchQuery: 'Current location', placeSearchList: [], startRideFrom: null });
         this.props.onChangeStartRideFrom(this.props.currentLocation);
     }
 
+    onSelectLocation = (item) => {
+        item.id === 'CURRENT_LOCATION'
+            ? this.onPressUseCurrentLocation()
+            : this.onSelectPlace(item);
+    }
+
+    openSearchResultPage = () => {
+        const { searchQuery } = this.state;
+        Actions.push(PageKeys.SEARCH_RESULT, { currentLocation: { geometry: { coordinates: [this.state.currentLocation.lng, this.state.currentLocation.lat] } }, searchQuery: searchQuery === 'Current location' ? '' : searchQuery, onPressSearchResult: (item) => this.onSelectLocation(item) })
+    }
+
     render() {
-        const { ride, searchQuery, placeSearchList, startRideFrom } = this.state;
+        const { ride, searchQuery, placeSearchList, startRideFrom, rideDescription, bikeList, selectedBikeId, isPrivate } = this.state;
+        const { bike, title, isRecorded } = this.props;
+        const BIKE_LIST = [];
+        if (!bike) {
+            const updatedBikeList = bikeList.reduce((obj, item) => {
+                if (item.isDefault) {
+                    obj.filtered.push(item);
+                }
+                else {
+                    obj.remaning.push(item)
+                }
+                return obj;
+            }, ({ filtered: [], remaning: [] }))
+            if (bikeList.length > 0) {
+                BIKE_LIST.push({ label: updatedBikeList.filtered[0].name, value: updatedBikeList.filtered[0].spaceId });
+                updatedBikeList.remaning.forEach(bike => BIKE_LIST.push({ label: bike.name, value: bike.spaceId }));
+            }
+        }
+        console.log(title,'/////// title')
         return (
             <View style={{ height: this.props.containerHeight, zIndex: 500, elevation: 11, backgroundColor: 'transparent' }}>
                 <View style={{ height: (WindowDimensions.height / 2) }}>
-                    <BasicHeader headerHeight={HEADER_HEIGHT} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                        title='Create Ride' />
+                    <BasicHeader leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
+                        title={title} />
                     {
                         placeSearchList.length > 0 ?
                             <SearchResults style={{ top: 0, marginTop: 0, height: heightPercentageToDP(35) }} data={placeSearchList} onPressClose={this.onPressSearchResultsClose} onSelectItem={this.onSelectPlace} />
                             : null
                     }
-                    <ScrollView style={{ backgroundColor: 'white', flex: 1, paddingTop: HEADER_HEIGHT }} contentContainerStyle={{ flex: 1 }}>
-                        <View style={{ maxHeight: FORM_AREA_HEIGHT, flex: 1, justifyContent: 'space-around' }}>
-                            <Item style={{ marginLeft: widthPercentageToDP(4), marginRight: widthPercentageToDP(4), paddingTop: heightPercentageToDP(4) }}>
-                                {/* <NBIcon name='highway' type='MaterialCommunityIcons' style={styles.formFieldIcon} /> */}
-                                <TextInput style={{ flex: 1 }} textContentType='name' keyboardType='default' placeholder='New ride name' onChangeText={this.onChangeRideName} />
-                            </Item>
-                            {/* <Item style={{ borderBottomWidth: 0, marginLeft: widthPercentageToDP(4), marginRight: widthPercentageToDP(4), marginTop: heightPercentageToDP(4) }}>
-                                <NBIcon name='eye' type='MaterialCommunityIcons' style={styles.formFieldIcon} />
-                                
-                            </Item> */}
-                            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: widthPercentageToDP(4) }}>
-                                <DefaultText style={{ alignSelf: 'center', letterSpacing: 3 }}>{ride.privacyMode === 'private' ? 'PRIVATE' : 'PUBLIC'}</DefaultText>
-                                <SwitchIconButton
-                                    activeIcon={<NBIcon name='close' type='FontAwesome' style={{ color: '#fff', alignSelf: 'flex-start', paddingHorizontal: 10, fontSize: widthPercentageToDP(6) }} />}
-                                    inactiveIcon={<NBIcon name='eye' type='MaterialCommunityIcons' style={{ color: '#fff', alignSelf: 'flex-end', paddingHorizontal: 10, fontSize: widthPercentageToDP(6) }} />}
-                                    value={ride.privacyMode === 'private'} onChangeValue={this.onChangePrivacyMode} />
+                    <ScrollView style={{ backgroundColor: 'white' }} contentContainerStyle={{}}>
+                        <View style={{ marginTop: 70 }}>
+                            <LabeledInputPlaceholder
+                                containerStyle={{ backgroundColor: '#F4F4F4' }}
+                                inputValue={ride.name} inputStyle={{ paddingBottom: 0 }}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3), marginLeft: 28, }}
+                                inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next'
+                                onChange={this.onChangeRideName} label='RIDE NAME' labelStyle={styles.labelStyle}
+                                onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
+                            <LabeledInputPlaceholder
+                                containerStyle={{ backgroundColor: '#F4F4F4' }}
+                                inputValue={ride.description}
+                                inputStyle={{ paddingBottom: 0 }}
+                                multiline={true}
+                                inputRef={elRef => this.fieldRefs[1] = elRef}
+                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3), marginLeft: 28, }}
+                                returnKeyType='next'
+                                onChange={this.onChangeRideDescription} label='RIDE DESCRIPTION' labelStyle={styles.labelStyle}
+                                hideKeyboardOnSubmit={true} />
+                            <View style={styles.hDivider} />
+                            {title!=='Plan a Ride'?<View style={styles.dropdownContainer}>
+                                <IconicList
+                                    disabled={BIKE_LIST.length === 0}
+                                    iconProps={IS_ANDROID ? {} : { type: 'MaterialIcons', name: 'arrow-drop-down', style: { color: APP_COMMON_STYLES.infoColor, fontSize: 28 } }}
+                                    pickerStyle={[{ borderBottomWidth: 0 }, IS_ANDROID ? { flex: 1 } : null]}
+                                    textStyle={{left:8, fontSize: 14, bottom: 7 }}
+                                    selectedValue={ride.selectedBikeId}
+                                    values={BIKE_LIST}
+                                    placeholder={'SELECT A BIKE'}
+                                    outerContainer={{ flex: 1, alignItems: 'flex-end' }}
+                                    containerStyle={{ flex: 1 }}
+                                    innerContainerStyle={{ height: 24 }}
+                                    onChange={this.onChangeBike} />
+                            </View>:null}
+                            <View style={styles.switchBtnContainer}>
+                                <LinkButton style={[styles.grayBorderBtn, { marginRight: 17 }, isPrivate ? null : styles.greenLinkBtn]} title='ROAD CREW' titleStyle={[styles.grayBorderBtnText, { color: isPrivate ? '#9A9A9A' : '#fff' }]} onPress={() => isPrivate === true && this.onChangePrivacyMode(false)} />
+                                <LinkButton style={[styles.grayBorderBtn, isPrivate ? styles.redLinkBtn : null]} title='ONLY ME' titleStyle={[styles.grayBorderBtnText, { color: isPrivate ? '#fff' : '#9A9A9A' }]} onPress={() => isPrivate === false && this.onChangePrivacyMode(true)} />
                             </View>
-                            <Item style={{ marginLeft: widthPercentageToDP(4), marginRight: widthPercentageToDP(4) }}>
-                                {/* <NBIcon name='map-pin' type='FontAwesome' style={[styles.formFieldIcon, { paddingHorizontal: widthPercentageToDP(2) }]} /> */}
-                                <DefaultText style={{ color: '#8C8C8C' }}>Start ride from: </DefaultText>
-                                <SearchBox value={searchQuery} onFocus={() => this.setState({ searchQuery: '' })} hideIcon={true} onTextChange={this.onSearchPlace} onPressClear={() => this.setState({ searchQuery: '', })} />
-                            </Item>
-                            <LinkButton style={{ alignSelf: 'flex-end', marginRight: 25 }} title='Use my current location' titleStyle={{ color: APP_COMMON_STYLES.headerColor }} onPress={this.onPressUseCurrentLocation} />
+                            {
+                                isRecorded ?
+                                    null
+                                    : <View style={styles.btmContainer}>
+                                        <DefaultText style={styles.btmLabelTxt}>START RIDE FROM</DefaultText>
+                                        <View style={styles.currentLctnCont} >
+                                            <LinkButton numberOfLines={1} style={{ width: 120 }} title={searchQuery} titleStyle={{ color: APP_COMMON_STYLES.headerColor, letterSpacing:searchQuery === 'Current location'?2:0 }} onPress={this.openSearchResultPage} />
+                                            {/* <DefaultText numberOfLines={1} style={{width:120}}>{searchQuery}</DefaultText> */}
+                                            {
+                                                searchQuery === 'Current location'
+                                                ?null
+                                                : <IconButton iconProps={{ name: 'close', type: 'FontAwesome', style: { fontSize: 10, color: '#fff' } }} style={[styles.closeIconCont, { backgroundColor: '#CE0D0D' }]} onPress={this.onPressUseCurrentLocation} />
+                                            }
+                                        </View>
+                                    </View>
+                            }
                         </View>
                     </ScrollView>
                 </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', backgroundColor: 'rgba(82, 137, 25, 0.8)', height: 100, minHeight: 100, alignItems: 'center' }}>
-                    <LinkButton style={{ marginRight: 25 }} title='SUBMIT' onPress={this.onSubmitForm} titleStyle={{ fontSize: 18, color: '#fff' }} />
-                    {/* <LinkButton title='CANCEL' onPress={this.onPressBackButton} titleStyle={{ fontSize: 18, color: '#fff' }} /> */}
-                </View>
-                {/* {
-                    placeSearchList.length > 0 ?
-                        <SearchResults style={{ marginTop: ((WindowDimensions.height / 2) - HEADER_HEIGHT) }} data={placeSearchList} onPressClose={this.onPressSearchResultsClose} onSelectItem={this.onSelectPlace} />
-                        : null
-                } */}
+                <BasicButton title='ADD RIDE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: 20, fontFamily: CUSTOM_FONTS.robotoSlabBold }} onPress={this.onSubmitForm} />
             </View>
         );
     }
@@ -267,12 +344,13 @@ export class CreateRide extends Component {
 const mapStateToProps = (state) => {
     const { ride } = state.RideInfo;
     const { user } = state.UserAuth;
-    return { ride, user };
+    const { spaceList,currentBike: bike } = state.GarageInfo;
+    return { ride, user, bike,spaceList };
 }
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        submitForm: (rideInfo) => dispatch(createNewRide(rideInfo))
+        submitForm: (rideInfo) => dispatch(createNewRide(rideInfo)),
     }
 }
 

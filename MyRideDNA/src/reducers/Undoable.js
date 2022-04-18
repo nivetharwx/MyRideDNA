@@ -36,7 +36,8 @@ export function undoable(reducer) {
                 const newPresent = reducer(present, action)
                 if (present === newPresent) {
                     return state
-                } else if (newPresent.ride.isRecorded || present.ride.rideId === null || (present.ride.rideId !== newPresent.ride.rideId)) {
+                }
+                else if (newPresent.ride.isRecorded || present.ride.rideId === null || (present.ride.rideId !== newPresent.ride.rideId)) {
                     return {
                         past: [],
                         present: newPresent,
@@ -50,10 +51,75 @@ export function undoable(reducer) {
                         future: [...future]
                     }
                 }
-                return {
-                    past: [...past, present],
-                    present: newPresent,
-                    future: []
+                else {
+                    if (action.data.isUndoable === false) {
+                        // to update data of waypoint in past array
+                        // to update data of waypoint in future array
+                        return {
+                            past: past.map((item) => {
+                                if (action.data.source) {
+                                    return {
+                                        ...item, ride: { ...item.ride, source: { ...item.ride.source, description: action.data.source.description, name: action.data.source.name, pictureList: action.data.source.pictureList } }
+                                    }
+                                }
+                                else if (action.data.destination) {
+                                    return {
+                                        ...item, ride: { ...item.ride, destination: { ...item.ride.destination, description: action.data.destination.description, name: action.data.destination.name, pictureList: action.data.destination.pictureList } }
+                                    }
+                                }
+                                else if (action.data.updates) {
+                                    return {
+                                        ...item, ride: {
+                                            ...item.ride, waypoints: item.ride.waypoints.map(point => {
+                                                if (point.lng && point.lat && ((point.lng + "." + point.lat) === action.data.combinedCoordinates)) {
+                                                    return { ...point, description: action.data.updates.description, name: action.data.updates.name, pictureList: action.data.updates.pictureList }
+                                                }
+                                                else {
+                                                    return point
+                                                }
+                                            })
+                                        }
+                                    }
+                                }
+                                else return item
+                            }),
+                            present: newPresent,
+                            future: future.map((item) => {
+                                if (action.data.source) {
+                                    return {
+                                        ...item, ride: { ...item.ride, source: { ...item.ride.source, description: action.data.source.description, name: action.data.source.name, pictureList: action.data.source.pictureList } }
+                                    }
+                                }
+                                else if (action.data.destination) {
+                                    return {
+                                        ...item, ride: { ...item.ride, destination: { ...item.ride.destination, description: action.data.destination.description, name: action.data.destination.name, pictureList: action.data.destination.pictureList } }
+                                    }
+                                }
+                                else if (action.data.updates) {
+                                    return {
+                                        ...item, ride: {
+                                            ...item.ride, waypoints: item.ride.waypoints.map(point => {
+                                                if (point.lng && point.lat && ((point.lng + "." + point.lat) === action.data.combinedCoordinates)) {
+                                                    return { ...point, description: action.data.updates.description, name: action.data.updates.name, pictureList: action.data.updates.pictureList }
+                                                }
+                                                else {
+                                                    return point
+                                                }
+                                            })
+                                        }
+                                    }
+                                }
+                                else return item
+                            })
+                        }
+                    }
+                    else {
+                        return {
+                            past: [...past, present],
+                            present: newPresent,
+                            future: []
+                        }
+                    }
                 }
         }
     }

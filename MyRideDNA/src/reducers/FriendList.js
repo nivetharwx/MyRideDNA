@@ -1,16 +1,28 @@
-import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_PERSON_PROFILE, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION, ADD_FRIENDS_LOCATION, REPLACE_FRIEND_INFO, UPDATE_FRIENDS_RIDE_SNAPSHOT, GET_NOT_FRIEND_INFO, UPDATE_FAVOURITE_FRIEND_LIST, SET_CURRENT_FRIEND, UPDATE_PICTURES } from "../actions/actionConstants";
+import { Actions } from "react-native-router-flux";
+import { REPLACE_FRIEND_LIST, UPDATE_FRIEND_LIST, CLEAR_FRIEND_LIST, DELETE_FRIEND, UPDATE_SEARCH_FRIEND_LIST, REPLACE_SEARCH_FRIEND_LIST, CLEAR_SEARCH_FRIEND_LIST, UPDATE_RELATIONSHIP, GET_FRIEND_INFO, RESET_PERSON_PROFILE, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_ONLINE_STATUS, UPDATE_CURRENT_FRIEND, UPDATE_CURRENT_FRIEND_GARAGE, UPDATE_FRIENDS_LOCATION, REPLACE_FRIENDS_LOCATION, HIDE_FRIENDS_LOCATION, ADD_FRIENDS_LOCATION, REPLACE_FRIEND_INFO, UPDATE_FRIENDS_RIDE_SNAPSHOT, GET_NOT_FRIEND_INFO, UPDATE_FAVOURITE_FRIEND_LIST, SET_CURRENT_FRIEND, UPDATE_PICTURES, REMOVE_TEMP_LOCATION, UPDATE_FAVOURITE_LIST } from "../actions/actionConstants";
 import { FRIEND_TYPE, HEADER_KEYS, RELATIONSHIP, RIDE_TAIL_TAG, THUMBNAIL_TAIL_TAG, PageKeys } from "../constants";
 
 const initialState = {
     allFriends: [],
     paginationNum: 0,
-    friendsLocationList: { activeLength: 0 }
+    friendsLocationList: { activeLength: 0 },
+    favouriteList:[]
 };
 
 export default (state = initialState, action) => {
     switch (action.type) {
 
         case REPLACE_FRIEND_LIST:
+            if(action.data.comingFrom === PageKeys.NOTIFICATIONS){
+                return{
+                    ...state,
+                    allFriends:[
+                        action.data.newFriendData,
+                        ...state.allFriends,
+                    ]
+                }
+            }
+            else{
             if (action.data.pageNumber === 0) {
                 return {
                     ...state,
@@ -26,7 +38,7 @@ export default (state = initialState, action) => {
                 }
             }
 
-
+        }
         case UPDATE_FRIEND_LIST:
             if (typeof action.data.index === 'number' && action.data.index >= 0) {
                 return {
@@ -42,6 +54,7 @@ export default (state = initialState, action) => {
                     paginationNum
                 }
             }
+    
 
         case ADD_FRIENDS_LOCATION:
             return {
@@ -74,6 +87,23 @@ export default (state = initialState, action) => {
                     [action.data]: { ...state.friendsLocationList[action.data], isVisible: false },
                     activeLength: state.friendsLocationList.activeLength - 1
                 }
+            }
+
+        case REMOVE_TEMP_LOCATION:
+            return {
+                ...state,
+                friendsLocationList: Object.keys(state.friendsLocationList).reduce((list, k) => {
+                    if (list[k].isTempLocation && list[k].isVisible) {
+                        return {
+                            ...list,
+                            [k]: { ...list[k], isVisible: false },
+                            activeLength: list.activeLength - 1
+                        }
+                    }
+                    else {
+                        return list;
+                    }
+                }, { ...state.friendsLocationList })
             }
 
         case UPDATE_FRIENDS_LOCATION:
@@ -136,20 +166,50 @@ export default (state = initialState, action) => {
                     allFriends: updatedFriendList
                 }
             }
+        
+        case UPDATE_FAVOURITE_LIST:
+            console.log(action.data,'////printed')
+            if(action.data.data.refreshed){
+                return {
+                    ...state,
+                    favouriteList:[...action.data.data.friendsList]
+                }
+            }
+            return {
+                ...state,
+                favouriteList:[...state.favouriteList,...action.data.data.friendsList]
+            }
 
         case UPDATE_FAVOURITE_FRIEND_LIST:
             const friendIndex = state.allFriends.findIndex(item => item.userId === action.data.friendId);
             const updatedFriend = state.allFriends[friendIndex];
             updatedFriend['favorite'] = action.data.favorite;
-            return {
-                ...state,
-                allFriends: [
-                    ...state.allFriends.slice(0, friendIndex),
-                    updatedFriend,
-                    ...state.allFriends.slice(friendIndex + 1)
-                ]
+            if(!action.data.favorite){
+                
+                    const favouriteList=state.favouriteList.filter((item)=>{
+                        return item.userId !== action.data.friendId
+                    })
+                    return {
+                        ...state,
+                        allFriends: [
+                            ...state.allFriends.slice(0, friendIndex),
+                            updatedFriend,
+                            ...state.allFriends.slice(friendIndex + 1)
+                        ],
+                        favouriteList:favouriteList
+                    }    
+            }else{
+                return {
+                    ...state,
+                    allFriends: [
+                        ...state.allFriends.slice(0, friendIndex),
+                        updatedFriend,
+                        ...state.allFriends.slice(friendIndex + 1)
+                    ],
+                    favouriteList:[...state.favouriteList,updatedFriend]
+                }
             }
-            return state;
+
 
         default: return state
     }

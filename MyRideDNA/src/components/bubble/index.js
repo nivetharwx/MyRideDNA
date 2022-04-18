@@ -1,69 +1,42 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, TouchableWithoutFeedback } from 'react-native';
-import { APP_COMMON_STYLES, widthPercentageToDP, heightPercentageToDP, CUSTOM_FONTS } from '../../constants';
+import { View, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { APP_COMMON_STYLES, CUSTOM_FONTS } from '../../constants';
 import { DefaultText } from '../labels';
+import { Icon as NBIcon } from 'native-base';
 
-class Bubble extends React.PureComponent {
-    render() {
-        let innerChildView = this.props.children;
-
-        if (this.props.onPress) {
-            innerChildView = (
-                <TouchableOpacity onPress={this.props.onPress}>
-                    {this.props.children}
-                </TouchableOpacity>
-            );
-        }
-
-        return (
-            <View style={[styles.centerContainer, this.props.style]}>
-                {innerChildView}
-            </View>
-        );
-    }
-}
-
-export const ChatBubble = ({ bubbleStyle, bubbleHeaderStyle, bubbleNameStyle, messageTimeStyle, messageStyle, bubbleName, messageTime, messageDate, message, onLongPress, onPress, selectedMessage }) => (
-
-    <TouchableWithoutFeedback onPress={() => onPress ? onPress() : null} activeOpacity={onLongPress ? 0.7 : 1} onLongPress={() => onLongPress && onLongPress()} style={{
+export const ChatBubble = ({ bubbleStyle, showSelectionCircle, messageTimeStyle, messageStyle, bubbleName, messageTime, messageDate, message, onLongPress = null, onPress = null, selectedMessage, circleStyle }) => (
+    <TouchableWithoutFeedback onPress={onPress} activeOpacity={onLongPress ? 0.7 : 1} onLongPress={onLongPress} style={{
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center'
     }}>
-        {
-            selectedMessage ?
-                <View>
-                    {
-                        bubbleName || messageDate
-                            ? <View style={{ height: 15, marginTop: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <DefaultText style={[styles.bubbleName]}>{bubbleName || ''}</DefaultText>
-                                <DefaultText style={[styles.bubbleDate]}>{messageDate}</DefaultText>
-                            </View>
-                            : <View style={{ height: 15, marginTop: 5 }} />
-                    }
-                    <View style={[styles.chatBubble, bubbleStyle, styles.highlightStyle]}>
-                        <DefaultText style={[styles.message, messageStyle]}>{message}</DefaultText>
-                        <DefaultText style={[styles.messageTime, messageTimeStyle]}>{messageTime}</DefaultText>
-                    </View>
+        <View style={{ flexDirection: 'row', flex: 1 }}>
+            <View style={{ flex: 1 }}>
+                {
+                    bubbleName || messageDate
+                        ? <View style={{ height: 15, marginTop: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <DefaultText style={[styles.bubbleName]}>{bubbleName || ''}</DefaultText>
+                        </View>
+                        : <View style={{ height: 5 }} />
+                }
+                <View style={[styles.chatBubble, bubbleStyle]}>
+                    <DefaultText style={[styles.message, messageStyle]}>{message}</DefaultText>
+                    <DefaultText style={[styles.messageTime, messageTimeStyle]}>{messageTime}</DefaultText>
                 </View>
-                :
-                <View>
-                    {
-                        bubbleName || messageDate
-                            ? <View style={{ height: 15, marginTop: 5, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <DefaultText style={[styles.bubbleName]}>{bubbleName || ''}</DefaultText>
-                                <DefaultText style={[styles.bubbleDate]}>{messageDate}</DefaultText>
-                            </View>
-                            : <View style={{ height: 15, marginTop: 5 }} />
-                    }
-                    <View style={[styles.chatBubble, bubbleStyle]}>
-                        <DefaultText style={[styles.message, messageStyle]}>{message}</DefaultText>
-                        <DefaultText style={[styles.messageTime, messageTimeStyle]}>{messageTime}</DefaultText>
+            </View>
+            {
+                showSelectionCircle
+                    ? <View style={[styles.circle, { marginTop: bubbleName ? 15 : 0 }, circleStyle, { backgroundColor: selectedMessage ? APP_COMMON_STYLES.infoColor : 'rgba(255,255,255, 0.4)' }]}>
+                        {
+                            selectedMessage
+                                ? <NBIcon name='check' type='Entypo' style={{ color: '#FFFFFF', left: 2, fontSize: 24.5, marginRight: 5 }} />
+                                : null
+                        }
                     </View>
-                </View>
-        }
-
-    </TouchableWithoutFeedback>
+                    : null
+            }
+        </View>
+    </TouchableWithoutFeedback >
 );
 
 const styles = StyleSheet.create({
@@ -71,12 +44,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#99C8F7'
     },
     chatBubble: {
-        // paddingBottom: 8,
-        // paddingTop: 8,
-        // paddingHorizontal: 20,
         paddingTop: 11,
         width: 215,
-        // minHeight: heightPercentageToDP(8),
+        marginRight: 7,
         maxWidth: 215,
         borderRadius: 9,
         borderBottomLeftRadius: 9,
@@ -86,7 +56,6 @@ const styles = StyleSheet.create({
     },
     chatBubbleHeader: {
         flexDirection: 'row',
-        // paddingBottom: 5,
     },
     message: {
         paddingHorizontal: 20,
@@ -110,11 +79,6 @@ const styles = StyleSheet.create({
         paddingBottom: 2,
         letterSpacing: 0.8,
         fontFamily: CUSTOM_FONTS.robotoBold
-        // fontStyle: 'italic',
-        // marginRight: 5,
-        // marginTop: 5,
-        // color: '#fff',
-        // height: 17
     },
     container: {
         borderRadius: 30,
@@ -143,5 +107,14 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         alignSelf: 'center',
         zIndex: 900
+    },
+    circle: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        marginLeft: 'auto',
+        alignSelf: 'center',
+        justifyContent: 'center',
+        alignItems: 'center'
     }
 });

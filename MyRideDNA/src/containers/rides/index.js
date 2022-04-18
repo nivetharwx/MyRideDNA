@@ -1,96 +1,42 @@
 import React, { Component } from 'react';
-import {
-    SafeAreaView, Text, View, FlatList, ImageBackground,
-    TouchableOpacity, Alert, StatusBar, Platform, StyleSheet,
-    Image, ActivityIndicator, Easing, Animated
-} from 'react-native';
+import { View, FlatList, Alert, StyleSheet, ActivityIndicator, Easing, Animated, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import { connect } from 'react-redux';
-
-import { Tab, TabHeading, Tabs, ScrollableTab, Icon as NBIcon, ListItem, Left, Toast, Card, CardItem, Thumbnail, Body, Button, Right } from "native-base";
-import { PageKeys, WindowDimensions, RIDE_TYPE, APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, RIDE_TAIL_TAG, JS_SDK_ACCESS_TOKEN, RECORD_RIDE_STATUS, UNSYNCED_RIDE, heightPercentageToDP } from '../../constants';
-import { ShifterButton, LinkButton, ImageButton, IconButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, screenChangeAction, clearRideAction, updateRidePictureInListAction, updateRideCreatorPictureInListAction, apiLoaderActions, updateRideInListAction, updateRideAction, isRemovedAction, updateRideSyncStatusAction, replaceUnsyncedRidesAction, deleteUnsyncedRideAction } from '../../actions';
-import { BasicHeader } from '../../components/headers';
-import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, renameRide, getAllPublicRides, copySharedRide, logoutUser, getPicture, getPictureList, updateRide, getRidePictureList, pauseRecordRide, completeRecordRide } from '../../api';
-import { getFormattedDateFromISO } from '../../util';
-import { LabeledInput } from '../../components/inputs';
-import { IconLabelPair, DefaultText } from '../../components/labels';
+import { Tab, Tabs, Toast, Thumbnail } from "native-base";
+import { PageKeys, RIDE_TYPE, APP_COMMON_STYLES, widthPercentageToDP, THUMBNAIL_TAIL_TAG, JS_SDK_ACCESS_TOKEN, RECORD_RIDE_STATUS, UNSYNCED_RIDE, heightPercentageToDP, GET_PICTURE_BY_ID, PORTRAIT_TAIL_TAG, CUSTOM_FONTS, RIDE_SORT_OPTIONS, CHAT_CONTENT_TYPE } from '../../constants';
+import { LinkButton, ImageButton, IconButton, BasicButton } from '../../components/buttons';
+import { appNavMenuVisibilityAction, screenChangeAction, clearRideAction, apiLoaderActions, updateRideInListAction, updateRideAction, isRemovedAction, deleteUnsyncedRideAction, updateRideListAction, resetErrorHandlingAction, deleteRideAction, updateRideLikeAndCommentAction, setCurrentFriendAction } from '../../actions';
+import { PostCard } from '../../components/cards';
+import { getAllBuildRides, getRideByRideId, deleteRide, getAllRecordedRides, copyRide, getAllPublicRides, copySharedRide, updateRide, pauseRecordRide, completeRecordRide, handleServiceErrors, addLike, unLike, sendMessage } from '../../api';
+import { SearchBoxFilter } from '../../components/inputs';
+import { DefaultText } from '../../components/labels';
 import { BaseModal } from '../../components/modal';
-import { Loader } from '../../components/loader';
 import axios from 'axios';
 import { APP_CONFIGS } from '../../config';
+import { Actions } from 'react-native-router-flux';
+import { BasePage } from '../../components/pages';
+import DurationIcon from '../../assets/img/Time-Ride.svg'
+import DistanceIcon from '../../assets/img/Distance-Rides.svg'
+import CalendarIcon from '../../assets/img/Date-Rides.svg'
 
-
+const NUM_OF_DESC_LINES = 3;
+const tabCode= {
+    0:RIDE_TYPE.BUILD_RIDE,
+    1:RIDE_TYPE.RECORD_RIDE,
+    2:RIDE_TYPE.SHARED_RIDE
+}
 export class Rides extends Component {
-    BUILD_RIDE_OPTIONS = [
-        {
-            text: 'Copy to new ride', id: 'copy', handler: () => {
-                this.setState({ isVisibleOptionsModal: false, isVisibleRenameModal: true });
-            }
-        },
-        {
-            text: 'Remove from list', id: 'remove', handler: () => {
-                const { rideId, name } = this.props.buildRides[this.state.selectedRide.index];
-                this.setState({ isVisibleOptionsModal: false }, () => {
-                    this.deleteRideConfirmation(rideId, name, this.state.selectedRide.index, RIDE_TYPE.BUILD_RIDE);
-                });
-            }
-        },
-        {
-            text: 'Change to ', id: 'changePrivacyMode', handler: () => {
-                const { rideId, privacyMode } = this.props.buildRides[this.state.selectedRide.index];
-                this.setState({ isVisibleOptionsModal: false }, () => {
-                    const updatedRide = { rideId };
-                    updatedRide.privacyMode = privacyMode === 'private' ? 'public' : 'private';
-                    this.props.updateRideInList(updatedRide, RIDE_TYPE.BUILD_RIDE, updatedRide.rideId === this.props.ride.rideId);
-                });
-            }
-        },
-        { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }
-    ];
-    RECORD_RIDE_OPTIONS = [
-        {
-            text: 'Rename ride', id: 'rename', handler: () => {
-                this.setState({ isVisibleOptionsModal: false, isVisibleRenameModal: true });
-            }
-        },
-        {
-            text: 'Remove from list', id: 'remove', handler: () => {
-                const { rideId, name } = this.props.recordedRides[this.state.selectedRide.index];
-                this.setState({ isVisibleOptionsModal: false }, () => {
-                    this.deleteRideConfirmation(rideId, name, this.state.selectedRide.index, RIDE_TYPE.RECORD_RIDE);
-                });
-            }
-        },
-        {
-            text: 'Change to ', id: 'changePrivacyMode', handler: () => {
-                const { rideId, privacyMode } = this.props.recordedRides[this.state.selectedRide.index];
-                this.setState({ isVisibleOptionsModal: false }, () => {
-                    const updatedRide = { rideId };
-                    updatedRide.privacyMode = privacyMode === 'private' ? 'public' : 'private';
-                    this.props.updateRideInList(updatedRide, RIDE_TYPE.RECORD_RIDE, updatedRide.rideId === this.props.ride.rideId);
-                });
-            }
-        },
-        { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }
-    ];
-    SHARED_RIDE_OPTIONS = [
-        {
-            text: 'Copy to new ride', id: 'copy', handler: () => {
-                this.setState({ isVisibleOptionsModal: false, isVisibleRenameModal: true });
-            }
-        },
-        { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }
-    ];
+    _postType = 'ride';
+    _listRef = null;
+    tabsRef = null;
     callInitiatedObj = {};
+    _searchQueryTimeout = null;
     constructor(props) {
         super(props);
         this.state = {
             isRefreshing: false,
             activeTab: 0,
             searchQuery: '',
-            headerSearchMode: false,
             newRideName: '',
             isVisibleRenameModal: false,
             isVisibleOptionsModal: false,
@@ -98,108 +44,96 @@ export class Rides extends Component {
             isLoadingData: false,
             isLoading: false,
             spinValue: new Animated.Value(0),
+            showFilter: false,
+            showMoreSection: {},
+            hasRemainingList: false,
+            pageNumber: 0,
+            sortBy: RIDE_SORT_OPTIONS.DATE,
+            showRequestModal:false,
         };
     }
 
     showAppNavMenu = () => this.props.showAppNavMenu();
 
-    componentDidMount() {
-        const { activeTab } = this.state;
-        if (activeTab === 0) {
-            this.getRidesApi(activeTab);
-        }
+    componentDidMount() { 
+        console.log(this.props,'props/////')
+        this.fetchRides(); 
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (this.props.ride.rideId && (prevProps.ride.rideId !== this.props.ride.rideId)) {
-            this.props.changeScreen({ name: PageKeys.MAP });
+            this.props.changeScreen({ name: PageKeys.MAP});
+            return;
         }
         const { activeTab } = this.state;
-        if (prevState.activeTab != activeTab) {
-            this.getRidesApi(activeTab);
+        if (prevState.activeTab !== activeTab) {
+            if (activeTab === 0) this.fetchRides(this.props.buildRides.length === 0);
+            else if (activeTab === 1) this.fetchRides(this.props.recordedRides.length === 0);
+            else if (activeTab === 2) this.fetchRides(this.props.sharedRides.length === 0);
         }
 
-        if (prevProps.buildRides !== this.props.buildRides) {
-            if (this.state.selectedRide && this.state.selectedRide.rideType === RIDE_TYPE.SHARED_RIDE) {
-                Toast.show({
-                    text: 'Ride copied to your created rides',
-                    buttonText: 'Okay'
-                });
-                return;
-            }
-            this.onCancelRenameForm();
-            if (this.props.buildRides.length < prevProps.buildRides.length && this.props.isRemoved) {
-                this.showDeleteSuccessMessage();
-                return;
-            }
-            let buildPicIdList = this.props.buildRides.reduce((list, ride) => {
-                if (ride.snapshotId && !ride.snapshot) {
-                    // list.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
-                    list.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, RIDE_TAIL_TAG));
-                }
-                return list;
-            }, []);
-            if (buildPicIdList.length > 0) {
-                this.props.getRidePictureList(buildPicIdList, RIDE_TYPE.BUILD_RIDE);
-            }
-        } else if (prevProps.recordedRides !== this.props.recordedRides) {
-            this.onCancelRenameForm();
-            if (this.props.buildRides.length < prevProps.buildRides.length) {
-                this.showDeleteSuccessMessage()
-            }
-            let recordPicIdList = this.props.recordedRides.reduce((list, ride) => {
-                if (ride.snapshotId && !ride.snapshot) {
-                    // list.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
-                    list.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, RIDE_TAIL_TAG));
-                }
-                return list;
-            }, []);
-            if (recordPicIdList.length > 0) {
-                this.props.getRidePictureList(recordPicIdList, RIDE_TYPE.RECORD_RIDE);
-            }
-        } else if (prevProps.sharedRides !== this.props.sharedRides) {
-            this.onCancelRenameForm();
-            if (prevState.isRefreshing === true) {
-                this.setState({ isRefreshing: false });
-            }
-            let sharedPicIdObj = this.props.sharedRides.reduce((obj, ride) => {
-                if (ride.snapshotId && !ride.snapshot && !this.callInitiatedObj[ride.snapshotId]) {
-                    this.callInitiatedObj[ride.snapshotId] = true;
-                    // obj.snapshotIdList.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG));
-                    obj.snapshotIdList.push(ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, RIDE_TAIL_TAG));
-                } else {
-                    this.callInitiatedObj[ride.snapshotId] = false;
-                }
-                if (ride.creatorProfilePictureId && !ride.creatorProfilePicture && !this.callInitiatedObj[ride.creatorProfilePictureId]) {
-                    this.callInitiatedObj[ride.creatorProfilePictureId] = true;
-                    obj.creatorPicIdList.push(ride.creatorProfilePictureId);
-                } else {
-                    this.callInitiatedObj[ride.creatorProfilePictureId] = false;
-                }
-                return obj;
-            }, { snapshotIdList: [], creatorPicIdList: [] });
-            if (sharedPicIdObj.snapshotIdList.length > 0) {
-                this.props.getRidePictureList(sharedPicIdObj.snapshotIdList, RIDE_TYPE.SHARED_RIDE);
-            }
-            if (sharedPicIdObj.creatorPicIdList.length > 0) {
-                this.props.getRideCreatorPictureList(sharedPicIdObj.creatorPicIdList, RIDE_TYPE.SHARED_RIDE);
+        if (prevProps.hasNetwork === false && this.props.hasNetwork === true) {
+            this.retryApiFunction();
+        }
+
+        if (prevProps.isRetryApi === false && this.props.isRetryApi === true) {
+            if (Actions.currentScene === this.props.lastApi.currentScene) {
+                Alert.alert(
+                    'Something went wrong ',
+                    '',
+                    [
+                        {
+                            text: 'Retry ', onPress: () => {
+                                this.retryApiFunction();
+                                this.props.resetErrorHandling(false)
+                            }
+                        },
+                        { text: 'Cancel', onPress: () => { this.props.resetErrorHandling(false) }, style: 'cancel' },
+                    ],
+                    { cancelable: false }
+                )
             }
         }
     }
 
-    getRidesApi = (activeTab) => {
+    retryApiFunc = () => {
+        if (this.props.lastApi && this.props.lastApi.currentScene === Actions.currentScene) {
+            this.props[`${this.props.lastApi.api}`](...this.props.lastApi.params)
+        }
+    }
+
+    fetchRides = (showLoader = true, pageNumber = 0) => {
+        const { activeTab, sortBy, searchQuery } = this.state;
         switch (activeTab) {
-            case 0: this.props.getAllBuildRides(this.props.user.userId, true, 0, (res) => {
-            }, (err) => {
-            });
+            case 0: this.props.getAllBuildRides(this.props.user.userId, showLoader, pageNumber, (res) => {
+                if (res.rides.length > 0) {
+                    this.setState({ pageNumber: pageNumber + 1, showFilter: true, hasRemainingList: res.remainingList > 0, isLoading: false, }, () => {
+                        pageNumber === 0 && this._listRef && this._listRef.scrollToOffset({ animated: true, offset: 0 });
+                    });
+                } else {
+                    this.setState({ showFilter: false, isLoading: false, });
+                }
+            }, (err) => { }, sortBy, searchQuery);
                 break;
-            case 1: this.props.getAllRecordedRides(this.props.user.userId, true, 0, (res) => {
-            }, (err) => {
-            });
+            case 1: this.props.getAllRecordedRides(this.props.user.userId, showLoader, pageNumber, (res) => {
+                if (res.rides.length > 0) {
+                    this.setState({ pageNumber: pageNumber + 1, showFilter: true, hasRemainingList: res.remainingList > 0, isLoading: false, }, () => {
+                        pageNumber === 0 && this._listRef && this._listRef.scrollToOffset({ animated: true, offset: 0 });
+                    });
+                } else {
+                    this.setState({ showFilter: false, isLoading: false, });
+                }
+            }, (err) => { }, sortBy, searchQuery);
                 break;
-            case 2: this.props.getAllPublicRides(this.props.user.userId, true, 0, (res) => {
-            }, (err) => {
-            });
+            case 2: this.props.getAllPublicRides(this.props.user.userId, showLoader, pageNumber, (res) => {
+                if (res.rides.length > 0) {
+                    this.setState({ pageNumber: pageNumber + 1, showFilter: true, hasRemainingList: res.remainingList > 0, isLoading: false, }, () => {
+                        pageNumber === 0 && this._listRef && this._listRef.scrollToOffset({ animated: true, offset: 0 });
+                    });
+                } else {
+                    this.setState({ showFilter: false, isLoading: false, });
+                }
+            }, (err) => { }, sortBy, searchQuery);
                 break;
         }
     }
@@ -213,17 +147,15 @@ export class Rides extends Component {
             useNativeDriver: true
         }).start(() => {
             if (this.props.hasNetwork === true) {
-                this.getRidesApi(this.state.activeTab);
+                this.fetchRides();
             }
         });
-
     }
 
     onPullRefresh = () => {
         this.setState({ isRefreshing: true });
         this.props.getAllPublicRides(this.props.user.userId, false, 0, (res) => {
-        }, (err) => {
-        });
+        }, (err) => { });
     }
 
     showDeleteSuccessMessage() {
@@ -235,41 +167,30 @@ export class Rides extends Component {
     }
 
     onChangeTab = ({ from, i }) => {
-        this.setState({ activeTab: i, headerSearchMode: false });
+        
+        this.setState({ activeTab: i, searchQuery: '', sortBy: RIDE_SORT_OPTIONS.DATE, showFilter: false });
     }
 
     keyExtractor = (item) => item.rideId;
 
-    deleteRideConfirmation(rideId, rideName, index, rideType) {
-        setTimeout(() => {
-            Alert.alert(
-                'Confirmation to delete',
-                // `${this.props.ride.status === RECORD_RIDE_STATUS.RUNNING ? 'This ride is currently running. ' : ''}Are you sure to delete the ${rideName}`,
-                `Are you sure to delete the ${rideName}`,
-                [
-                    { text: 'Cancel', onPress: () => { }, style: 'cancel' },
-                    {
-                        text: 'Yes', onPress: () => {
-                            // DOC: Clear ride from map if it is currently loaded on map
-                            if (this.props.ride.rideId === rideId) {
-                                if (this.props.ride.status === RECORD_RIDE_STATUS.RUNNING) {
-                                    console.log("Ride is running");
-                                } else {
-                                    this.props.clearRideFromMap();
-                                }
-                            }
-                            AsyncStorage.removeItem(`${UNSYNCED_RIDE}${rideId}`).then(() => this.props.deleteRide(rideId, index, rideType));
-                        }
-                    },
-                ],
-                { cancelable: false }
-            );
-        }, 100);
+    deleteRideConfirmation = () => {
+        const { selectedRide } = this.state;
+        this.setState({ isVisibleOptionsModal: false, showRequestModal:false }, () => {
+            setTimeout(() => {
+                if (this.props.ride.rideId === selectedRide.rideId) {
+                    this.props.clearRideFromMap();
+                }
+                AsyncStorage.removeItem(`${UNSYNCED_RIDE}${selectedRide.rideId}`).then(() => this.props.deleteRide(selectedRide.rideId, selectedRide.rideType));
+            }, 100);
+        })
     }
 
-    async onPressRide(ride) {
+    onPressRide = async (ride = null) => {
+        this.hideOptionsModal();
+        const selectedRide = this.state.selectedRide === null ? ride : this.state.selectedRide;
+        if (!selectedRide) return;
         if (this.props.hasNetwork) {
-            if (this.props.ride.rideId === ride.rideId) {
+            if (this.props.ride.rideId === selectedRide.rideId) {
                 this.props.changeScreen({ name: PageKeys.MAP });
                 return;
             }
@@ -282,17 +203,18 @@ export class Rides extends Component {
             } else if (this.state.activeTab === 2) {
                 rideType = RIDE_TYPE.SHARED_RIDE;
             }
-            if (ride.unsynced === true) {
-                const unsyncedPoints = await AsyncStorage.getItem(`${UNSYNCED_RIDE}${ride.rideId}`);
+            console.log('////selected ride////',selectedRide,selectedRide.unsynced)
+            if (selectedRide.unsynced === true) {
+                const unsyncedPoints = await AsyncStorage.getItem(`${UNSYNCED_RIDE}${selectedRide.rideId}`);
                 if (unsyncedPoints) {
                     const points = JSON.parse(unsyncedPoints);
                     if (points.length > 0) {
-                        this.syncCoordinatesWithServer(ride, points[points.length - 1].status, points);
+                        this.syncCoordinatesWithServer(selectedRide, points[points.length - 1].status, points);
                         return;
                     }
                 }
             }
-            this.props.loadRideOnMap(ride.rideId, { rideType, creatorName: ride.creatorName, creatorNickname: ride.creatorNickname, creatorProfilePictureId: ride.creatorProfilePictureId, totalDistance: ride.totalDistance, totalTime: ride.totalTime });
+            this.props.loadRideOnMap(selectedRide.rideId, { rideType });
         } else {
             console.log("No network found");
         }
@@ -364,6 +286,7 @@ export class Rides extends Component {
             unsyncedPoints[unsyncedPoints.length - 1].status = rideStatus;
             if (unsyncedPoints.length > 1) {
                 if (APP_CONFIGS.callRoadMapApi === true) {
+                    console.log('////entered for getcoordsonroad////')
                     this.getCoordsOnRoad(unsyncedPoints, (responseBody, actualPoints, trackpoints, distance) => {
                         this.props.pauseRecordRide(new Date().toISOString(), actualPoints, trackpoints, distance, ride, this.props.user.userId, true);
                     });
@@ -379,6 +302,7 @@ export class Rides extends Component {
             unsyncedPoints[unsyncedPoints.length - 1].status = rideStatus;
             if (unsyncedPoints.length > 1) {
                 if (APP_CONFIGS.callRoadMapApi === true) {
+                    console.log('////entered for getcoordsonroad////')
                     this.getCoordsOnRoad(unsyncedPoints, (responseBody, actualPoints, trackpoints, distance) => {
                         this.props.completeRecordRide(new Date().toISOString(), actualPoints, trackpoints, distance, ride, this.props.user.userId, true)
                     });
@@ -393,124 +317,17 @@ export class Rides extends Component {
         }
     }
 
-    onSubmitRenameForm = () => {
-        if (this.state.newRideName === '' || this.state.newRideName === this.state.selectedRide.rideName) return;
-        // DOC: Check for selectedRide type and decide the API call
-        const { rideType, index } = this.state.selectedRide;
-        switch (rideType) {
-            case RIDE_TYPE.BUILD_RIDE:
-                this.props.copyRide(this.props.buildRides[index].rideId, this.state.newRideName,
-                    RIDE_TYPE.BUILD_RIDE, new Date().toISOString());
-                break;
-            case RIDE_TYPE.RECORD_RIDE:
-                this.props.renameRide({ ...this.props.recordedRides[index], name: this.state.newRideName },
-                    rideType, this.props.user.userId, index);
-                break;
-            case RIDE_TYPE.SHARED_RIDE:
-                this.props.copySharedRide(this.props.sharedRides[index].rideId, this.state.newRideName,
-                    RIDE_TYPE.BUILD_RIDE, this.props.user.userId, new Date().toISOString());
-                this.setState({ isVisibleRenameModal: false })
-                break;
-        }
+    copyRide = () => {
+        const { rideId, name } = this.state.selectedRide;
+        this.props.copySharedRide(rideId, `Copy of ${name}`,
+            RIDE_TYPE.BUILD_RIDE, this.props.user.userId, new Date().toISOString());
+        this.setState({ isVisibleRenameModal: false, isVisibleOptionsModal: false });
     }
 
-    showOptionsModal = (rideType, index) => {
-        this.setState({ isVisibleOptionsModal: true, selectedRide: { rideType: rideType, index } });
-    }
-
-    renderMenuOptions = () => {
-        const { selectedRide } = this.state;
-        if (selectedRide === null) return;
-        switch (selectedRide.rideType) {
-            case RIDE_TYPE.BUILD_RIDE:
-                if (!this.props.buildRides[selectedRide.index]) return;
-                return (
-                    this.BUILD_RIDE_OPTIONS.map(option => {
-                        if (option.id === 'changePrivacyMode') {
-                            return <LinkButton
-                                key={option.id}
-                                onPress={option.handler}
-                                highlightColor={APP_COMMON_STYLES.infoColor}
-                                style={APP_COMMON_STYLES.menuOptHighlight}
-                                title={this.props.buildRides[selectedRide.index].privacyMode === 'private' ? option.text + 'public' : option.text + 'private'}
-                                titleStyle={APP_COMMON_STYLES.menuOptTxt}
-                            />
-                        }
-                        return <LinkButton
-                            key={option.id}
-                            onPress={option.handler}
-                            highlightColor={APP_COMMON_STYLES.infoColor}
-                            style={APP_COMMON_STYLES.menuOptHighlight}
-                            title={option.text}
-                            titleStyle={APP_COMMON_STYLES.menuOptTxt}
-                        />
-                    })
-                )
-            case RIDE_TYPE.RECORD_RIDE:
-                if (!this.props.recordedRides[selectedRide.index]) return;
-                return (
-                    this.RECORD_RIDE_OPTIONS.map(option => {
-                        if (option.id === 'changePrivacyMode') {
-                            return <LinkButton
-                                key={option.id}
-                                onPress={option.handler}
-                                highlightColor={APP_COMMON_STYLES.infoColor}
-                                style={APP_COMMON_STYLES.menuOptHighlight}
-                                title={this.props.recordedRides[selectedRide.index].privacyMode === 'private' ? option.text + 'public' : option.text + 'private'}
-                                titleStyle={APP_COMMON_STYLES.menuOptTxt}
-                            />
-                        }
-                        return <LinkButton
-                            key={option.id}
-                            onPress={option.handler}
-                            highlightColor={APP_COMMON_STYLES.infoColor}
-                            style={APP_COMMON_STYLES.menuOptHighlight}
-                            title={option.text}
-                            titleStyle={APP_COMMON_STYLES.menuOptTxt}
-                        />
-                    })
-                )
-            case RIDE_TYPE.SHARED_RIDE:
-                return (
-                    this.SHARED_RIDE_OPTIONS.map(option => (
-                        <LinkButton
-                            key={option.id}
-                            onPress={option.handler}
-                            highlightColor={APP_COMMON_STYLES.infoColor}
-                            style={APP_COMMON_STYLES.menuOptHighlight}
-                            title={option.text}
-                            titleStyle={APP_COMMON_STYLES.menuOptTxt}
-                        />
-                    ))
-                )
-        }
-    }
-
-    onCancelRenameForm = () => {
-        this.setState({ isVisibleRenameModal: false, newRideName: '', selectedRide: null });
-    }
-
-    onCancelOptionsModal = () => {
-        this.setState({ isVisibleOptionsModal: false, selectedRide: null });
-    }
-
-    onPressLogout = async () => {
-        this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
-    }
-
-    getTimeAsFormattedString(estimatedTime) {
-        if (!estimatedTime) {
-            return '0 h 0 m';
-        }
-        let h = Math.floor(estimatedTime / 3600);
-        let m = Math.floor(estimatedTime % 3600 / 60);
-        let timeText = '';
-        if (h > 0) {
-            timeText += `${h} h`;
-        }
-        if (m > 0) {
-            timeText += ` ${m} m`;
-        }
+    getTimeAsFormattedString(timeInSeconds) {
+        if (!timeInSeconds) return '0 m';
+        const m = Math.floor(timeInSeconds / 60);
+        const timeText = `${m} m`;
         return timeText;
     }
 
@@ -525,88 +342,131 @@ export class Rides extends Component {
         }
     }
 
-    getDateAndTime = (item) => {
-        var dateFormat = { day: 'numeric', year: '2-digit', month: 'short' };
-        return new Date(item.date).toLocaleDateString('en-IN', dateFormat) + ', ' + new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    getDateAndTime = (date) => {
+        if (!date) return '';
+        const dateFormat = { day: 'numeric', year: '2-digit', month: 'short' };
+        return new Date(date).toLocaleDateString('en-IN', dateFormat) + ', ' + new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
 
-    renderRides = ({ item, index }) => {
-        return <Card>
-            <CardItem bordered>
-                <Left>
-                    {
-                        item.creatorProfilePicture
-                            ? <Thumbnail source={{ uri: item.creatorProfilePicture }} />
-                            : null
-                    }
-                    <Body>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <View>
-                                <DefaultText style={{ fontWeight: 'bold', fontSize: widthPercentageToDP(3.8) }}>{item.isRecorded ? this.getDateAndTime(item) : item.name}</DefaultText>
-                                <DefaultText note></DefaultText>
-                            </View>
-                            {
-                                this.state.activeTab !== 2
-                                    ? <DefaultText style={{ color: item.privacyMode === 'private' ? '#6B7663' : APP_COMMON_STYLES.infoColor }}>{item.privacyMode.toUpperCase()}</DefaultText>
-                                    : null
-                            }
-                        </View>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <IconLabelPair iconProps={{ name: 'road-variant', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(5) } }} text={this.getDistanceAsFormattedString(item.totalDistance, this.props.user.distanceUnit)}
-                                textStyle={{ fontSize: widthPercentageToDP(3.5) }} />
-                            <IconLabelPair iconProps={{ name: 'access-time', type: 'MaterialIcons', style: { fontSize: widthPercentageToDP(5) } }} text={this.getTimeAsFormattedString(item.totalTime)}
-                                textStyle={{ fontSize: widthPercentageToDP(3.5) }} />
-                        </View>
-                    </Body>
-                </Left>
-            </CardItem>
-            <CardItem cardBody button onPress={() => this.onPressRide(item)} onLongPress={() => {
-                let rideType = RIDE_TYPE.BUILD_RIDE;
-                if (this.state.activeTab === 1) {
-                    rideType = RIDE_TYPE.RECORD_RIDE;
-                } else if (this.state.activeTab === 2) {
-                    rideType = RIDE_TYPE.SHARED_RIDE;
-                }
-                this.showOptionsModal(rideType, index);
-            }}>
+    getFormattedDate = (isoDateString = new Date().toISOString(), joinBy = ' ') => {
+        // const dateInfo = new Date(isoDateString).toString().substr(4, 12).split(' ');
+        // return [dateInfo[0] + '.', (dateInfo[2] + '').slice(-2)].join(joinBy);
+        return new Date(isoDateString).toLocaleDateString('en-US');
+    }
+
+    goToRideDetails = () => {
+        const { selectedRide } = this.state
+        Actions.push(PageKeys.RIDE_DETAILS, { rideId: selectedRide.rideId, rideType: selectedRide.rideType, isEditable: selectedRide.creatorId === this.props.user.userId });
+        this.hideOptionsModal()
+    }
+
+    renderRideInfo = (item) => {
+        return <View style={{ flexDirection: 'row', justifyContent: 'space-around', height: 40, backgroundColor: '#585756', }}>
+            <View style={{ flexDirection: 'row' }}>
+                {/* <ImageButton imageSrc={require('../../assets/img/distance.png')} imgStyles={styles.footerIcon} /> */}
+                <View style={{ marginTop: 8 }}>
+                    <DistanceIcon />
+                </View>
+                <DefaultText style={styles.footerText}>{this.getDistanceAsFormattedString(item.totalDistance, this.props.user.distanceUnit)}</DefaultText>
+            </View>
+            <View style={{ flexDirection: 'row' }}>
+                <View style={{ marginTop: 8 }}>
+                    <DurationIcon />
+                </View>
+                {/* <ImageButton imageSrc={require('../../assets/img/duration.png')} imgStyles={styles.footerIcon} /> */}
+                <DefaultText style={styles.footerText}>{this.getTimeAsFormattedString(item.totalTime)}</DefaultText>
+            </View>
+            <View style={{ flexDirection: 'row' }}>
+                <View style={{ marginTop: 8 }}>
+                    <CalendarIcon />
+                </View>
+                {/* <ImageButton imageSrc={require('../../assets/img/date.png')} imgStyles={styles.footerIcon} /> */}
+                <DefaultText style={styles.footerText}>{this.getFormattedDate(item.date)}</DefaultText>
+            </View>
+        </View>
+    }
+
+    onDescriptionLayout({ nativeEvent: { lines } }, id) { lines.length >= NUM_OF_DESC_LINES && this.setState(prevState => ({ showMoreSection: { ...prevState.showMoreSection, [id]: true } })); }
+
+    toggleLikeAction(ride, rideType) {
+        if (ride.isLiked) {
+            this.props.unLike(ride.rideId, this.props.user.userId, rideType, ride.numberOfLikes);
+        } else {
+            this.props.addLike(ride.rideId, this._postType, rideType, ride.numberOfLikes);
+        }
+    }
+
+    openLikesPage(ride) { Actions.push(PageKeys.LIKES, { hasNetwork: this.props.hasNetwork, id: ride.rideId, type: this._postType, openFriendsProfile: this.openFriendsProfile }); }
+
+    openCommentPage(ride, rideType) {
+        Actions.push(PageKeys.COMMENTS, {
+            postId: ride.rideId, postType: this._postType, isEditable: ride.creatorId === this.props.user.userId,
+            onUpdatesuccess: (commentsCount) => this.props.updateCommentsCount(ride.rideId, rideType, commentsCount)
+            ,post:ride
+        });
+    }
+
+    openFriendsProfile = (item) => {
+        const personId = item.creatorId || item.userId;
+        if (personId === this.props.user.userId) {
+            Actions.push(PageKeys.PROFILE, { tabProps: { activeTab: 0 } });
+        }
+        else if (item.isFriend) {
+            this.props.setCurrentFriend({ userId: personId });
+            Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: personId });
+        }
+        else {
+            Actions.push(PageKeys.PASSENGER_PROFILE, { isUnknown: true, person: { ...item, userId: personId } })
+        }
+    }
+
+    renderRides(ride, rideType) {
+        console.log(ride)
+        return <PostCard
+            onPress={() => this.onPressRide(ride)}
+            outerContainer={{ paddingBottom: 32 }}
+            headerContent={<View>
+                <View style={styles.headerContainer}>
+                    <View style={{ flexDirection:'row', flex: 1 }}>
+                        {rideType !== RIDE_TYPE.SHARED_RIDE && <DefaultText style={styles.nameOfRide}>{ride.name}</DefaultText>}
+                        {rideType === RIDE_TYPE.SHARED_RIDE && <ImageButton pictureStyle={{ resizeMode: null }} imgStyles={{ height: 40, width: 40, borderRadius: 20, overflow: 'hidden' }} imageSrc={ride.creatorProfilePictureId ? { uri: `${GET_PICTURE_BY_ID}${ride.creatorProfilePictureId.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` } : require('../../assets/img/profile-pic-placeholder.png')} onPress={() => this.openFriendsProfile(ride)} />}
+                        {/* {rideType === RIDE_TYPE.SHARED_RIDE && <Thumbnail  style={{ height: 40, width: 40 }} source={ride.creatorProfilePictureId ? { uri: `${GET_PICTURE_BY_ID}${ride.creatorProfilePictureId.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` } : require('../../assets/img/profile-pic-placeholder.png')} />} */}
+                        {rideType === RIDE_TYPE.SHARED_RIDE && <DefaultText style={styles.nameOfRide}>{ride.creatorName}</DefaultText>}
+                    </View>
+                    <IconButton iconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#8D8D8D', fontSize: 20 } }} onPress={() => this.showOptionsModal({ ...ride, rideType })} />
+                </View>
+                {rideType !== RIDE_TYPE.SHARED_RIDE && <View style={{paddingHorizontal:20,flexDirection: rideType !== RIDE_TYPE.SHARED_RIDE?'column':'row', flex: 1 }}>
+                    <DefaultText numberOfLines={NUM_OF_DESC_LINES} style={{
+                    fontSize: 13,
+                    color: ride.description&&(ride.description.length>0)?'#585756':'#e0dfdc',
+                    padding: 10,
+                    paddingTop:0
+                    }}>{ride.description&&(ride.description.length>0)?ride.description:'Description'}</DefaultText>
+                </View>}
+                {this.renderRideInfo(ride)}
+            </View>}
+            image={ride.snapshotId ? `${GET_PICTURE_BY_ID}${ride.snapshotId.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` : null}
+            // image={ride.snapshot}
+            // placeholderImage={require('../../assets/img/ride-placeholder-image.png')}
+            placeholderImage={{uri:ride.snapshot}}
+            placeholderImgHeight={220}
+            placeholderBlur={0}
+            footerContent={<View>
+                <View style={styles.postCardFtrIconCont}>
+                    <View style={styles.likesCont}>
+                        <IconButton iconProps={{ name: 'like1', type: 'AntDesign', style: { color: ride.isLiked ? '#2B77B4' : '#fff', fontSize: 22 } }} onPress={() => this.toggleLikeAction(ride, rideType)} />
+                        <LinkButton style={{ alignSelf: 'center' }} title={ride.numberOfLikes + ' Likes'} titleStyle={styles.postCardFtrIconTitle} onPress={() => ride.numberOfLikes > 0 && this.openLikesPage(ride)} />
+                    </View>
+                    <IconButton title={ride.numberOfComments + ' Comments'} titleStyle={styles.postCardFtrIconTitle} iconProps={{ name: 'ios-chatbubbles', type: 'Ionicons', style: { color: '#fff', fontSize: 22 } }} onPress={() => this.openCommentPage(ride, rideType)} />
+                </View>
                 {
-                    item.snapshot
-                        ? <Image resizeMode='stretch' source={{ uri: item.snapshot }} style={{ height: 200, width: null, flex: 1 }} />
-                        : <ImageBackground blurRadius={3} resizeMode='cover' source={require('../../assets/img/ride-placeholder-image.png')} style={{ height: 200, width: null, flex: 1 }} />
+                    rideType === RIDE_TYPE.SHARED_RIDE && <View style={styles.postCardFtrTxtCont}>
+                        <DefaultText style={styles.postCardFtrTitle}>{ride.name}</DefaultText>
+                        <DefaultText onTextLayout={(evt) => this.onDescriptionLayout(evt, ride.rideId)} numberOfLines={NUM_OF_DESC_LINES}>{ride.description}</DefaultText>{this.state.showMoreSection[ride.rideId] ? <DefaultText>more</DefaultText> : null}
+                    </View>
                 }
-            </CardItem>
-            <CardItem>
-                {
-                    item.privacyMode === 'public'
-                        ? <Left>
-                            {/* <Button transparent>
-                                <NBIcon active name="thumbs-up" />
-                                <DefaultText>{item.totalLikes !== 1 ? item.totalLikes + ' Likes' : '1 Like'}</DefaultText>
-                            </Button>
-                            <Button transparent>
-                                <NBIcon active name="chatbubbles" />
-                                <DefaultText>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</DefaultText>
-                            </Button> */}
-                            <IconButton title={item.totalLikes !== 1 ? item.totalLikes + ' Likes' : '1 Like'} titleStyle={{ marginLeft: 8 }} iconProps={{ name: 'ios-thumbs-up', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} />
-                        </Left>
-                        : <Left></Left>
-                }
-                {
-                    item.privacyMode === 'public'
-                        ? <Body>
-                            {/* <Button transparent>
-                        <NBIcon active name="chatbubbles" />
-                        <DefaultText>{item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'}</DefaultText>
-                    </Button> */}
-                            <IconButton title={item.totalComments !== 1 ? item.totalComments + ' Comments' : '1 Comment'} titleStyle={{ marginLeft: 8 }} iconProps={{ name: 'ios-chatbubbles', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor } }} />
-                        </Body>
-                        : <Body></Body>
-                }
-                <Right>
-                    <DefaultText note>{this.getDateLabel((Date.now() - new Date(item.date).getTime()) / 1000 / 60 / 60)}</DefaultText>
-                </Right>
-            </CardItem>
-        </Card>
+            </View>}
+        />
     }
 
     getDateLabel(hourDiff) {
@@ -634,31 +494,10 @@ export class Rides extends Component {
         return days;
     }
 
-
     loadMoreData = () => {
-        if (this.state.isLoadingData && this.state.isLoading === false) {
+        if (this.state.hasRemainingList === true && this.state.isLoadingData && this.state.isLoading === false) {
             this.setState({ isLoading: true, isLoadingData: false });
-            if (this.state.activeTab === 0) {
-                this.props.getAllBuildRides(this.props.user.userId, false, this.props.pageNumber, (res) => {
-                    this.setState({ isLoading: false })
-                }, (err) => {
-                    this.setState({ isLoading: false })
-                });
-            }
-            else if (this.state.activeTab === 1) {
-                this.props.getAllRecordedRides(this.props.user.userId, false, this.props.pageNumber, (res) => {
-                    this.setState({ isLoading: false })
-                }, (err) => {
-                    this.setState({ isLoading: false })
-                });
-            }
-            else if (this.state.activeTab === 2) {
-                this.props.getAllPublicRides(this.props.user.userId, false, this.props.pageNumber, (res) => {
-                    this.setState({ isLoading: false })
-                }, (err) => {
-                    this.setState({ isLoading: false })
-                });
-            }
+            this.fetchRides(false, this.state.pageNumber);
         }
     }
 
@@ -679,178 +518,232 @@ export class Rides extends Component {
         return null
     }
 
+    onChangeSearchValue = (val = '') => {
+        clearTimeout(this._searchQueryTimeout);
+        this.setState({ searchQuery: val });
+        this._searchQueryTimeout = setTimeout(() => this.fetchRides(), 300);
+    }
+
+    showOptionsModal = (item) => this.setState({ isVisibleOptionsModal: true, selectedRide: item });
+
+    hideOptionsModal = () => this.setState({ isVisibleOptionsModal: false, selectedRide: null });
+
+    showRenameModal = () => this.setState({ isVisibleRenameModal: true, isVisibleOptionsModal: false })
+
+    onCancelRenameForm = () => this.setState({ isVisibleRenameModal: false, newRideName: '', selectedRide: null });
+
+    chageSortOption(value) { this.setState({ sortBy: value }, () => this.fetchRides()); }
+
+    gotoItinerary = (isEditing) => {
+        
+        if (this.props.ride.rideId === this.state.selectedRide.rideId) {
+            Actions.push(PageKeys.ITINERARY_SECTION, { ride: this.state.selectedRide, comingFrom: PageKeys.RIDES, isEditingRide: isEditing,rideType:tabCode[this.state.activeTab] });
+        }
+        else {
+            this.props.clearRideFromMap();
+            Actions.push(PageKeys.ITINERARY_SECTION, { ride: this.state.selectedRide, comingFrom: PageKeys.RIDES, isEditingRide: isEditing,rideType:tabCode[this.state.activeTab]  });
+        }
+        this.setState({ isVisibleOptionsModal: false });
+    }
+
+    renderSearchbox = (showFilter, isShared = false) => {
+        const { searchQuery, sortBy } = this.state;
+        return <SearchBoxFilter
+            searchQuery={searchQuery} onChangeSearchValue={this.onChangeSearchValue}
+            placeholder='Name' outerContainer={{ marginTop: 20, marginHorizontal: widthPercentageToDP(8), marginBottom: 15 }}
+            footer={showFilter && <View style={styles.filterContainer}>
+                <DefaultText style={{ fontFamily: CUSTOM_FONTS.roboto, paddingLeft: 15 }}>SORT:</DefaultText>
+                <LinkButton style={{ paddingHorizontal: 10, borderRightWidth: 1 }} title='DATE' titleStyle={[styles.filterIcon, sortBy === RIDE_SORT_OPTIONS.DATE ? styles.activeSortOption : null]} onPress={() => this.chageSortOption(RIDE_SORT_OPTIONS.DATE)} />
+                <LinkButton style={{ paddingHorizontal: 10, borderRightWidth: 1 }} title='DISTANCE' titleStyle={[styles.filterIcon, sortBy === RIDE_SORT_OPTIONS.DISTANCE ? styles.activeSortOption : null]} onPress={() => this.chageSortOption(RIDE_SORT_OPTIONS.DISTANCE)} />
+                <LinkButton style={{ paddingHorizontal: 10 }} title='TIME' titleStyle={[styles.filterIcon, sortBy === RIDE_SORT_OPTIONS.TIME ? styles.activeSortOption : null]} onPress={() => this.chageSortOption(RIDE_SORT_OPTIONS.TIME)} />
+                {isShared && <LinkButton style={{ paddingHorizontal: 10, borderLeftWidth: 1 }} title='AUTHOR' titleStyle={[styles.filterIcon, sortBy === RIDE_SORT_OPTIONS.AUTHOR ? styles.activeSortOption : null]} onPress={() => this.chageSortOption(RIDE_SORT_OPTIONS.AUTHOR)} />}
+            </View>}
+        />
+    }
+
+    shareRides = (rideId, ids, groupIds) => {
+        if (!rideId || (!ids && !groupIds)) return;
+        const data = {
+            userId: this.props.user.userId, name: this.props.user.name, nickname: this.props.user.nickname,
+            senderPictureId: this.props.user.profilePictureId,
+            content: rideId,
+            type: CHAT_CONTENT_TYPE.RIDE
+        };
+        if (ids) {
+            data.userIds = ids
+        }
+        if (groupIds) {
+            data.groupIds = groupIds
+        }
+        this.props.shareRides(data);
+    }
+
+    goToChatList = () => {
+        this.hideOptionsModal();
+        if (this.state.selectedRide.privacyMode === 'private') return;
+        Actions.push(PageKeys.CHAT_LIST, { isShareMode: true, isSharingRide: true, rideId: this.state.selectedRide.rideId, callbackFn: this.shareRides })
+    }
+
+    openRequestModal = () => this.setState({ showRequestModal: true, });
+
+    hideRequestModal = () => this.setState({ showRequestModal: false});
+
     render() {
-        const { activeTab, searchQuery, headerSearchMode, isVisibleRenameModal, isVisibleOptionsModal, isRefreshing } = this.state;
-        const { buildRides, recordedRides, sharedRides, user, showLoader, hasNetwork } = this.props;
+        const { isRefreshing, showFilter, isVisibleOptionsModal, selectedRide, activeTab, showRequestModal } = this.state;
+        const { buildRides, recordedRides, sharedRides, showLoader, hasNetwork,notificationCount } = this.props;
         const spin = this.state.spinValue.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
         });
         return (
-            <View style={{ flex: 1 }}>
-                <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                </View>
-                <View style={{ flex: 1 }}>
-                    <BaseModal alignCenter={true} isVisible={isVisibleRenameModal} onCancel={this.onCancelRenameForm} onPressOutside={this.onCancelRenameForm}>
-                        <View style={{ backgroundColor: '#fff', width: WindowDimensions.width * 0.6, padding: 20, elevation: 3 }}>
-                            <LabeledInput placeholder='Enter new name here' onChange={(val) => this.setState({ newRideName: val })}
-                                onSubmit={this.onSubmitRenameForm} />
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-                                <LinkButton title='Submit' onPress={this.onSubmitRenameForm} />
-                                <LinkButton title='Cancel' onPress={this.onCancelRenameForm} />
+            <BasePage showLoader={showLoader} loaderText={this.props.ride.unsynced ? 'You have unsynced data. Please wait to finish' : 'Loading...'} heading={'Atlas'}
+                headerLeftIconProps={{ reverse: true, name: 'ios-notifications', type: 'Ionicons', onPress: () => Actions.push(PageKeys.NOTIFICATIONS) }}
+                headerRightIconProps={activeTab === 2 ? null : { reverse: true, name: 'md-add', type: 'Ionicons', containerStyle: styles.headerRtIconContainer, style: styles.addIcon, onPress: () => this.props.changeScreen({ name: PageKeys.MAP, params: activeTab === 0 ? { showCreateRide: {active:true}} : { showRecordRide: {active:true}}}) }}
+                notificationCount={notificationCount}>
+                <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={isVisibleOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
+                    <View>
+                    <View style={APP_COMMON_STYLES.optionsContainer}>
+                        {
+                            selectedRide && selectedRide.rideType === RIDE_TYPE.SHARED_RIDE
+                                ? <LinkButton style={APP_COMMON_STYLES.optionBtn} title='COPY RIDE' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.copyRide} />
+                                : <LinkButton style={APP_COMMON_STYLES.optionBtn} title='EDIT DETAILS' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={() => this.gotoItinerary(true)} />
+                        }
+                        {
+                            selectedRide && selectedRide.rideType !== RIDE_TYPE.SHARED_RIDE && selectedRide.privacyMode !== 'private'
+                                ? <LinkButton style={APP_COMMON_STYLES.optionBtn} title='SHARE RIDE' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.goToChatList} />
+                                : null
+                        }
+                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='SHOW ON THE MAP' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.onPressRide} />
+                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='VIEW DETAILS' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={() => this.gotoItinerary(false)} />
+                        {selectedRide && selectedRide.rideType !== RIDE_TYPE.SHARED_RIDE && <LinkButton style={APP_COMMON_STYLES.optionBtn} title='DELETE' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.openRequestModal}
+                            disabled={selectedRide && this.props.ride.rideId === selectedRide.rideId && selectedRide.status === RECORD_RIDE_STATUS.RUNNING} />}
+                    </View>
+                    {
+                        showRequestModal && <BaseModal containerStyle={{ justifyContent: 'center', alignItems: 'center' }} isVisible={showRequestModal} onCancel={this.hideRequestModal} >
+                            <View style={styles.deleteBoxCont}>
+                                <DefaultText style={styles.deleteTitle}>Delete Ride</DefaultText>
+                                <DefaultText numberOfLines={4} style={styles.deleteText}>{`Are you sure you want to delete this Ride from your Atlas? You will not be able to undo this action.`}</DefaultText>
+                                <View style={styles.btnContainer}>
+                                    <BasicButton title='CANCEL' style={[styles.actionBtn, { backgroundColor: '#8D8D8D' }]} titleStyle={styles.actionBtnTxt} onPress={this.hideRequestModal} />
+                                    <BasicButton title='DELETE' style={styles.actionBtn} titleStyle={styles.actionBtnTxt} onPress={this.deleteRideConfirmation} />
+                                </View>
                             </View>
-                        </View>
-                    </BaseModal>
-                    <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
-                        <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
+                        </BaseModal>
+                    }
+                    </View>
+                </BaseModal>
+                <Tabs tabContainerStyle={APP_COMMON_STYLES.tabContainer} ref={elRef => this.tabsRef = elRef} onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' tabBarUnderlineStyle={{ height: 0 }}>
+                    <Tab heading='PLANNED' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
+                        <View >
+                            {this.renderSearchbox(showFilter)}
                             {
-                                this.renderMenuOptions()
+                                buildRides.length > 0
+                                    ? <FlatList
+                                        ref={elRef => this._listRef = elRef}
+                                        contentContainerStyle={{ paddingBottom: this.state.hasRemainingList ? 40 : 22 }}
+                                        keyboardShouldPersistTaps={'handled'}
+                                        style={showFilter ? { marginTop: 50 } : { marginTop: 12 }}
+                                        data={buildRides}
+                                        renderItem={({ item }) => this.renderRides(item, RIDE_TYPE.BUILD_RIDE)}
+                                        keyExtractor={this.keyExtractor}
+                                        ListFooterComponent={this.renderFooter}
+                                        onEndReached={this.loadMoreData}
+                                        onEndReachedThreshold={0.1}
+                                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                                    />
+                                    : hasNetwork
+                                        ? null
+                                        : <View style={{ flexDirection: 'column', justifyContent: 'space-between', position: 'absolute', top: heightPercentageToDP(20), left: widthPercentageToDP(27), height: 100, }}>
+                                            <IconButton iconProps={{ name: 'broadcast-tower', type: 'FontAwesome5', style: { fontSize: 60, color: '#505050' } }} />
+                                            <DefaultText style={{ alignSelf: 'center', fontSize: 14 }}>Please Connect To Internet</DefaultText>
+                                        </View>
                             }
                         </View>
-                    </BaseModal>
-                    <BasicHeader title='Rides' searchIconProps={{ name: 'search', type: 'FontAwesome', onPress: () => this.setState({ headerSearchMode: true }) }} searchbarMode={headerSearchMode}
-                        searchValue={searchQuery} onChangeSearchValue={(val) => this.setState({ searchQuery: val })} onCancelSearchMode={() => this.setState({ headerSearchMode: false })}
-                        onClearSearchValue={() => this.setState({ searchQuery: '' })} rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
-                    <Tabs onChangeTab={this.onChangeTab} style={{ flex: 1, paddingBottom: IS_ANDROID ? 0 : 20, backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab activeTab={activeTab} backgroundColor={APP_COMMON_STYLES.statusBarColor} underlineStyle={{ height: 0 }} />}>
-                        <Tab
-                            heading={<TabHeading style={{ width: widthPercentageToDP(33.3), backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3' }}>
-                                <IconLabelPair
-                                    containerStyle={styles.tabContentCont}
-                                    iconProps={{ name: 'motorbike', type: 'MaterialCommunityIcons', style: { color: activeTab === 0 ? '#fff' : '#6B7663' } }}
-                                    text={`Created\nRides`}
-                                    textStyle={{ color: activeTab === 0 ? '#fff' : '#6B7663' }}
-                                />
-                            </TabHeading>}>
-                            <View>
-                                {
-                                    buildRides.length > 0 ?
-                                        <FlatList
-                                            data={buildRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
-                                            renderItem={this.renderRides}
-                                            keyExtractor={this.keyExtractor}
-                                            ListFooterComponent={this.renderFooter}
-                                            onEndReached={this.loadMoreData}
-                                            onEndReachedThreshold={0.1}
-                                            onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
-
-                                        />
-                                        :
-                                        hasNetwork ?
-                                            <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
-                                            :
-                                            <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
-                                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                                </Animated.View>
-                                                <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
-                                                <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
-                                            </View>
-                                }
-                            </View>
-                        </Tab>
-                        <Tab
-                            heading={<TabHeading style={{ width: widthPercentageToDP(33.3), backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 2, borderLeftWidth: 2 }}>
-                                <IconLabelPair
-                                    containerStyle={styles.tabContentCont}
-                                    iconProps={{ name: 'menu', type: 'MaterialCommunityIcons', style: { color: activeTab === 1 ? '#fff' : '#6B7663' } }}
-                                    text={`Recorded\nRides`}
-                                    textStyle={{ color: activeTab === 1 ? '#fff' : '#6B7663' }}
-                                />
-                            </TabHeading>}>
-                            <View>
-                                {
-                                    recordedRides.length > 0 ?
-                                        <FlatList
-                                            data={recordedRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
-                                            renderItem={this.renderRides}
-                                            keyExtractor={this.keyExtractor}
-                                            ListFooterComponent={this.renderFooter}
-                                            onEndReached={this.loadMoreData}
-                                            onEndReachedThreshold={0.1}
-                                            onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
-
-                                        />
-                                        :
-                                        hasNetwork ?
-                                            <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
-                                            :
-                                            <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
-                                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                                </Animated.View>
-                                                <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
-                                                <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
-                                            </View>
-                                }
-                            </View>
-                        </Tab>
-                        <Tab
-                            heading={<TabHeading style={{ width: widthPercentageToDP(33.3), backgroundColor: activeTab === 2 ? '#81BB41' : '#E3EED3' }}>
-                                <IconLabelPair
-                                    containerStyle={styles.tabContentCont}
-                                    iconProps={{ name: 'ios-people', type: 'Ionicons', style: { color: activeTab === 2 ? '#fff' : '#6B7663' } }}
-                                    text={`Shared\nRides`}
-                                    textStyle={{ color: activeTab === 2 ? '#fff' : '#6B7663' }}
-                                />
-                            </TabHeading>}>
-                            <View>
-                                {
-                                    sharedRides.length > 0 ?
-                                        <FlatList
-                                            data={sharedRides.filter(ride => ride.name.toUpperCase().indexOf(searchQuery.toUpperCase()) > -1)}
-                                            refreshing={isRefreshing}
-                                            onRefresh={this.onPullRefresh}
-                                            renderItem={this.renderRides}
-                                            keyExtractor={this.keyExtractor}
-                                            ListFooterComponent={this.renderFooter}
-                                            onEndReached={this.loadMoreData}
-                                            onEndReachedThreshold={0.1}
-                                            onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
-                                        />
-                                        : hasNetwork ?
-                                            <ImageBackground source={require('../../assets/img/empty-rides-bg.png')} style={{ width: '100%', height: '100%' }} />
-                                            :
-                                            <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
-                                                <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                                    <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                                </Animated.View>
-                                                <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
-                                                <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
-                                            </View>
-                                }
-                            </View>
-                        </Tab>
-                    </Tabs>
-
-                    {/* Shifter: - Brings the app navigation menu */}
-                    <ShifterButton onPress={this.showAppNavMenu} containerStyles={this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null} alignLeft={this.props.user.handDominance === 'left'} />
-                </View>
-                <Loader title={this.props.ride.unsynced ? 'You have unsynced data. Please wait to finish' : 'Loading...'} isVisible={showLoader} />
-            </View>
+                    </Tab>
+                    <Tab
+                        heading='RECORDED' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
+                        <View>
+                            {this.renderSearchbox(showFilter)}
+                            {
+                                recordedRides.length > 0
+                                    ? <FlatList
+                                        ref={elRef => this._listRef = elRef}
+                                        contentContainerStyle={{ paddingBottom: this.state.hasRemainingList ? 40 : 22 }}
+                                        keyboardShouldPersistTaps={'handled'}
+                                        style={showFilter ? { marginTop: 50 } : { marginTop: 12 }}
+                                        data={recordedRides}
+                                        renderItem={({ item }) => this.renderRides(item, RIDE_TYPE.RECORD_RIDE)}
+                                        keyExtractor={this.keyExtractor}
+                                        ListFooterComponent={this.renderFooter}
+                                        onEndReached={this.loadMoreData}
+                                        onEndReachedThreshold={0.1}
+                                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                                    />
+                                    : hasNetwork
+                                        ? null
+                                        : <View style={{ flexDirection: 'column', justifyContent: 'space-between', position: 'absolute', top: heightPercentageToDP(20), left: widthPercentageToDP(27), height: 100, }}>
+                                            <IconButton iconProps={{ name: 'broadcast-tower', type: 'FontAwesome5', style: { fontSize: 60, color: '#505050' } }} />
+                                            <DefaultText style={{ alignSelf: 'center', fontSize: 14 }}>Please Connect To Internet</DefaultText>
+                                        </View>
+                            }
+                        </View>
+                    </Tab>
+                    <Tab heading='SHARED' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
+                        <View>
+                            {this.renderSearchbox(showFilter, true)}
+                            {
+                                sharedRides.length > 0
+                                    ? <FlatList
+                                        ref={elRef => this._listRef = elRef}
+                                        contentContainerStyle={{ paddingBottom: this.state.hasRemainingList ? 40 : 22 }}
+                                        keyboardShouldPersistTaps={'handled'}
+                                        style={showFilter ? { marginTop: 50 } : { marginTop: 12 }}
+                                        data={sharedRides}
+                                        refreshing={isRefreshing}
+                                        onRefresh={this.onPullRefresh}
+                                        renderItem={({ item }) => this.renderRides(item, RIDE_TYPE.SHARED_RIDE)}
+                                        keyExtractor={this.keyExtractor}
+                                        ListFooterComponent={this.renderFooter}
+                                        onEndReached={this.loadMoreData}
+                                        onEndReachedThreshold={0.1}
+                                        onMomentumScrollBegin={() => this.setState({ isLoadingData: true })}
+                                    />
+                                    : hasNetwork
+                                        ? null
+                                        : <View style={{ flexDirection: 'column', justifyContent: 'space-between', position: 'absolute', top: heightPercentageToDP(20), left: widthPercentageToDP(27), height: 100, }}>
+                                            <IconButton iconProps={{ name: 'broadcast-tower', type: 'FontAwesome5', style: { fontSize: 60, color: '#505050' } }} />
+                                            <DefaultText style={{ alignSelf: 'center', fontSize: 14 }}>Please Connect To Internet</DefaultText>
+                                        </View>
+                            }
+                        </View>
+                    </Tab>
+                </Tabs>
+            </BasePage >
         );
     }
 
     componentWillUnmount() {
+        clearTimeout(this._searchQueryTimeout);
         console.log("Rides unmounted");
     }
 }
 
 const mapStateToProps = (state) => {
-    const { showMenu } = state.TabVisibility;
     const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { buildRides, recordedRides, sharedRides, isRemoved, unsyncedRides } = state.RideList;
     const { ride, isSyncing } = state.RideInfo.present;
-    const { showLoader, pageNumber, hasNetwork } = state.PageState;
-    return { showMenu, user, userAuthToken, deviceToken, buildRides, recordedRides, sharedRides, unsyncedRides, ride, showLoader, pageNumber, isRemoved, hasNetwork, isSyncing };
+    const { showLoader, hasNetwork, lastApi, isRetryApi } = state.PageState;
+    const notificationCount=state.NotificationList.notificationList.totalUnseen
+    return { user, userAuthToken, deviceToken, buildRides, recordedRides, sharedRides,notificationCount, unsyncedRides, ride, showLoader, isRemoved, hasNetwork, lastApi, isRetryApi, isSyncing };
 }
 
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        getAllBuildRides: (userId, toggleLoader, pageNumber, successCallback, errorCallback) => dispatch(getAllBuildRides(userId, toggleLoader, pageNumber, successCallback, errorCallback)),
-        getAllRecordedRides: (userId, toggleLoader, pageNumber, successCallback, errorCallback) => dispatch(getAllRecordedRides(userId, toggleLoader, pageNumber, successCallback, errorCallback)),
-        getAllPublicRides: (userId, toggleLoader, pageNumber, successCallback, errorCallback) => dispatch(getAllPublicRides(userId, toggleLoader, pageNumber, successCallback, errorCallback)),
+        shareRides: (requestBody) => dispatch(sendMessage(requestBody)),
+        getAllBuildRides: (userId, showLoader, pageNumber, successCallback, errorCallback, sortBy, filterByName) => dispatch(getAllBuildRides(userId, showLoader, pageNumber, successCallback, errorCallback, sortBy, filterByName)),
+        getAllRecordedRides: (userId, showLoader, pageNumber, successCallback, errorCallback, sortBy, filterByName) => dispatch(getAllRecordedRides(userId, showLoader, pageNumber, successCallback, errorCallback, sortBy, filterByName)),
+        getAllPublicRides: (userId, showLoader, pageNumber, successCallback, errorCallback, sortBy, filterByName) => dispatch(getAllPublicRides(userId, showLoader, pageNumber, successCallback, errorCallback, sortBy, filterByName)),
         loadRideOnMap: (rideId, rideInfo) => dispatch(getRideByRideId(rideId, rideInfo)),
         updateRideInList: (updates, rideType, updateActiveRide) => {
             dispatch(apiLoaderActions(true));
@@ -860,38 +753,63 @@ const mapDispatchToProps = (dispatch) => {
                 updateActiveRide === true && dispatch(updateRideAction(updates));
             }, (err) => dispatch(apiLoaderActions(false)))
         },
-        deleteRide: (rideId, index, rideType) => dispatch(deleteRide(rideId, index, rideType)),
+        deleteRide: (rideId, rideType) => {
+            dispatch(apiLoaderActions(true))
+            deleteRide(rideId).then(res => {
+                console.log('deleteRide : ', res.data)
+                dispatch(apiLoaderActions(false))
+                dispatch(isRemovedAction(true))
+                dispatch(deleteRideAction({ rideType, rideId }));
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+            })
+                .catch(er => {
+                    console.log(er.response);
+                    handleServiceErrors(er, [rideId, rideType], 'deleteRide', true, true);
+                    dispatch(apiLoaderActions(false))
+                })
+        },
         copyRide: (rideId, rideName, rideType, date) => dispatch(copyRide(rideId, rideName, rideType, date)),
-        copySharedRide: (rideId, rideName, rideType, userId, date) => dispatch(copySharedRide(rideId, rideName, rideType, userId, date)),
-        renameRide: (ride, rideType, userId, index) => dispatch(renameRide(ride, rideType, userId, index)),
-        changeScreen: (screenKey) => dispatch(screenChangeAction(screenKey)),
+        copySharedRide: (rideId, rideName, rideType, userId, date, successCallback, errorCallback) => copySharedRide(rideId, rideName, userId, date).then(res => {
+            if (res.status === 200) {
+                console.log('copySharedRide : ', res.data);
+                Toast.show({ text: 'Ride copied to your created rides' });
+                typeof successCallback === 'function' && successCallback();
+                dispatch(apiLoaderActions(false))
+                dispatch(updateRideListAction({ rideType, rideList: [res.data] }));
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+            }
+        }).catch(er => {
+            console.log(er.response);
+            typeof errorCallback === 'function' && errorCallback();
+            handleServiceErrors(er, [rideId, rideName, rideType, userId, date, successCallback, errorCallback], 'copySharedRide', true, true);
+            dispatch(apiLoaderActions(false));
+        }),
+        changeScreen: (screenProps) => dispatch(screenChangeAction(screenProps)),
         clearRideFromMap: () => dispatch(clearRideAction()),
-        getRidePicture: (pictureId, rideId, rideType) => getPicture(pictureId, (response) => {
-            console.log("getPicture-ride success: ", response);
-            dispatch(updateRidePictureInListAction({ rideId, rideType, ...response }))
-        }, (error) => console.log("getPicture-ride error: ", error)),
-        // getRidePictureList: (pictureIdList, rideType) => getPictureList(pictureIdList, (response) => {
-        //     console.log("getRidePictureList-ride success: ", response);
-        //     dispatch(updateRidePictureInListAction({ rideType, pictureObject: response }))
-        // }, (error) => console.log("getRidePictureList-ride error: ", error)),
-        getRidePictureList: (pictureIdList, rideType) => getRidePictureList(pictureIdList, (response) => {
-            console.log("getRidePictureList-ride success: ", response);
-            dispatch(updateRidePictureInListAction({ rideType, pictureObject: response }))
-        }, (error) => console.log("getRidePictureList-ride error: ", error)),
-        getRideCreatorPicture: (pictureId, rideId, rideType) => getPicture(pictureId, (response) => {
-            console.log("getPicture-CreatorPicture success: ", response);
-            dispatch(updateRideCreatorPictureInListAction({ rideId, rideType, ...response }))
-        }, (error) => console.log("getPicture-CreatorPicture error: ", error)),
-        getRideCreatorPictureList: (pictureIdList, rideType) => getPictureList(pictureIdList, (response) => {
-            console.log("getRideCreatorPictureList success: ", response);
-            dispatch(updateRideCreatorPictureInListAction({ rideType, pictureObject: response }))
-        }, (error) => console.log("getRideCreatorPictureList error: ", error)),
-        logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         isRemovedAction: (state) => dispatch(isRemovedAction(false)),
-        pauseRecordRide: (pauseTime, actualPoints, trackpoints, distance, ride, userId, loadRide) => dispatch(pauseRecordRide(pauseTime, actualPoints, trackpoints, distance, ride, userId, loadRide)),
+        pauseRecordRide: (pauseTime, actualPoints, trackpoints, distance, ride, userId, loadRide) => dispatch(pauseRecordRide(false,pauseTime, actualPoints, trackpoints, distance, ride, userId, loadRide)),
         completeRecordRide: (endTime, actualPoints, trackpoints, distance, ride, userId, loadRide) => dispatch(completeRecordRide(endTime, actualPoints, trackpoints, distance, ride, userId, loadRide)),
         updateRide: (data) => dispatch(updateRideAction(data)),
-        deleteUnsyncedRide: (unsyncedRideId) => dispatch(deleteUnsyncedRideAction(unsyncedRideId))
+        deleteUnsyncedRide: (unsyncedRideId) => dispatch(deleteUnsyncedRideAction(unsyncedRideId)),
+        addLike: (rideId, postType, rideType) => addLike(rideId, postType).then(res => {
+            console.log('addLike sucess : ', res);
+            dispatch(updateRideLikeAndCommentAction({ isUpdateLike: true, isLiked: true, rideId, isAdded: true, rideType }));
+            dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+        }).catch(er => {
+            console.log('addLike error : ', er)
+            handleServiceErrors(er, [rideId, postType, rideType], 'addLike', true, true);
+        }),
+        unLike: (rideId, userId, rideType) => unLike(rideId, userId).then(res => {
+            console.log('unLike sucess : ', res);
+            dispatch(updateRideLikeAndCommentAction({ isUpdateLike: true, isLiked: true, rideId, isAdded: false, rideType }));
+            dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+        }).catch(er => {
+            console.log('unLike error : ', er)
+            handleServiceErrors(er, [rideId, userId, rideType], 'unLike', true, true);
+        }),
+        updateCommentsCount: (rideId, rideType, numberOfComments) => dispatch(updateRideInListAction({ ride: { rideId, numberOfComments }, rideType })),
+        setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
+        resetErrorHandling: (state) => dispatch(resetErrorHandlingAction({ comingFrom: 'ride', isRetryApi: state })),
     }
 }
 
@@ -899,6 +817,147 @@ export default connect(mapStateToProps, mapDispatchToProps)(Rides);
 
 const styles = StyleSheet.create({
     tabContentCont: {
-        paddingHorizontal: 0
-    }
+        paddingHorizontal: 0,
+    },
+    headerRtIconContainer: {
+        height: 27,
+        width: 27,
+        backgroundColor: '#F5891F',
+        borderRadius: 13.5
+    },
+    addIcon: {
+        color: '#fff',
+        fontSize: 19
+    },
+    activeTab: {
+        backgroundColor: '#000000'
+    },
+    inActiveTab: {
+        backgroundColor: '#81BA41'
+    },
+    borderRightWhite: {
+        borderRightWidth: 1,
+        borderColor: '#fff'
+    },
+    borderLeftWhite: {
+        borderLeftWidth: 1,
+        borderColor: '#fff'
+    },
+    tabText: {
+        fontSize: 13,
+        fontFamily: CUSTOM_FONTS.robotoBold,
+    },
+    filterContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#E6E6E6',
+        borderBottomRightRadius: 10,
+        borderBottomLeftRadius: 10,
+        position: 'absolute',
+        top: 20,
+        paddingTop: 30,
+        paddingBottom: 20,
+        width: widthPercentageToDP(84),
+    },
+    filterIcon: {
+        color: '#000000',
+        fontSize: 12,
+        fontFamily: CUSTOM_FONTS.robotoBold
+    },
+    activeSortOption: {
+        color: APP_COMMON_STYLES.headerColor
+    },
+    headerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        padding: 3
+    },
+    nameOfRide: {
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        fontSize: 14,
+        color: '#585756',
+        // alignSelf: 'center',
+        padding: 10
+    },
+    footerIcon: {
+        height: 23,
+        width: 26,
+        marginTop: 8
+    },
+    footerText: {
+        color: '#EAEAEA',
+        fontSize: 15,
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        marginTop: 11,
+        marginLeft: 5
+    },
+    postCardFtrIconTitle: {
+        color: '#fff',
+        marginLeft: 10
+    },
+    postCardFtrTitle: {
+        fontSize: 13,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        letterSpacing: 1.3
+    },
+    postCardFtrDate: {
+        marginTop: 6,
+        fontSize: 9,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        letterSpacing: 0.9,
+        color: '#8D8D8D'
+    },
+    postCardFtrIconCont: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        height: 40,
+        backgroundColor: '#585756'
+    },
+    postCardFtrTxtCont: {
+        marginHorizontal: 26,
+        marginVertical: 10
+    },
+    likesCont: {
+        flexDirection: 'row'
+    },
+    btnContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20
+    },
+    actionBtn: {
+        height: 35,
+        backgroundColor: '#2B77B4',
+        width: 125,
+        alignSelf: 'center',
+        borderRadius: 20,
+        marginTop: 20
+    },
+    actionBtnTxt: {
+        letterSpacing: 1.4,
+        fontSize: 14,
+        fontFamily: CUSTOM_FONTS.robotoBold
+    },
+    deleteBoxCont: {
+        height: 263,
+        width: 327,
+        backgroundColor: '#F4F4F4',
+        borderRadius: 20,
+        padding: 31,
+        paddingRight: 40
+    },
+    deleteTitle: {
+        color: '#585756',
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        fontSize: 20
+    },
+    deleteText: {
+        color: '#585756',
+        fontFamily: CUSTOM_FONTS.roboto,
+        fontSize: 17,
+        letterSpacing: 0.17,
+        marginTop: 30
+    },
 });

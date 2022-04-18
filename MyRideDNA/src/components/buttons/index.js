@@ -79,6 +79,7 @@ export const IconButton = ({ title, titleStyle, iconRight, iconProps = {}, onPre
             </View>
         : iconRight
             ? <TouchableOpacity style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} activeOpacity={activeOpacity} onPress={onPress} onPressOut={onPressOut}>
+                {/* <View style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]}> */}
                 {
                     title !== undefined || title !== null
                         ? <DefaultText style={titleStyle}>{title}</DefaultText >
@@ -86,15 +87,18 @@ export const IconButton = ({ title, titleStyle, iconRight, iconProps = {}, onPre
                 }
                 <NBIcon name={iconProps.name}
                     type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style]} />
+                {/* </View> */}
             </TouchableOpacity>
             : <TouchableOpacity style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]} activeOpacity={activeOpacity} onPress={onPress} onPressOut={onPressOut}>
-                <NBIcon name={iconProps.name}
-                    type={iconProps.type} style={[{ fontSize: 30 }, iconProps.style]} />
+                {/* <View style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, style]}> */}
+                <NBIcon  name={iconProps.name}
+                    type={iconProps.type}  style={[{ fontSize: 30 }, iconProps.style]} />
                 {
                     title !== undefined || title !== null
                         ? <DefaultText style={titleStyle}>{title}</DefaultText >
                         : null
                 }
+                {/* </View> */}
             </TouchableOpacity>
 };
 
@@ -108,19 +112,19 @@ export const AppMenuButton = ({ containerStyle, iconProps, onPress }) => (
     </TouchableOpacity>
 );
 
-export const LinkButton = ({ style, title, titleStyle, onPress, highlightColor, disabled, ...otherProps }) => (
+export const LinkButton = ({ style, title, titleStyle, onPress, highlightColor, disabled, activeOpacity,numberOfLines, ...otherProps }) => (
     highlightColor && !otherProps.children
         ? <TouchableHighlight onPress={disabled ? null : onPress || null}
             underlayColor={highlightColor}>
             <View style={style}>
-                <DefaultText style={titleStyle}>{title}</DefaultText>
+                <DefaultText numberOfLines={numberOfLines} style={titleStyle}>{title}</DefaultText>
             </View>
         </TouchableHighlight>
-        : <TouchableOpacity activeOpacity={disabled ? 1 : 0.6} style={[style, disabled ? { backgroundColor: 'gray' } : null]} onPress={disabled ? null : onPress || null}>
+        : <TouchableOpacity activeOpacity={disabled ? 1 : activeOpacity || 0.6} style={[style, disabled ? { backgroundColor: 'gray' } : null]} onPress={disabled ? null : onPress || null}>
             {
                 otherProps.children
                     ? otherProps.children
-                    : <DefaultText style={titleStyle}>{title}</DefaultText>
+                    : <DefaultText numberOfLines={numberOfLines} style={titleStyle}>{title}</DefaultText>
             }
         </TouchableOpacity>
 );
@@ -129,7 +133,7 @@ export class SwitchIconButton extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            switchAnim: new Animated.Value(props.value === false ? 0 : 33),
+            switchAnim: new Animated.Value(props.value === false ? 1 : 19),
             toggleValue: props.value
         };
     }
@@ -138,7 +142,7 @@ export class SwitchIconButton extends React.Component {
         if (prevProps.value != this.props.value) {
             Animated.timing(this.state.switchAnim,
                 {
-                    toValue: this.props.value === false ? 0 : 33,
+                    toValue: this.props.value === false ? 1 : 19,
                     duration: 300,
                     useNativeDriver: true
                 }
@@ -149,16 +153,16 @@ export class SwitchIconButton extends React.Component {
     onSwitchStateChange = () => this.props.onChangeValue(!this.props.value);
 
     render() {
-        const { activeIcon, inactiveIcon, value } = this.props;
+        const { activeIcon, inactiveIcon, value, innerContainer, animatedContainer } = this.props;
         const { switchAnim } = this.state;
         return (
             <View style={{ justifyContent: 'center', alignItems: 'flex-end', padding: widthPercentageToDP(2) }}>
                 <TouchableWithoutFeedback onPress={this.onSwitchStateChange}>
-                    <View style={{ width: widthPercentageToDP(17), height: heightPercentageToDP(3.7), borderRadius: heightPercentageToDP(2), borderWidth: 1, backgroundColor: value ? 'black' : 'green', justifyContent: 'center' }}>
+                    <View style={[{ width: widthPercentageToDP(17), height: heightPercentageToDP(3.7), borderRadius: heightPercentageToDP(2), backgroundColor: value === false ? 'black' : 'transparent', justifyContent: 'center' }, innerContainer]}>
                         {
                             value === true ? activeIcon : null
                         }
-                        <Animated.View style={{ position: 'absolute', zIndex: 100, elevation: 10, width: widthPercentageToDP(7.5), height: widthPercentageToDP(7.5), borderRadius: widthPercentageToDP(3.75), backgroundColor: '#fff', transform: [{ translateX: switchAnim }] }} />
+                        <Animated.View style={[{ position: 'absolute', zIndex: 100, elevation: 10, width: widthPercentageToDP(7.5), height: widthPercentageToDP(7.5), borderRadius: widthPercentageToDP(3.75), backgroundColor: '#fff', transform: [{ translateX: switchAnim }] }, animatedContainer]} />
                         {
                             value === false ? inactiveIcon : null
                         }
@@ -169,10 +173,10 @@ export class SwitchIconButton extends React.Component {
     }
 }
 
-export const ImageButton = ({ onPress, imgStyles, containerStyles, imageSrc }) => (
+export const ImageButton = ({ onPress, imgStyles, containerStyles, imageSrc, pictureStyle }) => (
     <TouchableOpacity activeOpacity={0.7} onPress={onPress ? onPress : () => { }} style={containerStyles}>
         <View style={[{ width: 120, height: 120, borderRadius: 120 }, imgStyles]}>
-            <Image style={{ width: null, height: null, flex: 1, resizeMode: 'contain' }} source={imageSrc} />
+            <Image style={[{ width: null, height: null, flex: 1, resizeMode: 'contain' },pictureStyle]} source={imageSrc} />
         </View>
     </TouchableOpacity>
 );

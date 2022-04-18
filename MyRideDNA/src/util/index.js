@@ -11,11 +11,40 @@ export const getFormattedDateFromISO = (isoDateString = new Date().toISOString()
     if (!isIsoDate(isoDateString)) {
         return '';
     }
+    // const dateInfo = new Date(isoDateString).toISOString().substr(0, 10).split('-');
+    // return [dateInfo[2], ShortMonthNames[Number(dateInfo[1] + '') - 1], (dateInfo[0] + '').slice(-2)].join(joinBy);
     const dateInfo = new Date(isoDateString).toString().substr(4, 12).split(' ');
-    return [dateInfo[1], dateInfo[0], (dateInfo[2] + '').slice(-2)].join(joinBy);
+    return [dateInfo[0], dateInfo[1]+',', (dateInfo[2] + '')].join(joinBy);
 }
 
 export const isValidEmailFormat = (email) => {
     var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
+}
+
+export const getTimeAsFormattedString = (estimatedTime) => {
+    if (!estimatedTime) {
+        return '0 h 0 m';
+    }
+    let h = Math.floor(estimatedTime / 3600);
+    let m = Math.floor(estimatedTime % 3600 / 60);
+    let timeText = '';
+    if (h > 0) {
+        timeText += `${h} h`;
+    }
+    if (m > 0) {
+        timeText += ` ${m} m`;
+    }
+    return timeText;
+}
+
+export const getDistanceAsFormattedString = (distance, distanceUnit) => {
+    if (!distance) {
+        return '0 ' + distanceUnit;
+    }
+    if (distanceUnit === 'km') {
+        return (distance / 1000).toFixed(2) + ' km';
+    } else {
+        return (distance * 0.000621371192).toFixed(2) + ' mi';
+    }
 }

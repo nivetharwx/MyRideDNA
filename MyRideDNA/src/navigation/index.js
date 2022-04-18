@@ -16,8 +16,9 @@ import GroupForm from '../containers/friends/group-list/add-edit-group-form';
 import Rides from '../containers/rides';
 import Map from '../containers/map';
 import WaypointList from '../containers/map/waypoint-list';
+import ItinerarySection from '../containers/map/itinerary-section';
 import CommentSection from '../containers/map/comment-scetion';
-import Chat, { SelectedImagesView } from '../containers/chats';
+import Chat, { SelectedMediaView } from '../containers/chats';
 import Signup from '../containers/signup';
 import Passengers from '../containers/passengers';
 import PaasengerForm from '../containers/passengers/add-edit-passenger-from';
@@ -45,15 +46,26 @@ import PostForm from '../containers/post-form';
 import BuddyFriends from '../containers/buddy-friends';
 import BuddyPassengers from '../containers/buddy-passengers';
 import BuddyAlbum from '../containers/buddy-album';
+import RideDetails from '../containers/rides/ride-details';
+import PostDetail from '../containers/post-detail';
+import Vest from '../containers/vest';
+import NewsFeed from '../containers/newsfeed';
+import ChatSearch from '../containers/chats/chat-search';
+import FindRide from '../containers/find-ride';
+import SearchResult from '../containers/geolocation-search';
+import Likes from '../containers/likes';
+import Comment from '../containers/comments';
+import LoggedRideDetails from '../containers/profile/my-garage/bike-details/logged-ride/logged-ride-detail';
+import Direction from '../containers/map/direction';
 
 export default class Navigation extends Component {
     render() {
         return (
-            <Provider store={store}>
-                <Root>
-                    <Router>
+           
+                <Root >
+                    <Router >
                         <Scene key='root'>
-                            <Scene gesturesEnabled={false} key={PageKeys.SPLASH_SCREEN} component={SplashScreen} hideNavBar initial></Scene>
+                            <Scene gesturesEnabled={false}  key={PageKeys.SPLASH_SCREEN} component={SplashScreen} hideNavBar initial></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.LOGIN} component={Login} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.SIGNUP} component={Signup} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.FRIENDS} component={Friends} hideNavBar></Scene>
@@ -68,6 +80,7 @@ export default class Navigation extends Component {
                             <Scene gesturesEnabled={false} key={PageKeys.ADD_BIKE_FORM} component={AddBikeForm} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.MAP} component={Map} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.WAYPOINTLIST} component={WaypointList} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.ITINERARY_SECTION} component={ItinerarySection} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.COMMENT_SECTION} component={CommentSection} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.CREATE_RIDE} component={CreateRide} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.GALLERY} component={GalleryView} hideNavBar></Scene>
@@ -78,7 +91,7 @@ export default class Navigation extends Component {
                             <Scene gesturesEnabled={false} key={PageKeys.CONTACTS_SECTION} component={ContactsSection} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.FRIENDS_PROFILE} component={FriendsProfile} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.CHAT} component={Chat} hideNavBar></Scene>
-                            <Scene gesturesEnabled={false} key={PageKeys.SELECTED_IMAGES_VIEW} component={SelectedImagesView} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.SELECTED_MEDIA_VIEW} component={SelectedMediaView} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.OFFERS} component={Offers} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.CHAT_LIST} component={ChatList} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.ALBUM} component={Album} hideNavBar></Scene>
@@ -92,10 +105,21 @@ export default class Navigation extends Component {
                             <Scene gesturesEnabled={false} key={PageKeys.BUDDY_FRIENDS} component={BuddyFriends} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.BUDDY_PASSENGERS} component={BuddyPassengers} hideNavBar></Scene>
                             <Scene gesturesEnabled={false} key={PageKeys.BUDDY_ALBUM} component={BuddyAlbum} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.RIDE_DETAILS} component={RideDetails} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.POST_DETAIL} component={PostDetail} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.VEST} component={Vest} hideNavBar ></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.NEWS_FEED} component={NewsFeed} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.CHAT_SEARCH} component={ChatSearch} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.FIND_RIDE} component={FindRide} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.SEARCH_RESULT} component={SearchResult} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.LIKES} component={Likes} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.COMMENTS} component={Comment} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.LOGGED_RIDE_DETAIL} component={LoggedRideDetails} hideNavBar></Scene>
+                            <Scene gesturesEnabled={false} key={PageKeys.DIRECTION} component={Direction} hideNavBar></Scene>
                         </Scene>
                     </Router>
                 </Root>
-            </Provider>
+            // </Provider>
         );
     }
 }

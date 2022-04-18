@@ -1,15 +1,15 @@
 import React from 'react';
 import {
     View, StyleSheet,
-    Image, ImageBackground, StatusBar, Animated, Easing
+    Image, ImageBackground, StatusBar, Animated, Easing, ToastAndroid, AlertIOS,
 } from 'react-native';
 import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from '@react-native-community/async-storage';
 import { connect } from 'react-redux';
 import { Actions } from 'react-native-router-flux';
-import { USER_AUTH_TOKEN, PageKeys, WindowDimensions, USER_BASE_URL, DEVICE_TOKEN, UNSYNCED_RIDE } from '../../constants';
-import { Icon as NBIcon, Toast } from 'native-base';
-import { storeUserAction, updateTokenAction, replaceUnsyncedRidesAction } from '../../actions';
+import { USER_AUTH_TOKEN, PageKeys, WindowDimensions, USER_BASE_URL, DEVICE_TOKEN, UNSYNCED_RIDE, IS_ANDROID } from '../../constants';
+import { Icon as NBIcon } from 'native-base';
+import { storeUserAction, updateTokenAction, replaceUnsyncedRidesAction, updateJwtTokenAction } from '../../actions';
 import axios from 'axios';
 
 class SplashScreen extends React.Component {
@@ -24,16 +24,17 @@ class SplashScreen extends React.Component {
 
     async componentDidMount() {
         console.log('componentDidMount splash screen')
-        const keys = await AsyncStorage.getAllKeys();
-        this.props.updateUnsyncedRides(keys.filter(key => key.indexOf(UNSYNCED_RIDE) === 0));
+        // const keys = await AsyncStorage.getAllKeys();
+        // this.props.updateUnsyncedRides(keys.filter(key => key.indexOf(UNSYNCED_RIDE) === 0));
         this.unregisterNetworkListener = NetInfo.addEventListener(this.handleFirstConnectivityChange);
         this.doAnimateLoader();
+        !IS_ANDROID && StatusBar.setBarStyle('light-content');
     }
 
 
     componentDidUpdate(prevProps) {
         if (prevProps.user !== this.props.user) {
-            if (this.props.user.userId) {
+            if (this.props.user && this.props.user.userId) {
                 Actions.reset(PageKeys.MAP);
             }
         }
@@ -41,29 +42,37 @@ class SplashScreen extends React.Component {
 
     handleFirstConnectivityChange = async (connectionInfo) => {
         if ((connectionInfo.type === 'wifi' || connectionInfo.type === 'cellular') && connectionInfo.isInternetReachable) {
-            Toast.hide();
+            // Toast.hide();
             if (this.props.user === null || this.props.user.userId === null) {
                 this.doAuthTokenVerfication();
             }
         } else if (connectionInfo.isInternetReachable === false) {
-            Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
+            // Toast.show({ text: 'Network connection lost', position: 'bottom', duration: 0 });
+            if (Platform.OS === 'android') {
+                ToastAndroid.show('Network connection lost', ToastAndroid.LONG)
+              } else {
+                AlertIOS.alert('Network connection lost');
+              }
         }
     }
 
     async doAuthTokenVerfication() {
         var userAuthToken = await AsyncStorage.getItem(USER_AUTH_TOKEN);
         var deviceToken = await AsyncStorage.getItem(DEVICE_TOKEN);
-        console.log('userAuthToken : ', userAuthToken)
+        console.log('\n\n\n devide Token : ', deviceToken)
+        
         if (userAuthToken) {
             this.props.updateToken({ userAuthToken, deviceToken });
             axios.post(USER_BASE_URL + 'loginUserUsingAccessToken', { accessToken: userAuthToken, date: new Date().toISOString() }, { timeout: 15000 })
-                .then(res => {
-                    console.log('loginUserUsingAccessToken success : ', res.data);
+                .then(res => {            
+                    // console.log('loginUserUsingAccessToken success : ', res.data);
                     if (res.status === 200) {
                         if (!res.data.clubs) {
                             console.log('clubs not existing')
                             res.data.clubs = [];
                         }
+                        if (!res.data.homeAddress) res.data.homeAddress = {};
+
                         this.props.storeUser(res.data);
                     }
                 })
@@ -99,6 +108,7 @@ class SplashScreen extends React.Component {
     }
 
     render() {
+        console.log('\n\n\n render splash screen')
         const spin = this.state.spinValue.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '360deg']
@@ -106,12 +116,14 @@ class SplashScreen extends React.Component {
         return (
             <View style={{ flex: 1, backgroundColor: '#fff' }}>
                 <StatusBar
-                    backgroundColor="black"
-                    barStyle="default"
+                    translucent={true}
+                    backgroundColor="transparent"
                 />
                 <ImageBackground source={require('../../assets/img/logo-sky-bg.jpg')}
                     style={styles.splashBackground} resizeMode='cover'>
-                    <Image source={require('../../assets/img/logo-high-res.png')} style={styles.logo} resizeMode='center' />
+                        <View style={{width:'100%',height:'20%'}}>
+                                <ImageBackground source={require('../../assets/img/logo-high-res.png')} style={styles.logo} resizeMode="contain"  />
+                        </View>
                 </ImageBackground>
                 <Animated.View style={[styles.loader, { transform: [{ rotate: spin }] }]}>
                     <NBIcon name='spinner' type='EvilIcons' style={{ fontSize: 100, color: '#EB861E' }} />
@@ -130,7 +142,8 @@ const mapDispatchToProps = (dispatch) => {
     return {
         updateToken: (token) => dispatch(updateTokenAction(token)),
         storeUser: (userInfo) => dispatch(storeUserAction(userInfo)),
-        updateUnsyncedRides: (unsyncedRides) => dispatch(replaceUnsyncedRidesAction(unsyncedRides))
+        updateUnsyncedRides: (unsyncedRides) => dispatch(replaceUnsyncedRidesAction(unsyncedRides)),
+        updateJwtToken: (unsyncedRides) => dispatch(updateJwtTokenAction(unsyncedRides))
     };
 }
 
@@ -144,13 +157,14 @@ const styles = StyleSheet.create({
         height: null,
         width: null,
         flex: 1,
+        display:'flex',
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 50
     },
     logo: {
         width: '100%',
-        height: '100%',
+        height:'100%',
     },
     loader: {
         position: 'absolute',

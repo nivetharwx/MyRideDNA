@@ -2,14 +2,15 @@ import React from 'react';
 import { StyleSheet, FlatList, TextInput, View, TouchableWithoutFeedback, TouchableOpacity, Text, ScrollView } from 'react-native';
 import { connect } from 'react-redux';
 import { BaseModal } from '../../../components/modal';
-import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, TAB_CONTAINER_HEIGHT, JS_SDK_ACCESS_TOKEN, RIDE_POINT, APP_EVENT_TYPE } from '../../../constants';
-import { Icon as NBIcon, Tabs, ScrollableTab, TabHeading, Tab, ListItem, Left, Body, Right, Item } from 'native-base';
+import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, TAB_CONTAINER_HEIGHT, JS_SDK_ACCESS_TOKEN, RIDE_POINT, APP_EVENT_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, GET_PICTURE_BY_ID } from '../../../constants';
+import { Icon as NBIcon, Tabs, ScrollableTab, TabHeading, Tab, ListItem, Left, Body, Right, Item, Thumbnail } from 'native-base';
 import { updateWaypointNameAction, updateSourceOrDestinationNameAction, reorderRideSourceAction, reorderRideDestinationAction, reorderRideWaypointsAction, apiLoaderActions, updateRideAction, updateRideInListAction } from '../../../actions';
 import { IconLabelPair, DefaultText } from '../../../components/labels';
 import DraggableFlatList from 'react-native-draggable-flatlist';
 import { IconButton, SwitchIconButton, LinkButton } from '../../../components/buttons';
 import { getFormattedDateFromISO } from '../../../util';
 import { updateRide } from '../../../api';
+import { BasePage } from '../../../components/pages';
 
 const BOTTOM_TAB_HEIGHT = heightPercentageToDP(7);
 const BOTTOM_TAB_CONTAINER_WIDTH = widthPercentageToDP(90);
@@ -35,16 +36,8 @@ class WaypointList extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        // console.log("componentDidUpdate: ", prevProps.ride.waypoints[0], this.props.ride.waypoints[0]);
         if (prevProps.ride !== this.props.ride) {
             if (this.props.ride.rideId) {
-                // if (this.state.activeDescriptionIdx > -1) {
-                //     this.setState(({ points }) => ({
-                //         points: [...points.slice(0, this.state.activeDescriptionIdx), ...points.slice(this.state.activeDescriptionIdx + 1)]
-                //     }, () => this.updatePoints()));
-                // } else {
-                //     this.updatePoints();
-                // }
                 this.updatePoints();
             }
         }
@@ -122,61 +115,30 @@ class WaypointList extends React.Component {
 
     renderRidePoint = ({ item, index, move, moveEnd, isActive }) => {
         if (item.isDescription) {
-            return <ListItem avatar>
+            return <ListItem avatar onPress={() => this.props.isEditable && this.onPressEditDescription(index - 1)}>
                 {
                     this.props.isEditable
                         ? <Left>
                             <View style={[styles.itemNumber, { backgroundColor: APP_COMMON_STYLES.headerColor }]}>
                                 {
                                     item.description
-                                        ? <TouchableOpacity onPress={() => this.onPressEditDescription(index - 1)}>
-                                            <NBIcon name='edit' type='MaterialIcons' style={styles.whiteFont} />
-                                        </TouchableOpacity>
-                                        : <TouchableOpacity onPress={() => this.onPressEditDescription(index - 1)}>
-                                            <NBIcon name='add' type='MaterialIcons' style={styles.whiteFont} />
-                                        </TouchableOpacity>
+                                        ? <NBIcon name='edit' type='MaterialIcons' style={styles.whiteFont} />
+                                        : <NBIcon name='add' type='MaterialIcons' style={styles.whiteFont} />
                                 }
                             </View>
                         </Left>
                         : null
                 }
-                <Body style={{ height: '100%', flex: 1 }}>
-                    {
-                        item.description
-                            ? <View style={{ flex: 1, justifyContent: 'space-around', flexDirection: 'row' }}>
-                                <DefaultText>{item.description}</DefaultText>
-                                {/* {
-                                    this.props.isEditable
-                                        ? <IconButton onPress={() => this.onPressEditDescription(index - 1)} style={{ backgroundColor: 'transparent', alignSelf: 'flex-end' }}
-                                            iconProps={{ name: 'edit', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.headerColor } }} />
-                                        : null
-                                } */}
-                            </View>
-                            : <View style={{ flex: 1, justifyContent: 'space-between', flexDirection: 'row' }}>
-                                <DefaultText style={{ color: '#ACACAC' }}>{this.props.isEditable ? 'Add description' : 'No description added for this point'}</DefaultText>
-                                {/* {
-                                    this.props.isEditable
-                                        ? <IconButton onPress={() => this.onPressEditDescription(index - 1)} style={{ backgroundColor: 'transparent', alignSelf: 'flex-end' }}
-                                            iconProps={{ name: 'add', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.headerColor } }} />
-                                        : null
-                                } */}
-                            </View>
-                    }
+                <Body style={{ flex: 1, justifyContent: 'center' }}>
+                    <DefaultText style={!item.description ? { top: 5, paddingBottom: 10 } : null}>{item.description || (this.props.isEditable ? 'Add description' : 'No description added for this point')}</DefaultText>
                 </Body>
-            </ListItem >
+            </ListItem>
         }
         return this.state.isEditable
             ? <ListItem avatar onLongPress={move} onPressOut={moveEnd} onPress={() => this.toggleDescription(index)}
                 style={{ backgroundColor: isActive ? APP_COMMON_STYLES.infoColor : '#fff' }}>
                 <Left style={{ alignItems: 'center', justifyContent: 'center' }}>
                     <View style={[styles.itemNumber, { backgroundColor: APP_COMMON_STYLES.infoColor }]}>
-                        {/* <DefaultText style={styles.whiteFont}>{
-                            index === 0
-                                ? 'S'
-                                : index === this.state.points.length - 1 && this.props.ride.destination
-                                    ? 'D'
-                                    : index
-                        }</DefaultText> */}
                         {
                             index === 0
                                 ? <NBIcon name='map-pin' type='FontAwesome' style={[styles.whiteFont, { paddingLeft: widthPercentageToDP(1) }]} />
@@ -208,7 +170,7 @@ class WaypointList extends React.Component {
                         <DefaultText>{item.name || 'Unknown'}</DefaultText>
                     </View>
                 </Body>
-            </ListItem >
+            </ListItem>
     }
 
     renderItemIcon = (index) => {
@@ -279,7 +241,6 @@ class WaypointList extends React.Component {
                 this.props.reorderRideWaypoints(from - 1, to - 1);
             }
         }
-        // this.setState({ points: data });
     }
 
     pointKeyExtractor = item => item.id || item.lng + '' + item.lat;
@@ -290,103 +251,47 @@ class WaypointList extends React.Component {
         return (
             <View style={styles.modalRoot}>
                 <View style={styles.container}>
-                    <View style={styles.header}>
-                        <TouchableOpacity style={styles.iconPadding} onPress={this.onCloseModal}>
-                            <NBIcon name='md-arrow-round-back' type='Ionicons' />
-                        </TouchableOpacity>
-                        <DefaultText style={styles.headerText}>Waypoints</DefaultText>
-                        {/* <IconButton style={{ alignSelf: 'flex-end' }} title='Itinerary' titleStyle={{ color: '#fff' }} iconRight={true} iconProps={{ name: 'arrow-right', type: 'MaterialCommunityIcons', style: { color: '#fff' } }} onPress={this.props.changeToItineraryMode} /> */}
-                        {
-                            this.props.ride.isRecorded
-                                ? null
-                                : <LinkButton title='Itinerary' titleStyle={[styles.whiteFont, { fontSize: widthPercentageToDP(3.5), fontWeight: 'bold', textDecorationLine: 'underline' }]} style={{ marginTop: 10, paddingRight: 20 }} onPress={this.props.changeToItineraryMode} />
-                        }
-                    </View>
-                    {/* <Tabs locked={true} onChangeTab={this.onChangeTab} style={{ backgroundColor: '#fff', marginTop: APP_COMMON_STYLES.headerHeight }} renderTabBar={() => <ScrollableTab tabsContainerStyle={{ width: BOTTOM_TAB_CONTAINER_WIDTH }} style={{ width: BOTTOM_TAB_CONTAINER_WIDTH }} ref={elRef => this.tabsRef = elRef} activeTab={activeTab} backgroundColor={APP_COMMON_STYLES.statusBarColor} underlineStyle={{ height: 0 }} />}>
-                        <Tab heading={<TabHeading style={{ width: BOTTOM_TAB_CONTAINER_WIDTH / 2, backgroundColor: activeTab === 0 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderRightWidth: 0.5 }}>
-                            <DefaultText style={{ fontSize: widthPercentageToDP(2.8), fontWeight: 'bold', color: activeTab === 0 ? '#fff' : '#000' }}>WAYPOINTS</DefaultText>
-                        </TabHeading>}>
-
-                        </Tab>
-                        <Tab heading={<TabHeading style={{ width: BOTTOM_TAB_CONTAINER_WIDTH / 2, backgroundColor: activeTab === 1 ? '#81BB41' : '#E3EED3', borderColor: '#fff', borderLeftWidth: 0.5 }}>
-                            <DefaultText style={{ fontSize: widthPercentageToDP(2.8), fontWeight: 'bold', color: activeTab === 1 ? '#fff' : '#000' }}>CURRENT RIDE</DefaultText>
-                        </TabHeading>}>
-
-                        </Tab>
-                    </Tabs> */}
-                    <View style={styles.bodyContent}>
-                        <View style={styles.rideInfo}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                {
-                                    isEditingName
-                                        ? <Item style={{ flexDirection: 'row', flex: 1, marginLeft: 10, borderBottomColor: 'rgba(0,0,0,0.3)', borderBottomWidth: 1, justifyContent: 'space-between' }}>
-                                            <TextInput style={{ flex: 1 }} value={rideName} onChangeText={this.onChangeName} onSubmitEditing={this.onPressSubmitRideName} />
-                                            <IconButton onPress={this.onPressSubmitRideName} style={{ backgroundColor: 'transparent', alignSelf: 'center', alignItems: 'flex-end', justifyContent: 'flex-end', marginRight: widthPercentageToDP(2) }}
-                                                iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: { color: APP_COMMON_STYLES.headerColor, fontSize: widthPercentageToDP(5) } }} />
-                                        </Item>
-                                        : <Item style={{ flexDirection: 'row', flex: 1, borderBottomWidth: 0, justifyContent: 'space-between' }}>
-                                            <IconLabelPair
-                                                iconProps={{ name: 'navigation', type: 'MaterialCommunityIcons' }}
-                                                text={rideName}
-                                            />
-                                            {
-                                                this.props.isEditable
-                                                    ? <IconButton onPress={this.onPressEditRideName} style={{ backgroundColor: 'transparent', alignSelf: 'center', alignItems: 'flex-end', justifyContent: 'flex-end' }}
-                                                        iconProps={{ name: 'edit', type: 'MaterialIcons', style: { color: APP_COMMON_STYLES.headerColor, fontSize: widthPercentageToDP(5) } }} />
-                                                    : null
-                                            }
-                                        </Item>
-                                }
-                                {/* <IconLabelPair
-                                    iconProps={{ name: 'navigation', type: 'MaterialCommunityIcons' }}
-                                    text={ride.privacyMode.toUpperCase()}
-                                /> */}
-                                {
-                                    this.props.isEditable
-                                        ? <SwitchIconButton
-                                            activeIcon={<NBIcon name='close' type='FontAwesome' style={{ color: '#fff', alignSelf: 'flex-start', paddingHorizontal: 10, fontSize: widthPercentageToDP(6) }} />}
-                                            inactiveIcon={<NBIcon name='eye' type='MaterialCommunityIcons' style={{ color: '#fff', alignSelf: 'flex-end', paddingHorizontal: 10, fontSize: widthPercentageToDP(6) }} />}
-                                            value={ride.privacyMode === 'private'} onChangeValue={this.onChangePrivacyMode} />
-                                        : null
-                                }
-
-                            </View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <IconLabelPair
-                                    iconProps={{ name: 'calendar-today', type: 'MaterialCommunityIcons' }}
-                                    text={getFormattedDateFromISO(ride.date)}
-                                />
-                                {
-                                    ride.createdBy !== user.userId
-                                        ?
+                    <BasePage heading={'Waypoints'} showShifter={false} onBackButtonPress={this.onCloseModal}>
+                        <View style={styles.bodyContent}>
+                            <View style={styles.rideInfo}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                    <Item style={{ flexDirection: 'row', flex: 1, borderBottomWidth: 0, justifyContent: 'space-between' }}>
                                         <IconLabelPair
-                                            iconProps={{ name: 'person', type: 'MaterialIcons' }}
-                                            text={<DefaultText>{ride.creatorName + '  '}{
-                                                ride.creatorNickname
-                                                    ? <DefaultText style={{ color: APP_COMMON_STYLES.infoColor }}>{`${ride.creatorNickname}`}</DefaultText>
-                                                    : null
-                                            }</DefaultText>}
+                                            iconProps={{ name: 'navigation', type: 'MaterialCommunityIcons' }}
+                                            text={rideName}
                                         />
-                                        : null
-                                }
+                                        <IconLabelPair
+                                            iconProps={{ name: 'calendar-today', type: 'MaterialCommunityIcons' }}
+                                            text={getFormattedDateFromISO(ride.date)}
+                                        />
+                                    </Item>
+                                </View>
+                                {ride.creatorId !== user.userId && <View style={{ marginLeft: 5, marginTop: 15, flexDirection: 'row', alignItems: 'center' }}>
+                                    <Thumbnail style={{ height: 30, width: 30 }} source={ride.creatorProfilePictureId ? { uri: `${GET_PICTURE_BY_ID}${ride.creatorProfilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` } : require('../../../assets/img/profile-pic-placeholder.png')} />
+                                    <DefaultText style={{ marginLeft: 10 }}>{ride.creatorName + '  '}
+                                        {
+                                            ride.creatorNickname && <DefaultText style={{ color: APP_COMMON_STYLES.infoColor }}>{`${ride.creatorNickname}`}</DefaultText>
+                                        }
+                                    </DefaultText>
+                                </View>}
                             </View>
+                            {
+                                isEditable
+                                    ? <DraggableFlatList
+                                        data={points}
+                                        renderItem={this.renderRidePoint}
+                                        keyExtractor={this.pointKeyExtractor}
+                                        onMoveEnd={this.onChangeOrder}
+                                    />
+                                    : <FlatList
+                                        keyboardShouldPersistTaps={'handled'}
+                                        data={points}
+                                        renderItem={this.renderRidePoint}
+                                        keyExtractor={this.pointKeyExtractor}
+                                    />
+                            }
                         </View>
-                        {
-                            isEditable
-                                ? <DraggableFlatList
-                                    data={points}
-                                    renderItem={this.renderRidePoint}
-                                    keyExtractor={this.pointKeyExtractor}
-                                    onMoveEnd={this.onChangeOrder}
-                                />
-                                : <FlatList
-                                    data={points}
-                                    renderItem={this.renderRidePoint}
-                                    keyExtractor={this.pointKeyExtractor}
-                                // ItemSeparatorComponent={this.renderSeparator}
-                                />
-                        }
-                    </View>
+                    </BasePage>
                 </View>
                 <TouchableWithoutFeedback onPress={onPressOutside}>
                     <View style={{ flex: 1 }} />
@@ -436,7 +341,7 @@ const styles = StyleSheet.create({
         height: APP_COMMON_STYLES.headerHeight,
         position: 'absolute',
         zIndex: 999,
-        elevation: 31,
+        elevation: 10,
         width: '100%',
         alignItems: 'center',
         flexDirection: 'row'
@@ -476,7 +381,7 @@ const styles = StyleSheet.create({
     },
     bodyContent: {
         flex: 1,
-        marginTop: APP_COMMON_STYLES.headerHeight
+        marginTop: 10
     },
     itemNumber: {
         // backgroundColor: APP_COMMON_STYLES.infoColor,
@@ -487,10 +392,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     whiteFont: {
-        color: '#fff'
+        color: '#fff',
     },
     rideInfo: {
-        height: heightPercentageToDP(15),
+        // height: heightPercentageToDP(15),
         padding: widthPercentageToDP(2),
         borderBottomWidth: 1,
         borderBottomColor: '#000',

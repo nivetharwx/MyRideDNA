@@ -8,11 +8,11 @@ import {
     TouchableOpacity
 } from 'react-native';
 import { Icon as NBIcon, Picker, DatePicker } from 'native-base';
-import { WindowDimensions, ShortMonthNames, heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, CUSTOM_FONTS } from '../../constants';
+import { WindowDimensions, ShortMonthNames, heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, CUSTOM_FONTS, IS_ANDROID } from '../../constants';
 import { getFormattedDateFromISO } from '../../util';
 import { DefaultText } from '../labels';
 import { IconButton } from '../buttons';
-
+import DateTimePicker from '@react-native-community/datetimepicker';
 const getKeyboardTypeForContentType = (contentType) => {
     if (contentType === 'telephoneNumber' || contentType === 'postalCode' || contentType === 'creditCardNumber') {
         return 'number-pad';
@@ -34,13 +34,20 @@ export const LabeledInput = ({ hideKeyboardOnSubmit, inputValue, containerStyle,
             returnKeyType={returnKeyType || 'done'} returnKeyLabel={returnKeyLabel} ref={(el) => inputRef && inputRef(el)} />
     </View>
 );
-export const LabeledInputPlaceholder = ({ hideKeyboardOnSubmit, inputValue, containerStyle, label, labelStyle, placeholder = '', placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus, onBlur, editable, placeHolderStyle, secondLabelStyle, secondLabel, outerContainer, multiline }) => (
-    <View style={[outerContainer]}>
-        <View style={[{ flexDirection: 'row', marginBottom: 3 }, containerStyle]}>
-            <TextInput multiline={multiline} minLength={inputType === 'telephoneNumber' ? 10 : null} maxLength={inputType === 'telephoneNumber' ? 10 : null} placeholder={placeholder} editable={editable} onFocus={onFocus && onFocus} onBlur={onBlur && onBlur} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password'} style={[{ borderBottomWidth: 1, borderBottomColor: '#000', flex: 1, fontSize: 14, fontFamily: CUSTOM_FONTS.roboto }, inputStyle]}
-                textContentType={inputType} keyboardType={getKeyboardTypeForContentType(inputType)}
+export const LabeledInputPlaceholder = ({ hideKeyboardOnSubmit, autoFocus = false, inputValue, containerStyle, label, labelStyle, placeholder = '', placeholderColor, inputStyle, inputType, returnKeyType, returnKeyLabel, onChange, onSubmit, inputRef, onFocus = null, onBlur = null, editable, placeHolderStyle, secondLabelStyle, secondLabel, outerContainer, multiline, iconProps, secureTextEntry }) => (
+    <View style={[{ flex: 1, }, outerContainer]}>
+        <View style={[{ flexDirection: 'row', marginBottom: 3, flex: 1, borderBottomWidth: 1, borderBottomColor: '#000', justifyContent: 'center', alignItems: 'center', height: 35 }, containerStyle]}>
+            <TextInput autoFocus={autoFocus} multiline={multiline} minLength={inputType === 'telephoneNumber' ? 10 : null} maxLength={inputType === 'telephoneNumber' ? 10 : null} placeholder={placeholder} editable={editable} onFocus={onFocus} onBlur={onBlur} value={inputValue} blurOnSubmit={typeof hideKeyboardOnSubmit === 'undefined' ? true : hideKeyboardOnSubmit} secureTextEntry={inputType === 'password' || secureTextEntry} style={[{ flex: 1, fontSize: 14, fontFamily: CUSTOM_FONTS.roboto, padding: 4, color: '#000000' }, inputStyle]}
+                placeholderTextColor={placeholderColor} textContentType={inputType} keyboardType={getKeyboardTypeForContentType(inputType)}
                 onChangeText={onChange && onChange} onSubmitEditing={({ nativeEvent }) => onSubmit && onSubmit(nativeEvent.text)}
                 returnKeyType={returnKeyType || 'done'} returnKeyLabel={returnKeyLabel} ref={(el) => inputRef && inputRef(el)} />
+            {
+                iconProps ?
+                    <View style={iconProps.containerStyle}>
+                        <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, iconProps.style]} onPress={iconProps.onPress} />
+                    </View>
+                    : null
+            }
         </View>
         {
             label ?
@@ -80,30 +87,30 @@ export const IconicInput = ({ inputColor, containerStyle, iconProps, placeholder
 );
 
 // DOC: Controlled component, caller have to pass onValueChange function to persist the user selection
-export const IconicList = ({ iconProps, dropdownIcon, outerContainer, values, selectedValue, placeholder, placeholderStyle, disabled, onChange, containerStyle, textStyle, innerContainerStyle, labelPlaceHolder, labelPlaceHolderStyle, pickerStyle }) => {
-    let options = selectedValue ? values : [{ label: placeholder || 'Select any', value: '' }, ...values];
+export const IconicList = ({ iconProps, dropdownIcon, outerContainer, values, selectedValue, placeholder, placeholderStyle, iconContainerStyle, disabled, onChange, containerStyle, textStyle, innerContainerStyle, labelPlaceHolder, labelPlaceHolderStyle, pickerStyle }) => {
+    let options = selectedValue ? values : typeof placeholder === 'undefined' ? [{ label: 'Select any', value: '' }, ...values] : values;
     return (
         <View style={[outerContainer]}>
             <View style={[{ flexDirection: 'row' }, containerStyle]}>
                 {
                     iconProps
-                        ? <View style={{ paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
+                        ? <View style={[{ position: 'absolute', right: 5, justifyContent: 'center', alignItems: 'center' }, iconContainerStyle]}>
                             <NBIcon name={iconProps.name} type={iconProps.type} style={[styles.formFieldIcon, iconProps.style]} />
                         </View>
                         : null
                 }
-                <View style={[innerContainerStyle]}>
+                <View style={[innerContainerStyle, { flex: 1 }]}>
                     <Picker
                         enabled={!disabled}
-                        mode="dropdown"
-                        iosIcon={dropdownIcon || <NBIcon name="ios-arrow-down" style={{ color: '#acacac' }} />}
+                        mode={IS_ANDROID ? 'dialog' : 'dropdown'}
+                        // iosIcon={dropdownIcon || <NBIcon name="ios-arrow-down" style={{ color: '#acacac' }} />}
                         placeholder={placeholder}
-                        placeholderStyle={[{ color: "#a9a9a9", paddingLeft: 0 }, placeholderStyle]}
+                        placeholderStyle={[{ color: "#a9a9a9", paddingLeft: 0, }, placeholderStyle]}
                         placeholderIconColor="#a9a9a9"
-                        style={[{ borderBottomWidth: 1, borderBottomColor: '#acacac', paddingTop: 0 }, pickerStyle]}
+                        style={[{ borderBottomWidth: 1, borderBottomColor: '#acacac', color: '#000000', paddingTop: 0, transform: [{ scaleY: 0.9 }], fontFamily: CUSTOM_FONTS.roboto }, pickerStyle]}
                         selectedValue={selectedValue}
                         onValueChange={onChange && onChange}
-                        textStyle={[{ paddingLeft: 0, paddingHorizontal: 0 }, textStyle]}
+                        textStyle={[{ paddingLeft: 0, paddingHorizontal: 0, }, textStyle]}
                     >
                         {
                             options.map((option, index) => <Picker.Item key={option.value} label={option.label} value={option.value} />)
@@ -133,11 +140,11 @@ export const IconicSwitch = ({ iconProps, label, selectedValue, onChange }) => (
 );
 
 // DOC: Controlled component, caller have to pass onValueChange function to persist the user selection
-export const IconicDatePicker = ({ iconProps, outerContainer, selectedDate, datePickerStyle, selectedDateString, minDate, maxDate, placeholder, onChange, label, labelStyle }) => {
+export const IconicDatePicker = ({ iconProps, outerContainer, selectedDate, datePickerStyle, selectedDateString, minDate, maxDate, placeholder, onChange, label, labelStyle, pickerBorderIos }) => {
     let currentDate = new Date();
     return (
         <View style={[outerContainer]}>
-            <View style={{ flexDirection: 'row', marginVertical: 4 }}>
+            <View style={[{ flexDirection: 'row', marginVertical: 4 }, IS_ANDROID ? null : pickerBorderIos]}>
                 {
                     iconProps
                         ? <View style={{ paddingLeft: 10, paddingRight: 5, justifyContent: 'center', alignItems: 'center' }}>
@@ -145,8 +152,10 @@ export const IconicDatePicker = ({ iconProps, outerContainer, selectedDate, date
                         </View>
                         : null
                 }
-                <DatePicker
-                    defaultDate={selectedDate ? new Date(selectedDate) : currentDate}
+              
+              { IS_ANDROID
+              ? <DatePicker
+                    defaultDate={selectedDate ? new Date(selectedDate) : null}
                     minimumDate={minDate || new Date(currentDate.getFullYear() - 100, currentDate.getMonth() + 1, currentDate.getDay())}
                     maximumDate={maxDate || currentDate}
                     locale={"en"}
@@ -155,9 +164,24 @@ export const IconicDatePicker = ({ iconProps, outerContainer, selectedDate, date
                     animationType={"fade"}
                     androidMode={"default"}
                     textStyle={[styles.datePickerDefaultStyles, datePickerStyle]}
-                    placeHolderTextStyle={[styles.datePickerDefaultStyles, { color: selectedDate ? "black" : "#a9a9a9" }]}
+                    placeHolderTextStyle={[styles.datePickerDefaultStyles, { color: selectedDate ? "#000000" : "#000000", }]}
                     onDateChange={onChange && onChange}
                 />
+                :<DateTimePicker
+                testID="dateTimePicker"
+                    maximumDate={new Date()}
+                    value={selectedDate ? new Date(selectedDate) : new Date()}
+                    mode={'date'}
+                    is24Hour={false}
+                    display={IS_ANDROID?"calendar":"default"}
+                    onChange={onChange && onChange}
+                    dateFormat={"longdate"}
+                    placeholderText="select date"
+                    neutralButtonLabel="clear"
+                    textColor={{color:'red'}}
+                    style={{ flex: 1, backgroundColor: '#F4F4F4'}}
+                />
+              }
             </View>
             {
                 label ?
@@ -184,20 +208,24 @@ export const SearchBox = ({ value, hideIcon, onTextChange, onFocus, onPressClear
     </View>
 );
 
-export const SearchBoxFilter = ({ outerContainer, searchQuery, onChangeSearchValue, placeholder, footer }) => (
+export const SearchBoxFilter = ({ outerContainer, autoFocus = false, placeholderTextColor, searchQuery, onChangeSearchValue, placeholder, footer, LabeledInputPlaceholderCont: labeledInputPlaceholderCont, onPressClear = null, onSubmit = null }) => (
     <View style={[outerContainer]}>
         <View style={styles.searchBoxFilterContainer}>
-            <View style={{ flex: 2.89 }}>
+            <View style={{ flex: 2.89, flexDirection: 'row', alignItems: 'center' }}>
                 <LabeledInputPlaceholder
+                    autoFocus={autoFocus}
                     placeholder={placeholder}
-                    inputValue={searchQuery} inputStyle={styles.searchBoxFilterInput}
-                    returnKeyType='next'
+                    inputValue={searchQuery} inputStyle={[styles.searchBoxFilterInput]}
+                    returnKeyType='search'
                     onChange={onChangeSearchValue}
                     hideKeyboardOnSubmit={true}
-                    containerStyle={styles.searchCont} />
+                    onSubmit={onSubmit}
+                    placeholderColor={placeholderTextColor}
+                    containerStyle={[styles.searchCont, labeledInputPlaceholderCont]} />
+                {onPressClear && <NBIcon name='close' type='MaterialCommunityIcons' style={{ color: '#000', fontSize: 18, right: 10 }} onPress={onPressClear} />}
             </View>
             <View style={styles.searchIconContainer}>
-                <IconButton iconProps={{ name: 'search', type: 'FontAwesome', style: { color: '#707070', fontSize: 22 } }} />
+                <NBIcon name='search' type='FontAwesome' style={{ color: '#585756', fontSize: 22 }} />
             </View>
         </View>
         {footer}
@@ -213,7 +241,8 @@ const styles = StyleSheet.create({
         width: WindowDimensions.width,
         borderBottomColor: '#000',
         borderBottomWidth: 1,
-        color: 'black'
+        color: '#000000',
+        backgroundColor: '#F4F4F4'
     },
     searchBox: {
         flex: 1,
@@ -250,25 +279,33 @@ const styles = StyleSheet.create({
     searchCont: {
         marginBottom: 0,
         width: widthPercentageToDP(47),
+        borderBottomWidth: 0,
+        backgroundColor: '#fff',
+        marginLeft: 10,
+        height: 20,
     },
     searchBoxFilterContainer: {
         borderWidth: 1,
+        borderColor:'#707070',
         flexDirection: 'row',
         justifyContent: 'space-between',
-        borderRadius: 20,
-        height: 37
+        borderRadius: 16,
+        height: 37,
+        zIndex: 999,
+        overflow: 'hidden',
+        backgroundColor: '#ffffff'
     },
     searchBoxFilterInput: {
         borderBottomWidth: 0,
         width: widthPercentageToDP(47),
-        marginLeft: 15,
         backgroundColor: '#fff'
     },
     searchIconContainer: {
         flex: 1,
         backgroundColor: '#C4C6C8',
-        borderTopRightRadius: 20,
-        borderBottomRightRadius: 20,
-        justifyContent: 'center'
+        borderTopRightRadius: 13,
+        borderBottomRightRadius: 13,
+        justifyContent: 'center',
+        alignItems: 'center'
     }
 });

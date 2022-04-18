@@ -9,9 +9,9 @@ import { BaseModal } from '../modal'
 import { widthPercentageToDP, IS_ANDROID, APP_COMMON_STYLES } from '../../constants';
 import { DefaultText } from '../labels';
 
-export const ImageLoader = ({ show, offsetTop }) => {
+export const ImageLoader = ({ show, offsetTop, containerStyle }) => {
     return (
-        <View style={[styles.modalContent, { marginTop: offsetTop, height: show ? '100%' : 0 }]} pointerEvents='none'>
+        <View style={[styles.modalContent, { marginTop: offsetTop, height: show ? '100%' : 0 }, containerStyle]} pointerEvents='none'>
             <View style={styles.wrapper}>
                 <ActivityIndicator animating={show} />
             </View>
@@ -28,7 +28,7 @@ export const Loader = ({ isVisible, onCancel, title }) => {
                         ? <ActivityIndicator size={widthPercentageToDP(20)} color='#fff' animating={isVisible} />
                         : <ActivityIndicator size={1} color='#fff' animating={isVisible} />
                 }
-                <DefaultText style={{ color: '#fff' }}>{title ? title : 'Loading...'}</DefaultText>
+                <DefaultText style={{ color: '#fff', marginTop: 20, fontSize: 16 }}>{title || 'Loading...'}</DefaultText>
             </View>
         </View>
         : null
@@ -48,14 +48,17 @@ const styles = StyleSheet.create({
     loaderContent: {
         width: widthPercentageToDP(20),
         height: widthPercentageToDP(20),
-        elevation: 3
+        elevation: 3,
+        alignItems: 'center'
     },
     modalContent: {
-        backgroundColor: 'rgba(133,133,133,0.5)',
+        // backgroundColor: 'rgba(133,133,133,0.5)',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'absolute',
         zIndex: 999,
+        minHeight: 100,
+        minWidth: 100,
         height: '100%',
         width: '100%',
         overflow: 'hidden'

@@ -1,106 +1,57 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, StatusBar, ImageBackground } from 'react-native';
-import { Actions } from 'react-native-router-flux';
-
-import { BasicHeader } from '../../components/headers';
-import { heightPercentageToDP, APP_COMMON_STYLES, widthPercentageToDP, CUSTOM_FONTS } from '../../constants';
-import { ShifterButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction } from '../../actions';
+import { View, StyleSheet, ImageBackground, ScrollView, Image } from 'react-native';
+import { CUSTOM_FONTS } from '../../constants';
 import { connect } from 'react-redux';
-import { logoutUser } from '../../api';
+import { BasePage } from '../../components/pages';
+import { DefaultText } from '../../components/labels';
 
 class Offers extends Component {
     constructor(props) {
         super(props);
     }
 
-    componentDidMount() {
-
-    }
-
-    toggleAppNavigation = () => this.props.showAppNavMenu();
-
-    componentWillUnmount() {
-    }
-
-    onPressLogout = async () => {
-        this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
-    }
-
     render() {
-        const { user } = this.props;
         return (
-            <View style={{ flex: 1 }}>
-                <View style={APP_COMMON_STYLES.statusBar}>
-                <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                </View>
-                <View style={{ flex: 1 }}>
-                    <BasicHeader title='Offers' rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
+            <BasePage heading={'Offers'}>
+                <ScrollView contentContainerStyle={{ flex: 1 }} >
                     <View style={styles.contentBody}>
-                        <View style={{ backgroundColor: 'rgba(149, 165, 166, 1)', flex: 1, }}>
-                            <ImageBackground source={require('../../assets/img/offers.png')} style={{ width: '100%', height: '100%' }} imageStyle={{ opacity: 0.2 }} ></ImageBackground>
-                            <Text style={{ position: 'absolute', width: '100%', textAlign: 'center', marginTop: heightPercentageToDP(40), fontSize: 50, color: 'rgba(rgba(46, 49, 49, 1))' }}>Coming Soon...</Text>
-
+                        <View style={{ width:'100%', backgroundColor: '#000',height:'40%'}}></View>
+                        <ImageBackground source={require('../../assets/img/profile-bg.png')} style={{ width:'100%',height:'100%' }} >
+                        <View style={styles.textCont}>
+                            <DefaultText style={styles.textStyle} >The best deals are right </DefaultText>
+                            <DefaultText style={[styles.textStyle]}>around the corner</DefaultText>
                         </View>
+                        </ImageBackground>
+                        <View style={{ position: 'absolute', width: '90%', height: '50%', alignSelf:'center',marginTop:'10%',display:"flex",justifyContent:'center',alignItems:'center'}}>
+                        <Image source={require('../../assets/img/offers.png')} resizeMode='contain' ></Image>
+                        </View>    
                     </View>
-                    {/* Shifter: - Brings the app navigation menu */}
-                    <ShifterButton onPress={this.toggleAppNavigation} containerStyles={this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null} alignLeft={user.handDominance === 'left'} />
-                </View>
-            </View>
+                </ScrollView>
+            </BasePage >
         );
     }
 }
 const mapStateToProps = (state) => {
-    const { user, userAuthToken, deviceToken } = state.UserAuth;
-    const { hasNetwork } = state.PageState
-    return { user, userAuthToken, deviceToken, hasNetwork };
+    return {};
 }
 const mapDispatchToProps = (dispatch) => {
-    return {
-        showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
-    }
+    return {}
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Offers);
 
 const styles = StyleSheet.create({
     contentBody: {
-        marginTop: APP_COMMON_STYLES.headerHeight,
         backgroundColor: '#fff',
-        justifyContent: 'center',
-        flex: 1
+        flex: 1,    
+        flexDirection:'column'
     },
-    name: {
-        fontFamily:CUSTOM_FONTS.gothamBold,
-        fontSize: 15
+    textCont: {
+        top: 150
     },
-    message: {
-        fontSize: 13
-    },
-    listItem: {
-        marginLeft: 0,
-        paddingLeft: 10,
-        height: heightPercentageToDP(10),
-        borderBottomWidth: 1,
-        borderBottomColor: '#000'
-    },
-    noBorderTB: {
-        borderBottomWidth: 0,
-        borderTopWidth: 0,
-    },
-    itemBody: {
-        height: '100%',
-        justifyContent: 'center'
-    },
-    avatarContainer: {
-        height: '100%',
-        paddingTop: 0,
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
-    bottomImage: {
-        height: '100%',
-        width: '100%',
-        flexShrink: 1
+    textStyle: {
+        color: '#F5891F',
+        fontSize: 22,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        alignSelf: 'center'
     }
 });

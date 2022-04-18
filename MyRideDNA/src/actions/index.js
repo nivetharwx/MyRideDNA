@@ -2,23 +2,20 @@ import {
     LOGIN_RESPONSE, APP_NAV_MENU_VISIBILITY, UPDATE_RIDE, CLEAR_RIDE,
     DEVICE_GPS_STATE, UPDATE_WAYPOINT, CURRENT_USER, UPDATE_USER, TOGGLE_LOADER, SCREEN_CHANGE,
     UPDATE_SIGNUP_RESULT, TOGGLE_NETWORK_STATUS, UPDATE_FRIEND_LIST, REPLACE_FRIEND_LIST, DELETE_FRIEND, UPDATE_GARAGE_NAME, UPDATE_BIKE_LIST, ADD_TO_BIKE_LIST, REPLACE_GARAGE_INFO, DELETE_BIKE_FROM_LIST, UPDATE_ACTIVE_BIKE, REPLACE_SHORT_SPACE_LIST,
-    REPLACE_SEARCH_RESULTS, CLEAR_SEARCH_RESULTS, UPDATE_RELATIONSHIP, UPDATE_IMAGE_INFO, ADD_FRIEND_GROUP_TO_LIST, REPLACE_FRIEND_GROUP_LIST, UPDATE_CURRENT_GROUP, RESET_CURRENT_GROUP, ADD_MEMBERS_TO_CURRENT_GROUP, RESET_MEMBERS_IN_CURRENT_GROUP,
-    GET_GROUP_INFO, UPDATE_MEMBER_IN_CURRENT_GROUP, REMOVE_MEMBER_FROM_CURRENT_GROUP, REDO, UNDO, INIT_UNDO_REDO, ADD_WAYPOINT, DELETE_WAYPOINT, REMOVE_FRIEND_GROUP_FROM_LIST, UPDATE_PASSWORD_SUCCESS, UPDATE_PASSWORD_ERROR, RESET_PASSWORD_ERROR, GET_FRIEND_INFO, RESET_PERSON_PROFILE, ADD_PASSENGER_TO_LIST,
+    REPLACE_SEARCH_RESULTS, CLEAR_SEARCH_RESULTS, UPDATE_RELATIONSHIP, UPDATE_IMAGE_INFO, ADD_FRIEND_GROUP_TO_LIST, REPLACE_FRIEND_GROUP_LIST, UPDATE_CURRENT_GROUP, RESET_CURRENT_GROUP, RESET_MEMBERS_IN_CURRENT_GROUP,
+    REDO, UNDO, INIT_UNDO_REDO, ADD_WAYPOINT, DELETE_WAYPOINT, REMOVE_FRIEND_GROUP_FROM_LIST, UPDATE_PASSWORD_SUCCESS, UPDATE_PASSWORD_ERROR, RESET_PASSWORD_ERROR, GET_FRIEND_INFO, RESET_PERSON_PROFILE, ADD_PASSENGER_TO_LIST,
     REMOVE_PASSENGER_FROM_LIST, REPLACE_PASSENGER_LIST, UPDATE_PASSENGER_IN_LIST, UPDATE_FRIEND_IN_LIST, UNFRIEND, UPDATE_FRIEND_REQUEST_RESPONSE, CLEAR_FRIEND_REQUEST_RESPONSE, UPDATE_ONLINE_STATUS, RESET_NOTIFICATION_LIST, UPDATE_NOTIFICATION_IN_LIST, CLEAR_NOTIFICATION_LIST, DELETE_NOTIFICATIONS_FROM_LIST,
-    UPDATE_FRIEND_INVITATION_RESPONSE, CLEAR_FRIEND_INVITATION_RESPONSE, UPDATE_BIKE_PICTURE, REPLACE_FRIENDS_REQUEST_LIST, UPDATE_FRIEND_REQUEST_LIST, UPDATE_CURRENT_FRIEND, REPLACE_RIDE_LIST, UPDATE_RIDE_LIST, DELETE_RIDE, LOAD_RIDE, UPDATE_EMAIL_STATUS, UPDATE_SOURCE_OR_DESTINATION, UPDATE_WAYPOINT_NAME,
-    UPDATE_CURRENT_FRIEND_GARAGE,
+    UPDATE_FRIEND_INVITATION_RESPONSE, CLEAR_FRIEND_INVITATION_RESPONSE, UPDATE_BIKE_PICTURE, REPLACE_FRIENDS_REQUEST_LIST, UPDATE_FRIEND_REQUEST_LIST, UPDATE_CURRENT_FRIEND, RESET_PERSON_PROFILE_PIC, REPLACE_RIDE_LIST, UPDATE_RIDE_LIST, DELETE_RIDE, LOAD_RIDE, UPDATE_EMAIL_STATUS, UPDATE_SOURCE_OR_DESTINATION, UPDATE_WAYPOINT_NAME,
     REORDER_WAYPOINTS,
     REORDER_SOURCE,
     REORDER_DESTINATION,
     UPDATE_SHORT_SPACE_LIST,
     RESETING_STATE_ON_LOGOUT,
     UPDATE_FRIENDS_LOCATION,
-    REPLACE_FRIENDS_LOCATION,
     HIDE_FRIENDS_LOCATION,
     ADD_FRIENDS_LOCATION,
     UPDATE_MYPROFILE_LAST_OPTION,
     UPDATE_TOKEN,
-    PROFILE_LOADER,
     REPLACE_FRIEND_INFO,
     RESET_NOTIFICATION_COUNT,
     UPDATE_APPSTATE,
@@ -28,16 +25,15 @@ import {
     UPDATE_RIDE_IN_LIST,
     UPDATE_PAGENUMBER,
     IS_REMOVED,
-    UPDATE_FRIENDS_RIDE_SNAPSHOT,
     GET_NOT_FRIEND_INFO,
     UPDATE_CHAT_MESSAGES,
     REPLACE_CHAT_MESSAGES,
     UPDATE_CHAT_LIST,
-    REPLACE_CHAT_LIST,
     RESET_MESSAGE_COUNT,
     UPDATE_CHAT_DATA_LIST,
     RESET_CHAT_MESSAGES,
     UPDATE_NOTIFICATION_COUNT,
+    DECREASE_NOTIFICATION_COUNT,
     REPLACE_UNSYNCED_RIDES,
     ADD_UNSYNCED_RIDE,
     DELETE_UNSYNCED_RIDE,
@@ -59,7 +55,6 @@ import {
     UPDATE_COMMUNITY_LIST,
     RESET_COMMUNITY_LIST,
     SET_CURRENT_FRIEND,
-    UPDATE_PICTURES,
     UPDATE_SEARCH_RESULTS,
     GO_PREV_PROFILE,
     UPDATE_GROUP_CHAT_PIC,
@@ -71,7 +66,6 @@ import {
     UPDATE_POST_TYPES,
     UPDATE_BIKE_ALBUM,
     CLEAR_BIKE_ALBUM,
-    UPDATE_PREV_PROFILE,
     SET_CURRENT_BIKE_ID,
     UPDATE_PAGE_CONTENT_STATUS,
     GET_CURRENT_BIKE,
@@ -80,6 +74,34 @@ import {
     GET_CURRENT_BIKE_SPEC,
     UPDATE_BIKE_LOGGED_RIDE,
     UPDATE_JOURNAL,
+    UPDATE_JWT_TOKEN,
+    CLEAR_GROUP_SEARCH_RESULTS,
+    REPLACE_GROUP_SEARCH_RESULTS,
+    DELETE_JOURNAL,
+    REPLACE_JOURNAL,
+    DELETE_BIKE_SPECS,
+    UPDATE_BIKE_SPECS,
+    EDIT_CURRENT_BIKE_SPECS,
+    UPDATE_COMMENT,
+    DELETE_COMMENT,
+    UPDATE_LIKE_AND_COMMENT_COUNT,
+    ADD_COMMENT,
+    UPDATE_PUBLIC_RIDES,
+    DELETE_PICTURE_FROM_ALBUM,
+    CLEAR_PUBLIC_RIDES,
+    DELETE_PICTURE_FROM_BIKE_ALBUM,
+    DELETE_USER_PROFILE_PICTURE,
+    TOGGLE_API_CALL_INFO,
+    UPDATE_FRIEND_GROUP_LIST,
+    REMOVE_FROM_PREV_PROFILE,
+    UPDATE_RIDE_LIKE_AND_COMMENT_COUNT,
+    UPDATE_CURRENT_BIKE_LIKE_AND_COMMENT_COUNT,
+    REMOVE_TEMP_LOCATION,
+    UPDATE_FAVOURITE_FRIEND_GROUP_LIST,
+    REMOVE_TEMP_MEMBERS_LOCATION,
+    UPDATE_GROUP_MEMBERS,
+    UPDATE_DESC_IN_BIKE_ALBUM,
+    UPDATE_FAVOURITE_LIST
 } from './actionConstants';
 
 export const toggleLoaderAction = (data) => (
@@ -118,6 +140,12 @@ export const storeUserAction = (data) => (
         data: data
     }
 );
+export const updateJwtTokenAction = (data) => (
+    {
+        type: UPDATE_JWT_TOKEN,
+        data: data
+    }
+);
 export const updateSignupResultAction = (data) => (
     {
         type: UPDATE_SIGNUP_RESULT,
@@ -133,6 +161,12 @@ export const updateEmailStatusAction = (data) => (
 export const updateUserAction = (data) => (
     {
         type: UPDATE_USER,
+        data: data
+    }
+);
+export const deleteUserProfilePictureAction = (data) => (
+    {
+        type: DELETE_USER_PROFILE_PICTURE,
         data: data
     }
 );
@@ -208,6 +242,18 @@ export const updateRideCreatorPictureInListAction = (data) => (
         data: data
     }
 );
+export const updatePublicRidesAction = (data) => (
+    {
+        type: UPDATE_PUBLIC_RIDES,
+        data: data
+    }
+);
+export const clearPublicRidesAction = (data) => (
+    {
+        type: CLEAR_PUBLIC_RIDES,
+        data: data
+    }
+);
 export const updateRideAction = (data) => (
     {
         type: UPDATE_RIDE,
@@ -217,6 +263,12 @@ export const updateRideAction = (data) => (
 export const updateRideInListAction = (data) => (
     {
         type: UPDATE_RIDE_IN_LIST,
+        data: data
+    }
+);
+export const updateRideLikeAndCommentAction = (data) => (
+    {
+        type: UPDATE_RIDE_LIKE_AND_COMMENT_COUNT,
         data: data
     }
 );
@@ -370,6 +422,18 @@ export const updateBikeListAction = (data) => (
         data: data
     }
 );
+export const editBikeListAction = (data) => (
+    {
+        type: EDIT_CURRENT_BIKE_SPECS,
+        data: data
+    }
+);
+export const updateCurrentBikeLikeAndCommentCountAction = (data) => (
+    {
+        type: UPDATE_CURRENT_BIKE_LIKE_AND_COMMENT_COUNT,
+        data: data
+    }
+);
 export const updateBikePictureAction = (data) => (
     {
         type: UPDATE_BIKE_PICTURE,
@@ -385,6 +449,12 @@ export const updateBikeAlbumAction = (data) => (
 export const clearBikeAlbumAction = (data) => (
     {
         type: CLEAR_BIKE_ALBUM,
+        data: data
+    }
+);
+export const deletePictureFromBikeAlbumAction = (data) => (
+    {
+        type: DELETE_PICTURE_FROM_BIKE_ALBUM,
         data: data
     }
 );
@@ -412,6 +482,54 @@ export const updateJournalAction = (data) => (
         data: data
     }
 );
+export const replaceJournalAction = (data) => (
+    {
+        type: REPLACE_JOURNAL,
+        data: data
+    }
+);
+export const deleteJournalAction = (data) => (
+    {
+        type: DELETE_JOURNAL,
+        data: data
+    }
+);
+export const updateCommentAction = (data) => (
+    {
+        type: UPDATE_COMMENT,
+        data: data
+    }
+);
+export const addCommentAction = (data) => (
+    {
+        type: ADD_COMMENT,
+        data: data
+    }
+);
+export const deleteCommentAction = (data) => (
+    {
+        type: DELETE_COMMENT,
+        data: data
+    }
+);
+export const updateLikeAndCommentAction = (data) => (
+    {
+        type: UPDATE_LIKE_AND_COMMENT_COUNT,
+        data: data
+    }
+);
+export const updateBikeSpecsAction = (data) => (
+    {
+        type: UPDATE_BIKE_SPECS,
+        data: data
+    }
+);
+export const deleteBikeSpecsAction = (data) => (
+    {
+        type: DELETE_BIKE_SPECS,
+        data: data
+    }
+);
 export const clearGarageInfoAction = (data) => (
     {
         type: CLEAR_GARAGE,
@@ -430,6 +548,12 @@ export const updateFavouriteFriendAction = (data) => (
         data: data
     }
 );
+export const updateFavouriteFriendGroupAction = (data) => (
+    {
+        type: UPDATE_FAVOURITE_FRIEND_GROUP_LIST,
+        data: data
+    }
+);
 export const addFriendsLocationAction = (data) => (
     {
         type: ADD_FRIENDS_LOCATION,
@@ -439,6 +563,12 @@ export const addFriendsLocationAction = (data) => (
 export const hideFriendsLocationAction = (data) => (
     {
         type: HIDE_FRIENDS_LOCATION,
+        data: data
+    }
+);
+export const removeTempLocationAction = (data) => (
+    {
+        type: REMOVE_TEMP_LOCATION,
         data: data
     }
 );
@@ -460,6 +590,12 @@ export const hideMembersLocationAction = (data) => (
         data: data
     }
 );
+export const removeTempMembersLocationAction = (data) => (
+    {
+        type: REMOVE_TEMP_MEMBERS_LOCATION,
+        data: data
+    }
+);
 export const updateGroupsLocationAction = (data) => (
     {
         type: UPDATE_GROUPS_LOCATION,
@@ -472,6 +608,13 @@ export const updateOnlineStatusAction = (data) => (
         data: data
     }
 );
+
+export const updateFavouriteList = (data) => (
+    {
+        type: UPDATE_FAVOURITE_LIST,
+        data: data
+    }
+)
 export const doUnfriendAction = (data) => (
     {
         type: UNFRIEND,
@@ -575,9 +718,9 @@ export const goToPrevProfileAction = (data) => (
         data: data
     }
 );
-export const updatePrevProfileAction = (data) => (
+export const removeFromPrevProfileAction = (data) => (
     {
-        type: UPDATE_PREV_PROFILE,
+        type: REMOVE_FROM_PREV_PROFILE,
         data: data
     }
 );
@@ -587,28 +730,33 @@ export const updateCurrentFriendAction = (data) => (
         data: data
     }
 );
-export const updatePicturesAction = (data) => (
+export const resetPersonProfilePicAction = (data) => (
     {
-        type: UPDATE_PICTURES,
+        type: RESET_PERSON_PROFILE_PIC,
         data: data
     }
 );
-export const updateFriendsRideSnapshotAction = (data) => (
+export const updateFriendGroupListAction = (data) => (
     {
-        type: UPDATE_FRIENDS_RIDE_SNAPSHOT,
+        type: UPDATE_FRIEND_GROUP_LIST,
         data: data
     }
 );
-
-export const updateCurrentFriendGarageAction = (data) => (
-    {
-        type: UPDATE_CURRENT_FRIEND_GARAGE,
-        data: data
-    }
-)
 export const replaceFriendGroupListAction = (data) => (
     {
         type: REPLACE_FRIEND_GROUP_LIST,
+        data: data
+    }
+);
+export const clearGroupSearchResultsAction = (data) => (
+    {
+        type: CLEAR_GROUP_SEARCH_RESULTS,
+        data: data
+    }
+);
+export const replaceGroupSearchResultsAction = (data) => (
+    {
+        type: REPLACE_GROUP_SEARCH_RESULTS,
         data: data
     }
 );
@@ -660,9 +808,9 @@ export const updateCurrentGroupAction = (data) => (
         data: data
     }
 );
-export const addMembersToCurrentGroupAction = (data) => (
+export const updateGroupMembersAction = (data) => (
     {
-        type: ADD_MEMBERS_TO_CURRENT_GROUP,
+        type: UPDATE_GROUP_MEMBERS,
         data: data
     }
 );
@@ -672,24 +820,7 @@ export const resetMembersFromCurrentGroupAction = (data) => (
         data: data
     }
 );
-export const updateMemberAction = (data) => (
-    {
-        type: UPDATE_MEMBER_IN_CURRENT_GROUP,
-        data: data
-    }
-);
-export const removeMemberAction = (data) => (
-    {
-        type: REMOVE_MEMBER_FROM_CURRENT_GROUP,
-        data: data
-    }
-);
-export const getGroupInfoAction = (data) => (
-    {
-        type: GET_GROUP_INFO,
-        data: data
-    }
-);
+
 export const updatePasswordSuccessAction = (data) => (
     {
         type: UPDATE_PASSWORD_SUCCESS,
@@ -786,6 +917,18 @@ export const updateAlbumListAction = (data) => (
         data: data
     }
 );
+export const updateDescInBikeAlbumAction = (data) => (
+    {
+        type: UPDATE_DESC_IN_BIKE_ALBUM,
+        data: data
+    }
+);
+export const deletePictureFromAlbumAction = (data) => (
+    {
+        type: DELETE_PICTURE_FROM_ALBUM,
+        data: data
+    }
+);
 export const resetNotificationListAction = (data) => (
     {
         type: RESET_NOTIFICATION_LIST,
@@ -802,6 +945,11 @@ export const updateNotificationCountAction = (data) => (
     {
         type: UPDATE_NOTIFICATION_COUNT,
         data: data
+    }
+);
+export const decreaseNotificationCountAction = () => (
+    {
+        type: DECREASE_NOTIFICATION_COUNT
     }
 );
 export const isloadingDataAction = (data) => (
@@ -933,6 +1081,12 @@ export const errorHandlingAction = (data) => (
 export const updatePageContentStatusAction = (data) => (
     {
         type: UPDATE_PAGE_CONTENT_STATUS,
+        data: data
+    }
+);
+export const toggleApiCallInfoAction = (data) => (
+    {
+        type: TOGGLE_API_CALL_INFO,
         data: data
     }
 );

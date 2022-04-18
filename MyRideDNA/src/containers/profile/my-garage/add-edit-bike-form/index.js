@@ -1,65 +1,49 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, StatusBar, ScrollView, View, Keyboard, Alert, KeyboardAvoidingView, ImageBackground } from 'react-native';
-import { BasicHeader } from '../../../../components/headers';
-import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, CUSTOM_FONTS } from '../../../../constants';
+import { StyleSheet, ScrollView, View, Keyboard, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, } from 'react-native';
+import { heightPercentageToDP, widthPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, CUSTOM_FONTS, PageKeys, GET_PICTURE_BY_ID, THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG } from '../../../../constants';
 import { Actions } from 'react-native-router-flux';
-import { LabeledInput, LabeledInputPlaceholder, IconicList, IconicDatePicker } from '../../../../components/inputs';
-import { BasicButton, ShifterButton, ImageButton, IconButton } from '../../../../components/buttons';
-import { Thumbnail } from '../../../../components/images';
+import { LabeledInputPlaceholder } from '../../../../components/inputs';
+import { BasicButton, ImageButton, } from '../../../../components/buttons';
+import { SelectedImage } from '../../../../components/images';
 import ImagePicker from 'react-native-image-crop-picker';
 import { addBikeToGarage, editBike } from '../../../../api';
-import { toggleLoaderAction, appNavMenuVisibilityAction } from '../../../../actions';
-import { Loader } from '../../../../components/loader';
 import { DefaultText } from '../../../../components/labels';
+import { Toast } from 'native-base';
+import { BasePage } from '../../../../components/pages';
 
 class AddBikeForm extends Component {
     fieldRefs = [];
     constructor(props) {
         super(props);
         this.state = {
-            bikeImages: [],
+            bikeImage: this.props.bike && this.props.bike.picture && this.props.bike.picture.id ? { profilePictureId: this.props.bike.picture.id } : null,
             bike: { ...props.bike },
-            showLoader: false
+            showLoader: false,
+            deletedId:null
         };
-        if (typeof this.state.bike.pictures === 'undefined') {
-            this.state.bike.pictures = [];
-        }
+        if (typeof this.state.bike.pictures === 'undefined') this.state.bike.pictures = [];
     }
-
-    componentDidUpdate(prevProps, prevState) { }
 
     onPressCameraIcon = async () => {
         try {
-            const imgs = await ImagePicker.openCamera({
-                width: 300,
-                height: 300,
-                includeBase64: true,
-                multiple: true,
-                maxFiles: 5,
-                cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
-            });
-            this.setState({ bikeImages: imgs.slice(0, 5).map(({ mime, data }) => ({ mimeType: mime, picture: data })) });
-        } catch (er) {
-            console.log("Error occurd: ", er);
-        }
+            const imgObj = await ImagePicker.openCamera({ cropping: false, hideBottomControls: true });
+            ImagePicker.openCropper({height:imgObj.height, width:imgObj.width, path: imgObj.path, hideBottomControls: true, compressImageQuality: imgObj.size > 600000 ? IS_ANDROID ? 0.4 : 0.2 : 1, }).then(image => {
+                this.setState({ bikeImage: { mimeType: image.mime, path: image.path } });
+            })
+        } catch (er) { console.log("Error occurd: ", er); }
     }
 
     onPressGalleryIcon = async () => {
         try {
-            const imgs = await ImagePicker.openPicker({
-                width: 300,
-                height: 300,
-                cropping: false,
-                multiple: true,
-                maxFiles: 5,
-                includeBase64: true,
-            });
-            this.setState({ bikeImages: imgs.slice(0, 5).map(({ mime, data }) => ({ mimeType: mime, picture: data })) });
-        } catch (er) {
-            console.log("Error occurd: ", er);
-        }
+            const imgObj = await ImagePicker.openPicker({ cropping: false, hideBottomControls: true });
+            ImagePicker.openCropper({ height:imgObj.height, width:imgObj.width,path: imgObj.path, hideBottomControls: true, compressImageQuality: imgObj.size > 600000 ? IS_ANDROID ? 0.4 : 0.2 : 1, }).then(image => {
+                this.setState({ bikeImage: { mimeType: image.mime, path: image.path } });
+            })
+        } catch (er) { console.log("Error occurd: ", er); }
     }
+
+    onPressSelectFromAlbum = () => Actions.push(PageKeys.ALBUM, { isSelectMode: true, isMultiSelect: false, getSelectedPhotos: (photoIds) => this.setState({ bikeImage: { id: photoIds[0] } }) });
 
     onChangeNickname = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, name: val + '' } }));
 
@@ -69,109 +53,125 @@ class AddBikeForm extends Component {
 
     onChangeYear = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, year: val } }));
 
-    onChangeMilage = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, milage: val } }));
+    onChangeMilage = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, mileage: val } }));
 
     onChangeNotes = (val) => this.setState(prevState => ({ bike: { ...prevState.bike, notes: val } }));
 
     hideLoader = () => this.setState({ showLoader: false });
 
-    onPressBackArrow = () => Actions.pop();
-
-    showAppNavMenu = () => this.props.showAppNavMenu();
+    gotoPreviousPage = () => Actions.pop();
 
     onSubmit = () => {
         Keyboard.dismiss();
-        const { bike, bikeImages } = this.state;
+        const { bike, bikeImage } = this.state;
         if (!bike.name || bike.name.trim().length === 0) {
             Alert.alert('Field Error', 'Please enter a bike name');
             return;
         }
-        const pictures = [...bikeImages];
-        if (!bike.spaceId) {
-            this.setState({ showLoader: true });
-            this.props.addBikeToGarage(this.props.user.userId, bike, pictures, () => {
-                this.hideLoader();
-                this.onPressBackArrow();
-            }, this.hideLoader);
+        const { picture, ...otherData } = bike;
+        const bikeDetail = otherData;
+        if (bikeImage && (bikeImage.path || bikeImage.id)) bikeDetail.picture = bikeImage;
+        if(this.state.deletedId){
+            bikeDetail.deletedId = this.state.deletedId
+        }
+        if (bikeDetail.picture) {
+            this.props[bike.spaceId ? `editBike` : `addBikeToGarage`](this.props.user.userId, bikeDetail);
+            Toast.show({ text: 'Uploading image... We will let you know once it is completed' });
+            setTimeout(this.gotoPreviousPage, 200);
         } else {
             this.setState({ showLoader: true });
-            this.props.editBike(this.props.user.userId, bike, pictures, () => {
+            this.props[bike.spaceId ? `editBike` : `addBikeToGarage`](this.props.user.userId, bikeDetail, () => {
                 this.hideLoader();
-                this.onPressBackArrow();
+                this.gotoPreviousPage();
             }, this.hideLoader);
         }
     }
 
+    unselectProfilePic = () => {
+        console.log('\n\n\n unSelectProfilePage : ', this.state.bikeImage.profilePictureId);
+        this.setState({ bikeImage: null, deletedId:this.state.bikeImage.profilePictureId })
+    }
+
     render() {
-        const { bike, showLoader } = this.state;
-        const { user } = this.props;
+        const { bike, showLoader, bikeImage } = this.state;
         return (
-            <View style={styles.fill}>
-                <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                </View>
-                <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
-                    <BasicHeader title={!bike.spaceId ? 'Add Bike' : 'Edit Bike'} leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackArrow }} />
-                    <ScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ marginTop: 41 + APP_COMMON_STYLES.headerHeight }}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
-                            <View style={{ alignSelf: 'center', alignItems: 'center' }}>
-                                <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../../assets/img/cam-icon.png')} imgStyles={{ width: 45, height: 37 }} />
-                                <DefaultText style={{ letterSpacing: 1.8, marginTop: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold }}>{' TAKE \nPHOTO'}</DefaultText>
-                            </View>
-                            <View style={{ alignSelf: 'center', alignItems: 'center' }}>
-                                <ImageButton onPress={this.onPressGalleryIcon} imageSrc={require('../../../../assets/img/photos-icon.png')} imgStyles={{ width: 41, height: 33 }} />
-                                <DefaultText style={{ letterSpacing: 2, marginTop: 15, fontFamily: CUSTOM_FONTS.robotoSlabBold }}>{'UPLOAD \n PHOTO'}</DefaultText>
-                            </View>
-                        </View>
-                        <View style={{ marginLeft: widthPercentageToDP(12), marginTop: heightPercentageToDP(3) }}>
+            <BasePage showLoader={showLoader} heading={!bike.spaceId ? 'Add Bike' : 'Edit Bike'}>
+                <KeyboardAvoidingView keyboardVerticalOffset={20} behavior={IS_ANDROID ? null : 'padding'} style={styles.fill}>
+                    <ScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ paddingBottom: styles.submitBtn.height }}>
+                        {
+                            bikeImage && (bikeImage.path || bikeImage.profilePictureId || bikeImage.id)
+                                ? <SelectedImage
+                                    outerContainer={{ marginTop: APP_COMMON_STYLES.statusBar.height }}
+                                    image={{ uri: bikeImage.path ? bikeImage.path : `${GET_PICTURE_BY_ID}${bikeImage.id ? bikeImage.id.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG) : bikeImage.profilePictureId.replace(THUMBNAIL_TAIL_TAG, PORTRAIT_TAIL_TAG)}` }}
+                                    onPressCloseImg={this.unselectProfilePic}
+                                />
+                                : <View style={styles.imageUploadIconsCont}>
+                                    <TouchableWithoutFeedback onPress={this.onPressCameraIcon} >
+                                    <View style={styles.imageUploadIcon}>
+                                        <ImageButton onPress={this.onPressCameraIcon} imageSrc={require('../../../../assets/img/cam-icon.png')} imgStyles={styles.iconStyle} />
+                                        <DefaultText style={styles.uploadImageIconLabel}>{' TAKE \nPHOTO'}</DefaultText>
+                                    </View>
+                                    </TouchableWithoutFeedback>
+                                    <TouchableWithoutFeedback onPress={this.onPressGalleryIcon}>
+                                    <View style={styles.imageUploadIcon}>
+                                        <ImageButton  onPress={this.onPressGalleryIcon} imageSrc={require('../../../../assets/img/upload-icon-orange.png')} imgStyles={styles.iconStyle} />
+                                        <DefaultText style={styles.uploadImageIconLabel}>{'UPLOAD \n PHOTO'}</DefaultText>
+                                    </View>
+                                    </TouchableWithoutFeedback>
+                                    <TouchableWithoutFeedback onPress={this.onPressSelectFromAlbum}>
+                                    <View style={styles.imageUploadIcon}>
+                                        <ImageButton onPress={this.onPressSelectFromAlbum} imageSrc={require('../../../../assets/img/photos-icon.png')} imgStyles={styles.iconStyle} />
+                                        <DefaultText style={[styles.uploadImageIconLabel, { letterSpacing: 0.6 }]}>{'SELECT FROM \n MY PHOTOS'}</DefaultText>
+                                    </View>
+                                    </TouchableWithoutFeedback>
+                                </View>
+                        }
+                        <View style={styles.container}>
                             <LabeledInputPlaceholder
+                                containerStyle={{ backgroundColor: '#F4F4F4' }}
                                 inputValue={bike.name || ''} inputStyle={{ paddingBottom: 0 }}
                                 outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next'
                                 onChange={this.onChangeNickname} label='NICKNAME' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false} />
                             <LabeledInputPlaceholder
+                                containerStyle={{ backgroundColor: '#F4F4F4' }}
                                 inputValue={bike.make || ''} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
+                                outerContainer={{ marginTop: IS_ANDROID ? 5 : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next'
                                 onChange={this.onChangeMake} label='MAKE' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false} />
                             <LabeledInputPlaceholder
+                                containerStyle={{ backgroundColor: '#F4F4F4' }}
                                 inputValue={bike.model || ''} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
+                                outerContainer={{ marginTop: IS_ANDROID ? 5 : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next'
                                 onChange={this.onChangeModel} label='MODEL' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[3].focus()} hideKeyboardOnSubmit={false} />
                             <LabeledInputPlaceholder
+                                containerStyle={{ backgroundColor: '#F4F4F4' }}
                                 inputValue={bike.year ? bike.year + '' : ''} inputStyle={{ paddingBottom: 0 }} inputType={'postalCode'}
-                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
+                                outerContainer={{ marginTop: IS_ANDROID ? 5 : heightPercentageToDP(3) }}
                                 inputRef={elRef => this.fieldRefs[3] = elRef} returnKeyType='next'
                                 onChange={this.onChangeYear} label='YEAR' labelStyle={styles.labelStyle}
                                 onSubmit={() => this.fieldRefs[4].focus()} hideKeyboardOnSubmit={false} />
                             <LabeledInputPlaceholder
-                                inputValue={bike.milage ? bike.milage + '' : ''} inputStyle={{ paddingBottom: 0 }} inputType={'postalCode'}
-                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
-                                inputRef={elRef => this.fieldRefs[4] = elRef} returnKeyType='next'
-                                onChange={this.onChangeMilage} label='MILAGE' labelStyle={styles.labelStyle}
-                                onSubmit={() => this.fieldRefs[5].focus()} hideKeyboardOnSubmit={false} />
-                            <LabeledInputPlaceholder
-                                inputValue={bike.notes} inputStyle={{ paddingBottom: 0 }}
-                                outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3) }}
-                                inputRef={elRef => this.fieldRefs[5] = elRef} returnKeyType='next'
-                                onChange={this.onChangeNotes} label='NOTES' labelStyle={styles.labelStyle}
-                                hideKeyboardOnSubmit={true} />
+                                containerStyle={{ backgroundColor: '#F4F4F4' }}
+                                inputValue={bike.mileage ? bike.mileage + '' : ''} inputStyle={{ paddingBottom: 0 }} inputType={'postalCode'}
+                                outerContainer={{ marginTop: IS_ANDROID ? 5 : heightPercentageToDP(3) }}
+                                inputRef={elRef => this.fieldRefs[4] = elRef}
+                                onChange={this.onChangeMilage} label='MILEAGE' labelStyle={styles.labelStyle}
+                                hideKeyboardOnSubmit={true}
+                                onSubmit={this.onSubmit}
+                            />
                         </View>
-                        <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 2, fontSize: 20, fontFamily: CUSTOM_FONTS.robotoSlabBold }} onPress={this.onSubmit} />
+                        <BasicButton title={!bike.spaceId ? 'ADD BIKE' : 'UPDATE'} style={styles.submitBtn} titleStyle={{ letterSpacing: 1.4, fontSize: 14, fontFamily: CUSTOM_FONTS.robotoBold }} onPress={this.onSubmit} />
                     </ScrollView>
                 </KeyboardAvoidingView>
-                <Loader isVisible={showLoader} />
-                {/* Shifter: - Brings the app navigation menu */}
-                <ShifterButton onPress={this.showAppNavMenu} size={18} alignLeft={user.handDominance === 'left'} />
-            </View>
+            </BasePage>
         );
     }
 }
-
 const mapStateToProps = (state) => {
     const { user } = state.UserAuth;
     const { currentBike: bike } = state.GarageInfo;
@@ -179,10 +179,8 @@ const mapStateToProps = (state) => {
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        addBikeToGarage: (userId, bike, pictureList, successCallback, errorCallback) => dispatch(addBikeToGarage(userId, bike, pictureList, successCallback, errorCallback)),
-        editBike: (userId, bike, pictureList, index, successCallback, errorCallback) => dispatch(editBike(userId, bike, pictureList, index, successCallback, errorCallback)),
-        toggleLoader: (toggleValue) => dispatch(toggleLoaderAction(toggleValue)),
-        showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
+        addBikeToGarage: (userId, bike, successCallback, errorCallback) => dispatch(addBikeToGarage(userId, bike, successCallback, errorCallback)),
+        editBike: (userId, bike, successCallback, errorCallback) => dispatch(editBike(userId, bike, successCallback, errorCallback)),
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(AddBikeForm);
@@ -192,29 +190,43 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
-    form: {
-        marginTop: APP_COMMON_STYLES.headerHeight,
-    },
-    formContent: {
-        paddingTop: 20,
-    },
     submitBtn: {
-        height: heightPercentageToDP(8.5),
-        marginTop: heightPercentageToDP(3)
-    },
-    imageUploadBtn: {
-        marginLeft: 10,
-        height: heightPercentageToDP(5),
-        width: '50%'
-    },
-    imgContainer: {
-        marginTop: heightPercentageToDP(2),
-        flexDirection: 'row',
-        flexWrap: 'wrap',
+        height: 35,
+        backgroundColor: '#f69039',
+        width: 213,
+        alignSelf: 'center',
+        borderRadius: 20,
+        marginVertical: 30
     },
     labelStyle: {
         fontSize: 11,
         letterSpacing: 1.1,
         fontFamily: CUSTOM_FONTS.robotoSlabBold
-    }
+    },
+    imageUploadIconsCont: {
+        paddingHorizontal: 20,
+        height: heightPercentageToDP(25),
+        width: widthPercentageToDP(100),
+        flexDirection: 'row',
+        justifyContent: 'space-evenly',
+        alignItems: 'center',
+    },
+    imageUploadIcon: {
+        alignItems: 'center',
+        flex: 1
+    },
+    iconStyle: {
+        width: 41,
+        height: 33
+    },
+    uploadImageIconLabel: {
+        letterSpacing: 1.8,
+        marginTop: 15,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        color: '#000'
+    },
+    container: {
+        marginLeft: widthPercentageToDP(12),
+        marginTop: heightPercentageToDP(2),
+    },
 });

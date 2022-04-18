@@ -16,7 +16,7 @@ export const IconLabelPair = ({ containerStyle, iconProps, text, textStyle }) =>
     )
 }
 
-export const DefaultText = ({ fontFamily, numberOfLines, style, onTextLayout = null, ...otherProps }) => <Text numberOfLines={numberOfLines} onTextLayout={onTextLayout} style={[styles.defaultText, style, fontFamily ? { fontFamily } : null]}>{otherProps.children || null}</Text>
+export const DefaultText = ({ text, fontFamily, numberOfLines, style, onTextLayout = null, ...otherProps }) => <Text numberOfLines={numberOfLines} onTextLayout={onTextLayout} style={[styles.defaultText, style, fontFamily ? { fontFamily } : null]}>{otherProps.children || text || null}</Text>
 
 // export class IconLabelPair extends React.Component {
 

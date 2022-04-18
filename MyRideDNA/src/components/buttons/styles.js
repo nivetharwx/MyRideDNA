@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     shiterButtonContainer: {
         position: 'absolute',
         zIndex: 900,
-        elevation: 10,
+        elevation: 9,
         bottom: 0,
         right: 0,
         maxHeight: 65, 

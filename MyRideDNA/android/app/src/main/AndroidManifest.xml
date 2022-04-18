@@ -5,10 +5,14 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+   <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/> -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
+     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <application
       android:usesCleartextTraffic="true"
@@ -16,14 +20,50 @@
       android:label="@string/app_name"
       android:icon="@mipmap/ic_launcher"
       android:allowBackup="false"
-      android:theme="@style/AppTheme">
+      android:theme="@style/AppTheme"
+      android:requestLegacyExternalStorage="true"
+      >
 
       <uses-library android:name="org.appache.http.legacy" android:required="false" />
       
-      <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/myridedna_notif_icon"/>
-      <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="my_default_channel"/>
+      <meta-data android:name="com.transistorsoft.locationmanager.license" android:value="7cd9bca8620b6bf083d02b9ae189c423d48be8d555e34eb61eb3771d24748b8e" />
 
-      <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
+      <!--For push notification-->
+      <meta-data  android:name="com.dieam.reactnativepushnotification.notification_channel_name"
+                android:value="YOUR NOTIFICATION CHANNEL NAME"/>
+        <meta-data  android:name="com.dieam.reactnativepushnotification.notification_channel_description"
+                    android:value="YOUR NOTIFICATION CHANNEL DESCRIPTION"/>
+
+        <!-- Change the value to true to enable pop-up for in foreground (remote-only, for local use ignoreInForeground) -->
+        <meta-data  android:name="com.dieam.reactnativepushnotification.notification_foreground"
+                    android:value="false"/>
+        <!-- Change the value to false if you don't want the creation of the default channel -->
+        <meta-data  android:name="com.dieam.reactnativepushnotification.channel_create_default"
+                    android:value="true"/>
+
+        <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationActions" />
+        <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationPublisher" />
+        <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationBootEventReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationListenerService"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+      <!--  ==============================================    -->
+
+      <meta-data android:name="com.facebook.sdk.ApplicationId" 
+        android:value="@string/facebook_app_id"/>
+      <!-- Get below appID from @string/facebook_app_id -->
+      <provider android:authorities="com.facebook.app.FacebookContentProvider2321365271526977"
+          android:name="com.facebook.FacebookContentProvider"
+          android:exported="true"/>
       <activity android:name="com.facebook.FacebookActivity"
         android:configChanges=
                 "keyboard|keyboardHidden|screenLayout|screenSize|orientation"
@@ -38,19 +78,6 @@
             <data android:scheme="@string/fb_login_protocol_scheme" />
         </intent-filter>
       </activity>
-  
-      <service android:name="io.invertase.firebase.messaging.RNFirebaseMessagingService">
-        <intent-filter>
-          <action android:name="com.google.firebase.MESSAGING_EVENT" />
-        </intent-filter>
-      </service>
-      <service android:name="io.invertase.firebase.messaging.RNFirebaseInstanceIdService">
-        <intent-filter>
-          <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
-        </intent-filter>
-      </service>
-      <!-- Background message handler -->
-      <service android:name="io.invertase.firebase.messaging.RNFirebaseBackgroundMessagingService" />
       
       <activity
         android:name=".MainActivity"

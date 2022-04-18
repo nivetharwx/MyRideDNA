@@ -89,27 +89,22 @@ export default (state = initialState, action) => {
             }
 
         case REMOVE_PASSENGER_FROM_LIST:
-            const passengerIdx = state.passengerList.findIndex(passenger => passenger.passengerId === action.data);
             return {
                 ...state,
-                passengerList: [
-                    ...state.passengerList.slice(0, passengerIdx),
-                    ...state.passengerList.slice(passengerIdx + 1)
-                ],
-                currentPassenger: {
-                    passengerId: null
-                },
-
+                passengerList: state.passengerList.filter(passenger => passenger.passengerId !== action.data.passengerId),
+                communityList: state.communityList.map(item => {
+                    return item.userId === action.data.friendId
+                        ? { ...item, isPassenger: false }
+                        : item
+                })
             }
 
         case GET_PASSENGER_INFO:
-            const passenger = state.passengerList[action.data]
-            const { profilePicture, ...otherPassengerKey } = passenger
-            return {
-                ...state,
-                currentPassenger: {
-                    passengerId: null,
-                    ...otherPassengerKey
+            const psngIdx = state.passengerList.findIndex(psng => psng.passengerId === action.data)
+            if (psngIdx > -1) {
+                return {
+                    ...state,
+                    currentPassenger: state.passengerList[psngIdx]
                 }
             }
 
@@ -164,6 +159,7 @@ export default (state = initialState, action) => {
                 const communityIndex = state.communityList.findIndex(item => item.userId === action.data.userId)
                 updatedCommnuity = state.communityList[communityIndex];
                 updatedCommnuity.isPassenger = true
+                updatedCommnuity.passengerId = action.data.passengerId
                 return {
                     ...state,
                     communityList: [

@@ -1,50 +1,52 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Animated, FlatList, View, Alert, ActivityIndicator, Easing, StatusBar } from 'react-native';
-import { Icon as NBIcon, Tabs, Tab } from 'native-base';
+import { StyleSheet, Animated, FlatList, View, Alert, ActivityIndicator, Easing } from 'react-native';
+import { Tabs, Tab } from 'native-base';
 import { Actions } from 'react-native-router-flux';
 import { DefaultText } from '../../components/labels';
-import { APP_COMMON_STYLES, PageKeys, CUSTOM_FONTS, widthPercentageToDP, heightPercentageToDP, FRIEND_TYPE, RELATIONSHIP, GET_PICTURE_BY_ID } from '../../constants';
-import { BasicHeader } from '../../components/headers';
-import { LabeledInputPlaceholder, SearchBoxFilter } from '../../components/inputs';
-import { IconButton } from '../../components/buttons';
-import { getRoadBuddiesById, getPictureList, sendFriendRequest, approveFriendRequest, rejectFriendRequest, cancelFriendRequest, getMutualFriends } from '../../api';
+import { APP_COMMON_STYLES, PageKeys, CUSTOM_FONTS, widthPercentageToDP, heightPercentageToDP, RELATIONSHIP, GET_PICTURE_BY_ID } from '../../constants';
+import { SearchBoxFilter } from '../../components/inputs';
+import { IconButton, ShifterButton } from '../../components/buttons';
+import { getRoadBuddiesById, sendFriendRequest, approveFriendRequest, rejectFriendRequest, cancelFriendRequest, getMutualFriends } from '../../api';
 import { HorizontalCard } from '../../components/cards';
-import { setCurrentFriendAction, goToPrevProfileAction, resetPersonProfileAction, updatePicturesAction, updateCurrentFriendAction } from '../../actions';
+import { setCurrentFriendAction, goToPrevProfileAction, resetPersonProfileAction, updateCurrentFriendAction } from '../../actions';
+import { BasePage } from '../../components/pages';
+import { getCurrentProfileState } from '../../selectors';
 
 
 class BuddyFriends extends Component {
-    filteredFriends = []
-    isLoadingFrndsPic = false;
+    filteredFriends = [];
+    _screenIndex = null;
     constructor(props) {
         super(props);
         this.state = {
             isRefreshing: false,
             isLoading: false,
-            isLoadingData: false,
             spinValue: new Animated.Value(0),
             searchQuery: '',
-            pageNumber: 1
+            pageNumber: 0,
+            showLoader: false,
         }
     }
 
     componentDidMount() {
+        this._screenIndex = this.props.screens.length;
+        this.props.getRoadBuddiesById(this.props.user.userId, this.props.person.userId, 0, this.props.person.friendList, (res) => {
+            if (res.friendList.length > 0) {
+                this.setState({ pageNumber: 1, hasRemainingList: res.remainingList > 0 })
+            }
+        });
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.person.friendList !== this.props.person.friendList) {
-            // if (!this.isLoadingFrndsPic) {
-            //     const frndPicIdList = [];
-            //     this.props.person.friendList.forEach((frnd) => {
-            //         if (!frnd.profilePicture && frnd.profilePictureId) {
-            //             frndPicIdList.push(frnd.profilePictureId);
-            //         }
-            //     })
-            //     if (frndPicIdList.length > 0) {
-            //         this.isLoadingFrndsPic = true;
-            //         this.props.getPictureList(frndPicIdList, 'roadBuddies', () => this.isLoadingFrndsPic = false, () => this.isLoadingFrndsPic = false);
-            //     }
-            // }
+        if (prevProps.screens.length > this.props.screens.length) {
+            if (this.props.screens.length === this._screenIndex) {
+                if (!this.props.person.isFriend) {
+                    this.onPressBackButton();
+                } else {
+                    this.setState({ showLoader: false });
+                }
+            }
         }
     }
 
@@ -68,8 +70,14 @@ class BuddyFriends extends Component {
             if (i === 1) {
                 this.setState({ searchQuery: '', pageNumber: 0 });
                 this.props.getMutualFriends(this.props.user.userId, this.props.person.userId, 0, 10, undefined, (res) => {
+                    if (res.friendList.length > 0) {
+                        this.setState({ pageNumber: 1, hasRemainingList: res.remainingList > 0 })
+                    }
                 }, (error) => {
                 })
+            }
+            else if (i === 0) {
+                this.setState({ searchQuery: '', });
             }
         });
     }
@@ -99,7 +107,7 @@ class BuddyFriends extends Component {
             if (type === 'allBuddies') {
                 this.props.getRoadBuddiesById(this.props.user.userId, this.props.person.userId, this.state.pageNumber, this.props.person.friendList, (res) => {
                     if (res.friendList.length > 0) {
-                        this.setState({ pageNumber: this.state.pageNumber + 1 })
+                        this.setState({ pageNumber: this.state.pageNumber + 1, hasRemainingList: res.remainingList > 0 })
                     }
                     this.setState({ isLoading: false })
                 }, (error) => {
@@ -109,7 +117,7 @@ class BuddyFriends extends Component {
             else if (type === 'mutualFriends') {
                 this.props.getMutualFriends(this.props.user.userId, this.props.person.userId, this.state.pageNumber, 10, this.props.person.mutualFriends, (res) => {
                     if (res.friendList.length > 0) {
-                        this.setState({ pageNumber: this.state.pageNumber + 1 })
+                        this.setState({ pageNumber: this.state.pageNumber + 1, hasRemainingList: res.remainingList > 0 })
                     }
                     this.setState({ isLoading: false })
                 }, (er) => {
@@ -137,40 +145,36 @@ class BuddyFriends extends Component {
     }
 
     onPressBackButton = () => {
-        Actions.pop()
-        this.props.hasPrevProfiles
-            ? this.props.goToPrevProfile()
-            : this.props.resetPersonProfile();
+        Actions.pop();
+        this.props.goToPrevProfile();
     }
 
     friendKeyExtractor = (item) => item.userId;
 
-    openFriendsProfileTab = (friend) => {
+    openFriendsProfileTab = (friend, type) => {
         if (this.state.searchQuery !== '')
             this.setState(prevState => ({ searchQuery: '' }));
         friend = friend || this.state.selectedPerson;
-        this.openProfile(friend.userId)
+        if (friend.relationship === RELATIONSHIP.FRIEND || type === 'mutualFriends') {
+            this.openProfile(friend.userId)
+        }
+        else {
+            Actions.push(PageKeys.PASSENGER_PROFILE, { isUnknown: true, person: friend })
+        }
     }
     openProfile = (userId) => {
-        if (this.state.searchQuery !== '')
-            this.setState(prevState => ({ searchQuery: '' }));
         this.props.setCurrentFriend({ userId });
-        if (this.state.isVisibleOptionsModal) {
-            this.setState({ isVisibleOptionsModal: false })
-        }
+        this.setState({ searchQuery: '', isVisibleOptionsModal: false, showLoader: true });
         Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId });
     }
-    onChangeSearchValue = (val) => { this.setState({ searchQuery: val }) }
 
-    approvingFriendRequest = (item) => {
-        this.props.approvedRequest(this.props.user.userId, item.userId, new Date().toISOString(), item.id, this.props.person.friendList, this.props.person.userId);
-    }
-    rejectingFriendRequest = (item) => {
-        this.props.rejectRequest(this.props.user.userId, item.userId, item.id, this.props.person.friendList, this.props.person.userId);
-    }
-    cancelingFriendRequest = (item) => {
-        this.props.cancelRequest(this.props.user.userId, item.userId, item.id, this.props.person.friendList, this.props.person.userId);
-    }
+    onChangeSearchValue = (val) => this.setState({ searchQuery: val })
+
+    approvingFriendRequest = (item) => this.props.approvedRequest(this.props.user.userId, item.userId, new Date().toISOString(), this.props.person.friendList, this.props.person.userId);
+
+    rejectingFriendRequest = (item) => this.props.rejectRequest(this.props.user.userId, item.userId, this.props.person.friendList, this.props.person.userId);
+
+    cancelingFriendRequest = (item) => this.props.cancelRequest(this.props.user.userId, item.userId, this.props.person.friendList, this.props.person.userId);
 
     sendFriendRequest = (item) => {
         const { user } = this.props;
@@ -182,7 +186,6 @@ class BuddyFriends extends Component {
             userId: item.userId,
             name: item.name,
             nickname: item.nickname,
-            // email: item.email,
             actionDate: new Date().toISOString()
         };
         this.props.sendFriendRequest(requestBody, item.userId, this.props.person.friendList, this.props.person.userId);
@@ -228,18 +231,18 @@ class BuddyFriends extends Component {
     getActions = (item) => {
         switch (item.relationship) {
             case RELATIONSHIP.RECIEVED_REQUEST: return { isIconImage: true, imgSrc: require('../../assets/img/accept-reject.png'), id: 4, onPressActions: () => this.acceptRejectFriendRequest(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
-            case RELATIONSHIP.SENT_REQUEST: return { isIconImage: true, imgSrc: require('../../assets/img/cancel.png'), id: 4, onPressActions: () => this.cancelFriendRequest(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
+            case RELATIONSHIP.SENT_REQUEST: return { isIconImage: true, imgSrc: require('../../assets/img/add-frnd-frm-comm-success-green.png'), id: 4, onPressActions: () => this.cancelFriendRequest(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
             case RELATIONSHIP.UNKNOWN: return { isIconImage: true, imgSrc: require('../../assets/img/add-friend-from-community.png'), id: 4, onPressActions: () => this.sendFriendRequest(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
             default: return { isIconImage: true, imgSrc: require('../../assets/img/chat.png'), id: 4, onPressActions: () => this.openChatPage(item), imgStyle: { height: 23, width: 26, marginTop: 6 } }
         }
     }
 
-    _renderItem = ({ item, index }) => {
+    _renderItem = (item, index, type) => {
         return (
             <HorizontalCard
                 horizontalCardPlaceholder={require('../../assets/img/friend-profile-pic.png')}
                 item={item}
-                onPressLeft={() => this.openFriendsProfileTab(item)}
+                onPressLeft={() => this.openFriendsProfileTab(item, type)}
                 thumbnail={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
                 cardOuterStyle={styles.horizontalCardOuterStyle}
                 actionsBar={{
@@ -253,12 +256,13 @@ class BuddyFriends extends Component {
     }
     renderList = (data, type) => {
         return <FlatList
+            contentContainerStyle={[{ paddingBottom: this.state.hasRemainingList ? 40 : 0 }, styles.friendList]}
+            keyboardShouldPersistTaps={'handled'}
             showsVerticalScrollIndicator={false}
             style={{ flexDirection: 'column' }}
-            contentContainerStyle={styles.friendList}
             data={data}
             keyExtractor={this.friendKeyExtractor}
-            renderItem={this._renderItem}
+            renderItem={({ item, index }) => this._renderItem(item, index, type)}
             ListFooterComponent={this.renderFooter}
             onEndReached={({ distanceFromEnd }) => this.loadMoreData(distanceFromEnd, type)}
             onEndReachedThreshold={0.1}
@@ -266,69 +270,63 @@ class BuddyFriends extends Component {
     }
 
     render() {
-        const { searchQuery, isRefreshing } = this.state;
+        const { searchQuery, activeTab } = this.state;
         const { person } = this.props;
-        this.filteredFriends = searchQuery === '' ? person.friendList : person.friendList.filter(friend => {
+        this.filteredFriends = searchQuery === '' ? (activeTab && activeTab === 1 ? person.mutualFriends : person.friendList) : (activeTab && activeTab === 1 ? person.mutualFriends : person.friendList).filter(friend => {
             return (friend.name.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 ||
                 (friend.nickname ? friend.nickname.toLowerCase().indexOf(searchQuery.toLowerCase()) > -1 : false))
         });
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         return (
-            <View style={styles.fill}>
-                <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent barStyle="light-content" />
-                </View>
-                <View style={styles.fill}>
-                    <BasicHeader
-                        title='Road Buddies'
-                        leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
-                    />
+            <BasePage heading={`${person.name}'s Road Crew`} showLoader={this.state.showLoader} onBackButtonPress={this.onPressBackButton}>
+                <Tabs tabContainerStyle={APP_COMMON_STYLES.tabContainer} onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' tabBarUnderlineStyle={{ height: 0 }}>
+                    <Tab heading='ALL' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
+                        <View style={{ marginHorizontal: widthPercentageToDP(8), flex: 1 }}>
+                            <SearchBoxFilter
+                                searchQuery={searchQuery} onChangeSearchValue={this.onChangeSearchValue}
+                                placeholder='Name' outerContainer={{ marginTop: 16 }} />
+                            {
+                                this.renderList(this.filteredFriends, 'allBuddies')
+                            }
+                            {
+                                this.props.hasNetwork === false && ((person.friendList && person.friendList.length === 0) || !person.friendList) && <View style={{ flexDirection: 'column', justifyContent: 'space-between', height: 100, position: 'absolute', top: heightPercentageToDP(20), left: widthPercentageToDP(27) }}>
+                                    <IconButton iconProps={{ name: 'broadcast-tower', type: 'FontAwesome5', style: { fontSize: 60, color: '#505050' } }} />
+                                    <DefaultText style={{ alignSelf: 'center', fontSize: 14 }}>Please Connect To Internet</DefaultText>
+                                </View>
+                            }
 
-                    <Tabs tabContainerStyle={APP_COMMON_STYLES.tabContainer} onChangeTab={this.onChangeTab} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' style={{ marginTop: APP_COMMON_STYLES.headerHeight }} tabBarUnderlineStyle={{ height: 0 }}>
-                        <Tab heading='ALL BUDDIES' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
-                            <View style={{ marginHorizontal: widthPercentageToDP(8), flex: 1 }}>
-                                <SearchBoxFilter
-                                    searchQuery={searchQuery} onChangeSearchValue={this.onChangeSearchValue}
-                                    placeholder='Name' outerContainer={{ marginTop: 16 }} />
-                                {
-                                    this.renderList(this.filteredFriends, 'allBuddies')
-                                }
-                                {
-                                    this.props.hasNetwork === false && person.friendList.length === 0 && <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
-                                        <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                            <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                        </Animated.View>
-                                        <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
-                                        <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
-                                    </View>
-                                }
-
-                            </View>
-                        </Tab>
-                        <Tab heading='MUTUAL BUDDIES' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
-                            <View style={{ marginHorizontal: widthPercentageToDP(8), flex: 1 }}>
-                                <SearchBoxFilter
-                                    searchQuery={searchQuery} onChangeSearchValue={this.onChangeSearchValue}
-                                    placeholder='Name' outerContainer={{ marginTop: 16 }} />
-                                {
-                                    this.renderList(person.mutualFriends, 'mutualFriends')
-                                }
-                            </View>
-                        </Tab>
-                    </Tabs>
-                </View>
-
-            </View>
+                        </View>
+                    </Tab>
+                    <Tab heading='MUTUAL' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
+                        <View style={{ marginHorizontal: widthPercentageToDP(8), flex: 1 }}>
+                            <SearchBoxFilter
+                                searchQuery={searchQuery} onChangeSearchValue={this.onChangeSearchValue}
+                                placeholder='Name' outerContainer={{ marginTop: 16 }} />
+                            {
+                                this.renderList(this.filteredFriends, 'mutualFriends')
+                            }
+                            {
+                                this.props.hasNetwork === false && ((person.mutualFriends && person.mutualFriends.length === 0) || !person.mutualFriends) && <View style={{ flexDirection: 'column', justifyContent: 'space-between', height: 100, position: 'absolute', top: heightPercentageToDP(20), left: widthPercentageToDP(20) }}>
+                                    <IconButton iconProps={{ name: 'broadcast-tower', type: 'FontAwesome5', style: { fontSize: 60, color: '#505050' } }} />
+                                    <DefaultText style={{ alignSelf: 'center', fontSize: 14 }}>Please Connect To Internet</DefaultText>
+                                </View>
+                            }
+                        </View>
+                    </Tab>
+                </Tabs>
+            </BasePage>
         )
     }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, props) => {
     const { user } = state.UserAuth;
-    const { allFriends, paginationNum, searchFriendList, friendsLocationList } = state.FriendList;
     const { pageNumber, hasNetwork } = state.PageState;
-    const { person } = state.CurrentProfile;
-    const hasPrevProfiles = state.CurrentProfile.prevProfiles.length > 0;
-    return { user, allFriends, paginationNum, searchFriendList, friendsLocationList, pageNumber, hasNetwork, person, hasPrevProfiles };
+    const { screens } = state.FriendsProfiles;
+    return { user, pageNumber, hasNetwork, screens, person: getCurrentProfileState(state, props) };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -336,11 +334,6 @@ const mapDispatchToProps = (dispatch) => {
         setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
         goToPrevProfile: () => dispatch(goToPrevProfileAction()),
         resetPersonProfile: () => dispatch(resetPersonProfileAction()),
-        // getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
-        //     dispatch(updatePicturesAction({ pictureObj, type: callingFrom }))
-        // }, (error) => {
-        //     console.log('getPictureList error : ', error)
-        // }),
         sendFriendRequest: (requestBody, personId, friendList, currentPersonId) => dispatch(sendFriendRequest(requestBody, (res) => {
             const personIdx = friendList.findIndex(friend => friend.userId === personId);
             const buddyFriend = { ...friendList[personIdx], relationship: RELATIONSHIP.SENT_REQUEST }
@@ -350,11 +343,9 @@ const mapDispatchToProps = (dispatch) => {
                 ...friendList.slice(personIdx + 1)
             ];
             dispatch(updateCurrentFriendAction({ friendList: updatedBuddyFriendList, userId: currentPersonId }));
-            // dispatch(updateSearchListAction({userId: requestBody.userId, relationship: RELATIONSHIP.SENT_REQUEST }));
         }, (error) => {
-            // dispatch(updateFriendRequestResponseAction({ error: error.response.data || "Something went wrong" }));
         })),
-        approvedRequest: (userId, personId, actionDate, requestId, friendList, currentPersonId) => dispatch(approveFriendRequest(userId, personId, actionDate, requestId, (res) => {
+        approvedRequest: (userId, personId, actionDate, friendList, currentPersonId) => dispatch(approveFriendRequest(userId, personId, actionDate, (res) => {
             const personIdx = friendList.findIndex(friend => friend.userId === personId);
             const buddyFriend = { ...friendList[personIdx], relationship: RELATIONSHIP.FRIEND }
             const updatedBuddyFriendList = [
@@ -365,7 +356,7 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(updateCurrentFriendAction({ friendList: updatedBuddyFriendList, userId: currentPersonId }));
         }, (error) => {
         })),
-        rejectRequest: (userId, personId, requestId, friendList, currentPersonId) => dispatch(rejectFriendRequest(userId, personId, requestId, (res) => {
+        rejectRequest: (userId, personId, friendList, currentPersonId) => dispatch(rejectFriendRequest(userId, personId, (res) => {
             const personIdx = friendList.findIndex(friend => friend.userId === personId);
             const buddyFriend = { ...friendList[personIdx], relationship: RELATIONSHIP.UNKNOWN }
             const updatedBuddyFriendList = [
@@ -376,7 +367,7 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(updateCurrentFriendAction({ friendList: updatedBuddyFriendList, userId: currentPersonId }));
         }, (error) => {
         })),
-        cancelRequest: (userId, personId, requestId, friendList, currentPersonId) => dispatch(cancelFriendRequest(userId, personId, requestId, (res) => {
+        cancelRequest: (userId, personId, friendList, currentPersonId) => dispatch(cancelFriendRequest(userId, personId, (res) => {
             const personIdx = friendList.findIndex(friend => friend.userId === personId);
             const buddyFriend = { ...friendList[personIdx], relationship: RELATIONSHIP.UNKNOWN }
             const updatedBuddyFriendList = [
@@ -387,7 +378,6 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(updateCurrentFriendAction({ friendList: updatedBuddyFriendList, userId: currentPersonId }));
         }, (error) => {
         })),
-
         getMutualFriends: (userId, friendId, pageNumber, preference, mutualFriends, successCallback, errorCallback) => dispatch(getMutualFriends(userId, friendId, pageNumber, preference, mutualFriends, successCallback, errorCallback)),
     };
 };
@@ -413,16 +403,10 @@ const styles = StyleSheet.create({
         fontFamily: CUSTOM_FONTS.robotoBold,
         letterSpacing: 0.6
     },
-    searchCont: {
-        marginBottom: 0,
-        flex: 1,
-        width: widthPercentageToDP(47),
-    },
     friendList: {
         marginTop: 20,
     },
     horizontalCardOuterStyle: {
-        // marginHorizontal: widthPercentageToDP(4),
         marginBottom: heightPercentageToDP(4),
     }
 });

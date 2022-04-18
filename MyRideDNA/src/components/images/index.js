@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Image, Text, TouchableWithoutFeedback, StyleSheet } from 'react-native';
+import { View, Image, Text, TouchableWithoutFeedback, StyleSheet, ImageBackground } from 'react-native';
 import { widthPercentageToDP, APP_COMMON_STYLES } from '../../constants';
 import { DefaultText } from '../labels';
+import { IconButton } from '../buttons';
 
 const THUMBNAIL_MAX_WIDTH = widthPercentageToDP(50);
 export const Thumbnail = (props) => {
@@ -11,7 +12,7 @@ export const Thumbnail = (props) => {
                 borderColor: props.selected ? '#EB861E' : props.active ? APP_COMMON_STYLES.infoColor : 'transparent',
                 borderWidth: props.selected ? 4 : props.active ? 4 : 2
             }, props.containerStyle]}>
-                {props.horizontal ? <DefaultText  style={{ alignSelf: 'center', color: 'black', fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>{props.title}</DefaultText> : null}
+                {props.horizontal ? <DefaultText style={{ alignSelf: 'center', color: 'black', fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>{props.title}</DefaultText> : null}
                 <View style={{
                     alignSelf: 'center',
                     height: props.height,
@@ -34,7 +35,7 @@ export const Thumbnail = (props) => {
                                 : null
                     }
                 </View>
-                {props.horizontal ? null : <DefaultText  style={{ alignSelf: 'center', color: 'black', fontSize: 16, fontWeight: 'bold' }}>{props.title && props.title.length > 12 ? `${props.title.substring(0, 12)}...` : props.title}</DefaultText>}
+                {props.horizontal ? null : <DefaultText style={{ alignSelf: 'center', color: 'black', fontSize: 16, fontWeight: 'bold' }}>{props.title && props.title.length > 12 ? `${props.title.substring(0, 12)}...` : props.title}</DefaultText>}
             </View>
         </TouchableWithoutFeedback>
     );
@@ -52,6 +53,19 @@ export const ProgressiveImage = ({ thumbnailSource, source, imageBGColor, imageS
         />
     </View>
 );
+
+export const SelectedImage = ({ image, onPressCloseImg, outerContainer = null, isEditablePicture = true }) => (
+    <View style={[{ alignSelf: 'center' }, outerContainer]}>
+        <View style={styles.imageContainer}>
+            <ImageBackground source={image} style={{ height: null, width: null, flex: 1 }} />
+        </View>
+        {
+            isEditablePicture ?
+                <IconButton style={styles.closeIconContainer} iconProps={{ name: 'close', type: 'Ionicons', style: styles.closeIcon }} onPress={onPressCloseImg} />
+                : null
+        }
+    </View>
+)
 
 const styles = StyleSheet.create({
     flexRow: {
@@ -79,4 +93,29 @@ const styles = StyleSheet.create({
         bottom: 0,
         top: 0,
     },
+    imageContainer: {
+        height: 116,
+        width: 116,
+        borderWidth: 3,
+        borderColor: '#9A9A9A',
+        borderRadius: 20,
+        overflow: 'hidden'
+    },
+    closeIconContainer: {
+        position: 'absolute',
+        zIndex: 100,
+        height: 30,
+        width: 30,
+        borderRadius: 15,
+        backgroundColor: '#F5891F',
+        alignItems: 'center',
+        justifyContent: 'center',
+        alignSelf: 'flex-end',
+        top: -11,
+        right: -11
+    },
+    closeIcon: {
+        fontSize: 23,
+        color: '#fff'
+    }
 });

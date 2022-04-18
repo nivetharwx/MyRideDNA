@@ -13,46 +13,73 @@ export default (state = initialState, action) => {
     switch (action.type) {
         case UPDATE_CHAT_LIST:
             if (action.data.comingFrom === 'getAllChatsApi') {
+                console.log('///get all chat ' + JSON.stringify(action.data.totalUnseenMessage))
                 return {
                     ...state,
-                    chatList: action.data.chatList
+                    chatList: action.data.chats,
+                    totalUnseenMessage: action.data.totalUnseenMessage
                 }
             }
-            else if (action.data.comingFrom === 'sendMessgaeApi' && state.chatList.length > 0) {
+            else if (action.data.id) {
                 const index = state.chatList.findIndex(list => list.id === action.data.id)
+                console.log('message data',action.data,state,index)
                 if (index > -1) {
-                    const newChat = { ...state.chatList[index] };
-                    newChat.message = action.data.newMessage
                     return {
                         ...state,
                         chatList: [
+                            {
+                                ...state.chatList[index],
+                                message: action.data.comingFrom === PageKeys.NOTIFICATIONS ? {
+                                    ...action.data.messageBody,
+                                    media: action.data.messageBody.media ? JSON.parse(action.data.messageBody.media) : null,
+                                    seenUser: action.data.messageBody.seenUser ? JSON.parse(action.data.messageBody.seenUser) : []
+                                } : {
+                                        ...action.data.messageBody,
+                                        media: action.data.messageBody.media ? action.data.messageBody.media : null,
+                                        seenUser: action.data.messageBody.seenUser ? action.data.messageBody.seenUser : []
+                                    }
+                            },
                             ...state.chatList.slice(0, index),
-                            newChat,
                             ...state.chatList.slice(index + 1)
                         ]
                     }
-                }
-            }
-            else {
-                if (action.data.comingFrom === PageKeys.NOTIFICATIONS) {
-                    const index = state.chatList.findIndex(list => list.id === action.data.id)
-                    if (index > -1) {
-                        const newChat = { ...state.chatList[index] };
-                        newChat.message = action.data.newMessage
-                        return {
-                            ...state,
-                            chatList: [
-                                newChat,
-                                ...state.chatList.slice(0, index),
-                                ...state.chatList.slice(index + 1)
-                            ]
-                        }
+                }else{
+                    console.log(state)
+                    
+                    return {
+                        ...state,
+                        chatList: [
+                            {
+                                id:action.data.id,
+                                name:action.data.messageBody.senderName,
+                                nickname:action.data.messageBody.senderNickname,
+                                profilePictureId:action.data.messageBody.senderPictureId,
+                                date:action.data.messageBody.date,
+                                status:action.data.messageBody.status,
+                                ...action.data.messageBody,
+                                ...(action.data.messageBody.memberPictureIdList && {profilePictureIdList : JSON.parse(action.data.messageBody.memberPictureIdList)}),
+                                ...(action.data.messageBody.exceptUser && {exceptUser : JSON.parse(action.data.messageBody.exceptUser)}),
+                                ...(action.data.messageBody.memberPictureIdList && {memberNameList : JSON.parse(action.data.messageBody.memberPictureIdList)}),
+                                ...(action.data.messageBody.seenUser && {seenUser: JSON.parse(action.data.messageBody.seenUser)}),
+                                isGroup:action.data.messageBody.isGroup=='true'?true:false,
+                                message: action.data.comingFrom === PageKeys.NOTIFICATIONS ? {
+                                    ...action.data.messageBody,
+                                    media: action.data.messageBody.media ? JSON.parse(action.data.messageBody.media) : null,
+                                    seenUser: action.data.messageBody.seenUser ? JSON.parse(action.data.messageBody.seenUser) : []
+                                } : {
+                                        ...action.data.messageBody,
+                                        media: action.data.messageBody.media ? action.data.messageBody.media : null,
+                                        seenUser: action.data.messageBody.seenUser ? action.data.messageBody.seenUser : []
+                                    },
+                                totalUnseenMessage:1
+                            },
+                            ...state.chatList
+                        ]
                     }
+
                 }
             }
-            return {
-                ...state,
-            }
+            return state
 
 
         case UPDATE_CHAT_PIC:
@@ -80,6 +107,7 @@ export default (state = initialState, action) => {
                 ...state,
                 chatMessages: action.data
             }
+
         case REPLACE_CHAT_MESSAGES:
             if (action.data.comingFrom === 'deleteMessage') {
                 // const updatedChatMessages = action.data.messageIds.map(deletedMessage => {
@@ -91,67 +119,75 @@ export default (state = initialState, action) => {
                 return { ...state, chatMessages: state.chatMessages.filter(msg => action.data.messageIds.indexOf(msg.messageId) === -1) }
             }
             else if (action.data.comingFrom === PageKeys.NOTIFICATIONS) {
+                console.log('replace notification',action.data)
                 if (state.chatData.id === action.data.notificationBody.id) {
                     return {
                         ...state,
                         chatMessages: [
-                            action.data.notificationBody,
+                            {
+                                ...action.data.notificationBody,
+                                media: action.data.notificationBody.media ? JSON.parse(action.data.notificationBody.media) : null,
+                                seenUser: action.data.notificationBody.seenUser ? JSON.parse(action.data.notificationBody.seenUser) : []
+                            },
                             ...state.chatMessages,
                         ],
-                        totalUnseenMessage: state.totalUnseenMessage + 1
                     }
                 }
                 else {
                     return state
                 }
-
             }
             else if (action.data.comingFrom === 'deleteAllMessages') {
-                const index = state.chatList.findIndex(list => list.id === action.data.id);
-                const { ['message']: deletedKey, ...otherKeys } = state.chatList[index];
-
                 return {
                     ...state,
                     chatMessages: [],
-                    chatList: [
-                        ...state.chatList.slice(0, index),
-                        otherKeys,
-                        ...state.chatList.slice(index + 1)
-                    ]
+                    chatList: state.chatList.filter(item=>item.id !==action.data.id)
                 }
             }
             else if (action.data.comingFrom === 'fcmDeletForEveryone') {
-                if (state.chatMessages.length === 0) {
-                    return state
-                }
-                else {
-                    const updatedMessage = state.chatMessages.filter(msg => action.data.notificationBody.messageIdList.indexOf(msg.messageId) === -1);
-                    if (updatedMessage.length === 0) {
-                        const index = state.chatList.findIndex(list => list.id === action.data.notificationBody.id)
+                const updatedMessage = state.chatMessages.filter(msg => action.data.notificationBody.messageIdList.indexOf(msg.messageId) === -1);
+                const index = state.chatList.findIndex(list => list.id === action.data.notificationBody.id)
+                if (updatedMessage.length === 0) {
+                    if (index > -1) {
                         const { ['message']: deletedKey, ...otherKeys } = state.chatList[index];
-
+                        const chatListData = { ...otherKeys, totalUnseenMessage: state.totalUnseenMessage === 0 ? state.totalUnseenMessage : state.totalUnseenMessage - 1 }
                         return {
                             ...state,
                             chatMessages: updatedMessage,
                             chatList: [
                                 ...state.chatList.slice(0, index),
-                                otherKeys,
+                                chatListData,
                                 ...state.chatList.slice(index + 1)
-                            ]
+                            ],
+
                         }
                     }
                     else {
-                        const index = state.chatList.findIndex(list => list.id === action.data.notificationBody.id)
+                        return {
+                            ...state,
+                            chatMessages: updatedMessage,
+                        }
+                    }
+                }
+                else {
+                    if (index > -1) {
                         const updatedList = state.chatList[index];
                         updatedList.message = updatedMessage[0];
+                        const chatListData = { ...updatedList, totalUnseenMessage: state.totalUnseenMessage === 0 ? state.totalUnseenMessage : state.totalUnseenMessage - 1 }
                         return {
                             ...state,
                             chatMessages: updatedMessage,
                             chatList: [
                                 ...state.chatList.slice(0, index),
-                                updatedList,
+                                chatListData,
                                 ...state.chatList.slice(index + 1)
-                            ]
+                            ],
+                        }
+                    }
+                    else {
+                        return {
+                            ...state,
+                            chatMessages: updatedMessage,
                         }
                     }
 
@@ -173,30 +209,37 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 chatMessages: [],
-                totalUnseenMessage: 0,
+                // totalUnseenMessage: 0,
                 chatData: null
             }
 
         case RESET_MESSAGE_COUNT:
+            console.log('state', state, '\n\n total unssen messages ',action.data.comingFrom)
             if (action.data.comingFrom === "seenMessage") {
-                const index = state.chatList.findIndex(chat => chat.id === action.data.id)
-                if (index > -1) {
-                    const updatedChatLIst = state.chatList[index];
-                    updatedChatLIst.totalUnseenMessage = 0
+                let totalUnseenMessage=0
+                let newList= state.chatList.map(item=>{
+                    if(item.id !== action.data.id){
+                        totalUnseenMessage+=item.totalUnseenMessage
+                    }
+                    return item.id === action.data.id
+                    ?{...item, totalUnseenMessage:0}
+                    :item
+                })
+                // let totalUnseenMessage=newList.reduce((firstItem,secondItem)=>{
+                //     return firstItem+=secondItem.totalUnseenMessage
+                // },0)
+                console.log(totalUnseenMessage,'////totalUnseen')
                     return {
                         ...state,
-                        chatList: [
-                            ...state.chatList.slice(0, index),
-                            updatedChatLIst,
-                            ...state.chatList.slice(index + 1)
-                        ]
+                        chatList: newList,
+                        // totalUnseenMessage: state.totalUnseenMessage - (action.data.unSeenmessageCount?action.data.unSeenmessageCount:state.chatList.length>0?state.chatList[state.chatList.findIndex(list => list.id === action.data.id)].totalUnseenMessage:0)
+                        totalUnseenMessage: totalUnseenMessage
                     }
-                }
             }
             else if (action.data.resetTotalUnseen) {
                 return {
                     ...state,
-                    totalUnseenMessage: 0
+                    // totalUnseenMessage: 0
                 }
             }
 
@@ -224,8 +267,13 @@ export default (state = initialState, action) => {
         //         }
         //     }
         case UPDATE_CHAT_DATA_LIST:
+            console.log('\n\n\n UPDATE_CHAT_DATA_LIST : ', UPDATE_CHAT_DATA_LIST)
+            console.log('LOGGED BY NIVETHA 1....***************************',action.data.chatData.profilePictureId);
             if (action.data.chatData && !action.data.chatData.profilePictureId && action.data.chatData.isGroup === false) {
-                action.data.chatData['profilePictureId'] = action.data.chatData.id + '_thumb';
+            // if (action.data.chatData && !action.data.chatData.profilePictureId && action.data.chatData.isGroup === false) {
+                // action.data.chatData['profilePictureId'] = action.data.chatData.id + '_thumb';
+                console.log('LOGGED BY NIVETHA 2.....***************************',action.data.chatData.profilePictureId);
+
                 return {
                     ...state,
                     chatData: action.data.chatData
@@ -256,17 +304,32 @@ export default (state = initialState, action) => {
             }
 
         case UPDATE_MESSAGE_COUNT:
-            const index = state.chatList.findIndex(chat => chat.id === action.data.id)
-            if (index > -1) {
-                const updatedChatLIst = state.chatList[index];
-                updatedChatLIst.totalUnseenMessage = state.chatList[index].totalUnseenMessage + 1
+            if (action.data.id) {
+                const index = state.chatList.findIndex(chat => chat.id === action.data.id)
+                if (index > -1) {
+                    const updatedChatLIst = state.chatList[index];
+                    updatedChatLIst.totalUnseenMessage = state.chatList[index].totalUnseenMessage + 1
+                    console.log(updatedChatLIst)
+                    return {
+                        ...state,
+                        chatList: [
+                            ...state.chatList.slice(0, index),
+                            updatedChatLIst,
+                            ...state.chatList.slice(index + 1)
+                        ],
+                        totalUnseenMessage: state.totalUnseenMessage + 1
+                    }
+                }else{
+                    return {
+                        ...state,
+                        totalUnseenMessage: state.totalUnseenMessage + 1
+                    }
+                }
+            }
+            else {
                 return {
                     ...state,
-                    chatList: [
-                        ...state.chatList.slice(0, index),
-                        updatedChatLIst,
-                        ...state.chatList.slice(index + 1)
-                    ]
+                    totalUnseenMessage: state.totalUnseenMessage + 1
                 }
             }
 
@@ -274,7 +337,7 @@ export default (state = initialState, action) => {
             return {
                 chatMessages: [],
                 chatList: [],
-                totalUnseenMessage: 0,
+                // totalUnseenMessage: 0,
                 chatData: null
             }
 

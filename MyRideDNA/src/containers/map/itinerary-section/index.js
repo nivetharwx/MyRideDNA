@@ -1,866 +1,657 @@
 import React, { Component } from 'react';
-import { StyleSheet, Alert, ActivityIndicator, Animated, FlatList, TextInput, View, Text, ScrollView, Image, ImageBackground, TouchableOpacity } from 'react-native';
+import { StyleSheet, FlatList, View, ScrollView, Image, TouchableOpacity, Alert, Text, } from 'react-native';
 import { connect } from 'react-redux';
-import { BaseModal } from '../../../components/modal';
-import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, WindowDimensions, TAB_CONTAINER_HEIGHT, JS_SDK_ACCESS_TOKEN, RIDE_POINT, APP_EVENT_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../../constants';
-import { Icon as NBIcon, ActionSheet, Tabs, ScrollableTab, TabHeading, Tab, ListItem, Left, Body, Right, Item } from 'native-base';
-import { IconButton, BasicButton } from '../../../components/buttons';
-import ImagePicker from 'react-native-image-crop-picker';
-import { updateSource, updateWaypoint, updateDestination, getWaypointPictureList, updateRide, deleteWaypointPicture } from '../../../api';
-import { updateRideAction, updateRideInListAction, apiLoaderActions } from '../../../actions';
+import { BaseModal, GesturedCarouselModal } from '../../../components/modal';
+import { widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, RIDE_POINT, CUSTOM_FONTS, GET_PICTURE_BY_ID, PageKeys, POST_TYPE, RECORD_RIDE_STATUS, RIDE_TYPE, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG } from '../../../constants';
+import { IconButton, BasicButton, ImageButton, LinkButton } from '../../../components/buttons';
+import { updateRide, getSpaces, getRideInfo } from '../../../api';
+import { updateRideAction, updateRideInListAction, apiLoaderActions, editBikeListAction, resetErrorHandlingAction } from '../../../actions';
 import { DefaultText } from '../../../components/labels';
+import { IconicList, LabeledInputPlaceholder } from '../../../components/inputs';
+import { Actions } from 'react-native-router-flux';
+import { BasePage } from '../../../components/pages';
+import { ImageLoader } from '../../../components/loader';
+import CommentSection from '../comment-scetion';
+import DurationIcon from '../../../assets/img/Time-Ride.svg'
+import DistanceIcon from '../../../assets/img/Distance-Rides.svg'
+import CalendarIcon from '../../../assets/img/Date-Rides.svg'
+import ImageViewer from 'react-native-image-viewing'
+import { Icon as NBIcon } from 'native-base';
 
-const BUTTONS = ["Gallery", "Camera", "Cancel"];
-const CANCEL_IDX = 2;
-const INDEX_ID_SEPARATOR = '_._';
+const CONTAINER_H_SPACE = widthPercentageToDP(6);
+const NUM_OF_DESC_LINES = 2;
 class ItinerarySection extends Component {
-    allImageRef = {};
-    oldPosition = {};
-    position = new Animated.ValueXY();
-    dimensions = new Animated.ValueXY();
-    animation = new Animated.Value(0);
-    viewImage = null;
     constructor(props) {
         super(props);
         this.state = {
-            editingPointId: null,
-            selectedImages: null,
-            imageSelectionMode: false,
-            description: '',
-            activeImage: null,
-            uploadProgress: {},
+            isPrivate: this.props.ride ? this.props.ride.privacyMode === 'private' ? true : false : false,
+            selectedBikeId: this.props.ride.spaceId ? this.props.ride.spaceId : null,
+            bikeList: [],
+            isEditingRide: props.isEditingRide || false,
+            showOptionsModal: false,
+            description: this.props.ride.description || '',
+            name: this.props.ride.name || '',
+            showSwipingPictureModal: false,
+            selectedPictureIdLIst: [],
+            isLoadingWaypoints: false,
+            showMoreSections: {},
+            activeIndex: -1,
+            commentMode: false,
         };
     }
 
     componentDidMount() {
+        console.log('//// mounted called',this.props)
+        getSpaces(this.props.user.userId, (bikeList) => {
+            this.setState({ bikeList });
+        }, (er) => console.log(er));
+        if (this.props.comingFrom !== PageKeys.MAP) {
+            this.fetchRideInfo();
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.ride !== this.props.ride) {
-            if (this.props.ride.rideId) {
-                if (this.state.selectedImages !== null) {
-                    this.setState({ selectedImages: null, imageSelectionMode: false });
-                }
-                setTimeout(() => {
-                    if (this.props.ride.source) {
-                        if (this.props.ride.source.pictureIdList && this.props.ride.source.pictureIdList.length > 0 && (!prevProps.ride.source || prevProps.ride.source.pictureIdList !== this.props.ride.source.pictureIdList)) {
-                            if (this.state.uploadProgress[RIDE_POINT.SOURCE] === true) {
-                                this.setState(prevState => {
-                                    const { [RIDE_POINT.SOURCE]: deletedKey, ...others } = prevState.uploadProgress;
-                                    return { uploadProgress: { ...others } };
-                                });
+        console.log('/// component did update called')
+        if (prevProps.hasNetwork === false && this.props.hasNetwork === true) {
+            this.retryApiFunc();
+        }
+
+        console.log(this.props,'printed props')
+
+        if (prevProps.isRetryApi === false && this.props.isRetryApi === true) {
+            if (Actions.currentScene === this.props.lastApi.currentScene) {
+                Alert.alert(
+                    'Something went wrong ',
+                    '',
+                    [
+                        {
+                            text: 'Retry ', onPress: () => {
+                                this.retryApiFunc();
+                                this.props.resetErrorHandling(false)
                             }
-                            this.props.getWaypointPictureList(RIDE_POINT.SOURCE, this.props.ride.source.pictureIdList.map(pictureId => pictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)));
-                        }
-                    }
-                    this.props.ride.waypoints.forEach((point, idx) => {
-                        if (point.pictureIdList && point.pictureIdList.length > 0 && (!prevProps.ride.waypoints[idx] || prevProps.ride.waypoints[idx].pictureIdList !== this.props.ride.waypoints[idx].pictureIdList)) {
-                            if (this.state.uploadProgress[idx] === true) {
-                                this.setState(prevState => {
-                                    const { [idx]: deletedKey, ...others } = prevState.uploadProgress;
-                                    return { uploadProgress: { ...others } };
-                                });
-                            }
-                            this.props.getWaypointPictureList(idx, point.pictureIdList.map(pictureId => pictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)));
-                        }
-                    });
-                    if (this.props.ride.destination) {
-                        if (this.props.ride.destination.pictureIdList && this.props.ride.destination.pictureIdList.length > 0 && (!prevProps.ride.destination || prevProps.ride.destination.pictureIdList !== this.props.ride.destination.pictureIdList)) {
-                            if (this.state.uploadProgress[RIDE_POINT.DESTINATION] === true) {
-                                this.setState(prevState => {
-                                    const { [RIDE_POINT.DESTINATION]: deletedKey, ...others } = prevState.uploadProgress;
-                                    return { uploadProgress: { ...others } };
-                                });
-                            }
-                            this.props.getWaypointPictureList(RIDE_POINT.DESTINATION, this.props.ride.destination.pictureIdList.map(pictureId => pictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)));
-                        }
-                    }
-                }, 50);
-            } else {
-                this.setState({
-                    editingPointId: null,
-                    selectedImages: null,
-                    imageSelectionMode: false,
-                    description: '',
-                    activeImage: null,
-                    uploadProgress: {},
-                });
+                        },
+                        { text: 'Cancel', onPress: () => { this.props.resetErrorHandling(false) }, style: 'cancel' },
+                    ],
+                    { cancelable: false }
+                )
             }
-            if (this.state.editingPointId !== null) {
-                this.setState({ editingPointId: null, description: '' });
-            }
+        }
+
+        
+    }
+
+    retryApiFunc = () => {
+        if (this.props.lastApi && this.props.lastApi.currentScene === Actions.currentScene) {
+            this.props[`${this.props.lastApi.api}`](...this.props.lastApi.params)
         }
     }
 
-    showLargerImage = (id) => {
-        const idParts = id.split(INDEX_ID_SEPARATOR);
-        let activeImage = null;
-        if (idParts[0] === RIDE_POINT.SOURCE) {
-            const picIdx = this.props.ride.source.pictureIdList.indexOf(idParts[1]);
-            activeImage = this.props.ride.source.pictureList[picIdx];
-        } else if (idParts[0] === RIDE_POINT.DESTINATION) {
-            const picIdx = this.props.ride.destination.pictureIdList.indexOf(idParts[1]);
-            activeImage = this.props.ride.destination.pictureList[picIdx];
-        } else {
-            const picIdx = this.props.ride.waypoints[idParts[0]].pictureIdList.indexOf(idParts[1]);
-            activeImage = this.props.ride.waypoints[idParts[0]].pictureList[picIdx];
-        }
-        this.allImageRef[id].measure((x, y, width, height, pageX, pageY) => {
-            this.oldPosition.x = pageX;
-            this.oldPosition.y = pageY;
-            this.oldPosition.width = width;
-            this.oldPosition.height = height;
-
-            this.position.setValue({ x: pageX, y: pageY });
-            this.dimensions.setValue({ x: width, y: height });
-        });
-
-        this.setState({ activeImage }, () => {
-            this.viewImage.measure((dx, dy, dWidth, dHeight, dPageX, dPageY) => {
-                Animated.parallel([
-                    Animated.timing(this.position.x, {
-                        toValue: 0,
-                        duration: 300,
-                        // useNativeDriver: true
-                    }),
-                    Animated.timing(this.position.y, {
-                        toValue: heightPercentageToDP(30),
-                        duration: 300,
-                        // useNativeDriver: true
-                    }),
-                    Animated.timing(this.dimensions.x, {
-                        toValue: widthPercentageToDP(100),
-                        duration: 300,
-                        // useNativeDriver: true
-                    }),
-                    Animated.timing(this.dimensions.y, {
-                        toValue: heightPercentageToDP(40),
-                        duration: 300,
-                        // useNativeDriver: true
-                    }),
-                    Animated.timing(this.animation, {
-                        toValue: 1,
-                        duration: 300,
-                        // useNativeDriver: true
-                    }),
-                ]).start();
-            });
-        });
-    }
-
-    hideLargerImage = () => {
-        Animated.parallel([
-            Animated.timing(this.position.x, {
-                toValue: this.oldPosition.x,
-                duration: 300,
-                // useNativeDriver: true
-            }),
-            Animated.timing(this.position.y, {
-                toValue: this.oldPosition.y,
-                duration: 300,
-                // useNativeDriver: true
-            }),
-            Animated.timing(this.dimensions.x, {
-                toValue: this.oldPosition.width,
-                duration: 300,
-                // useNativeDriver: true
-            }),
-            Animated.timing(this.dimensions.y, {
-                toValue: this.oldPosition.height,
-                duration: 300,
-                // useNativeDriver: true
-            }),
-            Animated.timing(this.animation, {
-                toValue: 0,
-                duration: 300,
-                // useNativeDriver: true
-            }),
-        ]).start(() => {
-            this.setState({ activeImage: null });
-        });
+    fetchRideInfo = () => {
+        this.setState({ isLoadingWaypoints: true });
+        this.props.getRideInfo(this.props.ride.rideId, (res) => {
+            
+            Actions.refresh({ ride: { ...this.props.ride, ...res } });
+            this.setState({ isLoadingWaypoints: false });
+        }, (er) => {
+            this.setState({ isLoadingWaypoints: false });
+        })
     }
 
     pointKeyExtractor = item => item.id || item.lng + '' + item.lat;
 
-    onPressAddPhotos = (id) => {
-        ActionSheet.show(
-            {
-                options: BUTTONS,
-                cancelButtonIndex: CANCEL_IDX,
-                title: "Choose option"
-            },
-            buttonIndex => {
-                if (BUTTONS[buttonIndex] === 'Gallery') {
-                    this.openGallery(id);
-                } else if (BUTTONS[buttonIndex] === 'Camera') {
-                    this.openCamera(id);
+    onPressUpdate = () => {
+        this.props.updateRide({ name: this.state.name, description: this.state.description, spaceId: this.state.selectedBikeId, privacyMode: this.state.isPrivate ? 'private' : 'public', rideId: this.props.ride.rideId },
+            this.props.comingFrom === PageKeys.LOGGED_RIDE ? POST_TYPE.LOGGED_RIDES : this.props.ride.rideType, this.props.comingFrom === PageKeys.MAP, (res) => {
+                if (this.props.comingFrom !== PageKeys.MAP) {
+                    Actions.refresh({ ride: { ...this.props.ride, name: this.state.name, description: this.state.description, spaceId: this.state.selectedBikeId, privacyMode: this.state.isPrivate ? 'private' : 'public' } ,isEditingRide:false});
                 }
-            }
-        )
+                this.setState({ isEditingRide: false });
+            }, (er) => this.setState({ isEditingRide: false }));
     }
 
-    openGallery = async (id) => {
-        try {
-            const images = await ImagePicker.openPicker({
-                multiple: true,
-                maxFiles: 4,
-                width: 300,
-                height: 300,
-                cropping: false,
-                includeBase64: true,
-            });
-            // DOC: Only first four pictures
-            if (images.length > 4) images.length = 4;
-            const pictureList = images.reduce((list, img) => {
-                list.push({ picture: img.data, mimeType: img.mime });
-                return list;
-            }, []);
-            if (id === RIDE_POINT.SOURCE) {
-                this.setState(prevState => ({ uploadProgress: { ...prevState.uploadProgress, [id]: true } }));
-                this.props.updateSource({ pictureList }, this.props.ride.source, { rideId: this.props.ride.rideId });
-            } else if (id === RIDE_POINT.DESTINATION) {
-                this.setState(prevState => ({ uploadProgress: { ...prevState.uploadProgress, [id]: true } }));
-                this.props.updateDestination({ pictureList }, this.props.ride.destination, { rideId: this.props.ride.rideId });
-            } else {
-                this.setState(prevState => ({ uploadProgress: { ...prevState.uploadProgress, [id]: true } }));
-                this.props.updateWaypoint({ pictureList }, this.props.ride.waypoints[id], { rideId: this.props.ride.rideId }, id);
-            }
-        } catch (er) {
-            console.log("Error occurd: ", er);
+    getFormattedDate = (isoDateString = new Date().toISOString(), joinBy = ' ') => {
+        const dateInfo = new Date(isoDateString).toString().substr(4, 12).split(' ');
+        return [dateInfo[0] + '.', (dateInfo[2] + '').slice(-2)].join(joinBy);
+    }
+
+    getDistanceAsFormattedString(distance, distanceUnit) {
+        if (!distance) {
+            return '0 ' + distanceUnit;
         }
-    }
-
-    openCamera = async (id) => {
-        try {
-            const image = await ImagePicker.openCamera({
-                multiple: true,
-                maxFiles: 4,
-                width: 300,
-                height: 300,
-                cropping: false, // DOC: Setting this to true (in openCamera) is not working as expected (19-12-2018).
-                includeBase64: true,
-            });
-            // DOC: Only first four pictures
-            // if (images.length > 4) images.length = 4;
-            // const pictureList = images.reduce((list, img) => {
-            //     list.push({ picture: img.data, mimeType: img.mime });
-            //     return list;
-            // }, []);
-            const pictureList = [{ picture: image.data, mimeType: image.mime }];
-            if (id === RIDE_POINT.SOURCE) {
-                this.setState(prevState => ({ uploadProgress: { ...prevState.uploadProgress, [id]: true } }));
-                this.props.updateSource({ pictureList }, this.props.ride.source, { rideId: this.props.ride.rideId });
-            } else if (id === RIDE_POINT.DESTINATION) {
-                this.setState(prevState => ({ uploadProgress: { ...prevState.uploadProgress, [id]: true } }));
-                this.props.updateDestination({ pictureList }, this.props.ride.destination, { rideId: this.props.ride.rideId });
-            } else {
-                this.setState(prevState => ({ uploadProgress: { ...prevState.uploadProgress, [id]: true } }));
-                this.props.updateWaypoint({ pictureList }, this.props.ride.waypoints[id], { rideId: this.props.ride.rideId }, id);
-            }
-        } catch (er) {
-            console.log("Error occurd: ", er);
-        }
-    }
-
-    onPressEditDescription = (id) => {
-        let description = '';
-        if (id === this.props.ride.rideId) {
-            description = this.props.ride.description;
-        } else if (id === RIDE_POINT.SOURCE) {
-            description = this.props.ride.source.description;
-        } else if (id === RIDE_POINT.DESTINATION) {
-            description = this.props.ride.destination.description;
+        if (distanceUnit === 'km') {
+            return (distance / 1000).toFixed(2) + ' km';
         } else {
-            description = this.props.ride.waypoints[id].description;
-        }
-        this.setState({ editingPointId: id, description });
-    }
-
-    onPressSubmitDescription = () => {
-        if (this.state.editingPointId === this.props.ride.rideId) {
-            this.state.description && this.props.updateRide({ description: this.state.description, rideId: this.props.ride.rideId }, this.props.ride.rideType);
-        } else if (this.state.editingPointId === RIDE_POINT.SOURCE) {
-            this.state.description && this.props.updateSource({ description: this.state.description }, this.props.ride.source, { rideId: this.props.ride.rideId });
-        } else if (this.state.editingPointId === RIDE_POINT.DESTINATION) {
-            this.state.description && this.props.updateDestination({ description: this.state.description }, this.props.ride.destination, { rideId: this.props.ride.rideId });
-        } else {
-            this.state.description && this.props.updateWaypoint({ description: this.state.description }, this.props.ride.waypoints[this.state.editingPointId], { rideId: this.props.ride.rideId }, this.state.editingPointId);
+            return (distance * 0.000621371192).toFixed(2) + ' mi';
         }
     }
 
-    changeToImageSelectionMode = (index) => {
-        if (!this.props.isEditable) return;
-        this.setState(prevState => ({ imageSelectionMode: true, selectedImages: { [index]: true } }));
+    getTimeAsFormattedString(timeInSeconds) {
+        if (!timeInSeconds) return '0 m';
+        const m = Math.floor(timeInSeconds / 60);
+        const timeText = `${m} m`;
+        return timeText;
     }
 
-    onSelectImage = (index) => {
-        if (this.state.imageSelectionMode === false) {
-            this.showLargerImage(index);
-            return;
-        }
-        if (Object.keys(this.state.selectedImages).length > 0) {
-            const prevId = Object.keys(this.state.selectedImages)[0].split(INDEX_ID_SEPARATOR)[0];
-            if (prevId !== index.split(INDEX_ID_SEPARATOR)[0]) return;
-        }
-        if (this.state.selectedImages[index]) return this.onUnselectImage(index);
-        this.setState(prevState => ({ selectedImages: { ...prevState.selectedImages, [index]: true } }));
-    }
+    onPressBackButton = () => Actions.pop()
 
-    onUnselectImage = (index) => this.setState(prevState => {
-        const { [index]: deletedKey, ...otherKeys } = prevState.selectedImages;
-        if (Object.keys(otherKeys).length === 0) {
-            return { selectedImages: null, imageSelectionMode: false };
-        } else {
-            return { selectedImages: { ...otherKeys } };
-        }
-    });
-
-    onDeletePictures = () => {
-        const { selectedImages } = this.state;
-        const keys = Object.keys(selectedImages);
-        const id = keys[0].split(INDEX_ID_SEPARATOR)[0];
-        const pictureIdList = keys.map(k => k.split(INDEX_ID_SEPARATOR)[1]);
-        this.props.deleteWaypointPicture(this.props.ride, id !== RIDE_POINT.SOURCE && id !== RIDE_POINT.DESTINATION ? parseInt(id) : id, pictureIdList);
-    }
+    onChangeBike = (val) => this.setState({ selectedBikeId: val });
 
     onChangeDescription = (val) => this.setState({ description: val });
 
-    renderRideWaypoint = ({ item, index }) => {
-        return <ListItem avatar style={styles.listItem}>
-            <Left style={styles.itemLeft}>
-                <View style={styles.itemLeftView}>
-                    <View style={styles.verticalBorderView}></View>
-                    <View style={{ marginVertical: heightPercentageToDP(1), width: '100%', justifyContent: 'center', alignItems: 'center' }}>
-                        <NBIcon name='map-marker' type='MaterialCommunityIcons' style={styles.iconLeft} />
-                        <DefaultText style={{ textAlign: 'center', fontSize: widthPercentageToDP(5) }}>
-                            {
-                                item.name
-                                    ? `${index + 1}. ${item.name}`
-                                    : `Unknown (${item.lat}, ${item.lng})`
-                            }
-                        </DefaultText>
-                    </View>
-                    <View style={styles.verticalBorderView}></View>
-                </View>
-            </Left>
-            <Body style={styles.itemBody}>
-                {
-                    item.description
-                        ? this.state.editingPointId === index
-                            ? <View style={[styles.ptDescrCont, styles.descrActive]}>
-                                <TextInput multiline={true} style={{ flex: 1 }} value={this.state.description} onChangeText={this.onChangeDescription} />
-                                <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
-                            </View>
-                            : <View style={[styles.ptDescrCont, styles.descrActive]}>
-                                <DefaultText style={{ flex: 1 }}>{item.description}</DefaultText>
-                                {
-                                    this.props.isEditable
-                                        ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'edit', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(index)} />
-                                        : null
-                                }
-                            </View>
-                        : this.state.editingPointId === index
-                            ? <View style={styles.ptDescrCont}>
-                                <TextInput multiline={true} style={{ flex: 1 }} placeholder='Add description for this point' value={this.state.description} onChangeText={this.onChangeDescription} />
-                                <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
-                            </View>
-                            : <View style={styles.ptDescrCont}>
-                                <DefaultText style={{ flex: 1 }}>{this.props.isEditable ? `Add description for this point` : `No description for this point`}</DefaultText>
-                                {
-                                    this.props.isEditable
-                                        ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'add', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(index)} />
-                                        : null
-                                }
-                            </View>
-                }
-                <View style={styles.photosContainer}>
-                    {
-                        item.pictureList ?
-                            item.pictureList.map((photo, idx) => <View key={item.pictureIdList[idx]} style={styles.photoFrame}>
-                                <TouchableOpacity style={{ flex: 1 }} onLongPress={() => this.changeToImageSelectionMode(index + INDEX_ID_SEPARATOR + item.pictureIdList[idx])} onPress={() => this.onSelectImage(index + INDEX_ID_SEPARATOR + item.pictureIdList[idx])}>
-                                    <Image style={styles.photo} source={{ uri: photo }} ref={imgRef => this.allImageRef[index + INDEX_ID_SEPARATOR + item.pictureIdList[idx]] = imgRef} />
-                                    <View style={[styles.selection, { height: this.state.selectedImages && this.state.selectedImages[index + INDEX_ID_SEPARATOR + item.pictureIdList[idx]] ? '100%' : 0 }]}>
-                                        <NBIcon name='md-checkmark' type='Ionicons' style={styles.whiteFont}></NBIcon>
-                                    </View>
-                                </TouchableOpacity>
-                            </View>)
-                            : item.pictureIdList ?
-                                item.pictureIdList.map((photo, idx) => <View key={item.pictureIdList[idx]} style={styles.photoFrame}>
-                                    <Image style={styles.photo} source={require('../../../assets/img/placeholder-image.jpg')} />
-                                </View>)
-                                : null
-                    }
-                    {
-                        this.props.isEditable
-                            ? !item.pictureIdList || item.pictureIdList.length < 4
-                                ? this.state.uploadProgress[index] === true
-                                    ? <View style={styles.photoFramePlaceholder}>
-                                        <DefaultText style={styles.whiteFont}>Uploading</DefaultText>
-                                        <ActivityIndicator size='large' color='#FFF' animating={this.state.uploadProgress[index] ? true : false} />
-                                    </View>
-                                    : <TouchableOpacity style={styles.photoFramePlaceholder} onPress={() => this.onPressAddPhotos(index)}>
-                                        <DefaultText style={styles.whiteFont}>Add Photo</DefaultText>
-                                        <NBIcon name='add' type='MaterialIcons' style={styles.whiteFont} />
-                                    </TouchableOpacity>
-                                : null
-                            : <DefaultText>No photos added</DefaultText>
-                    }
-                </View>
-            </Body>
-        </ListItem>
+    onChangeName = (val) => this.setState({ name: val });
+
+    onChangePrivacyMode = (val) => this.setState({ isPrivate: val });
+
+    enableEditingRide = () => this.setState({ isEditingRide: true, showOptionsModal: false })
+
+    openOptionsModal = () => {
+        this.setState({ showOptionsModal: true });
     }
 
-    render() {
-        const { ride, onClose } = this.props;
-        const { selectedImages } = this.state;
-        if (ride.rideId === null) return null;
-        const activeImageStyle = {
-            // transform: [{ scale: `${this.dimensions.x / this.oldPosition.width},${this.dimensions.y / this.oldPosition.height}` }],
-            // transform: [{ translateX: this.position.x }, { translateY: this.position.y }],
-            width: this.dimensions.x,
-            height: this.dimensions.y,
-            left: this.position.x,
-            top: this.position.y
-        };
-        const animatedCrossOpacity = {
-            opacity: this.animation
-        };
+    hideOptionsModal = () => this.setState({ showOptionsModal: false });
 
-        return <View style={styles.modalRoot}>
-            <View style={styles.container}>
-                <View style={styles.header}>
-                    <View style={styles.headerLeft}>
-                        {
-                            selectedImages
-                                ? <IconButton title={`${Object.keys(selectedImages).length} images`} titleStyle={[styles.whiteFont, { fontWeight: 'bold', fontSize: widthPercentageToDP(4) }]} iconProps={{ name: 'delete', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }} onPress={this.onDeletePictures} />
-                                : <DefaultText style={styles.headerText}>{`${ride.name} - Itinerary`}</DefaultText>
-                        }
-                    </View>
-                    <View style={styles.headerRight}>
-                        <IconButton iconProps={{ name: 'window-close', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(8), color: '#fff' } }} onPress={onClose} />
-                    </View>
-                </View>
-                <View style={styles.bodyContent}>
-                    <ScrollView contentContainerStyle={{ paddingBottom: heightPercentageToDP(1) }}>
-                        {
-                            ride.description
-                                ? this.state.editingPointId === ride.rideId
-                                    ? <View style={[styles.mainDescrCont, styles.descrActive]}>
-                                        <TextInput multiline={true} style={{ flex: 1 }} value={this.state.description} onChangeText={this.onChangeDescription} />
-                                        <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
-                                    </View>
-                                    : <View style={[styles.mainDescrCont, styles.descrActive]}>
-                                        <DefaultText style={{ flex: 1 }}>{ride.description}</DefaultText>
-                                        {
-                                            this.props.isEditable
-                                                ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'edit', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(ride.rideId)} />
-                                                : null
-                                        }
-                                    </View>
-                                : this.state.editingPointId === ride.rideId
-                                    ? <View style={styles.mainDescrCont}>
-                                        <TextInput multiline={true} style={{ flex: 1 }} placeholder='Add description for ride' value={this.state.description} onChangeText={this.onChangeDescription} />
-                                        <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
-                                    </View>
-                                    : <View style={styles.mainDescrCont}>
-                                        <DefaultText style={{ flex: 1 }}>{this.props.isEditable ? `Add description for ride` : `No description for ride`}</DefaultText>
-                                        {
-                                            this.props.isEditable
-                                                ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'add', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(ride.rideId)} />
-                                                : null
-                                        }
-                                    </View>
+    onPressWaypoint = (waypointType, selectedPost, index) => {
+        const pictureIds = selectedPost.pictureList ? selectedPost.pictureList.map(item => ({ id: item.id })) : [];
+        Actions.push(PageKeys.POST_FORM, {
+            comingFrom: PageKeys.ITINERARY_SECTION, updateRideOnMap: this.props.comingFrom === PageKeys.MAP,
+            waypointType, selectedPost: { ...selectedPost, pictureIds }, rideId: this.props.ride.rideId, index: waypointType === RIDE_POINT.WAYPOINT ? index - 1 : null,
+            onDismiss: this.props.comingFrom !== PageKeys.MAP ? () => new Promise((resolve, reject) => {
+                this.fetchRideInfo();
+                resolve("done");
+            }) : null
+        })
+    }
 
-                        }
-                        {
-                            ride.source
-                                ? <ListItem avatar style={styles.listItem}>
-                                    <Left style={styles.itemLeft}>
-                                        <View style={styles.itemLeftView}>
-                                            <View style={styles.verticalBorderView}></View>
-                                            <View style={{ marginVertical: heightPercentageToDP(1), width: '100%', justifyContent: 'center', alignItems: 'center' }}>
-                                                <NBIcon name='map-pin' type='FontAwesome' style={[styles.iconLeft, { paddingLeft: widthPercentageToDP(2) }]} />
-                                                <DefaultText style={{ textAlign: 'center', fontSize: widthPercentageToDP(5) }}>
-                                                    {
-                                                        ride.source.name
-                                                            ? ride.source.name
-                                                            : `Unknown (${ride.source.lat}, ${ride.source.lng})`
-                                                    }
-                                                </DefaultText>
-                                            </View>
-                                            <View style={styles.verticalBorderView}></View>
-                                        </View>
-                                    </Left>
-                                    <Body style={styles.itemBody}>
-                                        {
-                                            ride.source.description
-                                                ? this.state.editingPointId === RIDE_POINT.SOURCE
-                                                    ? <View style={[styles.ptDescrCont, styles.descrActive]}>
-                                                        <TextInput multiline={true} style={{ flex: 1 }} value={this.state.description} onChangeText={this.onChangeDescription} />
-                                                        <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
-                                                    </View>
-                                                    : <View style={[styles.ptDescrCont, styles.descrActive]}>
-                                                        <DefaultText style={{ flex: 1 }}>{ride.source.description}</DefaultText>
-                                                        {
-                                                            this.props.isEditable
-                                                                ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'edit', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(RIDE_POINT.SOURCE)} />
-                                                                : null
-                                                        }
-                                                    </View>
-                                                : this.state.editingPointId === RIDE_POINT.SOURCE
-                                                    ? <View style={styles.ptDescrCont}>
-                                                        <TextInput multiline={true} style={{ flex: 1 }} placeholder='Add description for source' value={this.state.description} onChangeText={this.onChangeDescription} />
-                                                        <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
-                                                    </View>
-                                                    : <View style={styles.ptDescrCont}>
-                                                        <DefaultText style={{ flex: 1 }}>{this.props.isEditable ? `Add description for source` : `No description for source`}</DefaultText>
-                                                        {
-                                                            this.props.isEditable
-                                                                ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'add', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(RIDE_POINT.SOURCE)} />
-                                                                : null
-                                                        }
-                                                    </View>
-                                        }
-                                        <View style={styles.photosContainer}>
-                                            {
-                                                ride.source.pictureList ?
-                                                    ride.source.pictureList.map((photo, idx) => <View key={ride.source.pictureIdList[idx]} style={styles.photoFrame}>
-                                                        <TouchableOpacity style={{ flex: 1 }} onLongPress={() => this.changeToImageSelectionMode(RIDE_POINT.SOURCE + INDEX_ID_SEPARATOR + ride.source.pictureIdList[idx])} onPress={() => this.onSelectImage(RIDE_POINT.SOURCE + INDEX_ID_SEPARATOR + ride.source.pictureIdList[idx])}>
-                                                            <Image style={styles.photo} source={{ uri: photo }} ref={imgRef => this.allImageRef[RIDE_POINT.SOURCE + INDEX_ID_SEPARATOR + ride.source.pictureIdList[idx]] = imgRef} />
-                                                            <View style={[styles.selection, { height: this.state.selectedImages && this.state.selectedImages[RIDE_POINT.SOURCE + INDEX_ID_SEPARATOR + ride.source.pictureIdList[idx]] ? '100%' : 0 }]}>
-                                                                <NBIcon name='md-checkmark' type='Ionicons' style={styles.whiteFont}></NBIcon>
-                                                            </View>
-                                                        </TouchableOpacity>
-                                                    </View>)
-                                                    : ride.source.pictureIdList ?
-                                                        ride.source.pictureIdList.map((photo, idx) => <View key={ride.source.pictureIdList[idx]} style={styles.photoFrame}>
-                                                            <Image style={styles.photo} source={require('../../../assets/img/placeholder-image.jpg')} />
-                                                        </View>)
-                                                        : null
-                                            }
-                                            {
-                                                this.props.isEditable
-                                                    ? !ride.source.pictureIdList || ride.source.pictureIdList.length < 4
-                                                        ? this.state.uploadProgress[RIDE_POINT.SOURCE] === true
-                                                            ? <View style={styles.photoFramePlaceholder}>
-                                                                <DefaultText style={styles.whiteFont}>Uploading</DefaultText>
-                                                                <ActivityIndicator size='large' color='#FFF' animating={this.state.uploadProgress[RIDE_POINT.SOURCE] ? true : false} />
-                                                            </View>
-                                                            : <TouchableOpacity style={styles.photoFramePlaceholder} onPress={() => this.onPressAddPhotos(RIDE_POINT.SOURCE)}>
-                                                                <DefaultText style={styles.whiteFont}>Add Photo</DefaultText>
-                                                                <NBIcon name='add' type='MaterialIcons' style={styles.whiteFont} />
-                                                            </TouchableOpacity>
-                                                        : null
-                                                    : <DefaultText>No photos added</DefaultText>
-                                            }
-                                        </View>
-                                    </Body>
-                                </ListItem>
-                                : null
-                        }
-                        <FlatList
-                            extraData={this.state}
-                            data={ride.waypoints}
-                            renderItem={this.renderRideWaypoint}
-                            keyExtractor={this.pointKeyExtractor}
-                        // ItemSeparatorComponent={this.renderSeparator}
-                        />
-                        {
-                            ride.destination
-                                ? <ListItem avatar style={styles.listItem}>
-                                    <Left style={styles.itemLeft}>
-                                        <View style={styles.itemLeftView}>
-                                            <View style={styles.verticalBorderView}></View>
-                                            <View style={{ marginVertical: heightPercentageToDP(1), width: '100%', justifyContent: 'center', alignItems: 'center' }}>
-                                                <NBIcon name='flag-variant' type='MaterialCommunityIcons' style={styles.iconLeft} />
-                                                <DefaultText style={{ textAlign: 'center', fontSize: widthPercentageToDP(5) }}>
-                                                    {
-                                                        ride.destination.name
-                                                            ? ride.destination.name
-                                                            : `Unknown (${ride.destination.lat}, ${ride.destination.lng})`
-                                                    }
-                                                </DefaultText>
-                                            </View>
-                                            <View style={styles.verticalBorderView}></View>
-                                        </View>
-                                    </Left>
-                                    <Body style={styles.itemBody}>
-                                        {
-                                            ride.destination.description
-                                                ? this.state.editingPointId === RIDE_POINT.DESTINATION
-                                                    ? <View style={[styles.ptDescrCont, styles.descrActive]}>
-                                                        <TextInput multiline={true} style={{ flex: 1 }} value={this.state.description} onChangeText={this.onChangeDescription} />
-                                                        <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
-                                                    </View>
-                                                    : <View style={[styles.ptDescrCont, styles.descrActive]}>
-                                                        <DefaultText style={{ flex: 1 }}>{ride.destination.description}</DefaultText>
-                                                        {
-                                                            this.props.isEditable
-                                                                ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'edit', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(RIDE_POINT.DESTINATION)} />
-                                                                : null
-                                                        }
-                                                    </View>
-                                                : this.state.editingPointId === RIDE_POINT.DESTINATION
-                                                    ? <View style={styles.ptDescrCont}>
-                                                        <TextInput multiline={true} style={{ flex: 1 }} placeholder='Add description for destination' value={this.state.description} onChangeText={this.onChangeDescription} />
-                                                        <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'md-checkmark', type: 'Ionicons', style: styles.whiteFont }} onPress={this.onPressSubmitDescription} />
-                                                    </View>
-                                                    : <View style={styles.ptDescrCont}>
-                                                        <DefaultText style={{ flex: 1 }}>{this.props.isEditable ? `Add description for destination` : `No description for destination`}</DefaultText>
-                                                        {
-                                                            this.props.isEditable
-                                                                ? <IconButton style={styles.addEditButtonContainer} iconProps={{ name: 'add', type: 'MaterialIcons', style: styles.whiteFont }} onPress={() => this.onPressEditDescription(RIDE_POINT.DESTINATION)} />
-                                                                : null
-                                                        }
-                                                    </View>
-                                        }
-                                        <View style={styles.photosContainer}>
-                                            {
-                                                ride.destination.pictureList ?
-                                                    ride.destination.pictureList.map((photo, idx) => <View key={ride.destination.pictureIdList[idx]} style={styles.photoFrame}>
-                                                        <TouchableOpacity style={{ flex: 1 }} onLongPress={() => this.changeToImageSelectionMode(RIDE_POINT.DESTINATION + INDEX_ID_SEPARATOR + ride.destination.pictureIdList[idx])} onPress={() => this.onSelectImage(RIDE_POINT.DESTINATION + INDEX_ID_SEPARATOR + ride.destination.pictureIdList[idx])}>
-                                                            <Image style={styles.photo} source={{ uri: photo }} ref={imgRef => this.allImageRef[RIDE_POINT.DESTINATION + INDEX_ID_SEPARATOR + ride.destination.pictureIdList[idx]] = imgRef} />
-                                                            <View style={[styles.selection, { height: this.state.selectedImages && this.state.selectedImages[RIDE_POINT.DESTINATION + INDEX_ID_SEPARATOR + ride.destination.pictureIdList[idx]] ? '100%' : 0 }]}>
-                                                                <NBIcon name='md-checkmark' type='Ionicons' style={styles.whiteFont}></NBIcon>
-                                                            </View>
-                                                        </TouchableOpacity>
-                                                    </View>)
-                                                    : ride.destination.pictureIdList ?
-                                                        ride.destination.pictureIdList.map((photo, idx) => <View key={ride.destination.pictureIdList[idx]} style={styles.photoFrame}>
-                                                            <Image style={styles.photo} source={require('../../../assets/img/placeholder-image.jpg')} />
-                                                        </View>)
-                                                        : null
-                                            }
-                                            {
-                                                this.props.isEditable
-                                                    ? !ride.destination.pictureIdList || ride.destination.pictureIdList.length < 4
-                                                        ? this.state.uploadProgress[RIDE_POINT.DESTINATION] === true
-                                                            ? <View style={styles.photoFramePlaceholder}>
-                                                                <DefaultText style={styles.whiteFont}>Uploading</DefaultText>
-                                                                <ActivityIndicator size='large' color='#FFF' animating={this.state.uploadProgress[RIDE_POINT.DESTINATION] ? true : false} />
-                                                            </View>
-                                                            : <TouchableOpacity style={styles.photoFramePlaceholder} onPress={() => this.onPressAddPhotos(RIDE_POINT.DESTINATION)}>
-                                                                <DefaultText style={styles.whiteFont}>Add Photo</DefaultText>
-                                                                <NBIcon name='add' type='MaterialIcons' style={styles.whiteFont} />
-                                                            </TouchableOpacity>
-                                                        : null
-                                                    : <DefaultText>No photos added</DefaultText>
-                                            }
-                                        </View>
-                                    </Body>
-                                </ListItem>
-                                : null
-                        }
-                    </ScrollView>
-                </View>
+    onPressPicture = (waypointType, item, index) => {
+        if (this.state.isEditingRide) {
+            this.onPressWaypoint(waypointType, item, index)
+        } else {
+            const updateList = []
+            item.pictureList.forEach(picture =>
+                updateList.push({ id: picture.id, description: item.description })
+            )
+            this.openPicture(updateList)
+        }
+    }
+
+    onDescriptionLayout({ nativeEvent: { lines } }, index) {
+        lines.length > NUM_OF_DESC_LINES && this.setState(prevState => ({ showMoreSections: { ...prevState.showMoreSections, [index]: true } }));
+    }
+
+    showMoreContent = (index) => {
+        this.setState(prevState => {
+            const { [index]: deletedKey, ...otherKeys } = prevState.showMoreSections;
+            if (Object.keys(otherKeys).length === 0) {
+                return { showMoreSections: {}, activeIndex: index };
+            } else {
+                return { showMoreSections: { ...otherKeys }, activeIndex: index };
+            }
+        })
+    }
+
+    renderWayPointContent = (item, waypointType, index) => {
+        const { isEditingRide, activeIndex } = this.state;
+        return <View style={styles.waypointContainer}>
+            <View style={styles.leftContainer}>
+                {
+                    waypointType === RIDE_POINT.WAYPOINT ?
+                        <View style={styles.dotIcon}></View>
+                        : <IconButton iconProps={{ name: 'location-pin', type: 'Entypo', style: styles.sourceIcon }} />
+                }
+                {
+                    waypointType === RIDE_POINT.DESTINATION ?
+                        null
+                        : <View style={[styles.dottedLine, { height: isEditingRide || item.pictureList && item.pictureList.length ? 93 : 20 }]} />
+                }
             </View>
-            <View style={StyleSheet.absoluteFill} pointerEvents={this.state.activeImage ? 'auto' : 'none'}>
-                <TouchableOpacity style={{ flex: 1, zIndex: 1000, backgroundColor: this.state.activeImage ? 'rgba(0,0,0,0.8)' : 'transparent' }} ref={elRef => this.viewImage = elRef} onPress={this.hideLargerImage}>
-                    <Animated.Image
-                        source={this.state.activeImage ? { uri: this.state.activeImage } : null}
-                        style={[{ resizeMode: 'cover', top: 0, left: 0, height: null, width: null }, activeImageStyle]}
-                    ></Animated.Image>
-                    {/* <DefaultText style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>X</DefaultText> */}
-                    <Animated.View style={[{ position: 'absolute', top: heightPercentageToDP(27), right: 0, backgroundColor: APP_COMMON_STYLES.infoColor, height: widthPercentageToDP(8), width: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4), alignItems: 'center' }, animatedCrossOpacity]}>
-                        <TouchableOpacity onPress={this.hideLargerImage}>
-                            <DefaultText style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>X</DefaultText>
+            <View style={styles.bodyContainer}>
+                <DefaultText style={styles.waypointName}>
+                    {
+                        item.name
+                            ? item.name
+                            : `Unknown (${item.lat}, ${item.lng})`
+                    }
+                </DefaultText>
+                {
+                    (item.pictureList && item.pictureList.length > 0) || (item.description)
+                        ? <TouchableOpacity style={styles.waypointDetail} onPress={() => isEditingRide ? this.onPressWaypoint(waypointType, item, index) : this.onPressPicture(waypointType, item, index)}>
+                            {
+                                (item.pictureList && item.pictureList.length > 0)
+                                    ? <View style={styles.waypointPic}>
+                                        <Image source={{ uri: `${GET_PICTURE_BY_ID}${item.pictureList[item.pictureList.length - 1].id}` }} style={{ width: null, height: null, flex: 1 }} />
+                                        {
+                                            item.pictureList.length > 1
+                                                ? <View style={styles.numberOfPictureCont}><DefaultText style={styles.numberOfPictureText}>{item.pictureList.length}</DefaultText></View>
+                                                : null
+                                        }
+                                    </View>
+                                    : <View style={[styles.waypointPic, { alignItems: 'center', justifyContent: 'center' }]}>
+                                        <ImageButton imageSrc={require('../../../assets/img/cam-icon-light-gray.png')} imgStyles={[styles.cameraIcon]} onPress={() => isEditingRide ? this.onPressWaypoint(waypointType, item, index) : null} />
+                                    </View>
+                            }
+                            <View style={styles.waypointDescriptionCont}>
+                                <DefaultText style={[styles.waypointDescription, { color: item.description ? '#4E4D4D' : '#9A9A9A' }]} numberOfLines={1}>{item.description ? item.description : 'additional description'}</DefaultText>
+                            </View>
                         </TouchableOpacity>
-                    </Animated.View>
-                </TouchableOpacity>
-                {/* <Animated.View style={[{ flex: 1, zIndex: 900, backgroundColor: '#fff', padding: 20, paddingTop: 50, paddingBotton: 10 }, animatedContentStyle]}>
-                    <DefaultText>TESING TEXT CONTENT</DefaultText>
-                </Animated.View> */}
+                        : isEditingRide
+                            ? <TouchableOpacity style={styles.waypointDetail} onPress={() => this.onPressWaypoint(waypointType, item, index)}>
+                                <View style={[styles.waypointPic, { alignItems: 'center', justifyContent: 'center' }]}>
+                                    <ImageButton imageSrc={require('../../../assets/img/cam-icon-light-gray.png')} imgStyles={[styles.cameraIcon]} />
+                                </View>
+                                <View style={styles.waypointDescriptionCont}>
+                                    <DefaultText style={[styles.waypointDescription, { color: item.description ? '#4E4D4D' : '#9A9A9A' }]}>{'additional description'}</DefaultText>
+                                </View>
+                            </TouchableOpacity>
+                            : null
+                }
+
             </View>
-        </View >
+        </View>
+    }
+
+    openPicture = (pictureList) => {
+        this.setState({ showSwipingPictureModal: true, selectedPictureIdLIst: pictureList });
+    }
+
+    onCancelVisiblePicture = () => {
+        this.setState({ showSwipingPictureModal: false, selectedPictureIdLIst: [] });
+    }
+
+    hideCommentSection = () => this.setState({ commentMode: false, activeIndex: -1 })
+
+    render() {
+        const { ride, bike, user } = this.props;
+        const { selectedBikeId, bikeList, isPrivate, showOptionsModal, name, description, isEditingRide, showSwipingPictureModal, selectedPictureIdLIst, commentMode, activeIndex } = this.state;
+        if (ride === undefined) return null;
+        if (ride.rideId === null) return null;
+        const BIKE_LIST = [];
+        console.log('\n\n\n bike :', ride)
+        if(ride.userId === user.userId || ride.rideType === RIDE_TYPE.BUILD_RIDE){
+            console.log('\n\n\n if')
+            if (bikeList.length>0) {
+                bikeList.forEach(bike => BIKE_LIST.push({ label: bike.name, value: bike.spaceId }));
+            } else {
+                // BIKE_LIST.push({ label: bike.name, value: bike.spaceId });
+            }
+        }
+        else{
+            console.log('\n\n\n if', bike && bike.spaceId)
+            if(ride && ride.spaceId && ride.space){
+                BIKE_LIST.push({ label: ride.space.name, value: ride.space.id });
+            }
+            else{
+                console.log('\n\n\n else')
+            }
+        }
+        
+        return <BasePage
+            heading={ride.name}
+            headerRightIconProps={( this.props.comingFrom === PageKeys.MAP && ride.userId === user.userId && !this.state.isEditingRide) ? { name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 20 }, onPress: this.openOptionsModal } : null}>
+            {
+                commentMode ?
+                    <View style={[{ height: heightPercentageToDP(100), width: widthPercentageToDP(100), elevation: 12, position: 'absolute', zIndex: 900 }]}>
+                        <CommentSection isEditable={false} showInEditMode={false} index={activeIndex} onClose={this.hideCommentSection} />
+                    </View>
+                    : null
+            }
+            <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
+                <View style={APP_COMMON_STYLES.optionsContainer}>
+                    <LinkButton style={APP_COMMON_STYLES.optionBtn} title='Edit' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.enableEditingRide} />
+                </View>
+            </BaseModal>
+            {/* {showSwipingPictureModal && <GesturedCarouselModal isVisible={showSwipingPictureModal} onCancel={this.onCancelVisiblePicture}
+                pictureIds={selectedPictureIdLIst}
+                isGestureEnable={true}
+                isZoomEnable={true}
+                initialCarouselIndex={0}
+                innerConatiner={{ marginTop: heightPercentageToDP(20) }}
+            />} */}
+            {
+                 showSwipingPictureModal && <ImageViewer FooterComponent={(img)=>{
+                    return   ( <View style={{ height: 100,backgroundColor:'rgba(0, 0, 0, 0.37)',display:'flex',flexDirection:'column',justifyContent:'space-between'}}>
+                            <DefaultText style={{ fontSize: 16, color: 'white',marginLeft:20 }} text={selectedPictureIdLIst[img.imageIndex].description} numberOfLines={2}/>
+                            <Text style={{ fontSize: 16, color: 'white',textAlign:'center',marginBottom:19, }} >{(img.imageIndex+1)+' / '+selectedPictureIdLIst.length}</Text>
+                            </View>)
+                }} HeaderComponent={()=>{
+                    return <View style={{height:IS_ANDROID?heightPercentageToDP(6):heightPercentageToDP(10),backgroundColor:'rgba(0, 0, 0, 0.37)',display:'flex',flexDirection:'row',justifyContent:'flex-end',alignItems:'flex-end'}}>
+                        <View style={{width:50,height:50,display:'flex',flexDirection:'row',justifyContent:'center',alignItems:'center',}}>
+                        <NBIcon name='close' fontSize={20}  style={{ color: '#fff'}} onPress={this.onCancelVisiblePicture} />
+                        </View>
+                    </View>
+                }} visible={showSwipingPictureModal} onRequestClose={this.onCancelVisiblePicture}  images={selectedPictureIdLIst.map(image=>{
+                        return {
+                            ...image,uri: `${GET_PICTURE_BY_ID}${image.id.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}`
+                        }
+                    })} imageIndex={0} />
+                }
+            <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps={'handled'}>
+                <View style={styles.subHeader}>
+                    <View style={{ flexDirection: 'row' }}>
+                        {/* <ImageButton imageSrc={require('../../../assets/img/distance.png')} imgStyles={styles.subHeaderIcon} /> */}
+                        <DistanceIcon />
+                        <DefaultText style={styles.subHeaderText}>{this.getDistanceAsFormattedString(ride.totalDistance, this.props.user.distanceUnit)}</DefaultText>
+                    </View>
+                    <View style={{ flexDirection: 'row' }}>
+                        {/* <ImageButton imageSrc={require('../../../assets/img/duration.png')} imgStyles={styles.subHeaderIcon} /> */}
+                        <DurationIcon />
+                        <DefaultText style={styles.subHeaderText}>{this.getTimeAsFormattedString(ride.totalTime)}</DefaultText>
+                    </View>
+                    <View style={{ flexDirection: 'row' }}>
+                        {/* <ImageButton imageSrc={require('../../../assets/img/date.png')} imgStyles={styles.subHeaderIcon} /> */}
+                        <CalendarIcon />
+                        <DefaultText style={styles.subHeaderText}>{this.getFormattedDate(ride.date)}</DefaultText>
+                    </View>
+                </View>
+                <View style={styles.rideDetailCont}>
+                    <DefaultText style={{ fontFamily: CUSTOM_FONTS.robotoBold, fontSize: 14, letterSpacing: 1.2, marginBottom: 3 }}>RIDE NAME</DefaultText>
+                    {
+                        isEditingRide
+                            ? <LabeledInputPlaceholder
+                                containerStyle={{ backgroundColor: '#F4F4F4', borderBottomWidth: 0, paddingRight: 10, }}
+                                inputValue={name} inputStyle={{ paddingVertical: 2, fontSize: 15, }}
+                                returnKeyType='next'
+                                onChange={this.onChangeName}
+                                hideKeyboardOnSubmit={true} />
+                            : <DefaultText style={{ fontFamily: CUSTOM_FONTS.roboto, fontSize: 15, color: ride.name ? '#000000' : '#ACACAC', paddingRight: 10, }}>{ride.name || '- - -'}</DefaultText>
+                    }
+                    <DefaultText style={{ fontFamily: CUSTOM_FONTS.robotoBold, fontSize: 14, letterSpacing: 1.2, marginTop: 20, marginBottom: 3 }}>RIDE DESCRIPTION</DefaultText>
+                    {
+                        isEditingRide
+                            ? <LabeledInputPlaceholder
+                                multiline={true}
+                                containerStyle={{ backgroundColor: '#F4F4F4', borderBottomWidth: 0, paddingRight: 10, }}
+                                inputValue={description} inputStyle={{ paddingVertical: 2, fontSize: 15, }}
+                                returnKeyType='default'
+                                onChange={this.onChangeDescription} />
+                            : <DefaultText style={{ fontFamily: CUSTOM_FONTS.roboto, fontSize: 15, color: ride.description ? '#000000' : '#ACACAC', paddingRight: 10, }}>{ride.description || '- - -'}</DefaultText>
+                    }
+                    {this.props.rideType==RIDE_TYPE.RECORD_RIDE?<View style={styles.dropdownContainer}>
+                        <IconicList
+                            disabled={BIKE_LIST.length === 0 || !isEditingRide}
+                            iconProps={IS_ANDROID ? {} : { type: 'MaterialIcons', name: 'arrow-drop-down', style: { color: APP_COMMON_STYLES.infoColor, fontSize: 28 } }}
+                            pickerStyle={[{ borderBottomWidth: 0 }, IS_ANDROID ? { flex: 1 } : null]}
+                            textStyle={{ paddingLeft: 10, fontSize: 14, bottom: 6 }}
+                            selectedValue={selectedBikeId}
+                            values={BIKE_LIST}
+                            placeholder={bike ? 'SELECT A BIKE' : null}
+                            outerContainer={{ flex: 1, alignItems: 'flex-end' }}
+                            containerStyle={[styles.borderStyle, { flex: 1 }]}
+                            innerContainerStyle={{ height: 24 }}
+                            onChange={this.onChangeBike} />
+                    </View>:null
+                    }
+                    {
+                        ride.isRecorded === false || ride.status === RECORD_RIDE_STATUS.COMPLETED
+                            ? <View style={styles.switchBtnContainer}>
+                                <LinkButton style={[styles.grayBorderBtn, { marginRight: 17 }, isPrivate ? null : styles.greenLinkBtn]} title='ROAD CREW' titleStyle={[styles.grayBorderBtnText, { color: isPrivate ? '#9A9A9A' : '#fff' }]} onPress={isEditingRide ? () => isPrivate === true && this.onChangePrivacyMode(false) : null} />
+                                <LinkButton style={[styles.grayBorderBtn, isPrivate ? styles.redLinkBtn : null]} title='ONLY ME' titleStyle={[styles.grayBorderBtnText, { color: isPrivate ? '#fff' : '#9A9A9A' }]} onPress={isEditingRide ? () => isPrivate === false && this.onChangePrivacyMode(true) : null} />
+                            </View>
+                            : null
+                    }
+
+                </View>
+                {isEditingRide && <BasicButton title='UPDATE' style={styles.submitBtn} titleStyle={{ letterSpacing: 1.4, fontSize: 14, fontFamily: CUSTOM_FONTS.robotoBold }} onPress={this.onPressUpdate} />}
+                <View style={styles.hDivider} />
+                <View>
+                    {this.state.isLoadingWaypoints && <ImageLoader containerStyle={{ backgroundColor: 'transparent' }} show={this.state.isLoadingWaypoints} />}
+                    {ride.source && this.renderWayPointContent(ride.source, RIDE_POINT.SOURCE, 0)}
+                    <FlatList
+                        keyboardShouldPersistTaps={'handled'}
+                        extraData={this.state}
+                        data={ride.waypoints}
+                        renderItem={({ item, index }) => this.renderWayPointContent(item, RIDE_POINT.WAYPOINT, ride.source ? index + 1 : index)}
+                        keyExtractor={this.pointKeyExtractor}
+                    />
+                    {ride.destination && this.renderWayPointContent(ride.destination, RIDE_POINT.DESTINATION, ride.source ? ride.waypoints.length + 1 : ride.waypoints.length)}
+                </View>
+            </ScrollView>
+        </BasePage >
     }
 }
 const mapStateToProps = (state) => {
     const { ride } = state.RideInfo.present;
     const { user } = state.UserAuth;
-    return { user, ride };
+    // const { rides } = state.
+    const { currentBike: bike } = state.GarageInfo;
+    const { hasNetwork, lastApi, isRetryApi } = state.PageState;
+    return ride && ride.rideId ? { user, ride, bike, hasNetwork, lastApi, isRetryApi } : { user, bike, hasNetwork, lastApi, isRetryApi };
 }
 const mapDipatchToProps = (dispatch) => {
     return {
-        updateRide: (updates, rideType) => {
+        updateRide: (updates, rideType, updateRideOnMap, successCallback) => {
             dispatch(apiLoaderActions(true));
             updateRide(updates, () => {
+                typeof successCallback === 'function' && successCallback()
                 dispatch(apiLoaderActions(false));
-                dispatch(updateRideAction(updates));
-                dispatch(updateRideInListAction({ ride: updates, rideType }));
+                updateRideOnMap && dispatch(updateRideAction(updates));
+                if (rideType === POST_TYPE.LOGGED_RIDES) {
+                    dispatch(editBikeListAction({ ride: updates, postType: rideType, }));
+                }
+                else {
+                    dispatch(updateRideInListAction({ ride: updates, rideType }));
+                }
             }, (err) => dispatch(apiLoaderActions(false)))
         },
-        updateSource: (updates, point, ride) => dispatch(updateSource(updates, point, ride)),
-        updateWaypoint: (updates, point, ride, index) => dispatch(updateWaypoint(updates, point, ride, index)),
-        updateDestination: (updates, point, ride) => dispatch(updateDestination(updates, point, ride)),
-        getWaypointPictureList: (id, pictureIdList) => dispatch(getWaypointPictureList(id, pictureIdList)),
-        deleteWaypointPicture: (ride, id, pictureIdList) => dispatch(deleteWaypointPicture(ride, id, pictureIdList)),
+        getRideInfo: (rideId, successCallback, errorCallback) => getRideInfo(rideId).then(res => {
+            console.log('getRideInfo success: ', res.data)
+            // dispatch(updateRideAction(res.data))  //sumit changes
+            dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+            successCallback(res.data)
+        }).catch(er => {
+            console.log('getRideInfo error: ', er)
+            handleServiceErrors(er, [rideId, successCallback, errorCallback], 'getRideInfo', true, true);
+        }),
+        resetErrorHandling: (state) => dispatch(resetErrorHandlingAction({ comingFrom: 'itinerary_section', isRetryApi: state })),
     };
 }
 export default connect(mapStateToProps, mapDipatchToProps)(ItinerarySection);
 
 const styles = StyleSheet.create({
     modalRoot: {
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        backgroundColor: '#fff',
         flex: 1,
-        flexDirection: 'row',
-        elevation: 20
-    },
-    container: {
-        width: widthPercentageToDP(100),
-        height: '100%',
-        backgroundColor: '#fff'
     },
     header: {
         backgroundColor: APP_COMMON_STYLES.headerColor,
         height: APP_COMMON_STYLES.headerHeight,
-        position: 'absolute',
         zIndex: 100,
         width: '100%',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        marginTop: APP_COMMON_STYLES.statusBar.height
     },
-    headerLeft: {
-
+    headerIconCont: {
+        paddingHorizontal: 0,
+        width: widthPercentageToDP(9),
+        height: widthPercentageToDP(9),
+        borderRadius: widthPercentageToDP(9) / 2,
+        backgroundColor: '#fff',
+        alignSelf: 'center',
+        marginLeft: 17
+    },
+    titleContainer: {
+        flex: 1,
+        flexDirection: 'column',
+        marginLeft: 17,
+        justifyContent: 'center',
+        alignSelf: 'center'
     },
     headerText: {
-        color: 'white',
-        fontSize: widthPercentageToDP(4),
-        fontWeight: 'bold',
-        marginLeft: widthPercentageToDP(2),
+        fontSize: 20,
+        color: '#FFFFFF',
+        backgroundColor: 'transparent',
+        letterSpacing: 0.8,
+        fontFamily: CUSTOM_FONTS.robotoBold
     },
     bodyContent: {
         flex: 1,
-        marginTop: APP_COMMON_STYLES.headerHeight
     },
-    listItem: {
-        marginBottom: heightPercentageToDP(5),
-        marginRight: widthPercentageToDP(1.5)
+    subHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        height: APP_COMMON_STYLES.headerHeight,
+        backgroundColor: '#585756',
+        alignItems: 'center'
     },
-    itemLeft: {
+    subHeaderIcon: {
+        height: 23,
+        width: 26,
+        alignSelf: 'center'
+    },
+    subHeaderText: {
+        color: '#EAEAEA',
+        fontSize: 15,
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        marginLeft: 5,
+        alignSelf: 'center'
+    },
+    rideDetailCont: {
+        marginLeft: 30,
+        marginTop: 33
+    },
+    dropdownContainer: {
+        borderRadius: 50,
+        borderWidth: 1,
+        borderColor: '#B2B2B2',
+        marginTop: 18
+    },
+    dropdownStyle: {
+        height: 26,
+        width: widthPercentageToDP(100) - CONTAINER_H_SPACE * 2,
+        borderBottomWidth: 0
+    },
+    dropdownTxt: {
+        top: 3,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        color: '#585756',
+        fontSize: 12
+    },
+    dropdownPlaceholderTxt: {
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        fontSize: 12,
+        top: 3
+    },
+    switchBtnContainer: {
+        flexDirection: 'row',
+        marginTop: 20
+    },
+    dropdownIcon: {
+        color: APP_COMMON_STYLES.infoColor,
+        height: 26,
+    },
+    grayBorderBtn: {
+        borderWidth: 1,
+        borderColor: '#9A9A9A',
+        alignItems: 'center',
+        width: 90,
+        paddingVertical: 3,
+        borderRadius: 22
+    },
+    grayBorderBtnText: {
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        letterSpacing: 0.5
+    },
+    greenLinkBtn: {
+        backgroundColor: '#2EB959',
+        borderColor: '#2EB959'
+    },
+    redLinkBtn: {
+        backgroundColor: '#B92E2E',
+        borderColor: '#B92E2E'
+    },
+    hDivider: {
+        backgroundColor: '#C4C6C8',
+        marginVertical: 20,
+        height: 1.5,
+    },
+    waypointContainer: {
+        marginHorizontal: 23,
+        flexDirection: 'row'
+    },
+    leftContainer: {
         flexDirection: 'column',
-        width: widthPercentageToDP(25),
-        paddingRight: widthPercentageToDP(2),
-        // borderRightWidth: 2,
-        // borderRightColor: APP_COMMON_STYLES.infoColor,
+        width: 23,
         paddingTop: 0,
     },
-    itemLeftView: {
-        flex: 1,
-        width: '100%',
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
-    iconLeft: {
-        fontSize: widthPercentageToDP(9),
+    sourceIcon: {
         color: APP_COMMON_STYLES.infoColor,
-        width: widthPercentageToDP(9),
+        fontSize: 25,
+        marginTop: 3
     },
-    horizontalBorderView: {
-        height: widthPercentageToDP(2),
-        width: '100%',
-        backgroundColor: APP_COMMON_STYLES.infoColor
-    },
-    verticalBorderView: {
-        flex: 1,
-        width: widthPercentageToDP(2),
-        backgroundColor: APP_COMMON_STYLES.infoColor
-    },
-    itemBody: {
-        marginLeft: 0,
-        borderBottomWidth: 0,
-        // borderLeftWidth: 2,
-        // borderLeftColor: APP_COMMON_STYLES.infoColor,
-        // borderColor: APP_COMMON_STYLES.infoColor,
-        paddingLeft: widthPercentageToDP(2)
-    },
-    mainDescrCont: {
-        padding: widthPercentageToDP(2),
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-around',
-        backgroundColor: '#DBDBDB',
-        minHeight: heightPercentageToDP(10),
-        marginVertical: heightPercentageToDP(1),
-        marginHorizontal: widthPercentageToDP(1.5),
-        borderRadius: widthPercentageToDP(1)
-    },
-    ptDescrCont: {
-        padding: widthPercentageToDP(2),
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        backgroundColor: '#DBDBDB',
-        borderRadius: widthPercentageToDP(1)
-    },
-    descrActive: {
-        backgroundColor: 'rgba(0, 118, 180, 0.2)'
-    },
-    // photosContainer: {
-    //     borderBottomColor: 'rgba(0,0,0,0.3)',
-    //     borderBottomWidth: 1,
-    //     paddingVertical: heightPercentageToDP(1),
-    //     paddingRight: widthPercentageToDP(1)
-    // },
-    // photoFrame: {
-    //     width: '100%',
-    //     height: heightPercentageToDP(20),
-    //     borderWidth: 1,
-    //     borderColor: APP_COMMON_STYLES.infoColor,
-    //     marginBottom: heightPercentageToDP(0.5)
-    // },
-    // photo: {
-    //     flex: 1,
-    //     width: null,
-    //     height: null
-    // },
-    photosContainer: {
-        paddingVertical: heightPercentageToDP(1),
-        // paddingRight: widthPercentageToDP(1),
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-    },
-    photoFrame: {
-        width: '48%',
-        height: heightPercentageToDP(20),
-        // borderWidth: 1,
-        // borderColor: APP_COMMON_STYLES.infoColor,
-        marginBottom: heightPercentageToDP(0.5),
-        marginRight: heightPercentageToDP(0.5),
-        // borderRadius: widthPercentageToDP(1)
-    },
-    photoFramePlaceholder: {
-        width: '48%',
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        height: heightPercentageToDP(20),
+    dottedLine: {
+        marginTop: 2,
+        width: 1,
+        alignSelf: 'center',
+        borderColor: '#DBDBDB',
         borderWidth: 1,
-        borderColor: '#fff',
-        marginBottom: heightPercentageToDP(0.5),
-        marginRight: heightPercentageToDP(0.5),
+        borderStyle: 'dashed',
+        borderRadius: 1
+    },
+    bodyContainer: {
+        width: 281,
+    },
+    waypointName: {
+        fontSize: 23,
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        color: '#585756',
+        paddingBottom: 8,
+        paddingLeft: 5,
+    },
+    waypointDetail: {
+        flexDirection: 'row',
+        marginLeft: 5
+    },
+    waypointPic: {
+        height: 60,
+        width: 60,
+        backgroundColor: '#DBDBDB'
+    },
+    cameraIcon: {
+        height: 30,
+        width: 30,
+    },
+    waypointDescriptionCont: {
+        width: 210,
+        backgroundColor: '#EAEAEA',
+        justifyContent: 'center',
+    },
+    waypointDescription: {
+        marginLeft: 14,
+        fontSize: 17,
+        fontFamily: CUSTOM_FONTS.roboto
+    },
+    submitBtn: {
+        height: 35,
+        backgroundColor: '#f69039',
+        width: 213,
+        alignSelf: 'center',
+        borderRadius: 20,
+        marginTop: 20
+    },
+    dotIcon: {
+        height: 18,
+        width: 18,
+        borderRadius: 9,
+        backgroundColor: APP_COMMON_STYLES.infoColor,
+        marginTop: 8,
+        marginBottom: 2,
+        alignSelf: 'center'
+    },
+    numberOfPictureCont: {
+        height: 15,
+        width: 15,
+        borderRadius: 7.5,
         justifyContent: 'center',
         alignItems: 'center',
-        // borderRadius: widthPercentageToDP(1)
-    },
-    photo: {
-        flex: 1,
-        width: null,
-        height: null,
-    },
-    addEditButtonContainer: {
-        alignSelf: 'flex-start',
-        backgroundColor: APP_COMMON_STYLES.headerColor,
-        width: widthPercentageToDP(8),
-        height: widthPercentageToDP(8),
-        borderRadius: widthPercentageToDP(4)
-    },
-    selection: {
         position: 'absolute',
-        width: '100%',
-        overflow: 'hidden',
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        alignItems: 'center',
-        justifyContent: 'center',
+        right: 0,
+        bottom: 0,
+        backgroundColor: '#fff'
     },
-    whiteFont: {
-        color: '#fff'
+    numberOfPictureText: {
+        color: '#585756',
+        fontFamily: CUSTOM_FONTS.robotoBold
     }
+
 });

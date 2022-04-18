@@ -2,13 +2,17 @@
 
 buildscript {
     ext {
-	googlePlayServicesLocationVersion = "17.0.0"
-        buildToolsVersion = "28.0.3"
-        minSdkVersion = 16
-        compileSdkVersion = 28
-        targetSdkVersion = 28
-        supportLibVersion = "28.0.0"
+	    googlePlayServicesLocationVersion = "17.0.0"
+        buildToolsVersion = "29.0.2"
+        minSdkVersion = 24
+        compileSdkVersion = 29
+        targetSdkVersion = 29
+        // supportLibVersion = "28.0.0"
         googlePlayServicesVersion = "17.0.0"
+        androidXCore = "1.0.2"
+        appCompatVersion = "1.1.0"
+        firebaseMessagingVersion = "21.1.0"
+        googlePlayServicesAuthVersion = "17.0.0" // <--- use this version or newer
     }
     repositories {
         google()
@@ -16,8 +20,8 @@ buildscript {
         maven { url "$rootDir/../node_modules/react-native/android" }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.3.1'
-        classpath 'com.google.gms:google-services:4.2.0'
+        classpath("com.android.tools.build:gradle:3.4.2")
+        classpath 'com.google.gms:google-services:4.3.3'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -26,26 +30,29 @@ buildscript {
 
 allprojects {
     repositories {
-		maven {
-			url "$rootDir/../node_modules/react-native-background-fetch/android/libs"
-		}
-		maven {
-			url "$rootDir/../node_modules/react-native-background-geolocation/android/libs"
-		}
         mavenLocal()
+		maven {
+           // react-native-background-fetch
+          url("${project(':react-native-background-fetch').projectDir}/libs")
+        }
+        maven {
+          // Required for react-native-background-geolocation
+        url("${project(':react-native-background-geolocation').projectDir}/libs")
+       }
         google()
         jcenter()
         maven {
             // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-            url "$rootDir/../node_modules/react-native/android"
+            url("$rootDir/../node_modules/react-native/android")
         }
-        maven { url "https://jitpack.io" }
+        maven {
+            // Android JSC is installed from npm
+            url("$rootDir/../node_modules/jsc-android/dist")
+        }
+        maven { url "https://www.jitpack.io" }
         maven { url "https://maven.google.com" }
         configurations.all { 
             resolutionStrategy { 
-                force 'com.google.firebase:firebase-messaging:20.0.0' 
-                force 'com.google.firebase:firebase-core:17.1.0' 
-                force 'com.google.android.gms:play-services-gcm:17.0.0' 
                 force "com.squareup.okhttp3:okhttp:3.9.1"
                 force "com.squareup.okio:okio:1.13.0"
             } 
@@ -59,19 +66,19 @@ allprojects {
 }
 
 subprojects {
-    project.configurations.all {
-        resolutionStrategy.eachDependency { details ->
-            if (details.requested.group == 'com.android.support'
-                    && !details.requested.name.contains('multidex') ) {
-                details.useVersion "27.1.0"
-            }
-        }
-    }
+    // project.configurations.all {
+    //     resolutionStrategy.eachDependency { details ->
+    //         if (details.requested.group == 'com.android.support'
+    //                 && !details.requested.name.contains('multidex') ) {
+    //             details.useVersion "27.1.0"
+    //         }
+    //     }
+    // }
     afterEvaluate {project ->
         if (project.hasProperty("android")) {
             android {
-                compileSdkVersion 28
-                buildToolsVersion "28.0.3"
+                compileSdkVersion 29
+                buildToolsVersion "29"
             }
         }
     }

@@ -1,28 +1,34 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Animated, FlatList, View, ImageBackground, StatusBar, Easing } from 'react-native';
+import { StyleSheet, Animated, FlatList, View, ImageBackground, Easing, TextInput, ActivityIndicator, Text } from 'react-native';
 import { IconButton, LinkButton } from '../../../components/buttons';
-import { widthPercentageToDP, heightPercentageToDP, PageKeys, APP_COMMON_STYLES, CUSTOM_FONTS, GET_PICTURE_BY_ID } from '../../../constants';
-import { ListItem, Left, Thumbnail } from 'native-base';
+import { widthPercentageToDP, heightPercentageToDP, PageKeys, APP_COMMON_STYLES, CUSTOM_FONTS, GET_PICTURE_BY_ID, CHAT_CONTENT_TYPE } from '../../../constants';
+import { ListItem, Left, Thumbnail, Icon as NBIcon } from 'native-base';
 import { BasicHeader } from '../../../components/headers';
-import { ShifterButton } from '../../../components/buttons';
-import { getAllChats, getPictureList, logoutUser } from '../../../api';
-import { appNavMenuVisibilityAction, updateChatPicAction, updateGroupChatPicAction, clearChatListAction } from '../../../actions';
+import { getAllChats, getPictureList, handleServiceErrors, searchFriendsForChat, searchingOnChat } from '../../../api';
+import { appNavMenuVisibilityAction, updateChatPicAction, updateGroupChatPicAction, clearChatListAction, resetErrorHandlingAction } from '../../../actions';
 import { Actions } from 'react-native-router-flux';
-import { BaseModal } from '../../../components/modal';
 import { DefaultText } from '../../../components/labels';
+import { BasePage } from '../../../components/pages';
+
 class ChatList extends Component {
-    CHAT_LIST_OPTIONS = [{ text: 'Delete Chat', id: 'clearAll', handler: () => this.deleteFromChatList() }, { text: 'Close', id: 'close', handler: () => this.onCancelOptionsModal() }];
     frndChatPicLoading = false;
     grpChatPicLoading = false;
+    _searchQueryTimeout = null;
     constructor(props) {
         super(props);
         this.state = {
             isRefreshing: false,
             isLoading: false,
             isLoadingData: false,
-            isVisibleOptionsModal: false,
             spinValue: new Animated.Value(0),
+            showFriends: false,
+            showSearchbar: this.props.isShareMode || false,
+            searchQuery: '',
+            selectionList: [],
+            searchResults: [],
+            pageNumber:0,
+            hasRemainingList: false,
         };
     }
 
@@ -30,34 +36,6 @@ class ChatList extends Component {
         this.grpChatPicLoading = false;
         this.frndChatPicLoading = false;
         this.props.getAllChats(this.props.user.userId);
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        // if (prevProps.chatList !== this.props.chatList) {
-        //     const chatIdList = [];
-        //     const grpPicObj = {};
-        //     this.props.chatList.forEach((chat) => {
-        //         if (!chat.profilePicture || (chat.isGroup && !chat.profilePictureList)) {
-        //             if (chat.isGroup) {
-        //                 if (chat.groupProfilePictureId) {
-        //                     chatIdList.push(chat.groupProfilePictureId);
-        //                 } else if (chat.profilePictureIdList) {
-        //                     grpPicObj[chat.id] = chat.profilePictureIdList;
-        //                 }
-        //             } else if (chat.profilePictureId) {
-        //                 chatIdList.push(chat.profilePictureId);
-        //             }
-        //         }
-        //     })
-        //     if (chatIdList.length > 0 && !this.frndChatPicLoading) {
-        //         this.frndChatPicLoading = true;
-        //         this.props.getChatListPic(chatIdList);
-        //     }
-        //     if (Object.keys(grpPicObj).length > 0 && !this.grpChatPicLoading) {
-        //         this.grpChatPicLoading = true;
-        //         this.props.getGroupMembersPic(grpPicObj);
-        //     }
-        // }
     }
 
     retryApiFunction = () => {
@@ -74,77 +52,83 @@ class ChatList extends Component {
         });
     }
 
-    onPressLogout = async () => {
-        this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
-    }
-
     componentWillUnmount() {
-        this.props.clearChatList();
+        // this.props.clearChatList();
     }
 
     deleteFromChatList = () => {
 
     }
-
-    getFormattedDate = (item) => {
-        console.log('newDate chatList : ', new Date(item.date).toTimeString());
-        const itemDate = new Date(item.message.date).toString().substr(4, 12).split(' ')[1];
-        if (new Date().getDate() == itemDate) {
-            return new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    getFormattedDate = (dateTime) => {
+        var dateFirst = new Date();
+        var dateSecond = new Date(dateTime);
+        var timeDiff = Math.abs(dateSecond.getTime() - dateFirst.getTime());
+        var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        if (new Date(dateTime).toLocaleDateString() === new Date().toLocaleDateString()) {
+            const time = new Date(dateTime).toTimeString().substring(0, 5).split(':');
+            let period = time[0] < 12 ? 'AM' : 'PM';
+            if (time[0] > 12) {
+                time[0] = time[0] - 12;
+            }
+            return `${time.join(':')} ${period}`;
         }
-        else if ((new Date().getDate() - itemDate) === 1) {
-            return 'yesterday'
+        else if (diffDays > 0 && diffDays < 7) {
+            return `${diffDays} day ago`
         }
         else {
-            return new Date(item.date).toLocaleDateString('en-IN', { day: 'numeric', year: '2-digit', month: 'short' })
+            return `${Math.floor(diffDays / 7)} week ago`
         }
-    }
-
-    getFormattedTime = (dateTime) => {
-        const time = new Date(dateTime).toTimeString().substring(0, 5).split(':');
-        let period = time[0] < 12 ? 'AM' : 'PM';
-        if (time[0] > 12) {
-            time[0] = time[0] - 12;
-        }
-        return `${time.join(':')} ${period}`;
-        // return new Date(dateTime).toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
     }
 
     showAppNavigation = () => this.props.showAppNavMenu();
 
     goToChatPage = (item) => {
-        if (item.isGroup) {
-            Actions.push(PageKeys.CHAT, { comingFrom: PageKeys.CHAT_LIST, isGroup: true, chatInfo: item })
-        }
-        else {
-            Actions.push(PageKeys.CHAT, { comingFrom: PageKeys.CHAT_LIST, isGroup: false, chatInfo: item })
-        }
+        Actions.push(PageKeys.CHAT, { comingFrom: PageKeys.CHAT_LIST, isGroup: item.isGroup ? true : false, chatInfo: item });
     }
 
     renderItemHeader = (item) => {
-        const firstNameStr = item.memberNameList.reduce((arr, name) => {
-            arr.push(name.split(' ')[0]);
-            return arr;
-        }, []).join(', ');
+        if (item.isGroup) {
+            const firstNameStr = item.memberNameList.reduce((arr, name) => {
+                arr.push(name.split(' ')[0]);
+                return arr;
+            }, []).join(', ');
+            return <View style={{ flexDirection: 'row' }}>
+                <DefaultText numberOfLines={1} style={[styles.itemNameTxt, styles.groupNameTxt]}>
+                    {item.groupName}{
+                        firstNameStr
+                            ? <DefaultText numberOfLines={1} style={styles.groupMembersTxt}>{item.groupName ? ' - ' : '' + `${firstNameStr}`}</DefaultText>
+                            : null
+                    }
+                </DefaultText>
+                <DefaultText style={styles.msgTime}>{item.message && item.message.date ? this.getFormattedDate(item.message.date) : ''}</DefaultText>
+            </View>;
+        }
         return <View style={{ flexDirection: 'row' }}>
-            <DefaultText numberOfLines={1} style={[styles.itemNameTxt, styles.groupNameTxt]}>{item.groupName}
-                {
-                    firstNameStr ? <DefaultText numberOfLines={1} style={styles.groupMembersTxt}>{` - ${firstNameStr}`}</DefaultText> : null
-                }
-            </DefaultText>
-            <DefaultText style={styles.msgTime}>{item.message ? this.getFormattedTime(item.message.date) : null}</DefaultText>
-        </View>
+            <DefaultText style={[styles.itemNameTxt, styles.groupNameTxt]}>{item.name}</DefaultText>
+            <DefaultText style={styles.msgTime}>{item.message && item.message.date ? this.getFormattedDate(item.message.date) : ''}</DefaultText>
+        </View>;
     }
 
     renderItemBodyContent(item) {
+        let MSGCONTENT = null;
+        if (item.message) {
+            switch (item.message.type) {
+                case CHAT_CONTENT_TYPE.RIDE:
+                    MSGCONTENT = <DefaultText numberOfLines={2} style={styles.itemMsgTxt}><DefaultText style={[styles.itemMsgTxt, { fontWeight: 'bold' }]}>{item.isGroup ? item.message.senderId === this.props.user.userId ? 'You : ' : item.message.senderName && item.message.senderName !== 'system' && item.message.senderName.split(' ')[0] + ' : ' : null}</DefaultText>{(item.message.content + '').indexOf('Shared') !== 0 ? `Shared a ride, ${JSON.parse(item.message.content).name}` : item.message.content}</DefaultText>;
+                    break;
+                case CHAT_CONTENT_TYPE.IMAGE || CHAT_CONTENT_TYPE.VIDEO:
+                    MSGCONTENT = <DefaultText numberOfLines={2} style={styles.itemMsgTxt}><DefaultText style={[styles.itemMsgTxt, { fontWeight: 'bold' }]}>{item.isGroup ? item.message.senderId === this.props.user.userId ? 'You : ' :item.message.senderName && item.message.senderName !== 'system' && item.message.senderName.split(' ')[0] + ' : ' : null}</DefaultText>Shared {`${item.message.media.length} ${item.message.type}${item.message.media.length > 1 ? 's' : ''}`}</DefaultText>;
+                    break;
+                default:
+                    MSGCONTENT = <DefaultText numberOfLines={2} style={styles.itemMsgTxt}><DefaultText style={[styles.itemMsgTxt, { fontWeight: 'bold' }]}>{item.isGroup ? item.message.senderId === this.props.user.userId ? 'You : ' : item.message.senderName && item.message.senderName !== 'system' && item.message.senderName.split(' ')[0] + ' : ' : null}</DefaultText>{`${item.message.content ? item.message.content : ''}`}</DefaultText>;
+            }
+        }
         return <View style={styles.bodyCont}>
             {
-                item.isGroup
-                    ? this.renderItemHeader(item)
-                    : <DefaultText style={styles.itemNameTxt}>{item.name}</DefaultText>
+                this.renderItemHeader(item)
             }
             <View style={styles.itemMsgTxtView}>
-                <DefaultText numberOfLines={2} style={styles.itemMsgTxt}>{item.message ? item.message.content : null}</DefaultText>
+                {MSGCONTENT}
                 {
                     item.totalUnseenMessage > 0
                         ? <View style={styles.messageNumber}>
@@ -157,28 +141,56 @@ class ChatList extends Component {
     }
 
     renderChatList = ({ item, index }) => {
+        console.log("PROFILE ID-------------------",item.name,item.profilePictureId);
         return (
-            <ListItem noIndent style={styles.itemCont} onPress={() => this.goToChatPage(item)}>
+            <ListItem noIndent style={styles.itemCont} onPress={() => this.props.isShareMode ? this.selectChat({ ...item }) : this.goToChatPage(item)}>
                 {
                     item.isGroup
                         ? <Left style={styles.leftCont}>
                             {
+                                // console.log(item,'item printed'),
                                 item.groupProfilePictureId
                                     ? <Thumbnail style={styles.iconContComm} source={{ uri: `${GET_PICTURE_BY_ID}${item.groupProfilePictureId}` }} />
-                                    : item.profilePictureIdList
+                                    : item.profilePictureIdList.length>0
                                         ? <View style={[styles.iconContComm, { backgroundColor: '#ffffff' }]}>
-                                            <Thumbnail style={styles.smallThumbanail} source={{ uri: `${GET_PICTURE_BY_ID}${item.profilePictureIdList[0]}` }} />
-                                            <Thumbnail style={[styles.smallThumbanail, styles.smallThumbanailTop]} source={{ uri: `${GET_PICTURE_BY_ID}${item.profilePictureIdList[1]}` }} />
+                                            {item.profilePictureIdList[1]?<Thumbnail style={[styles.smallThumbanail]} source={{ uri: `${GET_PICTURE_BY_ID}${item.profilePictureIdList[1]}` }} />:
+                                            <View style={{width:32,height:32,backgroundColor:'#6C6C6B',borderRadius:16,alignItems:'center',justifyContent:'center', borderWidth: 1,borderColor: '#ffffff',}}>
+                                                <Text style={{fontSize:17,color:'#ffffff'}}>{item.memberNameList[1]?(item.memberNameList[1]).slice(0,1).toUpperCase():this.props.user.name.slice(0,1).toUpperCase()}
+                                                </Text>
+                                                </View>}
+                                            <Thumbnail style={[styles.smallThumbanail, styles.smallThumbanailTop]} source={{ uri: `${GET_PICTURE_BY_ID}${item.profilePictureIdList[0]}` }} />
                                         </View>
                                         : <IconButton disabled style={[styles.iconContComm, styles.groupIconCont]} iconProps={{ name: 'users', type: 'FontAwesome', style: styles.iconComm }} />
+                            }
+                            {
+                                this.state.selectionList.findIndex(chat => chat.id === item.id) > -1
+                                    ? <View style={[{
+                                        ...styles.iconContComm,
+                                        position: 'absolute', backgroundColor: 'rgba(0,0,0,0.6)',
+                                        alignItems: 'center', justifyContent: 'center',
+                                    }]}>
+                                        <NBIcon name='check' type='Entypo' style={{ color: '#fff', fontSize: 20 }} />
+                                    </View>
+                                    : null
                             }
                             {this.renderItemBodyContent(item)}
                         </Left>
                         : <Left style={styles.leftCont}>
-                            {
+                            {  
                                 item.profilePictureId
                                     ? <Thumbnail style={styles.iconContComm} source={{ uri: `${GET_PICTURE_BY_ID}${item.profilePictureId}` }} />
                                     : <IconButton disabled style={[styles.iconContComm, styles.userIconCont]} iconProps={{ name: 'user', type: 'FontAwesome', style: styles.iconComm }} />
+                            }
+                            {
+                                this.state.selectionList.findIndex(chat => chat.id === item.id) > -1
+                                    ? <View style={[{
+                                        ...styles.iconContComm,
+                                        position: 'absolute', backgroundColor: 'rgba(0,0,0,0.6)',
+                                        alignItems: 'center', justifyContent: 'center',
+                                    }]}>
+                                        <NBIcon name='check' type='Entypo' style={{ color: '#fff', fontSize: 20 }} />
+                                    </View>
+                                    : null
                             }
                             {this.renderItemBodyContent(item)}
                         </Left>
@@ -190,72 +202,232 @@ class ChatList extends Component {
 
     chatListKeyExtractor = (item) => item.id;
 
-    onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false })
+    onCancelOptionsModal = () => this.setState({ isVisibleOptionsModal: false });
 
-    renderMenuOptions = () => {
-        let options = null;
-        options = this.CHAT_LIST_OPTIONS;
-        return (
-            options.map(option => (
-                <LinkButton
-                    key={option.id}
-                    onPress={option.handler}
-                    highlightColor={APP_COMMON_STYLES.infoColor}
-                    style={APP_COMMON_STYLES.menuOptHighlight}
-                    title={option.text}
-                    titleStyle={APP_COMMON_STYLES.menuOptTxt}
-                />
-            ))
-        )
+    onChangeSearchValue = (val) =>{ 
+        if(this.props.isShareMode){
+            clearTimeout(this._searchQueryTimeout);
+         this.setState({ searchQuery: val, pageNumber: 0 },
+            () => this.state.searchQuery === ''
+                ? this.clearSearchResults()
+                : this._searchQueryTimeout = setTimeout(() => this.searchFriend(val), 200)
+        );
+        }
+        else{
+            this.setState({ searchQuery: val })
+        }
+    };
+
+    searchFriend(searchParam, appendResults = false) {
+        this.props.getAllChats(this.props.user.userId,searchParam, (res) => {
+            if (this.state.searchQuery === '') return;
+            // const chatListRes =  this.props.chatList.filter(item => {
+            //     if (item.isGroup) {
+            //         return item.groupName
+            //             ? item.groupName.toLocaleLowerCase().indexOf(val.toLocaleLowerCase()) > -1
+            //             : (item.memberNameList.reduce((arr, name) => {
+            //                 arr.push(name.split(' ')[0]);
+            //                 return arr;
+            //             }, []).join(', ') || '').toLocaleLowerCase().indexOf(val.toLocaleLowerCase()) > -1;
+            //     } else {
+            //         return (item.name || '').toLocaleLowerCase().indexOf(val.toLocaleLowerCase()) > -1
+            //     }
+            // });
+            this.setState(prevState => {
+                return {
+                    searchResults: appendResults
+                        ? [...prevState.searchResults, ...this._markSelectedFriend(prevState.selectionList, res.chats)]
+                        : this._markSelectedFriend(prevState.selectionList, res.chats),
+                    // pageNumber: res.data.friendList.length > 0 ? prevState.pageNumber + 1 : prevState.pageNumber,
+                    // hasRemainingList: res.data.remainingList > 0,
+                    isLoading: false,
+                };
+            });
+        }, (er) => { })
+        // this.props.getAllChats(this.props.user.userId,searchParam,(res)=>{
+        //     console.log('\n\n\n getAllChat searchParam:', res)
+        // },(er)=>{});
     }
 
-    showOptionsModal = () => {
-        this.setState({ isVisibleOptionsModal: true });
+    _markSelectedFriend(selectedList, newList) {
+        selectedList.forEach(friend => {
+            const idx = newList.findIndex(user => user.userId === friend.userId);
+            if (idx > -1) newList[idx].isSelected = true;
+        });
+        return newList;
+    }
+
+    loadMoreData = ({ distanceFromEnd }) => {
+        if (this.state.isLoading === true || distanceFromEnd < 0) return;
+        this.setState({ isLoading: true });
+        this.searchFriend(this.state.searchQuery, true);
+    }
+
+    renderFooter = () => {
+        return this.state.isLoading
+            ? <View style={{ paddingVertical: 20, borderTopWidth: 1, borderColor: "#CED0CE" }}>
+                <ActivityIndicator animating size="large" />
+            </View>
+            : null;
+    }
+
+    goToSelectedMediaPage = () => {
+        Actions.push(PageKeys.SELECTED_MEDIA_VIEW, {
+            receivers: this.state.selectionList, mediaIds: this.props.mediaIds, sendMessage: (...args) => {
+                this.props.callbackFn(...args);
+                this.onPressBackButton();
+            }
+        });
+    }
+
+    shareRide = () => {
+        const idsObj = this.state.selectionList.reduce((idsObj, item) => {
+            item.isGroup
+                ? idsObj.groupIds.push(item.id)
+                : idsObj.ids.push(item.id)
+            return idsObj;
+        }, { ids: [], groupIds: [] });
+        this.props.callbackFn(this.props.rideId, idsObj.ids.length ? idsObj.ids : null, idsObj.groupIds.length ? idsObj.groupIds : null);
+        this.onPressBackButton();
+    }
+
+    onPressBackButton = () => Actions.pop();
+
+    onPressNewChatIcon = () => Actions.push(PageKeys.CHAT_SEARCH, {
+        onDismiss: () => new Promise((resolve, reject) => {
+            this.props.getAllChats(this.props.user.userId);
+            resolve("done");
+        })
+    })
+
+    clearSearchQuery = () => this.setState({ searchQuery: '', searchResults:[] });
+    clearSearchResults = () => this.setState({ searchResults: [] });
+
+    selectChat(chat) {
+        if (this.state.selectionList.findIndex(item => item.id === chat.id) > -1) {
+            this.removeFromSelected(chat.id);
+        } else {
+            if (chat.isGroup && !chat.groupName) {
+                chat.groupName = chat.memberNameList.reduce((arr, name) => {
+                    arr.push(name.split(' ')[0]);
+                    return arr;
+                }, []).join(', ').slice(0, 11);
+            }
+            this.setState(prevState => {
+                return {
+                    selectionList: [...prevState.selectionList, chat],
+                }
+            });
+        }
+    }
+
+    removeFromSelected(id) {
+        this.setState(prevState => {
+            return {
+                selectionList: prevState.selectionList.filter(chat => chat.id !== id)
+            }
+        });
+    }
+
+    getSelectedChatName(chat) {
+        if (chat.isGroup && !chat.name) {
+            return chat.memberNameList.reduce((arr, name) => {
+                arr.push(name.split(' ')[0]);
+                return arr;
+            }, []).join(', ').slice(0, 11);
+        } else {
+            return chat.name;
+        }
     }
 
     render() {
-        const { chatList, user, hasNetwork } = this.props;
-        const { isVisibleOptionsModal } = this.state;
+        console.log('\n\n\n searchQuery : ', this.state.searchQuery);
+        const { chatList, hasNetwork, isShareMode, isSharingRide } = this.props;
+        const { searchQuery, showSearchbar, selectionList, hasRemainingList, searchResults } = this.state;
+        console.log('\n\n\n searchResults : ', searchResults);
+        const spin = this.state.spinValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+        });
         return (
-            <View style={styles.fill}>
-                <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                </View>
+            <BasePage defaultHeader={false} showShifter={!isShareMode}>
                 <View style={{ flex: 1 }}>
-                    <BasicHeader title='Messaging' />
-                    <BaseModal isVisible={isVisibleOptionsModal} onCancel={this.onCancelOptionsModal} onPressOutside={this.onCancelOptionsModal}>
-                        <View style={[APP_COMMON_STYLES.menuOptContainer, user.handDominance === 'left' ? APP_COMMON_STYLES.leftDominantCont : null]}>
-                            {
-                                this.renderMenuOptions()
-                            }
-                        </View>
-                    </BaseModal>
+                    {
+                        isShareMode
+                            ? <BasicHeader title={'Share media'}
+                                leftIconProps={{ reverse: true, name: 'md-arrow-round-back', type: 'Ionicons', onPress: this.onPressBackButton }}
+                                rightComponent={selectionList.length > 0 ? <LinkButton title={'Done'} titleStyle={{ color: '#fff', fontFamily: CUSTOM_FONTS.gothamBold, fontSize: 18 }} onPress={isSharingRide ? this.shareRide : this.goToSelectedMediaPage} /> : null}
+                            />
+                            : <BasicHeader title={'Messaging'}
+                                leftIconProps={{ reverse: true, name: 'ios-notifications', type: 'Ionicons', onPress: () => Actions.push(PageKeys.NOTIFICATIONS) }}
+                                rightIconProps={{ reverse: true, name: 'md-add', type: 'Ionicons', containerStyle: styles.headerRtIconContainer, style: styles.addIcon, onPress: this.onPressNewChatIcon }}
+                                notificationCount={this.props.notificationCount}
+                            />
+                    }
                     <View style={styles.rootContainer}>
-                        {
-                            chatList.length > 0 ?
-                                <FlatList
-                                    data={chatList}
-                                    keyExtractor={this.chatListKeyExtractor}
-                                    renderItem={this.renderChatList}
-                                />
-                                :
-                                hasNetwork ?
-                                    <ImageBackground source={require('../../../assets/img/profile-bg.png')} style={styles.backgroundImage} />
-                                    :
-                                    <View style={{ flex: 1, position: 'absolute', top: heightPercentageToDP(30) }}>
-                                        <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                            <IconButton iconProps={{ name: 'reload', type: 'MaterialCommunityIcons', style: { color: 'black', width: widthPercentageToDP(13), fontSize: heightPercentageToDP(15), flex: 1, marginLeft: widthPercentageToDP(40) } }} onPress={this.retryApiFunction} />
-                                        </Animated.View>
-                                        <DefaultText style={{ marginLeft: widthPercentageToDP(13), fontSize: heightPercentageToDP(4.5) }}>No Internet Connection</DefaultText>
-                                        <DefaultText style={{ marginTop: heightPercentageToDP(2), marginLeft: widthPercentageToDP(25) }}>Please connect to internet </DefaultText>
+                        {/* {
+                            showSearchbar && chatList.length > 0
+                                ? <View style={{ minHeight: 50, borderBottomColor: '#707070', borderBottomWidth: 0.5, marginTop: 20 }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20 }}>
+                                        <DefaultText style={{ color: APP_COMMON_STYLES.headerColor, fontSize: 14, fontFamily: CUSTOM_FONTS.robotoBold, marginRight: 10 }}>TO:</DefaultText>
+                                        <View style={{ flex: 1, justifyContent: 'center', flexDirection: 'row' }}>
+                                            <TextInput value={searchQuery} placeholder='Input name here' style={{ flex: 1 }} onChangeText={this.onChangeSearchValue} />
+                                            {searchQuery.length > 0 && <IconButton iconProps={{ name: 'clear', type: 'MaterialIcons', style: { fontSize: 20 } }} onPress={this.clearSearchQuery} />}
+                                        </View>
                                     </View>
+                                    {
+                                        selectionList
+                                            ? <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 5, paddingTop: 5 }}>
+                                                {
+                                                    selectionList.map(chat => {
+                                                        return <IconButton key={chat.id} onPress={() => this.removeFromSelected(chat.id)}
+                                                            title={chat.name || chat.groupName}
+                                                            titleStyle={{ color: '#fff', fontFamily: CUSTOM_FONTS.robotoBold, marginLeft: 2, }}
+                                                            style={{ marginLeft: 3, marginBottom: 3, padding: 5, backgroundColor: APP_COMMON_STYLES.infoColor, borderRadius: 20 }}
+                                                            iconProps={{ name: 'close', type: 'FontAwesome', style: { color: '#fff', fontSize: 14 } }} />
+                                                    })
+                                                }
+                                            </View>
+                                            : null
+                                    }
+                                </View>
+                                : null
+                        } */}
+                        <View style={{flex:1}}>
+                        <FlatList
+                        contentContainerStyle={{ paddingBottom: hasRemainingList ? 40 : 0 }}
+                            keyboardShouldPersistTaps={'handled'}
+                            data={searchResults.length>0?searchResults: chatList.filter(item => {
+                                if (item.isGroup) {
+                                    console.log(item.isGroup,item.groupName,'////////item ')
+                                    return item.groupName
+                                        ? item.groupName.toLocaleLowerCase().indexOf(searchQuery.toLocaleLowerCase()) > -1
+                                        : (item.memberNameList.reduce((arr, name) => {
+                                            arr.push(name.split(' ')[0]);
+                                            return arr;
+                                        }, []).join(', ') || '').toLocaleLowerCase().indexOf(searchQuery.toLocaleLowerCase()) > -1;
+                                } else {
+                                    return (item.name || '').toLocaleLowerCase().indexOf(searchQuery.toLocaleLowerCase()) > -1
+                                }
+                            })
                         }
+                            keyExtractor={this.chatListKeyExtractor}
+                            renderItem={this.renderChatList}
+                            extraData={selectionList}
+                           ListFooterComponent={isShareMode?this.renderFooter:null}
+                            onEndReached={isShareMode?this.loadMoreData:null}
+                            onEndReachedThreshold={0.1}
+                        />
+                        {
+                            this.props.hasNetwork === false && chatList.length === 0 && <View style={{ flexDirection: 'column', justifyContent: 'space-between', position: 'absolute', top: heightPercentageToDP(20), left: widthPercentageToDP(27), height: 100, }}>
+                                <IconButton iconProps={{ name: 'broadcast-tower', type: 'FontAwesome5', style: { fontSize: 60, color: '#505050' } }} />
+                                <DefaultText style={{ alignSelf: 'center', fontSize: 14 }}>Please Connect To Internet</DefaultText>
+                            </View>
+                        }
+                        </View>
                     </View>
-
-                    <ShifterButton onPress={this.showAppNavigation} containerStyles={this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null} alignLeft={this.props.user.handDominance === 'left'} />
-
                 </View>
-            </View>
+            </BasePage>
         )
     }
 }
@@ -264,13 +436,14 @@ const mapStateToProps = (state) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
     const { chatList } = state.ChatList;
     const { hasNetwork, lastApi } = state.PageState;
-    return { user, chatList, userAuthToken, deviceToken, hasNetwork, lastApi };
+    const notificationCount=state.NotificationList.notificationList.totalUnseen
+    return { user, chatList, userAuthToken, deviceToken, hasNetwork, lastApi ,notificationCount};
 };
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         createFriendGroup: (newGroupInfo) => dispatch(createFriendGroup(newGroupInfo)),
-        getAllChats: (userId) => dispatch(getAllChats(userId)),
+        getAllChats: (userId, searchParams, successCallback, errorCallback) => dispatch(getAllChats(userId, searchParams, successCallback, errorCallback)),
         getChatListPic: (chatIdList) => getPictureList(chatIdList, (pictureObj) => {
             dispatch(updateChatPicAction({ pictureObj }))
         }, (error) => {
@@ -291,8 +464,16 @@ const mapDispatchToProps = (dispatch) => {
                 console.log('getGroupMembersPic error :  ', error);
             })
         },
-        logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         clearChatList: () => dispatch(clearChatListAction()),
+        searchingOnChat: (searchParam, userId,  successCallback, errorCallback) => searchingOnChat(searchParam, userId).then(res => {
+            console.log('searchingOnChat success : ', res.data)
+            dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+            successCallback(res)
+        }).catch(er => {
+            console.log('searchingOnChat error : ', er)
+            errorCallback(er)
+            handleServiceErrors(er, [searchParam, userId, pageNumber, successCallback, errorCallback], 'searchFriendsForChat', true, true);
+        }),
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(ChatList);
@@ -300,6 +481,16 @@ export default connect(mapStateToProps, mapDispatchToProps)(ChatList);
 const styles = StyleSheet.create({
     fill: {
         flex: 1
+    },
+    headerRtIconContainer: {
+        height: 27,
+        width: 27,
+        backgroundColor: '#F5891F',
+        borderRadius: 13.5
+    },
+    addIcon: {
+        color: '#fff',
+        fontSize: 19
     },
     rootContainer: {
         flex: 1,
@@ -364,8 +555,6 @@ const styles = StyleSheet.create({
     },
     messageNumber: {
         backgroundColor: APP_COMMON_STYLES.infoColor,
-        // marginRight: widthPercentageToDP(8),
-        // marginTop: heightPercentageToDP(1.4),
         height: 30,
         minWidth: 30,
         borderRadius: 30,
@@ -377,15 +566,16 @@ const styles = StyleSheet.create({
         width: 32,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: '#ffffff'
+        borderColor: '#ffffff',
+        backgroundColor: '#6C6C6B'
     },
     smallThumbanailTop: {
         position: 'absolute',
         zIndex: 10,
         left: 17.5,
-        top: 12
+        top: 12,     
     },
-    groupMembersTxt: { color: '#585756', fontSize: 13 },
+    groupMembersTxt: { color: '#1D527C', fontSize: 13, fontFamily:CUSTOM_FONTS.robotoBold },
     msgTime: {
         color: '#8D8D8D',
         letterSpacing: 0.8,
@@ -405,7 +595,7 @@ const styles = StyleSheet.create({
     itemMsgTxt: {
         marginTop: 5,
         marginRight: 5,
-        color: '#585756',
+        color: '#1D527C',
         flex: 1
     }
 });

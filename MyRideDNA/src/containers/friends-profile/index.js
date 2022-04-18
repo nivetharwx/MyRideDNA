@@ -1,96 +1,86 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { StyleSheet, Platform, StatusBar, View, Text, ImageBackground, Image, FlatList, ScrollView, BackHandler, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Alert, ImageBackground, Image, FlatList, ScrollView, TouchableOpacity } from 'react-native';
 import { Actions } from 'react-native-router-flux';
-import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, IS_ANDROID, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions, FRIEND_TYPE, CUSTOM_FONTS, GET_PICTURE_BY_ID } from '../../constants/index';
-import { IconButton, LinkButton, ShifterButton } from '../../components/buttons';
-import { appNavMenuVisibilityAction, updateUserAction, updateBikePictureListAction, replaceGarageInfoAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction, setCurrentFriendAction, updateCurrentFriendAction, updatePicturesAction, undoLastAction, resetPersonProfileAction, goToPrevProfileAction } from '../../actions';
-import { logoutUser, updateProfilePicture, getPicture, getSpaceList, setBikeAsActive, getGarageInfo, getRoadBuddies, getPictureList, getFriendInfo, getFriendProfile, getPassengersById, getRoadBuddiesById, getUserProfile, doUnfriend } from '../../api';
-import { ImageLoader } from '../../components/loader';
+import { PageKeys, widthPercentageToDP, heightPercentageToDP, APP_COMMON_STYLES, THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG, WindowDimensions, CUSTOM_FONTS, GET_PICTURE_BY_ID, RELATIONSHIP, IS_ANDROID } from '../../constants/index';
+import { BasicButton, IconButton, LinkButton } from '../../components/buttons';
+import { appNavMenuVisibilityAction, updateUserAction, updateMyProfileLastOptionsAction, apiLoaderActions, screenChangeAction, setCurrentFriendAction, resetPersonProfileAction, goToPrevProfileAction, resetErrorHandlingAction, removeFromPassengerListAction, updateCurrentFriendAction, resetPersonProfilePicAction } from '../../actions';
+import { getSpaceList, setBikeAsActive, getRoadBuddies, getPassengersById, getRoadBuddiesById, getUserProfile, doUnfriend, deletePassenger, handleServiceErrors } from '../../api';
 import { SmallCard } from '../../components/cards';
-import { BasicHeader } from '../../components/headers';
 import { DefaultText } from '../../components/labels';
 import { getFormattedDateFromISO } from '../../util';
-import { BaseModal } from '../../components/modal';
+import { BaseModal, GesturedCarouselModal } from '../../components/modal';
+import { BasePage } from '../../components/pages';
+import { Tabs, Tab } from 'native-base';
+import MyGarageTab from '../profile/my-garage';
+import FitImage from 'react-native-fit-image';
+import { getCurrentProfileState } from '../../selectors';
+import ImageViewer from 'react-native-image-viewing'
+import { Icon as NBIcon } from 'native-base'
 
-const hasIOSAbove10 = parseInt(Platform.Version) > 10;
 class FriendsProfile extends Component {
-    // DOC: Icon format is for Icon component from NativeBase Library
-    profilePicture = null;
-    isLoadingPassPic = false;
-    isLoadingFrndsPic = false;
     constructor(props) {
         super(props);
         this.state = {
-            activeTab: -1,
+            activeTab: 'PROFILE',
             bikes: [10, 20, 30, 40, 50],
-            isLoadingProfPic: false,
-            pictureLoader: {},
             showOptionsModal: false,
+            isVisbleFullImage: false,
+            showDeleteModal: false,
+            isPassenger: false
         };
     }
 
-    async componentDidMount() {
-        // if (this.props.person.isFriend) {
-        //     this.props.getFriendProfile(this.props.user.userId, this.props.frienduserId);
-        //     this.props.getFriendsPassengersByFriendId(this.props.user.userId, this.props.frienduserId);
-        //     this.props.getRoadBuddiesByFriendId(this.props.user.userId, this.props.frienduserId);
-        // } else {
-        //     this.props.getUserProfile(this.props.frienduserId);
-        // }
-        this.props.getUserProfile(this.props.user.userId, this.props.frienduserId);
-    }
-
-    async componentDidUpdate(prevProps, prevState) {
-        if (prevProps.person !== this.props.person) {
-            if (prevProps.person.userId !== this.props.person.userId) {
-                this.isLoadingPassPic = false;
-                this.isLoadingFrndsPic = false;
-            }
-            if (prevProps.person.isFriend === false && this.props.person.isFriend === true) {
-                this.props.getPassengersById(this.props.user.userId, this.props.frienduserId, 0, this.props.person.passengerList, (res) => {
-                }, (error) => {
-                });
-                this.props.getRoadBuddiesById(this.props.user.userId, this.props.frienduserId, 0, this.props.person.friendList, (res) => {
-                }, (error) => {
-                });
-            }
-            // if (!this.state.isLoadingProfPic && !this.props.person.profilePicture && this.props.person.profilePictureId) {
-            //     this.setState({ isLoadingProfPic: true });
-            //     this.props.getProfilePicture(this.props.person.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG), this.props.person.userId);
-            // } else if (this.state.isLoadingProfPic && this.props.person.profilePicture) {
-            //     this.setState({ isLoadingProfPic: false });
-            // }
-            // if (prevProps.person.passengerList !== this.props.person.passengerList) {
-            //     if (!this.isLoadingPassPic) {
-            //         const passPicIdList = [];
-            //         this.props.person.passengerList.forEach((passenger) => {
-            //             if (!passenger.profilePicture && passenger.profilePictureId) {
-            //                 passPicIdList.push(passenger.profilePictureId);
-            //             }
-            //         })
-            //         if (passPicIdList.length > 0) {
-            //             this.isLoadingPassPic = true;
-            //             this.props.getPictureList(passPicIdList, 'passenger', () => this.isLoadingPassPic = false, () => this.isLoadingPassPic = false);
-            //         }
-            //     }
-            // }
-            // if (prevProps.person.friendList !== this.props.person.friendList) {
-            //     if (!this.isLoadingFrndsPic) {
-            //         const frndPicIdList = [];
-            //         this.props.person.friendList.forEach((frnd) => {
-            //             if (!frnd.profilePicture && frnd.profilePictureId) {
-            //                 frndPicIdList.push(frnd.profilePictureId);
-            //             }
-            //         })
-            //         if (frndPicIdList.length > 0) {
-            //             this.isLoadingFrndsPic = true;
-            //             this.props.getPictureList(frndPicIdList, 'roadBuddies', () => this.isLoadingFrndsPic = false, () => this.isLoadingFrndsPic = false);
-            //         }
-            //     }
-            // }
+    componentDidMount() {
+        if (this.props.comingFrom === PageKeys.NOTIFICATIONS) {
+            console.log('\n\n\n comingFrom : ', this.props.comingFrom)
+            this.props.getUserProfile(this.props.user.userId, this.props.notificationBody.fromUserId);
+        } else {
+            this.props.getUserProfile(this.props.user.userId, this.props.frienduserId);
         }
     }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevProps.person !== this.props.person) {
+            if (!this.props.person || prevProps.person.userId !== this.props.person.userId) return;
+            if (prevProps.person.isFriend === false && this.props.person.isFriend === true) {
+                this.props.getPassengersById(this.props.user.userId, this.props.frienduserId, 0, this.props.person.passengerList, (res) => { }, (error) => { });
+                this.props.getRoadBuddiesById(this.props.user.userId, this.props.frienduserId, 0, this.props.person.friendList, (res) => { }, (error) => { });
+            }
+        }
+
+        if (prevProps.hasNetwork === false && this.props.hasNetwork === true) {
+            this.retryApiFunc();
+        }
+
+        if (prevProps.isRetryApi === false && this.props.isRetryApi === true) {
+            if (Actions.currentScene === this.props.lastApi.currentScene) {
+                Alert.alert(
+                    'Something went wrong ',
+                    '',
+                    [
+                        {
+                            text: 'Retry ', onPress: () => {
+                                this.retryApiFunc();
+                                this.props.resetErrorHandling(false)
+                            }
+                        },
+                        { text: 'Cancel', onPress: () => { this.props.resetErrorHandling(false) }, style: 'cancel' },
+                    ],
+                    { cancelable: false }
+                )
+            }
+        }
+    }
+
+
+    retryApiFunc = () => {
+        if (this.props.lastApi && this.props.lastApi.currentScene === Actions.currentScene) {
+            this.props[`${this.props.lastApi.api}`](...this.props.lastApi.params)
+        }
+    }
+
+    onChangeTab = ({ i }) => this.setState({ activeTab: i === 0 ? 'PROFILE' : 'GARAGE' });
 
     clubsKeyExtractor = (item) => item.clubId;
 
@@ -98,24 +88,26 @@ class FriendsProfile extends Component {
 
     passengerListKeyExtractor = (item) => item.passengerId;
 
-    onPressFriendsPage = () => {
-        this.props.changeScreen({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.PROFILE } });
-    }
+    onPressFriendsPage = () => this.props.changeScreen({ name: PageKeys.FRIENDS, params: { comingFrom: PageKeys.PROFILE } });
 
     openPassengerProfile = (item, index) => {
         if (item.isFriend) {
-            this.openRoadBuddy(item.passengerUserId);
+            this.openRoadBuddy(item);
         } else {
-            Actions.push(PageKeys.PASSENGER_PROFILE, { passengerIdx: index });
+            Actions.push(PageKeys.PASSENGER_PROFILE, { passengerId: item.passengerId, onPassenger: false });
         }
     }
 
-    openRoadBuddy = (userId) => {
-        if (userId === this.props.user.userId) {
+    openRoadBuddy = (item) => {
+        if (item.userId === this.props.user.userId) {
             this.props.changeScreen({ name: PageKeys.PROFILE });
-        } else {
-            this.props.setCurrentFriend({ userId });
-            Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: userId });
+        }
+        else if (item.relationship === RELATIONSHIP.FRIEND) {
+            this.props.setCurrentFriend({ userId: item.passengerId ? item.passengerUserId : item.userId });
+            Actions.push(PageKeys.FRIENDS_PROFILE, { frienduserId: item.passengerId ? item.passengerUserId : item.userId });
+        }
+        else {
+            Actions.push(PageKeys.PASSENGER_PROFILE, { isUnknown: true, person: { ...item, userId: item.passengerId ? item.passengerUserId : item.userId } })
         }
     }
 
@@ -123,18 +115,17 @@ class FriendsProfile extends Component {
 
     popToPrevProfile = () => {
         Actions.pop();
-        this.props.hasPrevProfiles
-            ? this.props.goToPrevProfile()
-            : this.props.resetPersonProfile();
+        this.props.goToPrevProfile();
     }
 
     getBuddyFriendListPage = () => {
         this.props.setCurrentFriend(this.props.person);
-        Actions.push(PageKeys.BUDDY_FRIENDS);
+        Actions.push(PageKeys.BUDDY_FRIENDS, { frienduserId: this.props.person.userId });
     }
+
     getBuddyPassengerListPage = () => {
         this.props.setCurrentFriend(this.props.person);
-        Actions.push(PageKeys.BUDDY_PASSENGERS);
+        Actions.push(PageKeys.BUDDY_PASSENGERS, { frienduserId: this.props.person.userId });
     }
 
     showOptionsModal = () => this.setState({ showOptionsModal: true });
@@ -142,230 +133,279 @@ class FriendsProfile extends Component {
     hideOptionsModal = () => this.setState({ showOptionsModal: false });
 
     removeRoadBuddy = () => {
-        this.props.doUnfriend(this.props.user.userId, this.props.person.userId);
-        this.setState({ showOptionsModal: false })
+        this.props.doUnfriend(this.props.user.userId, this.props.person.userId, this.props.person.isPassenger ? this.props.person.passengerId : null, (res) => {
+            this.setState({ showDeleteModal: false, showOptionsModal: false, isPassenger: false }, () => {
+                Actions.pop()
+            })
+        }, (er) => { })
     }
 
-    openJournalPage = () => Actions.push(PageKeys.JOURNAL, { isEditable: this.props.person.userId === this.props.user.userId, personId: this.props.person.userId });
+    removeFromPassengers = () => {
+        this.props.deletePassenger(this.props.person.passengerId, this.props.person.userId, (res) => {
+            this.setState({ showDeleteModal: false, showOptionsModal: false, isPassenger: false }, () => {
+                Actions.pop()
+            })
+        });
+    }
+
+    openJournalPage = () => Actions.push(PageKeys.JOURNAL, { isEditable: this.props.person.userId === this.props.user.userId, personId: this.props.person.userId, person: this.props.person });
+
+    showFullImage = () => this.setState({ isVisbleFullImage: true });
+
+    onCancelFullImage = () => {
+        console.log('closed friends profile')
+       return this.setState({ isVisbleFullImage: false })
+    };
+
+    handleServiceErrors1 = () => {
+
+    }
+    openDeleteModal = (isPassenger) => this.setState({ showDeleteModal: true, isPassenger });
+
+    hideDeleteModal = () => this.setState({ showDeleteModal: false, isPassenger: false });
 
     render() {
-        const { person, prevProfiles } = this.props;
-        const { isLoadingProfPic, showOptionsModal } = this.state;
+        const { person = null } = this.props;
+        const { showOptionsModal, isVisbleFullImage, showDeleteModal, isPassenger } = this.state;
+        if (person === null) return <BasePage />;
         return (
-            <View style={styles.fill}>
-                <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
-                    <View style={APP_COMMON_STYLES.optionsContainer}>
-                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='REMOVE ROAD BUDDY' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.removeRoadBuddy} />
-                        <LinkButton style={APP_COMMON_STYLES.optionBtn} title='CANCEL' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={this.hideOptionsModal} />
-                    </View>
-                </BaseModal>
-                <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent barStyle="light-content" />
-                </View>
-                <View style={styles.header}>
-                    <IconButton iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: { fontSize: 27 } }}
-                        style={styles.headerIconCont} onPress={this.popToPrevProfile} />
-                    <View style={styles.titleContainer}>
-                        <DefaultText style={styles.title} >{person.name}</DefaultText>
-                        <DefaultText style={styles.subTitle}>{person.nickname ? person.nickname.toUpperCase() : null}</DefaultText>
-                    </View>
-                    {
-                        this.props.person.isFriend ?
-                            <IconButton style={{ padding: 30 }} iconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 20 } }} onPress={this.showOptionsModal} />
-                            :
-                            null
-                    }
-                </View>
-                <ScrollView showsVerticalScrollIndicator={false}>
-                    <View style={styles.profilePic}>
-                        <ImageBackground source={require('../../assets/img/profile-bg.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }}>
-                            {/* <ImageBackground source={require('../../assets/img/profile-bg.png')} style={{ flex: 1, height: null, width: null }}>
-                            <ImageBackground source={person.profilePicture ? { uri: person.profilePicture } : require('../../assets/img/profile-pic.png')} style={{ height: null, width: null, flex: 1, borderRadius: 0 }} resizeMode='contain'>
-                                {
-                                    isLoadingProfPic
-                                        ? <ImageLoader show={isLoadingProfPic} />
-                                        : null
-                                }
-                            </ImageBackground> */}
-                            <Image resizeMode='center' source={person.profilePictureId ? { uri: `${GET_PICTURE_BY_ID}${person.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` } : null} style={{ flex: 1, width: null, height: null }} />
-                        </ImageBackground>
-                    </View>
-                    {/* <Image source={require('../../assets/img/profile-bg.png')} style={styles.profilePicBtmBorder} /> */}
-                    <View style={styles.container}>
-                        <View style={{ flexDirection: 'column' }}>
-                            <DefaultText style={styles.labels}>LOCATION</DefaultText>
-                            <DefaultText style={styles.labelsData}>{person.homeAddress.city ? person.homeAddress.city : '__ '}, {person.homeAddress.state ? person.homeAddress.state : '__'}</DefaultText>
+            <BasePage defaultHeader={false} shifterBottomOffset={APP_COMMON_STYLES.tabContainer.height}>
+                {/* {person.profilePictureId && <GesturedCarouselModal
+                    isVisible={isVisbleFullImage}
+                    onCancel={this.onCancelFullImage}
+                    pictureIds={[{ id: person.profilePictureId }]}
+                    isGestureEnable={true}
+                    isZoomEnable={true}
+                />} */}
+                {
+                 person.profilePictureId && <ImageViewer HeaderComponent={()=>{
+                    return <View style={{height:IS_ANDROID?heightPercentageToDP(6):heightPercentageToDP(12),display:'flex',flexDirection:'row',backgroundColor:'rgba(0, 0, 0, 0.37)',justifyContent:'flex-end',alignItems:'flex-end'}}>
+                        <View style={{width:50,height:50,display:'flex',flexDirection:'row',justifyContent:'center',alignItems:'center'}}>
+                        <NBIcon name='close' fontSize={20}  style={{ color: '#fff'}} onPress={this.onCancelFullImage} />
                         </View>
-                        <View style={[styles.basicAlignment, styles.horizontalContainer]}>
-                            <View style={styles.individualComponent}>
-                                <DefaultText style={styles.labels}>DOB</DefaultText>
-                                <DefaultText style={styles.labelsData}>{person.dob ? getFormattedDateFromISO(new Date(person.dob).toISOString()) : '---'}</DefaultText>
+                    </View>
+                }} visible={isVisbleFullImage} onRequestClose={this.onCancelFullImage} images={[{ id: person.profilePictureId }].map(image=>{
+                        return {
+                            ...image,uri: `${GET_PICTURE_BY_ID}${image.id.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}`
+                        }
+                    })} imageIndex={0} />
+                }
+                <View style={{ flex: 1 }}>
+                    <BaseModal containerStyle={APP_COMMON_STYLES.optionsModal} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
+                        <View>
+                            <View style={APP_COMMON_STYLES.optionsContainer}>
+                                <LinkButton style={APP_COMMON_STYLES.optionBtn} title='REMOVE FRIEND' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={() => this.openDeleteModal(false)} />
+                                {person.isPassenger && <LinkButton style={APP_COMMON_STYLES.optionBtn} title='REMOVE AS PASSENGER' titleStyle={APP_COMMON_STYLES.optionBtnTxt} onPress={() => this.openDeleteModal(true)} />}
                             </View>
-                            <View style={styles.individualComponent}>
-                                <DefaultText style={[styles.labels, { paddingHorizontal: 9 }]}>YEARS RIDING</DefaultText>
-                                <DefaultText style={styles.labelsData}>{person.ridingSince ? new Date().getFullYear() - person.ridingSince : 0}</DefaultText>
-                            </View>
-                            <View style={styles.individualComponent}>
-                                <DefaultText style={styles.labels}>MEMBER SINCE</DefaultText>
-                                <DefaultText style={[styles.labelsData, { alignSelf: 'center' }]}>{new Date(person.dateOfRegistration).getFullYear()}</DefaultText>
-                            </View>
-                        </View>
-                        <View style={styles.clubContainer}>
-                            <DefaultText style={styles.labels}>CLUBS</DefaultText>
-                            <FlatList
-                                style={{ marginBottom: 9 }}
-                                data={person.clubs}
-                                keyExtractor={this.clubsKeyExtractor}
-                                renderItem={({ item, index }) => (
-                                    <View style={{ paddingVertical: 2 }}>
-                                        <DefaultText style={styles.labelsData}>{item.clubName}</DefaultText>
-                                    </View>
-                                )}
-                            />
-                        </View>
-
-
-                        {
-                            this.props.person.isFriend
-                                ? <View>
-                                    <View style={{ marginTop: 19 }}>
-                                        <View style={styles.basicAlignment}>
-                                            <TouchableOpacity style={styles.basicAlignment} onPress={() => this.getBuddyFriendListPage()}>
-                                                <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Road Buddies</DefaultText>
-                                                <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
-                                            </TouchableOpacity>
-                                        </View>
-                                        {
-                                            person.friendList.length > 0
-                                                ?
-                                                <View style={styles.greyBorder}>
-                                                    <FlatList
-                                                        style={{ flexDirection: 'column' }}
-                                                        numColumns={4}
-                                                        data={person.friendList.slice(0, 4)}
-                                                        keyExtractor={this.roadBuddiesKeyExtractor}
-                                                        renderItem={({ item, index }) => (
-                                                            <SmallCard
-                                                                placeholderImage={require('../../assets/img/profile-pic.png')}
-                                                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
-                                                                onPress={() => this.openRoadBuddy(item.userId)}
-                                                                imageStyle={styles.imageStyle}
-                                                            />
-                                                        )}
-                                                    />
-
-                                                </View>
-                                                : null
-                                        }
-                                    </View>
-
-
-
-                                    <View style={{ marginTop: 19 }}>
-                                        <View style={styles.basicAlignment}>
-                                            <TouchableOpacity style={styles.basicAlignment} onPress={() => this.getBuddyPassengerListPage()}>
-                                                <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Passengers</DefaultText>
-                                                <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
-                                            </TouchableOpacity>
-                                        </View>
-                                        {
-                                            person.passengerList.length > 0
-                                                ?
-                                                <View style={styles.greyBorder}>
-                                                    <FlatList
-                                                        style={{ flexDirection: 'column' }}
-                                                        numColumns={4}
-                                                        data={person.passengerList.slice(0, 4)}
-                                                        keyExtractor={this.passengerListKeyExtractor}
-                                                        renderItem={({ item, index }) => (
-                                                            <SmallCard
-                                                                placeholderImage={require('../../assets/img/profile-pic.png')}
-                                                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
-                                                                onPress={() => this.openPassengerProfile(item, index)}
-                                                                imageStyle={styles.imageStyle}
-                                                            />
-                                                        )}
-                                                    />
-                                                </View>
-                                                : null
-                                        }
+                            {showDeleteModal && <BaseModal containerStyle={{ justifyContent: 'center', alignItems: 'center' }} isVisible={showDeleteModal} onCancel={this.hideDeleteModal} >
+                                <View style={styles.deleteBoxCont}>
+                                    <DefaultText style={styles.deleteTitle}>{isPassenger ? `Remove Passenger` : `Remove Friend`}</DefaultText>
+                                    <DefaultText numberOfLines={3} style={styles.deleteText}>{isPassenger ? `Are you sure you want to remove ${this.props.person.name} from your passenger’s list?` : `Are you sure you want to remove ${this.props.person.name} from your Road Crew ?`}</DefaultText>
+                                    <View style={styles.btnContainer}>
+                                        <BasicButton title='CANCEL' style={[styles.actionBtn, { backgroundColor: '#8D8D8D' }]} titleStyle={styles.actionBtnTxt} onPress={this.hideDeleteModal} />
+                                        <BasicButton title='CONFIRM' style={styles.actionBtn} titleStyle={styles.actionBtnTxt} onPress={isPassenger ? this.removeFromPassengers : this.removeRoadBuddy} />
                                     </View>
                                 </View>
+                            </BaseModal>
+                            }
+                        </View>
+                    </BaseModal>
+                    <View style={styles.header}>
+                        <IconButton iconProps={{ name: 'md-arrow-round-back', type: 'Ionicons', style: { fontSize: 27 } }}
+                            style={styles.headerIconCont} onPress={this.popToPrevProfile} />
+                        <View style={styles.titleContainer}>
+                            <DefaultText style={styles.title} >{person.name}</DefaultText>
+                            {person.nickname && <DefaultText style={styles.subTitle}>{person.nickname.toUpperCase()}</DefaultText>}
+                        </View>
+                        {
+                            this.props.person.isFriend && this.state.activeTab === 'PROFILE'
+                                ? <IconButton style={{ justifyContent: 'flex-end', marginRight: 17 }} iconProps={{ name: 'options', type: 'SimpleLineIcons', style: { color: '#fff', fontSize: 20 } }} onPress={this.showOptionsModal} />
                                 : null
                         }
                     </View>
-                    <LinkButton style={styles.fullWidthContainer} onPress={this.openJournalPage}>
-                        <ImageBackground source={require('../../assets/img/my-journal.png')} style={styles.imgBG}>
-                            <DefaultText style={styles.txtOnImg}>Journal</DefaultText>
-                        </ImageBackground>
-                    </LinkButton>
-                    <View style={styles.fullWidthContainer}>
-                        <ImageBackground source={require('../../assets/img/my-vest.png')} style={styles.imgBG}>
-                            <DefaultText style={styles.txtOnImg}>Vest</DefaultText>
-                        </ImageBackground>
-                    </View>
-                    <TouchableOpacity style={styles.fullWidthContainer} onPress={() => Actions.push(PageKeys.BUDDY_ALBUM)}>
-                        <ImageBackground source={require('../../assets/img/my-photos.png')} style={styles.imgBG}>
-                            <DefaultText style={styles.txtOnImg}>Photos</DefaultText>
-                        </ImageBackground>
-                    </TouchableOpacity>
-
-                </ScrollView>
-                {/* Shifter: - Brings the app navigation menu */}
-                <ShifterButton onPress={this.showAppNavMenu} containerStyles={this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null} alignLeft={this.props.user.handDominance === 'left'} />
-            </View>
+                    <Tabs onChangeTab={this.onChangeTab} tabBarPosition='bottom' tabContainerStyle={styles.bottomTabContainer} ref={elRef => this.tabsRef = elRef} tabBarActiveTextColor='#fff' tabBarInactiveTextColor='#fff' tabBarUnderlineStyle={{ height: 0 }}>
+                        <Tab heading='PROFILE' tabStyle={[styles.inActiveTab, styles.borderRightWhite]} activeTabStyle={[styles.activeTab, styles.borderRightWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
+                            <View style={[styles.fill, { paddingBottom: APP_COMMON_STYLES.tabContainer.height }]}>
+                                <ScrollView showsVerticalScrollIndicator={false}>
+                                    <TouchableOpacity activeOpacity={1} onPress={person.profilePictureId ? this.showFullImage : null} style={styles.profilePic}>
+                                        {person.profilePictureId
+                                            ? <ImageBackground source={require('../../assets/img/profile-bg.png')} style={{ height: null, width: null, flex: 1, overflow: 'hidden' }}>
+                                                <FitImage onLoadStart={this.showProfilePicLoader} onLoadEnd={this.hideProfilePicLoader} resizeMode='cover' source={{ uri: `${GET_PICTURE_BY_ID}${person.profilePictureId.replace(THUMBNAIL_TAIL_TAG, MEDIUM_TAIL_TAG)}` }} />
+                                            </ImageBackground>
+                                            : <Image source={require('../../assets/img/profile-pic-placeholder.png')} style={{ height: null, width: null, flex: 1 }} />}
+                                    </TouchableOpacity>
+                                    <View style={styles.container}>
+                                        <View style={{ flexDirection: 'column' }}>
+                                            <DefaultText style={styles.labels}>LOCATION</DefaultText>
+                                            <DefaultText style={styles.labelsData}>{person.homeAddress.city ? person.homeAddress.city : '__ '}, {person.homeAddress.state ? person.homeAddress.state : '__'}</DefaultText>
+                                        </View>
+                                        <View style={[styles.basicAlignment, styles.horizontalContainer]}>
+                                            <View style={styles.individualComponent}>
+                                                <DefaultText style={styles.labels}>DOB</DefaultText>
+                                                <DefaultText style={styles.labelsData}>{person.dob ? getFormattedDateFromISO(new Date(person.dob).toISOString()) : '---'}</DefaultText>
+                                            </View>
+                                            <View style={styles.individualComponent}>
+                                                <DefaultText style={[styles.labels, { paddingHorizontal: 9 }]}>YEARS RIDING</DefaultText>
+                                                <DefaultText style={styles.labelsData}>{person.ridingSince ? new Date().getFullYear() - person.ridingSince : 0}</DefaultText>
+                                            </View>
+                                            <View style={styles.individualComponent}>
+                                                <DefaultText style={styles.labels}>MEMBER SINCE</DefaultText>
+                                                <DefaultText style={[styles.labelsData, { alignSelf: 'center' }]}>{new Date(person.dateOfRegistration).getFullYear()}</DefaultText>
+                                            </View>
+                                        </View>
+                                        <View style={styles.clubContainer}>
+                                            <DefaultText style={styles.labels}>CLUBS</DefaultText>
+                                            <FlatList
+                                                style={{ marginBottom: 9 }}
+                                                data={person.clubs}
+                                                keyExtractor={this.clubsKeyExtractor}
+                                                renderItem={({ item, index }) => (
+                                                    <View style={{ paddingVertical: 2 }}>
+                                                        <DefaultText style={styles.labelsData}>{item.clubName}</DefaultText>
+                                                    </View>
+                                                )}
+                                            />
+                                        </View>
+                                        {
+                                            person.isFriend
+                                                ? <View>
+                                                    {
+                                                        person.friendList.length > 0
+                                                            ? <View style={{ marginTop: 19 }}>
+                                                                <View style={styles.basicAlignment}>
+                                                                    <TouchableOpacity activeOpacity={person.friendList.length === 0 ? 1 : 0.7} style={styles.basicAlignment} onPress={() => person.friendList.length > 0 && this.getBuddyFriendListPage()}>
+                                                                        <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Road Crew</DefaultText>
+                                                                        <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
+                                                                    </TouchableOpacity>
+                                                                </View>
+                                                                <View style={styles.greyBorder}>
+                                                                    <FlatList
+                                                                        style={{ flexDirection: 'column' }}
+                                                                        numColumns={4}
+                                                                        data={person.friendList.slice(0, 4)}
+                                                                        keyExtractor={this.roadBuddiesKeyExtractor}
+                                                                        renderItem={({ item, index }) => (
+                                                                            <SmallCard
+                                                                                placeholderImage={require('../../assets/img/profile-pic-placeholder.png')}
+                                                                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
+                                                                                onPress={() => this.openRoadBuddy(item)}
+                                                                                imageStyle={styles.imageStyle}
+                                                                            />
+                                                                        )}
+                                                                    />
+                                                                </View>
+                                                            </View>
+                                                            : null
+                                                    }
+                                                    {
+                                                        person.passengerList.length > 0
+                                                            ? <View style={{ marginTop: 19 }}>
+                                                                <View style={styles.basicAlignment}>
+                                                                    <TouchableOpacity activeOpacity={person.passengerList.length === 0 ? 1 : 0.7} style={styles.basicAlignment} onPress={() => person.passengerList.length > 0 && this.getBuddyPassengerListPage()}>
+                                                                        <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, paddingRight: 8 }]}>Passengers</DefaultText>
+                                                                        <DefaultText style={[styles.labelsData, { letterSpacing: 1.8, color: '#F5891F' }]}>[see all]</DefaultText>
+                                                                    </TouchableOpacity>
+                                                                </View>
+                                                                <View style={styles.greyBorder}>
+                                                                    <FlatList
+                                                                        style={{ flexDirection: 'column' }}
+                                                                        numColumns={4}
+                                                                        data={person.passengerList.slice(0, 4)}
+                                                                        keyExtractor={this.passengerListKeyExtractor}
+                                                                        renderItem={({ item, index }) => (
+                                                                            <SmallCard
+                                                                                placeholderImage={require('../../assets/img/profile-pic-placeholder.png')}
+                                                                                image={item.profilePictureId ? `${GET_PICTURE_BY_ID}${item.profilePictureId}` : null}
+                                                                                onPress={() => this.openPassengerProfile(item, index)}
+                                                                                imageStyle={styles.imageStyle}
+                                                                            />
+                                                                        )}
+                                                                    />
+                                                                </View>
+                                                            </View>
+                                                            : null
+                                                    }
+                                                </View>
+                                                : null
+                                        }
+                                    </View>
+                                    <LinkButton style={styles.fullWidthContainer} onPress={this.openJournalPage}>
+                                        <ImageBackground source={require('../../assets/img/my-journal.png')} style={styles.imgBG}>
+                                                <DefaultText style={styles.txtOnImg}>The Road</DefaultText>
+                                                <DefaultText style={[styles.txtOnImg,{marginTop:-50}]}>Stories From</DefaultText>
+                                        </ImageBackground>
+                                    </LinkButton>
+                                    <LinkButton style={styles.fullWidthContainer} onPress={() => Actions.push(PageKeys.VEST)} >
+                                        <ImageBackground source={require('../../assets/img/my-vest.png')} style={styles.imgBG}>
+                                            <DefaultText style={styles.txtOnImg}>My Vest</DefaultText>
+                                        </ImageBackground>
+                                    </LinkButton>
+                                    <TouchableOpacity style={styles.fullWidthContainer} onPress={() => Actions.push(PageKeys.BUDDY_ALBUM, { frienduserId: this.props.person.userId })}>
+                                        <ImageBackground source={require('../../assets/img/my-photos.png')} style={styles.imgBG}>
+                                            <DefaultText style={styles.txtOnImg}>Photos</DefaultText>
+                                        </ImageBackground>
+                                    </TouchableOpacity>
+                                </ScrollView>
+                            </View>
+                        </Tab>
+                        <Tab heading='GARAGE' tabStyle={[styles.inActiveTab, styles.borderLeftWhite]} activeTabStyle={[styles.activeTab, styles.borderLeftWhite]} textStyle={styles.tabText} activeTextStyle={styles.tabText}>
+                            <MyGarageTab isEditable={false} friend={this.props.person} />
+                        </Tab>
+                    </Tabs>
+                </View>
+            </BasePage>
         );
     }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, props) => {
     const { user, userAuthToken, deviceToken } = state.UserAuth;
-    const { profileLastOptions, hasNetwork } = state.PageState;
-    const { person, prevProfiles } = state.CurrentProfile;
-    const hasPrevProfiles = state.CurrentProfile.prevProfiles.length > 0;
-    const garage = { garageId, garageName, spaceList, activeBikeIndex } = state.GarageInfo;
-    return { user, userAuthToken, deviceToken, garage, profileLastOptions, hasNetwork, person, hasPrevProfiles, prevProfiles };
+    const { hasNetwork, lastApi, isRetryApi } = state.PageState;
+    return { user, userAuthToken, deviceToken, lastApi, isRetryApi, hasNetwork, person: getCurrentProfileState(state, props) };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
-        logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
         updateUser: (updates) => dispatch(updateUserAction(updates)),
-        getProfilePicture: (pictureId, friendId) => getPicture(pictureId, ({ picture, pictureId }) => {
-            dispatch(updateCurrentFriendAction({ profilePicture: picture, userId: friendId }))
-        }, (error) => {
-            dispatch(updateCurrentFriendAction({ userId: friendId }))
-        }),
+        resetPersonProfilePic: () => dispatch(resetPersonProfilePicAction()),
         getSpaceList: (userId) => dispatch(getSpaceList(userId)),
-        updateProfilePicture: (profilePicStr, mimeType, userId) => dispatch(updateProfilePicture(profilePicStr, mimeType, userId)),
         setBikeAsActive: (userId, spaceId, prevActiveIndex, index) => dispatch(setBikeAsActive(userId, spaceId, prevActiveIndex, index)),
-        getGarageInfo: (userId) => {
-            dispatch(apiLoaderActions(true));
-            getGarageInfo(userId, (garage) => {
-                dispatch(replaceGarageInfoAction(garage))
-                dispatch(apiLoaderActions(false))
-            }, (error) => {
-                dispatch(apiLoaderActions(false));
-                console.log(`getGarage error: `, error);
-            })
-        },
         updateMyProfileLastOptions: (expanded) => dispatch(updateMyProfileLastOptionsAction({ expanded })),
         getRoadBuddies: (userId) => dispatch(getRoadBuddies(userId)),
         setCurrentFriend: (data) => dispatch(setCurrentFriendAction(data)),
-        getFriendInfo: (friendType, userId, friendIdList) => dispatch(getFriendInfo(friendType, userId, friendIdList)),
-        getFriendProfile: (userId, friendId) => dispatch(getFriendProfile(userId, friendId)),
-        getUserProfile: (userId, friendId) => dispatch(getUserProfile(userId, friendId)),
+        getUserProfile: (userId, friendId) => getUserProfile(userId, friendId).then(res => {
+            console.log('getUserProfile  : ', res.data)
+            dispatch(apiLoaderActions(false));
+            dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+            dispatch(updateCurrentFriendAction(res.data));
+        }).catch(er => {
+            console.log(`getUserProfile error: `, er.response || er);
+            dispatch(apiLoaderActions(false));
+            handleServiceErrors(er, [userId, friendId], 'getUserProfile', false, true);
+        }),
         getPassengersById: (userId, friendId, pageNumber, passengerList, successCallback, errorCallback) => dispatch(getPassengersById(userId, friendId, pageNumber, passengerList, successCallback, errorCallback)),
         getRoadBuddiesById: (userId, friendId, pageNumber, friendList, successCallback, errorCallback) => dispatch(getRoadBuddiesById(userId, friendId, pageNumber, friendList, successCallback, errorCallback)),
-        getPictureList: (pictureIdList, callingFrom) => getPictureList(pictureIdList, (pictureObj) => {
-            dispatch(updatePicturesAction({ pictureObj, type: callingFrom }))
-        }, (error) => {
-            console.log('getPictureList error : ', error)
-        }),
         goToPrevProfile: () => dispatch(goToPrevProfileAction()),
         resetPersonProfile: () => dispatch(resetPersonProfileAction()),
         changeScreen: (screenProps) => dispatch(screenChangeAction(screenProps)),
-        doUnfriend: (userId, personId) => dispatch(doUnfriend(userId, personId)),
+        doUnfriend: (userId, personId, passengerId, successCallback, errorCallback) => dispatch(doUnfriend(userId, personId, passengerId, successCallback, errorCallback)),
+        deletePassenger: (passengerId, frienduserId, successCallback) => {
+            dispatch(apiLoaderActions(true));
+            deletePassenger(passengerId).then(res => {
+                console.log("deletePassenger success: ", res.data);
+                dispatch(apiLoaderActions(false));
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }));
+                dispatch(removeFromPassengerListAction({ passengerId }));
+                dispatch(updateCurrentFriendAction({ isPassenger: false, userId: frienduserId }));
+                Actions.refresh({ passengerId: null });
+                successCallback();
+            }).catch(er => {
+                console.log(`deletePassenger error: `, er.response || er);
+                handleServiceErrors(er, [passengerId], 'deletePassenger', true, true);
+                dispatch(apiLoaderActions(false));
+            })
+        },
+        resetErrorHandling: (state) => dispatch(resetErrorHandlingAction({ comingFrom: 'friends_profile', isRetryApi: state })),
     }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(FriendsProfile);
@@ -385,7 +425,6 @@ const styles = StyleSheet.create({
         width: '100%',
         height: heightPercentageToDP(6),
         flexDirection: 'row',
-        marginTop: IS_ANDROID ? 0 : hasIOSAbove10 ? APP_COMMON_STYLES.statusBar.height : 0
     },
     headerIconCont: {
         paddingHorizontal: 0,
@@ -516,10 +555,12 @@ const styles = StyleSheet.create({
         marginRight: 10
     },
     txtOnImg: {
+        marginLeft:20,
         color: '#fff',
         fontSize: 18,
         letterSpacing: 2.7,
         fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        marginTop:-40
     },
     greyBorder: {
         borderTopWidth: 13,
@@ -529,5 +570,74 @@ const styles = StyleSheet.create({
         marginRight: widthPercentageToDP(1.8),
         height: widthPercentageToDP(100 / 5),
         width: widthPercentageToDP(100 / 5)
-    }
+    },
+    bottomTabContainer: {
+        position: 'absolute',
+        bottom: 0,
+        width: '100%',
+        height: APP_COMMON_STYLES.tabContainer.height
+    },
+    bottomTab: {
+        height: APP_COMMON_STYLES.tabContainer.height,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: widthPercentageToDP(50),
+
+    },
+    activeTab: {
+        backgroundColor: '#000000'
+    },
+    inActiveTab: {
+        backgroundColor: '#0083CA'
+    },
+    borderRightWhite: {
+        borderRightWidth: 1,
+        borderColor: '#fff'
+    },
+    borderLeftWhite: {
+        borderLeftWidth: 1,
+        borderColor: '#fff'
+    },
+    tabText: {
+        fontSize: 13,
+        fontFamily: CUSTOM_FONTS.robotoBold,
+    },
+    deleteBoxCont: {
+        height: 263,
+        width: 327,
+        backgroundColor: '#F4F4F4',
+        borderRadius: 20,
+        padding: 31,
+        paddingRight: 40
+    },
+    deleteTitle: {
+        color: '#585756',
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        fontSize: 20
+    },
+    deleteText: {
+        color: '#585756',
+        fontFamily: CUSTOM_FONTS.roboto,
+        fontSize: 17,
+        letterSpacing: 0.17,
+        marginTop: 30
+    },
+    btnContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20
+    },
+    actionBtn: {
+        height: 35,
+        backgroundColor: '#2B77B4',
+        width: 125,
+        alignSelf: 'center',
+        borderRadius: 20,
+        marginTop: 20
+    },
+    actionBtnTxt: {
+        letterSpacing: 1.4,
+        fontSize: 14,
+        fontFamily: CUSTOM_FONTS.robotoBold
+    },
 });

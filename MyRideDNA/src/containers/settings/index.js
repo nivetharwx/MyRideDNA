@@ -1,21 +1,20 @@
 import React, { Component } from 'react';
-import { View, StatusBar, Text, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Alert } from 'react-native';
+import { View, ScrollView, KeyboardAvoidingView, Alert, TouchableHighlightBase } from 'react-native';
 import { connect } from 'react-redux';
 import styles from './styles';
-import { APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, USER_AUTH_TOKEN, heightPercentageToDP } from '../../constants';
-import { BasicHeader } from '../../components/headers';
-import { SwitchIconButton, ShifterButton, LinkButton, IconButton } from '../../components/buttons';
-import { Item, Icon as NBIcon, Accordion, Toast, Input } from 'native-base';
-import { appNavMenuVisibilityAction, resetPasswordErrorAction } from '../../actions';
-import { LabeledInput, IconicList } from '../../components/inputs';
-import { logoutUser, updateUserInfo, updateShareLocationState, updatePassword, updateUserSettings } from '../../api';
+import { APP_COMMON_STYLES, IS_ANDROID, widthPercentageToDP, heightPercentageToDP, CUSTOM_FONTS, PageKeys } from '../../constants';
+import { SwitchIconButton, LinkButton, BasicButton } from '../../components/buttons';
+import { Toast } from 'native-base';
+import { resetPasswordErrorAction, apiLoaderActions, resetErrorHandlingAction } from '../../actions';
+import { IconicList, LabeledInputPlaceholder } from '../../components/inputs';
+import { logoutUser, updatePassword, updateUserSettings, deactivateUserAccount } from '../../api';
 import { BaseModal } from '../../components/modal';
 import ForgotPassword from '../../containers/forgot-password';
 import Md5 from 'react-native-md5';
 import { Actions } from 'react-native-router-flux';
-import { Loader } from '../../components/loader';
 import { DefaultText } from '../../components/labels';
-
+import { BasePage } from '../../components/pages';
+import deviceInfo from 'react-native-device-info'
 
 export class Settings extends Component {
     fieldRefs = [];
@@ -30,15 +29,26 @@ export class Settings extends Component {
             hideNewPasswd: true,
             hideConfPasswd: true,
             showForgotPasswordModal: false,
-            expandedItem: null,
             measurementDistanceUnit: props.user.distanceUnit,
             locationRadiusState: props.user.locationRadius,
             handDominanceState: props.user.handDominance,
             timeIntervalInSeconds: props.user.timeIntervalInSeconds,
             showCircle: props.user.showCircle,
-            showLoader: false,
-            isUpdatedSetting: false
+            isUpdatedSetting: false,
+            showOptionsModal: false,
+            baseModalField: null,
+            versionNumber:''
         };
+    }
+
+    componentDidMount(){
+       
+        deviceInfo.getReadableVersion().then(ver=>{
+            this.setState({
+                versionNumber:ver
+            })
+        })
+        
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -56,7 +66,7 @@ export class Settings extends Component {
                 buttonText: 'Okay',
                 position: 'bottom',
             });
-            this.fieldRefs.forEach(field => field.clear());
+            this.fieldRefs = [];
             this.setState({ currentPasswd: '', newPasswd: '', confirmPasswd: '' });
             this.onPressLogout();
         }
@@ -66,6 +76,34 @@ export class Settings extends Component {
                 text: 'Setting updated successfully'
             });
             this.setState({ isUpdatedSetting: false })
+        }
+        if (prevProps.hasNetwork === false && this.props.hasNetwork === true) {
+            this.retryApiFunc();
+        }
+
+        if (prevProps.isRetryApi === false && this.props.isRetryApi === true) {
+            if (Actions.currentScene === this.props.lastApi.currentScene) {
+                Alert.alert(
+                    'Something went wrong ',
+                    '',
+                    [
+                        {
+                            text: 'Retry ', onPress: () => {
+                                this.retryApiFunc();
+                                this.props.resetErrorHandling(false)
+                            }
+                        },
+                        { text: 'Cancel', onPress: () => { this.props.resetErrorHandling(false) }, style: 'cancel' },
+                    ],
+                    { cancelable: false }
+                )
+            }
+        }
+    }
+
+    retryApiFunc = () => {
+        if (this.props.lastApi && this.props.lastApi.currentScene === Actions.currentScene) {
+            this.props[`${this.props.lastApi.api}`](...this.props.lastApi.params)
         }
     }
 
@@ -81,63 +119,13 @@ export class Settings extends Component {
 
     toggleConfPasswdVisibility = () => this.setState(prevState => ({ hideConfPasswd: !prevState.hideConfPasswd }));
 
-    onFocusNewPasswordField = () => {
-        if (this.state.currentPasswd.trim().length === 0) {
-            Toast.show({
-                text: 'Please provide your current password',
-                buttonText: 'Okay',
-                position: 'top',
-                onClose: () => {
-                    this.fieldRefs[0].focus();
-                }
-            });
-        }
-    }
+    onChangedistanceUnit = (val) => this.setState({ measurementDistanceUnit: val })
 
-    onChangedistanceUnit = (val) => {
-        this.setState({
-            measurementDistanceUnit: val
-        })
-    }
+    onChangeLoactionradius = (val) => this.setState({ locationRadiusState: val })
 
-    onChangeLoactionradius = (val) => {
-        this.setState({
-            locationRadiusState: val
-        })
-    }
+    onChangeTimeInterval = (val) => this.setState({ timeIntervalInSeconds: val })
 
-    onChangeTimeInterval = (val) => {
-        this.setState({
-            timeIntervalInSeconds: val
-        })
-    }
-
-    onChangeHandDominance = (val) => {
-        this.setState({
-            handDominanceState: val
-        })
-    }
-    onFocusConfirmPasswordField = () => {
-        if (this.state.currentPasswd.trim().length === 0) {
-            Toast.show({
-                text: 'Please provide your current password',
-                buttonText: 'Okay',
-                position: 'top',
-                onClose: () => {
-                    this.fieldRefs[0].focus();
-                }
-            });
-        } else if (this.state.newPasswd.trim().length === 0) {
-            Toast.show({
-                text: 'Please provide proper password',
-                buttonText: 'Okay',
-                position: 'top',
-                onClose: () => {
-                    this.fieldRefs[1].focus();
-                }
-            });
-        }
-    }
+    onChangeHandDominance = (val) => this.setState({ handDominanceState: val })
 
     passwordFormat = () => {
         if (this.state.newPasswd.length < 5) {
@@ -147,55 +135,16 @@ export class Settings extends Component {
         }
     }
 
-    showAppNavMenu = () => this.props.showAppNavMenu();
-
-    onPressLogout = async () => {
-        this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken);
-    }
 
     toggleForgotPasswordForm = () => {
         this.setState(prevState => ({ showForgotPasswordModal: !prevState.showForgotPasswordModal }));
     }
 
-    renderAccordionItem = (item) => {
-        if (item.title === 'Change password') {
-            const { currentPasswd, newPasswd, confirmPasswd,
-                hideCurPasswd, hideNewPasswd, hideConfPasswd } = this.state;
-            return (
-                <View style={styles.changePasswdFrom}>
-
-                    <Item style={styles.passwdFormField}>
-                        <TextInput secureTextEntry={hideCurPasswd} style={styles.fill} value={currentPasswd} ref={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChangeText={this.onChangeCurrentPasswordField} placeholder='Current Password' onSubmitEditing={() => this.fieldRefs[1].focus()} blurOnSubmit={false} />
-                        <IconButton onPress={this.toggleCurPasswdVisibility} style={{ backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: hideCurPasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
-                    </Item>
-                    <Item style={styles.passwdFormField}>
-                        <TextInput onBlur={this.passwordFormat} secureTextEntry={hideNewPasswd} style={styles.fill} value={newPasswd} ref={elRef => this.fieldRefs[1] = elRef} onFocus={this.onFocusNewPasswordField} returnKeyType='next' onChangeText={this.onChangeNewPasswordField} placeholder='New Password' onSubmitEditing={() => this.fieldRefs[2].focus()} blurOnSubmit={false} />
-                        <IconButton onPress={this.toggleNewPasswdVisibility} style={{ backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: hideNewPasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
-                    </Item>
-                    <Item style={styles.passwdFormField}>
-                        <TextInput secureTextEntry={hideConfPasswd} style={styles.fill} value={confirmPasswd} ref={elRef => this.fieldRefs[2] = elRef} onFocus={this.onFocusConfirmPasswordField} returnKeyType='next' onChangeText={this.onChangeConfirmPasswordField} placeholder='Confirm Password' onSubmitEditing={() => { }} blurOnSubmit={true} />
-                        <IconButton onPress={this.toggleConfPasswdVisibility} style={{ backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) }} iconProps={{ name: hideConfPasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' } }} />
-                    </Item>
-                    <LinkButton style={styles.linkItem} title='Forgot Password ?' titleStyle={styles.infoLink} onPress={this.toggleForgotPasswordForm} />
-                </View>
-            );
-        }
-    }
-
-    hasSettingsChanged = () => {
-        const { currentPasswd, newPasswd, confirmPasswd, locationEnable, measurementDistanceUnit,
-            locationRadiusState, handDominanceState, timeIntervalInSeconds, showCircle } = this.state;
-        return (currentPasswd !== '' && newPasswd !== '' && confirmPasswd !== '') || locationEnable !== this.props.user.locationEnable ||
-            (locationRadiusState !== this.props.user.locationRadius) || (measurementDistanceUnit !== this.props.user.distanceUnit) ||
-            (handDominanceState !== this.props.user.handDominance) || (timeIntervalInSeconds !== this.props.user.timeIntervalInSeconds) ||
-            (showCircle !== this.props.user.showCircle);
-    }
-
-    submitSettingsChanges = () => {
-        const { currentPasswd, newPasswd, confirmPasswd, locationEnable, measurementDistanceUnit,
-            locationRadiusState, handDominanceState, timeIntervalInSeconds, showCircle } = this.state;
+    submitPasswordChange = () => {
+        const { currentPasswd, newPasswd, confirmPasswd } = this.state;
         if (currentPasswd !== '' && newPasswd !== '' && confirmPasswd !== '') {
             if (newPasswd === confirmPasswd) {
+                this.setState({ showOptionsModal: false, baseModalField: null })
                 this.props.updatePassword({ userId: this.props.user.userId, currentPassword: Md5.hex_md5(currentPasswd + ''), newPassword: Md5.hex_md5(newPasswd + '') });
             } else {
                 Toast.show({
@@ -205,13 +154,18 @@ export class Settings extends Component {
                 });
             }
         }
+    }
+
+    submitSettingsChanges = () => {
+        const { locationEnable, measurementDistanceUnit,
+            locationRadiusState, handDominanceState, timeIntervalInSeconds, showCircle } = this.state;
         // TODO: Add new keys here and validate
         if (locationRadiusState !== '' && !isNaN(locationRadiusState) && parseInt(locationRadiusState) > 0
             && !isNaN(timeIntervalInSeconds) && parseInt(timeIntervalInSeconds) > 0) {
             this.props.updateUserSettings({
                 userId: this.props.user.userId, distanceUnit: measurementDistanceUnit,
                 locationRadius: parseInt(locationRadiusState), handDominance: handDominanceState,
-                timeIntervalInSeconds, showCircle, locationEnable
+                timeIntervalInSeconds: parseInt(timeIntervalInSeconds), showCircle, locationEnable
             })
             this.setState({ isUpdatedSetting: true })
         } else {
@@ -223,106 +177,233 @@ export class Settings extends Component {
         }
     }
 
-    render() {
-        const MEASUREMENT_UNITS = [{ label: 'Kilometers', value: 'km' }, { label: 'Miles', value: 'mi' }];
-        const HAND_DOMINANCE = [{ label: 'Left Handed', value: 'left' }, { label: 'Right Handed', value: 'right' }];
-        const { user, showLoader } = this.props;
-        const { locationEnable } = this.state;
-        return (
-            <View style={styles.fill}>
-                <ForgotPassword isVisible={this.state.showForgotPasswordModal} onCancel={this.toggleForgotPasswordForm} onPressOutside={this.toggleForgotPasswordForm} />
-                <View style={APP_COMMON_STYLES.statusBar}>
-                    <StatusBar translucent backgroundColor={APP_COMMON_STYLES.statusBarColor} barStyle="light-content" />
-                </View>
-                <View style={styles.fill}>
-                    <BasicHeader title='Settings' rightIconProps={{ name: 'md-exit', type: 'Ionicons', style: { fontSize: widthPercentageToDP(8), color: '#fff' }, onPress: this.onPressLogout }} />
-                    <View style={styles.pageContent}>
+    showOptionsModal = () => this.setState({ showOptionsModal: true });
 
-                        <ScrollView style={[styles.containerItem, { marginLeft: 0 }]} contentContainerStyle={{ backgroundColor: '#fff' }}>
-                            <KeyboardAvoidingView
-                                style={{ flex: 1 }}
-                                behavior="position"
-                            >
-                                <Item style={styles.containerItem}>
-                                    <DefaultText>Share my location with friends</DefaultText>
-                                    <View style={{ flex: 1 }}>
-                                        <SwitchIconButton
-                                            activeIcon={<NBIcon name='close' type='FontAwesome' style={{ color: '#fff', alignSelf: 'flex-start', paddingHorizontal: 10 }} />}
-                                            inactiveIcon={<NBIcon name='eye' type='MaterialCommunityIcons' style={{ color: '#fff', alignSelf: 'flex-end', paddingHorizontal: 12 }} />}
-                                            value={!locationEnable} onChangeValue={() => this.setState(prevState => ({ locationEnable: !prevState.locationEnable }))} />
-                                    </View>
-                                </Item>
-                                <Item style={styles.containerItem}>
-                                    <LabeledInput containerStyle={{ marginBottom: 0 }} inputStyle={{ borderBottomWidth: 0 }} inputValue={!this.state.timeIntervalInSeconds ? '' : this.state.timeIntervalInSeconds + ''}
-                                        placeholder='Time interval in seconds' onChange={this.onChangeTimeInterval} inputType='telephoneNumber'
-                                    />
-                                </Item>
-                                <IconicList
-                                    selectedValue={this.state.measurementDistanceUnit} style={styles.distanceMeasurementUnit}
-                                    placeholder='Distance measurement unit' values={MEASUREMENT_UNITS} containerStyle={{ paddingLeft: 10 }}
-                                    onChange={this.onChangedistanceUnit}
-                                />
-                                <Item style={styles.containerItem}>
-                                    <LabeledInput containerStyle={{ marginBottom: 0 }} inputStyle={{ borderBottomWidth: 0 }} inputValue={!this.state.locationRadiusState ? '' : this.state.locationRadiusState + ''}
-                                        placeholder='Location Radius' onChange={this.onChangeLoactionradius} inputType='telephoneNumber'
-                                    />
-                                </Item>
-                                <Item style={styles.containerItem}>
-                                    <DefaultText>Show visible map boundary circle</DefaultText>
-                                    <View style={{ flex: 1 }}>
-                                        <SwitchIconButton
-                                            activeIcon={<NBIcon name='close' type='FontAwesome' style={{ color: '#fff', alignSelf: 'flex-start', paddingHorizontal: 10 }} />}
-                                            inactiveIcon={<NBIcon name='eye' type='MaterialCommunityIcons' style={{ color: '#fff', alignSelf: 'flex-end', paddingHorizontal: 12 }} />}
-                                            value={!this.state.showCircle} onChangeValue={() => this.setState(prevState => ({ showCircle: !prevState.showCircle }))} />
-                                    </View>
-                                </Item>
-                                <IconicList
-                                    selectedValue={this.state.handDominanceState}
-                                    placeholder='User hand dominance' values={HAND_DOMINANCE} containerStyle={{ paddingLeft: 10 }}
-                                    onChange={this.onChangeHandDominance}
-                                />
+    hideOptionsModal = () => this.setState({ showOptionsModal: false, currentPasswd: '', newPasswd: '', confirmPasswd: '', baseModalField: null });
 
-                                <Accordion expanded={this.state.expandedItem} style={{ borderWidth: 0, marginLeft: '1.3%' }} dataArray={[{ title: 'Change password' }]} renderContent={this.renderAccordionItem} headerStyle={{}} />
-                            </KeyboardAvoidingView>
-                        </ScrollView>
+    getFormattedDeleteDateFromISO = (isoDateString = new Date().toISOString()) => {
+        return new Date(new Date().setDate(new Date().getDate() + 60)).toLocaleDateString('default', { weekday: 'long', month: 'long', day: "numeric", year: 'numeric' })
+    }
 
-                    </View>
-                </View>
-                <View style={styles.submitSec}>
-                    {
-                        this.hasSettingsChanged()
-                            ? <TouchableOpacity style={styles.submitButton} onPress={this.submitSettingsChanges}>
-                                <NBIcon name='md-checkmark' type='Ionicons' style={styles.submitBtnIcon} />
-                            </TouchableOpacity>
-                            : <View style={[styles.submitButton, styles.disabled]}>
-                                <NBIcon name='md-checkmark' type='Ionicons' style={[styles.submitBtnIcon, styles.disabled]} />
-                            </View>
-                    }
-                </View>
+    deactivateUserAccount = () => {
+        this.props.deactivateUserAccount(this.props.user.userId, (res) => {
+            this.setState({ showOptionsModal: true, baseModalField: 'DELETE_ACCOUNT_THIRD_CONFIRMATION' })
+        });
+    }
 
+    onPressLogout = async () => {
+        this.props.logoutUser(this.props.user.userId, this.props.userAuthToken, this.props.deviceToken, (res) => { }, (er) => { });
+    }
 
-                {/* Shifter: - Brings the app navigation menu */}
-                <ShifterButton onPress={this.showAppNavMenu} containerStyles={this.props.hasNetwork === false ? { bottom: heightPercentageToDP(8.5) } : null} alignLeft={user.handDominance === 'left'} />
-                <Loader isVisible={showLoader} />
+    renderBaseModal = () => {
+        const { currentPasswd, newPasswd, confirmPasswd,
+            hideCurPasswd, hideNewPasswd, hideConfPasswd } = this.state;
+        switch (this.state.baseModalField) {
+            case 'CHANGE_PASSWORD': return <View style={styles.optionsView}>
+                <DefaultText style={{ color: '#2B77B4', fontFamily: CUSTOM_FONTS.robotoBold, fontSize: 20, letterSpacing: 0.2 }}>Change Password</DefaultText>
+                {/* <TextInput secureTextEntry={hideCurPasswd} style={styles.fill} value={currentPasswd} ref={elRef => this.fieldRefs[0] = elRef} returnKeyType='next' onChangeText={this.onChangeCurrentPasswordField} placeholder='Current Password' onSubmitEditing={() => this.fieldRefs[1].focus()} blurOnSubmit={false} /> */}
+                <LabeledInputPlaceholder
+                    containerStyle={{ backgroundColor: '#F4F4F4', flex: 0, borderBottomColor: '#707070' }}
+                    inputValue={currentPasswd} inputStyle={{ paddingBottom: 0, }}
+                    outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3), marginTop: 40, flex: 0 }}
+                    inputRef={elRef => this.fieldRefs[0] = elRef} returnKeyType='next'
+                    secureTextEntry={hideCurPasswd}
+                    onChange={this.onChangeCurrentPasswordField} label='CURRENT PASSWORD' labelStyle={styles.labelStyle}
+                    onSubmit={() => this.fieldRefs[1].focus()} hideKeyboardOnSubmit={false}
+                    iconProps={{ name: hideCurPasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' }, onPress: this.toggleCurPasswdVisibility, containerStyle: { backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) } }}
+                />
+                <LabeledInputPlaceholder
+                    containerStyle={{ backgroundColor: '#F4F4F4', flex: 0, borderBottomColor: '#707070' }}
+                    inputValue={newPasswd} inputStyle={{ paddingBottom: 0, }}
+                    outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3), marginTop: 10, flex: 0 }}
+                    inputRef={elRef => this.fieldRefs[1] = elRef} returnKeyType='next'
+                    secureTextEntry={hideNewPasswd}
+                    onChange={this.onChangeNewPasswordField} label='NEW PASSWORD' labelStyle={styles.labelStyle}
+                    onSubmit={() => this.fieldRefs[2].focus()} hideKeyboardOnSubmit={false}
+                    iconProps={{ name: hideNewPasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' }, onPress: this.toggleNewPasswdVisibility, containerStyle: { backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) } }}
+                />
+                <LabeledInputPlaceholder
+                    containerStyle={{ backgroundColor: '#F4F4F4', flex: 0, borderBottomColor: '#707070' }}
+                    inputValue={confirmPasswd} inputStyle={{ paddingBottom: 0, }}
+                    outerContainer={{ marginTop: IS_ANDROID ? null : heightPercentageToDP(3), marginTop: 10, flex: 0 }}
+                    inputRef={elRef => this.fieldRefs[2] = elRef} returnKeyType='next'
+                    secureTextEntry={hideConfPasswd}
+                    onChange={this.onChangeConfirmPasswordField} label='CONFIRM PASSWORD' labelStyle={styles.labelStyle}
+                    onSubmit={this.submitSettingsChanges} hideKeyboardOnSubmit={false}
+                    iconProps={{ name: hideConfPasswd ? 'eye' : 'eye-off', type: 'MaterialCommunityIcons', style: { fontSize: widthPercentageToDP(6), paddingRight: 0, color: 'white' }, onPress: this.toggleConfPasswdVisibility, containerStyle: { backgroundColor: '#0083CA', alignItems: 'center', justifyContent: 'center', width: widthPercentageToDP(8), height: widthPercentageToDP(8), borderRadius: widthPercentageToDP(4) } }}
+                />
+                <BasicButton title='SUBMIT' style={[styles.submitBtn, { backgroundColor: '#2B77B4' }]} titleStyle={styles.submitBtnTxt} onPress={this.submitPasswordChange} />
+                <LinkButton style={[styles.linkItem, { marginTop: 20 }]} title='Forgot Password?' titleStyle={[styles.infoLink, { color: '#585756', fontSize: 18, letterSpacing: 0.18 }]} onPress={() => this.setState({ showOptionsModal: true, baseModalField: 'FORGOT_PASSWORD', showForgotPasswordModal: true })} />
             </View>
+            case 'FORGOT_PASSWORD': return <View style={styles.optionsView}>
+                <DefaultText style={{ color: '#2B77B4', fontFamily: CUSTOM_FONTS.robotoBold, fontSize: 20, letterSpacing: 0.2 }}>RESET PASSWORD</DefaultText>
+                <ForgotPassword isVisible={this.state.showForgotPasswordModal} onCancel={this.toggleForgotPasswordForm} onPressOutside={this.toggleForgotPasswordForm} comingFrom={PageKeys.SETTINGS} />
+            </View>
+            case 'DELETE_ACCOUNT_FIRST_CONFIRMATION': return <View style={[styles.optionsView, { marginRight: 32 }]}>
+                <DefaultText style={{ color: '#CE0D0D', fontFamily: CUSTOM_FONTS.robotoBold, fontSize: 20, letterSpacing: 0.2 }}>DELETE ACCOUNT</DefaultText>
+                <DefaultText style={[styles.deleteSubText, { marginRight: 20, marginTop: 30 }]} numberOfLines={3}>Your account is scheduled to be delete on {this.getFormattedDeleteDateFromISO()}.</DefaultText>
+                <DefaultText style={styles.deleteSubText}>Are you sure you wish to permanently delete your account?</DefaultText>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <BasicButton title='CANCEL' style={[styles.submitBtn, { backgroundColor: '#8D8D8D', width: 125 }]} titleStyle={styles.submitBtnTxt} onPress={this.hideOptionsModal} />
+                    <BasicButton title='DELETE' style={[styles.submitBtn, { backgroundColor: '#CE0D0D', width: 125 }]} titleStyle={styles.submitBtnTxt} onPress={() => this.setState({ showOptionsModal: true, baseModalField: 'DELETE_ACCOUNT_SECOND_CONFIRMATION' })} />
+                </View>
+            </View>
+            case 'DELETE_ACCOUNT_SECOND_CONFIRMATION': return <View style={[styles.optionsView, { marginRight: 32 }]}>
+                <DefaultText style={{ color: '#CE0D0D', fontFamily: CUSTOM_FONTS.robotoBold, fontSize: 20, letterSpacing: 0.2 }}>Delete: Are you sure?</DefaultText>
+                <DefaultText style={[styles.deleteSubText, { marginRight: 20, marginTop: 30 }]} numberOfLines={3}>Your account will be deactivated for 60 days before it is permanently deleted.</DefaultText>
+                <DefaultText style={[styles.deleteSubText, { marginTop: 10 }]} numberOfLines={6}>All of your account information and photos will be permanently deleted. If you would like to
+                keep your account, please log into MyRideDNA before {this.getFormattedDeleteDateFromISO()}.</DefaultText>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <BasicButton title='CANCEL' style={[styles.submitBtn, { backgroundColor: '#8D8D8D', width: 125 }]} titleStyle={styles.submitBtnTxt} onPress={this.hideOptionsModal} />
+                    <BasicButton title='CONFIRM' style={[styles.submitBtn, { backgroundColor: '#CE0D0D', width: 125 }]} titleStyle={styles.submitBtnTxt} onPress={() => this.setState(this.deactivateUserAccount)} />
+                </View>
+            </View>
+            case 'DELETE_ACCOUNT_THIRD_CONFIRMATION': return <View style={[styles.optionsView, { marginRight: 32 }]}>
+                <DefaultText style={{ color: '#CE0D0D', fontFamily: CUSTOM_FONTS.robotoBold, fontSize: 20, letterSpacing: 0.2 }}>Account successfully scheduled for deletion</DefaultText>
+                <DefaultText style={[styles.deleteSubText, { marginRight: 20, marginTop: 30 }]}>Your account has been deactivated from the site and will be permanently deleted after 60 days.
+                If you log back in to the site within the next 60 days, you will have the option to cancel your
+                request.</DefaultText>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <BasicButton title='OKAY' style={[styles.submitBtn, { backgroundColor: '#CE0D0D', width: 125 }]} titleStyle={styles.submitBtnTxt} onPress={this.onPressLogout} />
+                </View>
+            </View>
+
+            default: return null
+        }
+
+    }
+
+ render() {
+        const MEASUREMENT_UNITS = [{ label: 'Km', value: 'km' }, { label: 'Mi', value: 'mi' }];
+        const HAND_DOMINANCE = [{ label: 'LH', value: 'left' }, { label: 'RH', value: 'right' }];
+        const { user, showLoader,notificationCount } = this.props;
+        const { locationEnable, showCircle, showOptionsModal } = this.state;
+        return (
+            <BasePage
+                heading={'Settings'} showLoader={showLoader}
+                headerLeftIconProps={{ reverse: true, name: 'ios-notifications', type: 'Ionicons', onPress: () => Actions.push(PageKeys.NOTIFICATIONS) }}
+                notificationCount={notificationCount}>
+                <BaseModal containerStyle={styles.baseModalContainerStyle} isVisible={showOptionsModal} onCancel={this.hideOptionsModal} onPressOutside={this.hideOptionsModal}>
+                    <View style={styles.optionsContainer}>
+                        {
+                            this.renderBaseModal()
+                        }
+                    </View>
+                </BaseModal>
+                <KeyboardAvoidingView behavior={IS_ANDROID ? null : 'padding'} style={{ flex: 1, }} >
+                    <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps='handled' contentContainerStyle={{ paddingBottom: styles.submitBtn.height, bottom: this.state.btmOffset }}>
+                        <View style={[styles.fieldContainer]}>
+                            <DefaultText style={styles.labelText}>Share my location with buddies</DefaultText>
+                            <SwitchIconButton
+                                activeIcon={<DefaultText style={styles.activeSwitchBtn}>ON</DefaultText>}
+                                inactiveIcon={<DefaultText style={styles.inActiveSwitchBTn}>OFF</DefaultText>}
+                                value={locationEnable} onChangeValue={() => this.setState(prevState => ({ locationEnable: !prevState.locationEnable }))}
+                                innerContainer={{ backgroundColor: locationEnable ? '#01C650' : '#00000029', width: 45, height: 25 }}
+                                animatedContainer={{ height: 23, width: 24 }}
+                            />
+                        </View>
+                        <View style={[styles.fieldContainer]}>
+                            <DefaultText style={styles.labelText}>Distance units</DefaultText>
+                            <IconicList
+                                iconProps={IS_ANDROID ? {} : { type: 'MaterialIcons', name: 'arrow-drop-down', style: { color: APP_COMMON_STYLES.infoColor, fontSize: 28 } }}
+                                pickerStyle={[{ borderBottomWidth: 0 }, IS_ANDROID ? { flex: 1 } : null]}
+                                textStyle={{ paddingLeft: 10, fontSize: 14, bottom: 6 }}
+                                selectedValue={this.state.measurementDistanceUnit} values={MEASUREMENT_UNITS}
+                                outerContainer={{ flex: 1, alignItems: 'flex-end' }}
+                                containerStyle={[styles.borderStyle, { width: IS_ANDROID ? 90 : 86 }]}
+                                innerContainerStyle={{ height: 24 }}
+                                onChange={this.onChangedistanceUnit} />
+                        </View>
+
+                        <View style={[styles.fieldContainer, { marginHorizontal: 33 }]}>
+                            <DefaultText style={styles.labelText}>Time interval in seconds</DefaultText>
+                            <LabeledInputPlaceholder
+                                containerStyle={[{ width: 84, height: 26, backgroundColor: '#F4F4F4' }, styles.borderStyle]}
+                                inputValue={!this.state.timeIntervalInSeconds ? '' : this.state.timeIntervalInSeconds + ''}
+                                outerContainer={{ alignItems: 'flex-end', borderColor: '#C4C6C8', }}
+                                inputStyle={{ flex: 0, justifyContent: 'center', paddingBottom: 2, color: '#585756', fontFamily: CUSTOM_FONTS.robotoSlabBold }}
+                                returnKeyType='next'
+                                inputType='telephoneNumber'
+                                onChange={this.onChangeTimeInterval}
+                                hideKeyboardOnSubmit={true} />
+                        </View>
+
+                        <View style={[styles.fieldContainer, { borderTopWidth: 1, borderTopColor: '#C4C6C8', marginHorizontal: 0, paddingHorizontal: 33, paddingTop: 15, }]}>
+                            <DefaultText style={styles.labelText}>Show visible map boundary circle</DefaultText>
+                            <SwitchIconButton
+                                activeIcon={<DefaultText style={styles.activeSwitchBtn}>ON</DefaultText>}
+                                inactiveIcon={<DefaultText style={styles.inActiveSwitchBTn}>OFF</DefaultText>}
+                                value={showCircle} onChangeValue={() => this.setState(prevState => ({ showCircle: !prevState.showCircle }))}
+                                innerContainer={{ backgroundColor: showCircle ? '#01C650' : '#00000029', width: 45, height: 25 }}
+                                animatedContainer={{ height: 23, width: 24 }}
+                            />
+                        </View>
+                        <View style={[styles.fieldContainer, { borderBottomWidth: 1, borderBottomColor: '#C4C6C8', marginHorizontal: 0, paddingHorizontal: 33, paddingBottom: 15 }]}>
+                            <DefaultText style={styles.labelText}>Location Radius</DefaultText>
+                            <LabeledInputPlaceholder
+                                containerStyle={[{ width: 84, height: 26, backgroundColor: '#F4F4F4' }, styles.borderStyle]}
+                                inputValue={!this.state.locationRadiusState ? '' : this.state.locationRadiusState + ''}
+                                outerContainer={{ alignItems: 'flex-end', borderColor: '#C4C6C8', }}
+                                inputStyle={{ flex: 0, justifyContent: 'center', paddingBottom: 2, color: '#585756', fontFamily: CUSTOM_FONTS.robotoSlabBold }}
+                                returnKeyType='next'
+                                onChange={this.onChangeLoactionradius}
+                                hideKeyboardOnSubmit={true} />
+                        </View>
+
+                        <View style={[styles.fieldContainer, { borderBottomColor: '#C4C6C8', borderBottomWidth: 1, marginHorizontal: 0, paddingHorizontal: 33, marginTop: 0, paddingVertical: 20, }]}>
+                            <DefaultText style={styles.labelText}>Right or Left Handed</DefaultText>
+                            <IconicList
+                                selectedValue={this.state.handDominanceState} values={HAND_DOMINANCE}
+                                iconProps={IS_ANDROID ? {} : { type: 'MaterialIcons', name: 'arrow-drop-down', style: { color: APP_COMMON_STYLES.infoColor, fontSize: 28 } }}
+                                pickerStyle={[{ borderBottomWidth: 0 }, IS_ANDROID ? { flex: 1 } : null]}
+                                textStyle={{ paddingLeft: 10, fontSize: 14, bottom: 6 }}
+                                outerContainer={{ flex: 1, alignItems: 'flex-end' }}
+                                containerStyle={[styles.borderStyle, { width: IS_ANDROID ? 90 : 86 }]}
+                                innerContainerStyle={{ height: 24 }}
+                                onChange={this.onChangeHandDominance} />
+                        </View>
+                        <View style={{ marginTop: 10 }}>
+                            <BasicButton title='CHANGE PASSWORD' style={[styles.submitBtn, { backgroundColor: '#2B77B4' }]} titleStyle={styles.submitBtnTxt} onPress={() => this.setState({ showOptionsModal: true, baseModalField: 'CHANGE_PASSWORD' })} />
+                            <BasicButton title='UPDATE SETTINGS' style={styles.submitBtn} titleStyle={styles.submitBtnTxt} onPress={this.submitSettingsChanges} />
+                            <LinkButton style={styles.linkItem} title='DELETE ACCOUNT' titleStyle={styles.infoLink} onPress={() => this.setState({ showOptionsModal: true, baseModalField: 'DELETE_ACCOUNT_FIRST_CONFIRMATION' })} />
+                        </View>
+                        <View>
+                            <DefaultText style={styles.versionText}>{'Version.'+ this.state.versionNumber}</DefaultText>
+                        </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </BasePage >
         );
     }
 }
 
 const mapStateToProps = (state) => {
-    const { user, userAuthToken, deviceToken, updatePasswordError, updatePasswordSuccess } = state.UserAuth;
-    const { showLoader, hasNetwork } = state.PageState;
-    return { user, userAuthToken, deviceToken, updatePasswordError, updatePasswordSuccess, showLoader, hasNetwork };
+    const { user, deviceToken, userAuthToken, updatePasswordError, updatePasswordSuccess } = state.UserAuth;
+    const { showLoader, hasNetwork, lastApi, isRetryApi } = state.PageState;
+    const notificationCount=state.NotificationList.notificationList.totalUnseen;
+    return { user, deviceToken, userAuthToken, updatePasswordError, updatePasswordSuccess, showLoader, hasNetwork, lastApi, isRetryApi ,notificationCount};
 }
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        showAppNavMenu: () => dispatch(appNavMenuVisibilityAction(true)),
         updateUserSettings: (userSettings) => dispatch(updateUserSettings(userSettings)),
         updatePassword: (passwordInfo) => dispatch(updatePassword(passwordInfo)),
-        updateShareLocationState: (userId, shareLocState) => dispatch(updateShareLocationState(userId, shareLocState)),
-        logoutUser: (userId, accessToken, deviceToken) => dispatch(logoutUser(userId, accessToken, deviceToken)),
+        logoutUser: (userId, accessToken, deviceToken, successCallback, errorCallback) => dispatch(logoutUser(userId, accessToken, deviceToken, successCallback, errorCallback)),
         resetUpdatePasswordError: () => dispatch(resetPasswordErrorAction()),
+        deactivateUserAccount: (userId, successCallback) => {
+            dispatch(apiLoaderActions(true));
+            deactivateUserAccount(userId).then(res => {
+                console.log('deactivateUserAccount success: ', res.data)
+                dispatch(apiLoaderActions(false));
+                typeof successCallback === 'function' && successCallback(res.data)
+                dispatch(resetErrorHandlingAction({ comingFrom: 'api', isRetryApi: false }))
+            }).catch(er => {
+                dispatch(apiLoaderActions(false));
+                handleServiceErrors(er, [userId, successCallback], 'deactivateUserAccount', true, true);
+                console.log('deactivateUserAccount error: ', res.data)
+            })
+        },
+        resetErrorHandling: (state) => dispatch(resetErrorHandlingAction({ comingFrom: 'settings', isRetryApi: state })),
     }
 }
 

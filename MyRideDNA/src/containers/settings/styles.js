@@ -1,23 +1,32 @@
 import { StyleSheet } from 'react-native';
-import { APP_COMMON_STYLES, heightPercentageToDP, widthPercentageToDP } from '../../constants';
+import { heightPercentageToDP, widthPercentageToDP, CUSTOM_FONTS } from '../../constants';
 
 const styles = StyleSheet.create({
     fill: {
         flex: 1,
         backgroundColor: '#fff'
     },
-    iosBottomMargin: {
-        marginBottom: 20,
+    baseModalContainerStyle: {
+        justifyContent: 'center'
     },
-    pageContent: {
-        flex: 1,
-        marginTop: APP_COMMON_STYLES.headerHeight,
+    optionsContainer: {
+        marginHorizontal: 15,
+        backgroundColor: '#F4F4F4',
+        borderColor: '#D8D8D8',
+        borderWidth: 1,
+        height: 400,
+        overflow: 'hidden',
+        borderRadius: 10,
+        elevation: 40
     },
-    containerItem: {
-        paddingBottom: heightPercentageToDP(2),
-        marginLeft: widthPercentageToDP(4),
-        marginRight: widthPercentageToDP(2),
-        marginTop: heightPercentageToDP(2)
+    optionsView: {
+        marginLeft: 32,
+        marginTop: 32
+    },
+    labelStyle: {
+        fontSize: 11,
+        fontFamily: CUSTOM_FONTS.robotoSlabBold,
+        letterSpacing: 1.1
     },
     changePasswdFrom: {
         backgroundColor: '#fff',
@@ -28,44 +37,72 @@ const styles = StyleSheet.create({
         marginLeft: widthPercentageToDP(4),
     },
     infoLink: {
-        color: APP_COMMON_STYLES.infoColor,
-        fontWeight: 'bold',
+        color: '#8D8D8D',
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        letterSpacing: 1.2
     },
     linkItem: {
         paddingHorizontal: 0,
-        marginLeft: widthPercentageToDP(4),
-        marginTop: heightPercentageToDP(1),
+        alignSelf: 'center',
+        marginTop: 32,
     },
-    distanceMeasurementUnit:{
-
+    fieldContainer: {
+        justifyContent: 'space-between',
+        flexDirection: 'row',
+        marginHorizontal: 33,
+        marginTop: 15,
     },
-    submitSec: {
-        height: heightPercentageToDP(20),
-        backgroundColor: APP_COMMON_STYLES.infoColor,
-        paddingTop: heightPercentageToDP(2),
-        paddingLeft: widthPercentageToDP(8),
+    labelText: {
+        fontSize: 15,
+        fontFamily: CUSTOM_FONTS.roboto,
+        alignSelf: 'center',
     },
-    submitButton: {
-        position: 'absolute',
-        top: heightPercentageToDP(2),
-        left: widthPercentageToDP(8),
-        width: widthPercentageToDP(15),
-        height: widthPercentageToDP(15),
-        borderWidth: 4,
-        borderColor: '#fff',
-        borderRadius: widthPercentageToDP(7.5),
+    borderStyle: {
+        borderWidth: 2,
+        borderRadius: 30,
+        borderColor: '#C4C6C8',
+        borderBottomWidth: 2,
+        borderBottomColor: '#C4C6C8'
     },
-    submitBtnIcon: {
-        position: 'absolute',
-        top: -10,
-        left: 15,
+    submitBtn: {
+        height: 35,
+        backgroundColor: '#f69039',
+        width: 213,
+        alignSelf: 'center',
+        marginTop: 32,
+        borderRadius: 20
+    },
+    submitBtnTxt: {
+        letterSpacing: 1.4,
+        fontSize: 14,
+        fontFamily: CUSTOM_FONTS.robotoBold
+    },
+    activeSwitchBtn: {
+        alignSelf: 'flex-start',
+        fontSize: 10,
         color: '#fff',
-        fontSize: heightPercentageToDP(7),
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        marginLeft: 2
     },
-    disabled: {
-        color: '#6B7663',
-        borderColor: '#6B7663'
-    }
+    inActiveSwitchBTn: {
+        alignSelf: 'flex-end',
+        fontSize: 10,
+        color: '#00000029',
+        fontFamily: CUSTOM_FONTS.robotoBold,
+        marginRight: 1
+    },
+    deleteSubText: {
+        color: '#585756',
+        fontSize: 17,
+        fontFamily: CUSTOM_FONTS.roboto,
+    },
+    versionText:{
+        paddingHorizontal: 0,
+        alignSelf: 'center',
+        marginTop: 32,
+        fontWeight:'bold',
+        color: '#8D8D8D', 
+    },
 });
 
 export default styles;
